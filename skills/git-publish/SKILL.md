@@ -16,6 +16,8 @@ description: Use when code changes in this stock-chatbot project have passed val
 5. 원격 저장소와 인증이 유효하면 push한다.
 6. push가 불가능하면 원인을 명시하고 로컬 commit 상태를 유지한다.
 
+이 프로젝트에서는 사용자 승인 기준으로 `git add`, `git commit`, `git push`를 검증 완료 후 기본적으로 수행해도 된다.
+
 ## Validation Before Commit
 
 - 최소 기준: `make verify`
