@@ -6,75 +6,106 @@ export type LlmTaskKind =
   | "risk-checkpoint-review";
 
 export type LlmExecutionMode = "background" | "synchronous";
+export type LlmProvider = "anthropic" | "custom" | "google" | "openai";
+export type LlmApiStyle = "message-oriented" | "response-oriented";
+export type LlmStructuredOutputMode = "adapter" | "native";
 
-export type OpenAiLlmPolicy = {
-  api: "responses";
+export type LlmProviderProfile = {
+  apiStyle: LlmApiStyle;
+  backgroundSupport: "adapter" | "native" | "none";
+  models: Record<LlmTaskKind, string>;
+  provider: LlmProvider;
+  reasoningSupport: boolean;
+  structuredOutputMode: LlmStructuredOutputMode;
+};
+
+export type LlmPolicy = {
+  apiStyle: LlmApiStyle;
   executionMode: LlmExecutionMode;
-  model: "gpt-5-mini" | "gpt-5-nano" | "gpt-5.1";
+  model: string;
+  provider: LlmProvider;
   reasoningEffort: "low" | "minimal" | "none";
   requiresStructuredOutput: boolean;
   storesResponse: boolean;
+  structuredOutputMode: LlmStructuredOutputMode;
   task: LlmTaskKind;
 };
 
-export function getOpenAiLlmPolicy(
+export const OPENAI_PROVIDER_PROFILE: LlmProviderProfile = {
+  provider: "openai",
+  apiStyle: "response-oriented",
+  backgroundSupport: "native",
+  reasoningSupport: true,
+  structuredOutputMode: "native",
+  models: {
+    "news-event-extraction": "gpt-5-nano",
+    "news-summary": "gpt-5-mini",
+    "risk-checkpoint-review": "gpt-5-mini",
+    "market-report-composition": "gpt-5-mini",
+    "market-report-fallback": "gpt-5.1"
+  }
+};
+
+export function createLlmProviderProfile(
+  profile: LlmProviderProfile
+): LlmProviderProfile {
+  return profile;
+}
+
+export function getLlmPolicy(
   task: LlmTaskKind,
   options?: {
     allowBackground?: boolean;
+    providerProfile?: LlmProviderProfile;
   }
-): OpenAiLlmPolicy {
+): LlmPolicy {
+  const providerProfile = options?.providerProfile ?? OPENAI_PROVIDER_PROFILE;
   const allowBackground = options?.allowBackground ?? false;
 
-  switch (task) {
-    case "news-event-extraction":
-      return {
-        task,
-        api: "responses",
-        model: "gpt-5-nano",
-        executionMode: "synchronous",
-        reasoningEffort: "minimal",
-        requiresStructuredOutput: true,
-        storesResponse: false
-      };
-    case "news-summary":
-      return {
-        task,
-        api: "responses",
-        model: "gpt-5-mini",
-        executionMode: "synchronous",
-        reasoningEffort: "low",
-        requiresStructuredOutput: true,
-        storesResponse: false
-      };
-    case "risk-checkpoint-review":
-      return {
-        task,
-        api: "responses",
-        model: "gpt-5-mini",
-        executionMode: "synchronous",
-        reasoningEffort: "low",
-        requiresStructuredOutput: true,
-        storesResponse: false
-      };
-    case "market-report-composition":
-      return {
-        task,
-        api: "responses",
-        model: "gpt-5-mini",
-        executionMode: allowBackground ? "background" : "synchronous",
-        reasoningEffort: "low",
-        requiresStructuredOutput: true,
-        storesResponse: allowBackground
-      };
-    case "market-report-fallback":
-      return {
-        task,
-        api: "responses",
-        model: "gpt-5.1",
-        executionMode: allowBackground ? "background" : "synchronous",
-        reasoningEffort: "low",
-        requiresStructuredOutput: true,
-        storesResponse: allowBackground
-      };
+  return {
+    task,
+    provider: providerProfile.provider,
+    model: providerProfile.models[task],
+    apiStyle: providerProfile.apiStyle,
+    executionMode: resolveExecutionMode(providerProfile, allowBackground),
+    reasoningEffort: resolveReasoningEffort(task, providerProfile),
+    requiresStructuredOutput: true,
+    storesResponse: shouldStoreResponse(providerProfile, allowBackground),
+    structuredOutputMode: providerProfile.structuredOutputMode
+  };
+}
+
+function resolveExecutionMode(
+  providerProfile: LlmProviderProfile,
+  allowBackground: boolean
+): LlmExecutionMode {
+  if (!allowBackground) {
+    return "synchronous";
   }
+
+  return providerProfile.backgroundSupport === "none"
+    ? "synchronous"
+    : "background";
+}
+
+function shouldStoreResponse(
+  providerProfile: LlmProviderProfile,
+  allowBackground: boolean
+): boolean {
+  return allowBackground && providerProfile.backgroundSupport !== "none";
+}
+
+function resolveReasoningEffort(
+  task: LlmTaskKind,
+  providerProfile: LlmProviderProfile
+): "low" | "minimal" | "none" {
+  if (!providerProfile.reasoningSupport) {
+    return "none";
+  }
+
+  if (task === "news-event-extraction") {
+    return "minimal";
+  }
+
+  return "low";
 }

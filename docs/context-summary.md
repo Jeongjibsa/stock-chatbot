@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -38,7 +38,7 @@
 
 - 현재 권장 방향은 `API-first TypeScript backend`다.
 - 이 방향은 이제 프로젝트의 확정 아키텍처다.
-- LLM 계층 기준선은 `OpenAI Responses API`다.
+- LLM 계층은 provider-agnostic profile 기반으로 추상화하고, 기본 provider 기준선은 `OpenAI Responses API`다.
 - 텔레그램은 첫 번째 delivery adapter로 두고, 코어 애플리케이션 서비스는 채널 독립적으로 유지한다.
 - 초기 구현은 `Node.js 24.14.0 + TypeScript 5.9.2 + Fastify 5.6.0 + grammY 1.38.2 + BullMQ 5.58.5 + PostgreSQL 18.3 + Redis 8.6.0 + Drizzle 0.44.5` 기준선을 사용한다.
 - 로컬 인프라는 `Docker Compose + Makefile` 기준으로 PostgreSQL과 Redis를 실행한다.
@@ -57,7 +57,7 @@
 - `Phase 3`가 현재 다음 구현 시작점이다.
 - `Phase 2`에서 사용자 모델, 포트폴리오 보유 종목, 기본 시장 지표 카탈로그, 사용자별 시장 지표 override에 대한 Drizzle 저장 계층과 unit/integration 테스트가 추가됐다.
 - application 계층에는 정적 alias registry와 코드 정규화 기반의 포트폴리오/시장 지표 resolver가 추가됐다.
-- application 계층에는 task별 OpenAI 모델 라우팅 정책 함수가 추가됐다.
+- application 계층에는 task별 provider-agnostic LLM 라우팅 정책 함수가 추가됐다.
 - telegram-bot에는 command별 in-memory 대화 상태 저장소와 상태 전이 로직이 추가됐다.
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
@@ -78,6 +78,7 @@
 - 포트폴리오 수량과 평균단가를 어느 수준까지 정확히 관리할지
 - 티커 및 지표 해석 계층에서 지원하지 않는 시장 지표 요청을 어떻게 폴백할지
 - OpenAI client wrapper를 어느 패키지에 둘지
+- Gemini용 첫 provider adapter를 바로 추가할지
 - 미래 앱/web 확장 시 인증과 계정 연결을 어떻게 설계할지
 
 ## 9. Handoff Notes

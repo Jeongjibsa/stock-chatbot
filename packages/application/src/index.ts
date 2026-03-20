@@ -6,10 +6,16 @@ export type DailyReportPayload = {
 };
 
 export {
-  getOpenAiLlmPolicy,
+  createLlmProviderProfile,
+  getLlmPolicy,
+  OPENAI_PROVIDER_PROFILE,
+  type LlmApiStyle,
   type LlmExecutionMode,
-  type LlmTaskKind,
-  type OpenAiLlmPolicy
+  type LlmPolicy,
+  type LlmProvider,
+  type LlmProviderProfile,
+  type LlmStructuredOutputMode,
+  type LlmTaskKind
 } from "./llm-policy.js";
 export {
   StaticInstrumentResolver,

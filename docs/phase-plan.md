@@ -77,7 +77,7 @@
 - [ ] 시장 데이터 수집 어댑터 구현
 - [ ] 오전 9시 스케줄 트리거 구현
 - [ ] 일 배치 보고서 실행 orchestration 구현
-- [ ] OpenAI Responses API 클라이언트 wrapper 초안 구현
+- [ ] provider-agnostic LLM client interface 및 OpenAI adapter 초안 구현
 - [ ] 중복 실행 방지 및 재시도 규칙 구현
 - [ ] 텔레그램 메시지 렌더링 포맷 구현
 - [ ] 실패/부분 성공 응답 규칙 구현
