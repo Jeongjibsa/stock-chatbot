@@ -1,5 +1,7 @@
 import {
+  numeric,
   pgTable,
+  unique,
   text,
   timestamp,
   uuid
@@ -15,6 +17,32 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
 
+export const portfolioHoldings = pgTable(
+  "portfolio_holdings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    symbol: text("symbol").notNull(),
+    exchange: text("exchange").notNull(),
+    companyName: text("company_name").notNull(),
+    avgPrice: numeric("avg_price"),
+    quantity: numeric("quantity"),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    userSymbolExchangeUnique: unique("portfolio_holdings_user_symbol_exchange_unique").on(
+      table.userId,
+      table.symbol,
+      table.exchange
+    )
+  })
+);
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
-
+export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
+export type NewPortfolioHoldingRecord = typeof portfolioHoldings.$inferInsert;

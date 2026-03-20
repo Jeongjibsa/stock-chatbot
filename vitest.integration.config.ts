@@ -4,9 +4,10 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["packages/**/*.integration.test.ts"],
+    fileParallelism: false,
+    maxWorkers: 1,
     sequence: {
       concurrent: false
     }
   }
 });
-

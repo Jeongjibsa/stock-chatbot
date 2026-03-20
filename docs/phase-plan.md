@@ -66,7 +66,7 @@
 ### Phase 2. Core Domain and Persistence
 
 - [x] 사용자 모델 설계 및 저장 계층 구현
-- [ ] 포트폴리오 보유 종목 CRUD 구현
+- [x] 포트폴리오 보유 종목 CRUD 구현
 - [ ] 기본 시장 지표 시드 정의
 - [ ] 사용자별 지표 추가/삭제 플로우 구현
 - [ ] 티커 및 지표 해석 계층 구현
@@ -126,9 +126,9 @@
 
 우선순위:
 
-1. 포트폴리오 보유 종목 CRUD 구현
-2. 기본 시장 지표 시드 정의
-3. 사용자별 지표 추가/삭제 플로우 구현
+1. 기본 시장 지표 시드 정의
+2. 사용자별 지표 추가/삭제 플로우 구현
+3. 티커 및 지표 해석 계층 구현
 
 ## 6. Completion Log
 
@@ -141,3 +141,4 @@
 - 2026-03-20: `pnpm verify` 통과. lint, typecheck, unit test, compose validation까지 기본 검증 루프 확인
 - 2026-03-20: GitHub public repository 생성 및 첫 baseline push 완료
 - 2026-03-20: Drizzle 기반 사용자 스키마, repository, unit/integration 테스트 추가 완료
+- 2026-03-20: 포트폴리오 보유 종목 스키마, CRUD repository, unit/integration 테스트 추가 완료
