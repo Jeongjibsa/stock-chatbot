@@ -62,9 +62,35 @@ export const marketWatchCatalogItems = pgTable(
   })
 );
 
+export const userMarketWatchItems = pgTable(
+  "user_market_watch_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    itemCode: text("item_code").notNull(),
+    itemName: text("item_name"),
+    assetType: text("asset_type"),
+    sourceKey: text("source_key"),
+    isActive: boolean("is_active").notNull().default(true),
+    isCustom: boolean("is_custom").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    userItemCodeUnique: unique("user_market_watch_items_user_item_code_unique").on(
+      table.userId,
+      table.itemCode
+    )
+  })
+);
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
 export type NewPortfolioHoldingRecord = typeof portfolioHoldings.$inferInsert;
 export type MarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$inferSelect;
 export type NewMarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$inferInsert;
+export type UserMarketWatchItemRecord = typeof userMarketWatchItems.$inferSelect;
+export type NewUserMarketWatchItemRecord = typeof userMarketWatchItems.$inferInsert;

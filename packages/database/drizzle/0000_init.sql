@@ -37,3 +37,17 @@ CREATE TABLE IF NOT EXISTS "market_watch_catalog_items" (
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "market_watch_catalog_items_item_code_unique" UNIQUE("item_code")
 );
+
+CREATE TABLE IF NOT EXISTS "user_market_watch_items" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "item_code" text NOT NULL,
+  "item_name" text,
+  "asset_type" text,
+  "source_key" text,
+  "is_active" boolean DEFAULT true NOT NULL,
+  "is_custom" boolean DEFAULT false NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "user_market_watch_items_user_item_code_unique" UNIQUE("user_id", "item_code")
+);

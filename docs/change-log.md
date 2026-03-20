@@ -42,6 +42,7 @@
 | CHG-0015 | 2026-03-20 | DECISION | 검증 완료 후 `git add`, `git commit`, `git push`를 항상 수행 가능한 기본 작업으로 명시 | PRD, Plan, Change Log, Context, Skill | yes |
 | CHG-0016 | 2026-03-20 | ADD | 포트폴리오 보유 종목 스키마와 CRUD 저장 계층, unit/integration 테스트를 추가 | Plan, Change Log, Context, Code | yes |
 | CHG-0017 | 2026-03-20 | ADD | 기본 시장 지표 카탈로그 스키마와 default seed, repository, unit/integration 테스트를 추가 | PRD, Plan, Change Log, Context, Code | yes |
+| CHG-0018 | 2026-03-20 | ADD | 사용자별 시장 지표 override 스키마와 add/remove 저장 흐름, effective list merge 로직, unit/integration 테스트를 추가 | PRD, Plan, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

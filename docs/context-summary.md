@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -53,7 +53,7 @@
 
 - `Phase 1`은 완료됐다.
 - `Phase 2`는 현재 in progress 상태다.
-- `Phase 2`에서 사용자 모델, 포트폴리오 보유 종목, 기본 시장 지표 카탈로그에 대한 Drizzle 저장 계층, migration, unit/integration 테스트가 추가됐다.
+- `Phase 2`에서 사용자 모델, 포트폴리오 보유 종목, 기본 시장 지표 카탈로그, 사용자별 시장 지표 override에 대한 Drizzle 저장 계층과 unit/integration 테스트가 추가됐다.
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
 - `Phase 7`은 온디맨드 `/report`, 웹 클라이언트, 모바일 앱 같은 후순위 확장 단계다.
@@ -69,9 +69,9 @@
 ## 8. Current Open Questions
 
 - 시장 데이터와 뉴스 데이터의 우선 소스를 무엇으로 할지
-- 사용자별 시장 지표 추가/삭제를 카탈로그 참조형으로 고정할지
 - 리포트 예약 전송을 사용자별로 확장할지
 - 포트폴리오 수량과 평균단가를 어느 수준까지 정확히 관리할지
+- 티커 및 지표 해석 계층에서 지원하지 않는 시장 지표 요청을 어떻게 폴백할지
 - 미래 앱/web 확장 시 인증과 계정 연결을 어떻게 설계할지
 
 ## 9. Handoff Notes

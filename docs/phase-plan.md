@@ -68,7 +68,7 @@
 - [x] 사용자 모델 설계 및 저장 계층 구현
 - [x] 포트폴리오 보유 종목 CRUD 구현
 - [x] 기본 시장 지표 시드 정의
-- [ ] 사용자별 지표 추가/삭제 플로우 구현
+- [x] 사용자별 지표 추가/삭제 플로우 구현
 - [ ] 티커 및 지표 해석 계층 구현
 - [ ] 명령별 대화 상태 관리 구조 구현
 
@@ -126,9 +126,9 @@
 
 우선순위:
 
-1. 사용자별 지표 추가/삭제 플로우 구현
-2. 티커 및 지표 해석 계층 구현
-3. 명령별 대화 상태 관리 구조 구현
+1. 티커 및 지표 해석 계층 구현
+2. 명령별 대화 상태 관리 구조 구현
+3. 시장 데이터 수집 어댑터 구현
 
 ## 6. Completion Log
 
@@ -143,3 +143,4 @@
 - 2026-03-20: Drizzle 기반 사용자 스키마, repository, unit/integration 테스트 추가 완료
 - 2026-03-20: 포트폴리오 보유 종목 스키마, CRUD repository, unit/integration 테스트 추가 완료
 - 2026-03-20: 기본 시장 지표 카탈로그 스키마, default seed 정의, repository, unit/integration 테스트 추가 완료
+- 2026-03-20: 사용자별 시장 지표 override 스키마, add/remove repository, effective list merge 로직, unit/integration 테스트 추가 완료
