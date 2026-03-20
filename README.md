@@ -32,6 +32,8 @@
   - 포맷 검사
 - `make test`
   - Vitest 실행
+- `make test-integration`
+  - Docker PostgreSQL 기반 integration test 실행
 - `make verify`
   - lint, typecheck, test, compose 검증을 한 번에 실행
 - `make compose-validate`
@@ -58,4 +60,4 @@
 
 ## Validation Policy
 
-구현 변경 후 기본 검증 명령은 `make verify`다. 이후 기능이 늘어나면 이 명령에 integration 테스트와 스케줄/worker 검증을 계속 추가한다.
+구현 변경 후 기본 검증 명령은 `make verify`다. DB나 저장 계층을 바꾸면 `make test-integration`까지 함께 실행한다.

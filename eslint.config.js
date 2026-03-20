@@ -25,6 +25,7 @@ export default [
     },
     rules: {
       "@typescript-eslint/consistent-type-imports": "error",
+      "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
@@ -37,4 +38,3 @@ export default [
     }
   }
 ];
-

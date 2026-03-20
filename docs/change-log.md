@@ -37,6 +37,8 @@
 | CHG-0010 | 2026-03-20 | ADD | 구현 변경마다 lint, typecheck, test, compose 검증을 수행하는 기본 검증 자동화와 운영 규칙 추가 | PRD, Plan, Change Log, Context, Skill, Code | yes |
 | CHG-0011 | 2026-03-20 | DECISION | Phase 1 기반 작업을 완료 처리하고 `pnpm verify` 통과를 현재 검증 기준선으로 반영 | Plan, Change Log, Context | yes |
 | CHG-0012 | 2026-03-20 | ADD | 검증 통과 후 commit/push를 기본 작업 흐름에 포함하고 민감정보 ignore 규칙을 강화 | PRD, Plan, Change Log, Context, Skill, Code | yes |
+| CHG-0013 | 2026-03-20 | DECISION | 로컬 git 저장소를 초기화하고 GitHub public repository 생성 및 첫 push를 완료 | Plan, Change Log, Context, Code | yes |
+| CHG-0014 | 2026-03-20 | ADD | Drizzle 기반 사용자 모델과 저장 계층, migration, unit/integration 테스트를 추가하고 Phase 2를 시작 | PRD, Plan, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

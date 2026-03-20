@@ -33,7 +33,7 @@
 | --- | --- | --- |
 | Phase 0 | 문서 기준선과 운영 방식 확정 | done |
 | Phase 1 | 저장소/런타임 기본 구조 구축 | done |
-| Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | not started |
+| Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | in progress |
 | Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | not started |
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | not started |
 | Phase 5 | 하네스, 평가, 운영 자동화 구축 | not started |
@@ -64,7 +64,7 @@
 
 ### Phase 2. Core Domain and Persistence
 
-- [ ] 사용자 모델 설계 및 저장 계층 구현
+- [x] 사용자 모델 설계 및 저장 계층 구현
 - [ ] 포트폴리오 보유 종목 CRUD 구현
 - [ ] 기본 시장 지표 시드 정의
 - [ ] 사용자별 지표 추가/삭제 플로우 구현
@@ -121,13 +121,13 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 1`이다.
+현재 권장 시작점은 `Phase 2`다.
 
 우선순위:
 
-1. 사용자 모델과 저장 계층 설계 시작
-2. 포트폴리오 보유 종목 CRUD 구현
-3. 검증 범위에 integration 테스트 추가
+1. 포트폴리오 보유 종목 CRUD 구현
+2. 기본 시장 지표 시드 정의
+3. 사용자별 지표 추가/삭제 플로우 구현
 
 ## 6. Completion Log
 
@@ -138,3 +138,5 @@
 - 2026-03-20: pnpm workspace, Fastify API, Telegram bot skeleton, BullMQ worker, Docker Compose, Makefile 기반 로컬 인프라 구성을 추가
 - 2026-03-20: ESLint, Prettier, Vitest, make verify 기반의 기본 검증 자동화와 테스트 skeleton 추가
 - 2026-03-20: `pnpm verify` 통과. lint, typecheck, unit test, compose validation까지 기본 검증 루프 확인
+- 2026-03-20: GitHub public repository 생성 및 첫 baseline push 완료
+- 2026-03-20: Drizzle 기반 사용자 스키마, repository, unit/integration 테스트 추가 완료

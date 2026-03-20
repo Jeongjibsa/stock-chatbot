@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -43,14 +43,16 @@
 - 로컬 인프라는 `Docker Compose + Makefile` 기준으로 PostgreSQL과 Redis를 실행한다.
 - 코드 변경의 기본 검증 명령은 `make verify`다.
 - 현재 기본 검증 루프는 실제로 `pnpm verify` 통과 상태다.
+- DB/저장 계층 변경 시 `make test-integration`까지 수행한다.
+- GitHub public repository와 `origin/main` push 기준선이 준비됐다.
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
 - 분석 엔진이 커지면 Python 분석 서비스 분리를 고려한다.
 
 ## 6. Active Delivery Plan
 
 - `Phase 1`은 완료됐다.
-- 현재 다음 시작점은 `Phase 2`다.
-- `Phase 1`에서 workspace, API, worker, Telegram bot, Docker Compose, Makefile, 기본 검증 자동화가 추가됐다.
+- `Phase 2`는 현재 in progress 상태다.
+- `Phase 2`에서 사용자 모델과 Drizzle 기반 저장 계층, migration, unit/integration 테스트가 추가됐다.
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
 - `Phase 7`은 온디맨드 `/report`, 웹 클라이언트, 모바일 앱 같은 후순위 확장 단계다.
