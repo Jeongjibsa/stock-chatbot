@@ -47,6 +47,7 @@
 | CHG-0020 | 2026-03-20 | ADD | Telegram bot에 command별 in-memory 대화 상태 저장소와 상태 전이 로직을 추가하고 unit 테스트 및 Vitest workspace alias 설정을 보강 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0021 | 2026-03-20 | DECISION | LLM 계층 기준선을 OpenAI Responses API로 확정하고 task별 모델 라우팅 정책 문서와 application 정책 코드를 추가 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0022 | 2026-03-20 | UPDATE | LLM 정책 계층을 provider-agnostic profile 기반 추상화로 일반화하고 OpenAI를 기본 provider로 유지하도록 수정 | PRD, Plan, Change Log, Context, Code | yes |
+| CHG-0023 | 2026-03-20 | ADD | provider-agnostic LLM client interface와 OpenAI adapter 초안, unit 테스트, OpenAI SDK 의존성, env 템플릿, Vitest node_modules 제외 규칙을 추가 | PRD, Plan, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

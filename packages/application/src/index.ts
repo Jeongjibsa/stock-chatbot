@@ -6,6 +6,13 @@ export type DailyReportPayload = {
 };
 
 export {
+  createLlmClient,
+  OpenAiLlmClient,
+  type LlmClient,
+  type LlmGenerateRequest,
+  type LlmGenerateResponse
+} from "./llm-client.js";
+export {
   createLlmProviderProfile,
   getLlmPolicy,
   OPENAI_PROVIDER_PROFILE,

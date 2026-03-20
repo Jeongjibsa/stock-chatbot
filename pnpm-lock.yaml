@@ -63,6 +63,9 @@ importers:
 
   apps/telegram-bot:
     dependencies:
+      '@stock-chatbot/application':
+        specifier: workspace:*
+        version: link:../../packages/application
       dotenv:
         specifier: 17.2.2
         version: 17.2.2
@@ -90,7 +93,11 @@ importers:
         specifier: 4.20.5
         version: 4.20.5
 
-  packages/application: {}
+  packages/application:
+    dependencies:
+      openai:
+        specifier: 6.32.0
+        version: 6.32.0
 
   packages/core-types: {}
 
@@ -1323,6 +1330,18 @@ packages:
   on-exit-leak-free@2.1.2:
     resolution: {integrity: sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==}
     engines: {node: '>=14.0.0'}
+
+  openai@6.32.0:
+    resolution: {integrity: sha512-j3k+BjydAf8yQlcOI7WUQMQTbbF5GEIMAE2iZYCOzwwB3S2pCheaWYp+XZRNAch4jWVc52PMDGRRjutao3lLCg==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
 
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
@@ -2758,6 +2777,8 @@ snapshots:
     optional: true
 
   on-exit-leak-free@2.1.2: {}
+
+  openai@6.32.0: {}
 
   optionator@0.9.4:
     dependencies:

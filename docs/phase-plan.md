@@ -77,7 +77,7 @@
 - [ ] 시장 데이터 수집 어댑터 구현
 - [ ] 오전 9시 스케줄 트리거 구현
 - [ ] 일 배치 보고서 실행 orchestration 구현
-- [ ] provider-agnostic LLM client interface 및 OpenAI adapter 초안 구현
+- [x] provider-agnostic LLM client interface 및 OpenAI adapter 초안 구현
 - [ ] 중복 실행 방지 및 재시도 규칙 구현
 - [ ] 텔레그램 메시지 렌더링 포맷 구현
 - [ ] 실패/부분 성공 응답 규칙 구현
@@ -148,3 +148,4 @@
 - 2026-03-20: 사용자별 시장 지표 override 스키마, add/remove repository, effective list merge 로직, unit/integration 테스트 추가 완료
 - 2026-03-20: 정적 alias registry와 코드 정규화 기반의 티커/시장 지표 해석 계층, unit 테스트 추가 완료
 - 2026-03-20: Telegram bot에 in-memory 대화 상태 저장소와 command별 상태 전이 구조, unit 테스트 추가 완료
+- 2026-03-20: provider-agnostic LLM client interface와 OpenAI adapter 초안, unit 테스트, OpenAI SDK 의존성 및 env 템플릿 추가 완료

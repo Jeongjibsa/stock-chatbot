@@ -19,6 +19,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["packages/**/*.integration.test.ts"],
+    exclude: ["**/node_modules/**"],
     fileParallelism: false,
     maxWorkers: 1,
     sequence: {
