@@ -69,7 +69,7 @@
 - [x] 포트폴리오 보유 종목 CRUD 구현
 - [x] 기본 시장 지표 시드 정의
 - [x] 사용자별 지표 추가/삭제 플로우 구현
-- [ ] 티커 및 지표 해석 계층 구현
+- [x] 티커 및 지표 해석 계층 구현
 - [ ] 명령별 대화 상태 관리 구조 구현
 
 ### Phase 3. Daily Scheduled Report Pipeline
@@ -126,9 +126,9 @@
 
 우선순위:
 
-1. 티커 및 지표 해석 계층 구현
-2. 명령별 대화 상태 관리 구조 구현
-3. 시장 데이터 수집 어댑터 구현
+1. 명령별 대화 상태 관리 구조 구현
+2. 시장 데이터 수집 어댑터 구현
+3. 오전 9시 스케줄 트리거 구현
 
 ## 6. Completion Log
 
@@ -144,3 +144,4 @@
 - 2026-03-20: 포트폴리오 보유 종목 스키마, CRUD repository, unit/integration 테스트 추가 완료
 - 2026-03-20: 기본 시장 지표 카탈로그 스키마, default seed 정의, repository, unit/integration 테스트 추가 완료
 - 2026-03-20: 사용자별 시장 지표 override 스키마, add/remove repository, effective list merge 로직, unit/integration 테스트 추가 완료
+- 2026-03-20: 정적 alias registry와 코드 정규화 기반의 티커/시장 지표 해석 계층, unit 테스트 추가 완료
