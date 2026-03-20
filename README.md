@@ -69,6 +69,13 @@
 
 `/portfolio_add`, `/portfolio_remove`, `/market_add`는 in-memory 대화 상태 저장소 기반으로 단계별 입력 플로우를 유지한다.
 
+## External Keys
+
+- `OPENAI_API_KEY`
+  - OpenAI adapter 사용 시 필요
+- `FRED_API_KEY`
+  - FRED 기반 시장 데이터 어댑터 사용 시 필요
+
 ## Validation Policy
 
 구현 변경 후 기본 검증 명령은 `make verify`다. DB나 저장 계층을 바꾸면 `make test-integration`까지 함께 실행한다.
