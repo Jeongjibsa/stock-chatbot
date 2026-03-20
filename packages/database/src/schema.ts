@@ -1,9 +1,11 @@
 import {
+  boolean,
+  integer,
   numeric,
   pgTable,
-  unique,
   text,
   timestamp,
+  unique,
   uuid
 } from "drizzle-orm/pg-core";
 
@@ -42,7 +44,27 @@ export const portfolioHoldings = pgTable(
   })
 );
 
+export const marketWatchCatalogItems = pgTable(
+  "market_watch_catalog_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    itemCode: text("item_code").notNull(),
+    itemName: text("item_name").notNull(),
+    assetType: text("asset_type").notNull(),
+    sourceKey: text("source_key").notNull(),
+    isDefault: boolean("is_default").notNull().default(true),
+    sortOrder: integer("sort_order").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    itemCodeUnique: unique("market_watch_catalog_items_item_code_unique").on(table.itemCode)
+  })
+);
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
 export type NewPortfolioHoldingRecord = typeof portfolioHoldings.$inferInsert;
+export type MarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$inferSelect;
+export type NewMarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$inferInsert;

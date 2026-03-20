@@ -24,3 +24,16 @@ CREATE TABLE IF NOT EXISTS "portfolio_holdings" (
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "portfolio_holdings_user_symbol_exchange_unique" UNIQUE("user_id", "symbol", "exchange")
 );
+
+CREATE TABLE IF NOT EXISTS "market_watch_catalog_items" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "item_code" text NOT NULL,
+  "item_name" text NOT NULL,
+  "asset_type" text NOT NULL,
+  "source_key" text NOT NULL,
+  "is_default" boolean DEFAULT true NOT NULL,
+  "sort_order" integer NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "market_watch_catalog_items_item_code_unique" UNIQUE("item_code")
+);
