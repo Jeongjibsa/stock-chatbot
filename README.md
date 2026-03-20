@@ -56,7 +56,18 @@
 
 ## Telegram Bot
 
-`TELEGRAM_BOT_TOKEN`이 설정되어 있으면 `make dev-bot`으로 polling 기반 bot skeleton을 실행할 수 있다.
+`TELEGRAM_BOT_TOKEN`이 설정되어 있으면 `make dev-bot`으로 polling 기반 bot을 실행할 수 있다.
+
+현재 지원 명령:
+
+- `/start`
+- `/help`
+- `/portfolio_add`
+- `/portfolio_remove`
+- `/market_add`
+- `/market_items`
+
+`/portfolio_add`, `/portfolio_remove`, `/market_add`는 in-memory 대화 상태 저장소 기반으로 단계별 입력 플로우를 유지한다.
 
 ## Validation Policy
 

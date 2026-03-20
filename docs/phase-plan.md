@@ -34,7 +34,7 @@
 | --- | --- | --- |
 | Phase 0 | 문서 기준선과 운영 방식 확정 | done |
 | Phase 1 | 저장소/런타임 기본 구조 구축 | done |
-| Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | in progress |
+| Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | done |
 | Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | not started |
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | not started |
 | Phase 5 | 하네스, 평가, 운영 자동화 구축 | not started |
@@ -70,7 +70,7 @@
 - [x] 기본 시장 지표 시드 정의
 - [x] 사용자별 지표 추가/삭제 플로우 구현
 - [x] 티커 및 지표 해석 계층 구현
-- [ ] 명령별 대화 상태 관리 구조 구현
+- [x] 명령별 대화 상태 관리 구조 구현
 
 ### Phase 3. Daily Scheduled Report Pipeline
 
@@ -122,13 +122,13 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 2`다.
+현재 권장 시작점은 `Phase 3`다.
 
 우선순위:
 
-1. 명령별 대화 상태 관리 구조 구현
-2. 시장 데이터 수집 어댑터 구현
-3. 오전 9시 스케줄 트리거 구현
+1. 시장 데이터 수집 어댑터 구현
+2. 오전 9시 스케줄 트리거 구현
+3. 일 배치 보고서 실행 orchestration 구현
 
 ## 6. Completion Log
 
@@ -145,3 +145,4 @@
 - 2026-03-20: 기본 시장 지표 카탈로그 스키마, default seed 정의, repository, unit/integration 테스트 추가 완료
 - 2026-03-20: 사용자별 시장 지표 override 스키마, add/remove repository, effective list merge 로직, unit/integration 테스트 추가 완료
 - 2026-03-20: 정적 alias registry와 코드 정규화 기반의 티커/시장 지표 해석 계층, unit 테스트 추가 완료
+- 2026-03-20: Telegram bot에 in-memory 대화 상태 저장소와 command별 상태 전이 구조, unit 테스트 추가 완료
