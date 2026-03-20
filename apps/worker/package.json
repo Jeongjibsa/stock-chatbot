@@ -9,6 +9,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@stock-chatbot/application": "workspace:*",
     "bullmq": "5.58.5",
     "dotenv": "17.2.2",
     "ioredis": "5.8.0"

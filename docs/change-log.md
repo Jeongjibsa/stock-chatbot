@@ -49,6 +49,7 @@
 | CHG-0022 | 2026-03-20 | UPDATE | LLM 정책 계층을 provider-agnostic profile 기반 추상화로 일반화하고 OpenAI를 기본 provider로 유지하도록 수정 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0023 | 2026-03-20 | ADD | provider-agnostic LLM client interface와 OpenAI adapter 초안, unit 테스트, OpenAI SDK 의존성, env 템플릿, Vitest node_modules 제외 규칙을 추가 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0024 | 2026-03-20 | ADD | FRED 기반 시장 데이터 어댑터와 source key 매핑, partial failure 처리, unit 테스트, FRED env 템플릿을 추가 | PRD, Plan, Change Log, Context, Code | yes |
+| CHG-0025 | 2026-03-20 | ADD | BullMQ job scheduler 기반 오전 9시 트리거 모듈과 worker 연동, env 기반 패턴/타임존 설정, unit 테스트를 추가 | PRD, Plan, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

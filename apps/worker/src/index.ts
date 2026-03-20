@@ -3,15 +3,15 @@ import "dotenv/config";
 import { fileURLToPath } from "node:url";
 import { Queue, Worker } from "bullmq";
 import { Redis } from "ioredis";
-
-const REPORT_QUEUE_NAME = "daily-report";
-const DAILY_REPORT_JOB_NAME = "daily-report.run";
-
-type DailyReportPayload = {
-  source: "bootstrap" | "scheduler" | "manual";
-};
+import {
+  DAILY_REPORT_JOB_NAME,
+  REPORT_QUEUE_NAME,
+  type DailyReportPayload
+} from "@stock-chatbot/application";
 
 type Environment = Record<string, string | undefined>;
+
+import { getWorkerReadyMessage, scheduleDailyReportJob } from "./scheduler.js";
 
 export function readRedisUrl(env: Environment = process.env): string {
   return env.REDIS_URL ?? "redis://localhost:6379";
@@ -49,7 +49,9 @@ async function main(): Promise<void> {
     });
   });
 
-  console.log(`[worker] ready on queue ${REPORT_QUEUE_NAME}`);
+  await scheduleDailyReportJob(queue);
+
+  console.log(getWorkerReadyMessage());
 
   if (process.env.NODE_ENV !== "production") {
     await queue.add(

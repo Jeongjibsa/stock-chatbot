@@ -75,6 +75,12 @@
   - OpenAI adapter 사용 시 필요
 - `FRED_API_KEY`
   - FRED 기반 시장 데이터 어댑터 사용 시 필요
+- `ENABLE_DAILY_REPORT_SCHEDULER`
+  - worker에서 일 배치 스케줄 등록 여부 제어
+- `DAILY_REPORT_PATTERN`
+  - BullMQ scheduler cron pattern
+- `REPORT_TIMEZONE`
+  - 스케줄 계산 타임존
 
 ## Validation Policy
 
