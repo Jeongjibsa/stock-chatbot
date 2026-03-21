@@ -363,7 +363,13 @@ async function main(): Promise<void> {
   process.once("SIGINT", () => void shutdown());
   process.once("SIGTERM", () => void shutdown());
 
-  await bot.start();
+  await bot.start({
+    allowed_updates: [
+      "message",
+      "chat_member",
+      "my_chat_member"
+    ]
+  });
 }
 
 function resolveTelegramCommandError(error: unknown): string {
