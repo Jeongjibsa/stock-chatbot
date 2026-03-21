@@ -50,7 +50,9 @@ describe("UserRepository", () => {
         timezone: "Asia/Seoul",
         dailyReportEnabled: true,
         dailyReportHour: 9,
-        dailyReportMinute: 0
+        dailyReportMinute: 0,
+        reportDetailLevel: "standard",
+        includePublicBriefingLink: true
       }
     ];
     const repository = new UserRepository(db);
@@ -77,7 +79,9 @@ describe("UserRepository", () => {
           telegramUserId: "123",
           dailyReportEnabled: false,
           dailyReportHour: 21,
-          dailyReportMinute: 15
+          dailyReportMinute: 15,
+          reportDetailLevel: "compact",
+          includePublicBriefingLink: false
         }
       ] as unknown[]
     };
@@ -97,13 +101,17 @@ describe("UserRepository", () => {
         telegramUserId: "123",
         dailyReportEnabled: false,
         dailyReportHour: 21,
-        dailyReportMinute: 15
+        dailyReportMinute: 15,
+        reportDetailLevel: "compact",
+        includePublicBriefingLink: false
       })
     ).resolves.toMatchObject({
       telegramUserId: "123",
       dailyReportEnabled: false,
       dailyReportHour: 21,
-      dailyReportMinute: 15
+      dailyReportMinute: 15,
+      reportDetailLevel: "compact",
+      includePublicBriefingLink: false
     });
   });
 });

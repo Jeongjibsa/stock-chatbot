@@ -245,6 +245,116 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 
+  it("persists strategy snapshots for generated quant scorecards", async () => {
+    const strategySnapshotRepository = {
+      insertMany: vi.fn(async () => [])
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [
+          {
+            companyName: "삼성전자",
+            symbol: "005930",
+            exchange: "KR"
+          }
+        ])
+      },
+      reportRunRepository: {
+        startRun: vi.fn(async () => ({
+          created: true,
+          run: {
+            id: "run-3",
+            status: "running"
+          }
+        })),
+        completeRun: vi.fn(async (input) => ({
+          id: input.id,
+          status: input.status,
+          reportText: input.reportText,
+          errorMessage: input.errorMessage
+        }))
+      },
+      strategySnapshotRepository,
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-21",
+      scheduleType: "daily-9am"
+    });
+
+    expect(strategySnapshotRepository.insertMany).toHaveBeenCalledWith([
+      expect.objectContaining({
+        reportRunId: "run-3",
+        userId: "user-1",
+        companyName: "삼성전자",
+        exchange: "KR",
+        symbol: "005930"
+      })
+    ]);
+  });
+
+  it("downgrades to partial success when strategy snapshot persistence fails", async () => {
+    const reportRunRepository = {
+      startRun: vi.fn(async () => ({
+        created: true,
+        run: {
+          id: "run-4",
+          status: "running"
+        }
+      })),
+      completeRun: vi.fn(async (input) => ({
+        id: input.id,
+        status: input.status,
+        reportText: input.reportText,
+        errorMessage: input.errorMessage
+      }))
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [])
+      },
+      reportRunRepository,
+      strategySnapshotRepository: {
+        insertMany: vi.fn(async () => {
+          throw new Error("insert failed");
+        })
+      },
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-21",
+      scheduleType: "daily-9am"
+    });
+
+    expect(result.status).toBe("partial_success");
+    expect(reportRunRepository.completeRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: "partial_success",
+        errorMessage: expect.stringContaining("strategy_snapshot: insert failed")
+      })
+    );
+  });
+
   it("appends a public briefing link when a base url is configured", async () => {
     const orchestrator = new DailyReportOrchestrator({
       marketDataAdapter: {

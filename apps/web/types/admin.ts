@@ -26,10 +26,36 @@ export type AdminDashboardSummary = {
   totalCount: number;
 };
 
+export type AdminStrategyBacktestSummary = {
+  averageReturnPct: number | null;
+  evaluatedCount: number;
+  hitRate: number | null;
+  lossCount: number;
+  neutralCount: number;
+  unavailableCount: number;
+  winCount: number;
+};
+
+export type AdminRecentStrategySnapshot = {
+  action: "ACCUMULATE" | "DEFENSIVE" | "HOLD" | "REDUCE";
+  companyName: string;
+  createdAt: string;
+  displayName: string;
+  exchange: string | null;
+  id: string;
+  outcome: "loss" | "neutral" | "unavailable" | "win";
+  realizedReturnPct: number | null;
+  runDate: string;
+  symbol: string | null;
+  totalScore: number;
+};
+
 export type AdminDashboardSnapshot = {
   latestReport: AdminRecentPublicReport | null;
   recentReports: AdminRecentPublicReport[];
   recentRuns: AdminRecentRun[];
+  recentStrategySnapshots: AdminRecentStrategySnapshot[];
   reportsLast7Days: number;
   runSummary24h: AdminDashboardSummary;
+  strategyBacktestSummary: AdminStrategyBacktestSummary;
 };

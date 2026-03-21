@@ -25,6 +25,7 @@ export type TelegramReportRenderInput = {
   keyIndicatorSummaries?: string[];
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs?: HoldingNewsBrief[];
+  reportDetailLevel?: "compact" | "standard";
   quantScorecards?: QuantScorecard[];
   quantScenarios?: string[];
   riskCheckpoints?: string[];
@@ -79,22 +80,25 @@ export function renderTelegramDailyReport(
     ...renderScenarioLines(input.quantScorecards, input.quantScenarios)
   );
   lines.push(SECTION_DIVIDER, "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
-  lines.push(
-    SECTION_DIVIDER,
-    "🧭 시장, 매크로, 자금 브리핑",
-    ...renderCombinedBriefingSection(
-      input.marketBullets,
-      input.macroBullets,
-      input.fundFlowBullets
-    )
-  );
-  lines.push(
-    SECTION_DIVIDER,
-    "🗓️ 주요 일정 및 이벤트 브리핑",
-    ...renderCustomBulletSection(input.eventBullets, [
-      "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
-    ])
-  );
+
+  if (input.reportDetailLevel !== "compact") {
+    lines.push(
+      SECTION_DIVIDER,
+      "🧭 시장, 매크로, 자금 브리핑",
+      ...renderCombinedBriefingSection(
+        input.marketBullets,
+        input.macroBullets,
+        input.fundFlowBullets
+      )
+    );
+    lines.push(
+      SECTION_DIVIDER,
+      "🗓️ 주요 일정 및 이벤트 브리핑",
+      ...renderCustomBulletSection(input.eventBullets, [
+        "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
+      ])
+    );
+  }
 
   if (failedMarketItems.length > 0) {
     lines.push(SECTION_DIVIDER, "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));

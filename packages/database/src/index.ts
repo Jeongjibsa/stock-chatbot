@@ -9,6 +9,7 @@ export {
   portfolioHoldings,
   reports,
   reportRuns,
+  strategySnapshots,
   telegramConversationStates,
   userMarketWatchItems,
   users,
@@ -17,11 +18,13 @@ export {
   type NewReportRecord,
   type NewMarketWatchCatalogItemRecord,
   type NewPortfolioHoldingRecord,
+  type NewStrategySnapshotRecord,
   type NewUserRecord,
   type NewUserMarketWatchItemRecord,
   type PortfolioHoldingRecord,
   type ReportRecord,
   type ReportRunRecord,
+  type StrategySnapshotRecord,
   type TelegramConversationStateRecord,
   type UserMarketWatchItemRecord,
   type UserRecord
@@ -35,6 +38,10 @@ export {
   PublicReportRepository,
   type InsertPublicReportInput
 } from "./public-report-repository.js";
+export {
+  StrategySnapshotRepository,
+  type InsertStrategySnapshotInput
+} from "./strategy-snapshot-repository.js";
 export { TelegramConversationStateRepository } from "./telegram-conversation-state-repository.js";
 export {
   ReportRunRepository,

@@ -178,6 +178,20 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("❗ 이 리포트는 정보 제공용이며");
   });
 
+  it("omits lower-detail briefing sections in compact mode", () => {
+    const report = renderTelegramDailyReport({
+      displayName: "Jisung",
+      runDate: "2026-03-20",
+      reportDetailLevel: "compact",
+      holdings: [],
+      marketResults: []
+    });
+
+    expect(report).not.toContain("🧭 시장, 매크로, 자금 브리핑");
+    expect(report).not.toContain("🗓️ 주요 일정 및 이벤트 브리핑");
+    expect(report).toContain("⚠️ 리스크 체크리스트");
+  });
+
   it("renders news, strategy and risk sections when enrichment exists", () => {
     const report = renderTelegramDailyReport({
       displayName: "Jisung",

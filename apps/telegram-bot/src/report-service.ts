@@ -17,6 +17,7 @@ import {
   PortfolioHoldingRepository,
   PublicReportRepository,
   ReportRunRepository,
+  StrategySnapshotRepository,
   UserMarketWatchItemRepository,
   UserRepository
 } from "@stock-chatbot/database";
@@ -28,7 +29,9 @@ type UserRepositoryPort = {
     | {
         displayName: string;
         id: string;
+        includePublicBriefingLink?: boolean;
         preferredDeliveryChatId?: string | null;
+        reportDetailLevel?: string | null;
       }
     | null
   >;
@@ -56,11 +59,26 @@ export class TelegramReportService {
       throw new Error("USER_NOT_REGISTERED");
     }
 
+    const orchestratorUser: {
+      displayName: string;
+      id: string;
+      includePublicBriefingLink?: boolean;
+      reportDetailLevel?: "compact" | "standard";
+    } = {
+      id: user.id,
+      displayName: user.displayName
+    };
+
+    if (user.includePublicBriefingLink !== undefined) {
+      orchestratorUser.includePublicBriefingLink = user.includePublicBriefingLink;
+    }
+
+    if (user.reportDetailLevel === "compact" || user.reportDetailLevel === "standard") {
+      orchestratorUser.reportDetailLevel = user.reportDetailLevel;
+    }
+
     return this.dependencies.orchestrator.runForUser({
-      user: {
-        id: user.id,
-        displayName: user.displayName
-      },
+      user: orchestratorUser,
       runDate: input.runDate,
       scheduleType: "telegram-report"
     });
@@ -89,6 +107,7 @@ export function buildTelegramReportRuntime(env: Environment = process.env): {
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
     publicReportRepository: new PublicReportRepository(db),
     reportRunRepository: new ReportRunRepository(db),
+    strategySnapshotRepository: new StrategySnapshotRepository(db),
     userMarketWatchRepository: new UserMarketWatchItemRepository(db)
   };
   const publicBriefingBaseUrl = env.PUBLIC_BRIEFING_BASE_URL?.trim();

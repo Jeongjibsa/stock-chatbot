@@ -86,6 +86,27 @@ type ReportCompositionServicePort = {
   }): Promise<DailyReportComposition>;
 };
 
+type StrategySnapshotRepositoryPort = {
+  insertMany(
+    input: Array<{
+      action: string;
+      actionSummary: string;
+      companyName: string;
+      eventScore: string;
+      exchange?: string;
+      flowScore: string;
+      macroScore: string;
+      reportRunId: string;
+      runDate: string;
+      scheduleType: string;
+      symbol?: string;
+      totalScore: string;
+      trendScore: string;
+      userId: string;
+    }>
+  ): Promise<unknown>;
+};
+
 export type DailyReportOrchestratorResult = {
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs: HoldingNewsBrief[];
@@ -113,6 +134,7 @@ export class DailyReportOrchestrator {
       };
       reportCompositionService?: ReportCompositionServicePort;
       reportRunRepository: ReportRunRepositoryPort;
+      strategySnapshotRepository?: StrategySnapshotRepositoryPort;
       userMarketWatchRepository: UserMarketWatchRepositoryPort;
     }
   ) {}
@@ -125,6 +147,8 @@ export class DailyReportOrchestrator {
     user: {
       displayName: string;
       id: string;
+      includePublicBriefingLink?: boolean;
+      reportDetailLevel?: "compact" | "standard";
     };
   }): Promise<DailyReportOrchestratorResult> {
     const startRunInput: {
@@ -189,6 +213,68 @@ export class DailyReportOrchestrator {
       portfolioNewsBriefs
     });
     const quantScenarios = toQuantStrategyBullets(quantScorecards);
+    let strategySnapshotError: string | undefined;
+
+    if (this.dependencies.strategySnapshotRepository) {
+      try {
+        const holdingMap = new Map(
+          holdings.map((holding) => [holding.symbol, holding])
+        );
+
+        await this.dependencies.strategySnapshotRepository.insertMany(
+          quantScorecards.map((scorecard) => {
+            const matchingHolding = scorecard.symbol
+              ? holdingMap.get(scorecard.symbol)
+              : undefined;
+            const snapshotInput: {
+              action: string;
+              actionSummary: string;
+              companyName: string;
+              eventScore: string;
+              exchange?: string;
+              flowScore: string;
+              macroScore: string;
+              reportRunId: string;
+              runDate: string;
+              scheduleType: string;
+              symbol?: string;
+              totalScore: string;
+              trendScore: string;
+              userId: string;
+            } = {
+              reportRunId: started.run.id,
+              userId: input.user.id,
+              runDate: input.runDate,
+              scheduleType: input.scheduleType,
+              companyName: scorecard.companyName,
+              action: scorecard.action,
+              actionSummary: scorecard.actionSummary,
+              macroScore: scorecard.macroScore.toFixed(2),
+              trendScore: scorecard.trendScore.toFixed(2),
+              eventScore: scorecard.eventScore.toFixed(2),
+              flowScore: scorecard.flowScore.toFixed(2),
+              totalScore: scorecard.totalScore.toFixed(2)
+            };
+
+            if (matchingHolding?.exchange) {
+              snapshotInput.exchange = matchingHolding.exchange;
+            }
+
+            if (scorecard.symbol) {
+              snapshotInput.symbol = scorecard.symbol;
+            }
+
+            return snapshotInput;
+          })
+        );
+      } catch (error) {
+        strategySnapshotError =
+          error instanceof Error
+            ? error.message
+            : "strategy snapshot persistence failed";
+      }
+    }
+
     let composition: DailyReportComposition | undefined;
     let compositionError: string | undefined;
 
@@ -215,7 +301,12 @@ export class DailyReportOrchestrator {
       }
     }
 
-    const status = resolveRunStatus(marketResults, portfolioNewsBriefs, compositionError);
+    const status = resolveRunStatus(
+      marketResults,
+      portfolioNewsBriefs,
+      compositionError,
+      strategySnapshotError
+    );
     const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
       displayName: input.user.displayName,
       runDate: input.runDate,
@@ -228,6 +319,10 @@ export class DailyReportOrchestrator {
       portfolioNewsBriefs,
       quantScorecards
     };
+
+    if (input.user.reportDetailLevel) {
+      renderInput.reportDetailLevel = input.user.reportDetailLevel;
+    }
 
     if (composition?.oneLineSummary) {
       renderInput.summaryLine = composition.oneLineSummary;
@@ -271,7 +366,10 @@ export class DailyReportOrchestrator {
       renderInput.riskCheckpoints = composition.riskBullets;
     }
 
-    if (this.dependencies.publicBriefingBaseUrl) {
+    if (
+      this.dependencies.publicBriefingBaseUrl &&
+      input.user.includePublicBriefingLink !== false
+    ) {
       const latestPublicReport = await this.dependencies.publicReportRepository?.findLatestByReportDate(
         input.runDate
       );
@@ -291,7 +389,8 @@ export class DailyReportOrchestrator {
     const errorMessage = buildErrorMessage(
       marketResults,
       portfolioNewsBriefs,
-      compositionError
+      compositionError,
+      strategySnapshotError
     );
     const completeRunInput: {
       errorMessage?: string;
@@ -325,7 +424,8 @@ export class DailyReportOrchestrator {
 function resolveRunStatus(
   marketResults: MarketDataFetchResult[],
   portfolioNewsBriefs: HoldingNewsBrief[],
-  compositionError?: string
+  compositionError?: string,
+  strategySnapshotError?: string
 ): "completed" | "failed" | "partial_success" {
   const successCount = marketResults.filter((result) => result.status === "ok").length;
   const errorCount = marketResults.length - successCount;
@@ -337,7 +437,7 @@ function resolveRunStatus(
     return "failed";
   }
 
-  if (errorCount > 0 || newsErrorCount > 0 || compositionError) {
+  if (errorCount > 0 || newsErrorCount > 0 || compositionError || strategySnapshotError) {
     return "partial_success";
   }
 
@@ -347,7 +447,8 @@ function resolveRunStatus(
 function buildErrorMessage(
   marketResults: MarketDataFetchResult[],
   portfolioNewsBriefs: HoldingNewsBrief[],
-  compositionError?: string
+  compositionError?: string,
+  strategySnapshotError?: string
 ): string | undefined {
   const errors = marketResults.filter(
     (result): result is Extract<MarketDataFetchResult, { status: "error" }> =>
@@ -357,13 +458,19 @@ function buildErrorMessage(
     .filter((brief) => brief.status !== "ok")
     .map((brief) => `${brief.holding.symbol}: ${brief.errorMessage ?? "news_unavailable"}`);
 
-  if (errors.length === 0 && newsErrors.length === 0 && !compositionError) {
+  if (
+    errors.length === 0 &&
+    newsErrors.length === 0 &&
+    !compositionError &&
+    !strategySnapshotError
+  ) {
     return undefined;
   }
 
   return [
     ...errors.map((error) => `${error.sourceKey}: ${error.message}`),
     ...newsErrors,
-    ...(compositionError ? [`report_composition: ${compositionError}`] : [])
+    ...(compositionError ? [`report_composition: ${compositionError}`] : []),
+    ...(strategySnapshotError ? [`strategy_snapshot: ${strategySnapshotError}`] : [])
   ].join("; ");
 }

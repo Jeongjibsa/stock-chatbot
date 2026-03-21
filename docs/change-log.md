@@ -113,6 +113,8 @@
 | CHG-0086 | 2026-03-21 | ADD | `apps/web`에 Telegram webhook route와 Vercel cron route를 추가하고, Telegram command 로직을 공유 `build-bot` runtime으로 정리했으며, GitHub Actions `Daily Report`를 Vercel reconcile backup 경로를 우선 사용하는 구조로 갱신 | PRD, Plan, README, Change Log, Context, Workflow, Code, Tests | yes |
 | CHG-0087 | 2026-03-21 | ADD | Telegram `setWebhook` 등록용 스크립트와 운영 절차를 추가해 polling 없이도 Vercel webhook 기반 Telegram command runtime을 배포 후 즉시 활성화할 수 있도록 정리 | PRD, Plan, README, Change Log, Context, Docs, Code | yes |
 | CHG-0088 | 2026-03-21 | ADD | `apps/web`에 Basic Auth 기반 read-only 운영 콘솔 `/admin`을 추가해 최근 공개 브리핑과 최근 개인화 리포트 실행 로그를 조회할 수 있게 하고, 운영용 인증 env와 문서를 갱신 | PRD, Plan, README, Change Log, Context, Code, Tests | yes |
+| CHG-0089 | 2026-03-21 | ADD | `strategy_snapshots` 저장 모델을 추가하고, daily report가 생성한 퀀트 점수카드를 실행 시점 스냅샷으로 저장한 뒤 `/admin`에서 이후 수익률과 액션 적합도를 간단히 회고할 수 있도록 전략 성과 추적/백테스트 slice를 구현 | PRD, Plan, README, Change Log, Context, Code, Tests | yes |
+| CHG-0090 | 2026-03-21 | ADD | 사용자 설정을 `report_detail_level(standard/compact)`과 `include_public_briefing_link`까지 확장하고, `/report_mode`, `/report_link_on`, `/report_link_off` 명령과 실제 텔레그램 렌더링 반영 규칙을 추가 | PRD, Plan, README, Change Log, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

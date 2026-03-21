@@ -39,7 +39,7 @@
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | done |
 | Phase 5 | GitHub Actions 기반 CI/스케줄 운영 자동화 구축 | done |
 | Phase 6 | 멀티채널 확장 준비 | done |
-| Phase 7 | 공개 웹 전환 및 후속 운영 확장 | in progress |
+| Phase 7 | 공개 웹 전환 및 후속 운영 확장 | done |
 
 ## 4. Detailed Plan
 
@@ -156,18 +156,18 @@
 - [x] README 및 운영 문서를 Vercel + Neon 기준으로 갱신
 - [x] Vercel 배포 설정 및 운영 runbook 정리
 - [x] 웹 관리 콘솔
-- [ ] 전략 성과 추적 및 백테스트
-- [ ] 사용자 설정 고도화
+- [x] 전략 성과 추적 및 백테스트
+- [x] 사용자 설정 고도화
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 7`의 웹 관리 콘솔과 운영 분석 기능이다.
+현재 활성 phase 계획은 모두 완료됐다.
 
-우선순위:
+다음 권장 작업:
 
-1. 웹 관리 콘솔
-2. 전략 성과 추적 및 백테스트
-3. 사용자 설정 고도화
+1. Vercel production webhook / cron smoke 검증
+2. Neon production 연결 및 read/write smoke 검증
+3. 전략 스코어 튜닝과 운영 지표 보강
 
 ## 6. Completion Log
 
@@ -225,3 +225,5 @@
 - 2026-03-21: `apps/web`에 `/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile` route를 추가하고, `apps/telegram-bot/src/build-bot.ts`를 polling/webhook 공용 command runtime entrypoint로 정리
 - 2026-03-21: `pnpm telegram:webhook:register` 기반 `setWebhook` 등록 절차를 추가하고, GitHub Actions `Daily Report`를 `VERCEL_RECONCILE_URL + CRON_SECRET` 기반 backup/reconcile 우선 구조로 재편
 - 2026-03-21: `apps/web`에 Basic Auth 기반 read-only `/admin` 운영 콘솔을 추가해 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그를 조회할 수 있게 하고 관련 env/runbook을 정리
+- 2026-03-21: `strategy_snapshots` 저장 모델을 추가하고 daily report가 생성한 퀀트 점수카드를 스냅샷으로 저장한 뒤 `/admin`에서 최근 시그널의 이후 수익률과 액션 적합도를 회고할 수 있게 함
+- 2026-03-21: 사용자 설정을 `report_detail_level`, `include_public_briefing_link`까지 확장하고 `/report_mode`, `/report_link_on`, `/report_link_off` 명령과 compact 텔레그램 렌더링을 추가

@@ -2,9 +2,15 @@ import type {
   AdminDashboardSnapshot,
   AdminDashboardSummary,
   AdminRecentPublicReport,
-  AdminRecentRun
+  AdminRecentRun,
+  AdminRecentStrategySnapshot
 } from "../types/admin";
 import { getWebPool } from "./db";
+import {
+  evaluateStrategySnapshots,
+  summarizeStrategySnapshots,
+  type StrategyBacktestSnapshotInput
+} from "./strategy-backtest";
 
 type AdminSummaryRow = {
   completed_count: string;
@@ -26,7 +32,14 @@ export function mapAdminSummaryRow(row: AdminSummaryRow): AdminDashboardSummary 
 
 export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapshot> {
   const pool = getWebPool();
-  const [latestReportResult, recentReportsResult, recentRunsResult, runSummaryResult, reportsLast7DaysResult] =
+  const [
+    latestReportResult,
+    recentReportsResult,
+    recentRunsResult,
+    runSummaryResult,
+    reportsLast7DaysResult,
+    recentStrategySnapshotsResult
+  ] =
     await Promise.all([
       pool.query<{
         created_at: Date;
@@ -94,8 +107,30 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
           'FROM "reports"',
           `WHERE "created_at" >= NOW() - INTERVAL '7 days'`
         ].join(" ")
+      ),
+      pool.query<{
+        action: "ACCUMULATE" | "DEFENSIVE" | "HOLD" | "REDUCE";
+        company_name: string;
+        created_at: Date;
+        display_name: string;
+        exchange: string | null;
+        id: string;
+        run_date: string;
+        symbol: string | null;
+        total_score: string;
+      }>(
+        [
+          'SELECT ss."id", ss."run_date", ss."company_name", ss."symbol", ss."exchange", ss."action", ss."total_score", ss."created_at", u."display_name"',
+          'FROM "strategy_snapshots" ss',
+          'JOIN "users" u ON u."id" = ss."user_id"',
+          'ORDER BY ss."run_date" DESC, ss."created_at" DESC',
+          "LIMIT 12"
+        ].join(" ")
       )
     ]);
+  const evaluatedStrategySnapshots = await evaluateStrategySnapshots({
+    snapshots: recentStrategySnapshotsResult.rows.map(mapStrategySnapshotInput)
+  });
 
   return {
     latestReport: latestReportResult.rows[0]
@@ -115,7 +150,9 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
     reportsLast7Days: Number.parseInt(
       reportsLast7DaysResult.rows[0]?.report_count ?? "0",
       10
-    )
+    ),
+    recentStrategySnapshots: evaluatedStrategySnapshots.map(mapRecentStrategySnapshot),
+    strategyBacktestSummary: summarizeStrategySnapshots(evaluatedStrategySnapshots)
   };
 }
 
@@ -156,5 +193,50 @@ function mapRecentRun(run: {
     startedAt: run.started_at.toISOString(),
     completedAt: run.completed_at?.toISOString() ?? null,
     errorMessage: run.error_message
+  };
+}
+
+function mapStrategySnapshotInput(snapshot: {
+  action: "ACCUMULATE" | "DEFENSIVE" | "HOLD" | "REDUCE";
+  company_name: string;
+  created_at: Date;
+  display_name: string;
+  exchange: string | null;
+  id: string;
+  run_date: string;
+  symbol: string | null;
+  total_score: string;
+}): StrategyBacktestSnapshotInput & { createdAt: string; displayName: string } {
+  return {
+    id: snapshot.id,
+    runDate: snapshot.run_date,
+    companyName: snapshot.company_name,
+    symbol: snapshot.symbol,
+    exchange: snapshot.exchange,
+    action: snapshot.action,
+    totalScore: Number.parseFloat(snapshot.total_score),
+    createdAt: snapshot.created_at.toISOString(),
+    displayName: snapshot.display_name
+  };
+}
+
+function mapRecentStrategySnapshot(
+  snapshot: ReturnType<typeof mapStrategySnapshotInput> & {
+    outcome: "loss" | "neutral" | "unavailable" | "win";
+    realizedReturnPct: number | null;
+  }
+): AdminRecentStrategySnapshot {
+  return {
+    id: snapshot.id,
+    runDate: snapshot.runDate,
+    companyName: snapshot.companyName,
+    symbol: snapshot.symbol,
+    exchange: snapshot.exchange,
+    action: snapshot.action,
+    totalScore: snapshot.totalScore,
+    createdAt: snapshot.createdAt,
+    displayName: snapshot.displayName,
+    realizedReturnPct: snapshot.realizedReturnPct,
+    outcome: snapshot.outcome
   };
 }

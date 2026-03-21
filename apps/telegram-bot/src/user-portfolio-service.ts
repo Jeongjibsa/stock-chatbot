@@ -9,8 +9,10 @@ type UserRecord = {
   dailyReportMinute?: number;
   displayName: string;
   id: string;
+  includePublicBriefingLink?: boolean;
   preferredDeliveryChatId?: string | null;
   preferredDeliveryChatType?: string | null;
+  reportDetailLevel?: string | null;
   telegramUserId: string;
   timezone?: string;
 };
@@ -21,6 +23,8 @@ type UserRepositoryPort = {
     dailyReportEnabled?: boolean;
     dailyReportHour?: number;
     dailyReportMinute?: number;
+    includePublicBriefingLink?: boolean;
+    reportDetailLevel?: "compact" | "standard";
     telegramUserId: string;
     timezone?: string;
   }): Promise<UserRecord>;
@@ -29,9 +33,11 @@ type UserRepositoryPort = {
     dailyReportHour?: number;
     dailyReportMinute?: number;
     displayName: string;
+    includePublicBriefingLink?: boolean;
     locale?: string;
     preferredDeliveryChatId?: string;
     preferredDeliveryChatType?: string;
+    reportDetailLevel?: "compact" | "standard";
     telegramUserId: string;
     timezone?: string;
   }): Promise<UserRecord>;
@@ -213,6 +219,8 @@ export class TelegramUserPortfolioService {
       dailyReportEnabled?: boolean;
       dailyReportHour?: number;
       dailyReportMinute?: number;
+      includePublicBriefingLink?: boolean;
+      reportDetailLevel?: "compact" | "standard";
       timezone?: string;
     }
   ): Promise<UserRecord> {

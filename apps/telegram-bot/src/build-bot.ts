@@ -332,6 +332,87 @@ export function buildTelegramBotApp(
     }
   });
 
+  bot.command("report_mode", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    const rawMode = String(context.match ?? "")
+      .trim()
+      .toLowerCase();
+
+    if (rawMode !== "compact" && rawMode !== "standard") {
+      await context.reply("사용 예시: /report_mode compact");
+      return;
+    }
+
+    try {
+      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
+        reportDetailLevel: rawMode
+      });
+
+      await context.reply(
+        [
+          `리포트 밀도를 ${rawMode}로 변경했습니다.`,
+          formatReportSettings(updated)
+        ].join("\n\n")
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
+
+  bot.command("report_link_on", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
+        includePublicBriefingLink: true
+      });
+
+      await context.reply(
+        [
+          "공개 상세 브리핑 링크를 표시하도록 설정했습니다.",
+          formatReportSettings(updated)
+        ].join("\n\n")
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
+
+  bot.command("report_link_off", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
+        includePublicBriefingLink: false
+      });
+
+      await context.reply(
+        [
+          "공개 상세 브리핑 링크를 숨기도록 설정했습니다.",
+          formatReportSettings(updated)
+        ].join("\n\n")
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
+
   bot.command("portfolio_add", async (context) =>
     startConversation(context.from?.id, "portfolio_add", (text) => context.reply(text))
   );

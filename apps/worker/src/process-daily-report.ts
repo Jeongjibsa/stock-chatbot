@@ -20,6 +20,7 @@ import {
   PortfolioHoldingRepository,
   PublicReportRepository,
   ReportRunRepository,
+  StrategySnapshotRepository,
   UserMarketWatchItemRepository,
   UserRepository
 } from "@stock-chatbot/database";
@@ -36,6 +37,8 @@ type OrchestratorPort = {
     user: {
       displayName: string;
       id: string;
+      includePublicBriefingLink?: boolean;
+      reportDetailLevel?: "compact" | "standard";
     };
   }): Promise<{
     status: "completed" | "failed" | "partial_success" | "skipped_duplicate";
@@ -59,7 +62,9 @@ type UserRepositoryPort = {
       dailyReportMinute?: number;
       displayName: string;
       id: string;
+      includePublicBriefingLink?: boolean;
       preferredDeliveryChatId?: string | null;
+      reportDetailLevel?: string | null;
       timezone?: string | null;
     }>
   >;
@@ -273,10 +278,28 @@ export async function processDailyReportJob(
       : users;
 
   for (const user of usersToProcess) {
+    const orchestratorUser: {
+      displayName: string;
+      id: string;
+      includePublicBriefingLink?: boolean;
+      reportDetailLevel?: "compact" | "standard";
+    } = {
+      id: user.id,
+      displayName: user.displayName
+    };
+
+    if (user.includePublicBriefingLink !== undefined) {
+      orchestratorUser.includePublicBriefingLink = user.includePublicBriefingLink;
+    }
+
+    if (user.reportDetailLevel === "compact" || user.reportDetailLevel === "standard") {
+      orchestratorUser.reportDetailLevel = user.reportDetailLevel;
+    }
+
     const result = await dependencies.orchestrator.runForUser({
       promptVersion: DEFAULT_DAILY_REPORT_PROMPT_VERSION,
       skillVersion: DEFAULT_DAILY_REPORT_SKILL_VERSION,
-      user,
+      user: orchestratorUser,
       runDate: dependencies.runDate,
       scheduleType: dependencies.scheduleType
     });
@@ -350,6 +373,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
     ...(publicBriefingBaseUrl ? { publicBriefingBaseUrl } : {}),
     publicReportRepository: new PublicReportRepository(db),
     reportRunRepository: new ReportRunRepository(db),
+    strategySnapshotRepository: new StrategySnapshotRepository(db),
     userMarketWatchRepository: new UserMarketWatchItemRepository(db)
   };
 

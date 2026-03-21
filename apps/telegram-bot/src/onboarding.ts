@@ -38,6 +38,9 @@ const COMMAND_SUMMARIES = [
   "/report_on - 정기 브리핑 켜기",
   "/report_off - 정기 브리핑 끄기",
   "/report_time - 브리핑 시간 변경",
+  "/report_mode - 브리핑 밀도 변경",
+  "/report_link_on - 상세 링크 표시",
+  "/report_link_off - 상세 링크 숨김",
   "/portfolio_add - 보유 종목 추가",
   "/portfolio_list - 내 종목 확인",
   "/portfolio_remove - 보유 종목 삭제",
@@ -85,6 +88,7 @@ export function buildPrivateRegisterSuccessMessage(): string {
     "2. /portfolio_add 로 보유 종목을 추가해 주세요.",
     "3. /portfolio_list 로 저장 결과를 확인해 주세요.",
     "4. 필요하면 /market_add 로 관심 지표를 추가해 주세요.",
+    "5. /report_mode compact 로 더 짧은 브리핑으로 바꿀 수 있습니다.",
     "보유 종목이 없어도 시장 브리핑은 먼저 받아보실 수 있습니다."
   ].join("\n");
 }

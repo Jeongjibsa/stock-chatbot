@@ -58,6 +58,32 @@ export default async function AdminPage() {
           />
         </section>
 
+        <section className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <MetricCard
+            label="전략 회고 적중률"
+            value={
+              snapshot.strategyBacktestSummary.hitRate === null
+                ? "없음"
+                : `${snapshot.strategyBacktestSummary.hitRate}%`
+            }
+            detail={`win ${snapshot.strategyBacktestSummary.winCount} / loss ${snapshot.strategyBacktestSummary.lossCount}`}
+          />
+          <MetricCard
+            label="평균 이후 수익률"
+            value={
+              snapshot.strategyBacktestSummary.averageReturnPct === null
+                ? "없음"
+                : `${snapshot.strategyBacktestSummary.averageReturnPct > 0 ? "+" : ""}${snapshot.strategyBacktestSummary.averageReturnPct}%`
+            }
+            detail={`평가 가능 ${snapshot.strategyBacktestSummary.evaluatedCount}건`}
+          />
+          <MetricCard
+            label="회고 불가 항목"
+            value={`${snapshot.strategyBacktestSummary.unavailableCount}건`}
+            detail={`neutral ${snapshot.strategyBacktestSummary.neutralCount}건`}
+          />
+        </section>
+
         <section className="mt-10 grid gap-6 xl:grid-cols-[1.05fr_1.45fr]">
           <Card>
             <CardContent className="space-y-4">
@@ -197,6 +223,81 @@ export default async function AdminPage() {
             </CardContent>
           </Card>
         </section>
+
+        <section className="mt-10">
+          <Card>
+            <CardContent className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold">최근 전략 회고</h2>
+                <p className="text-sm text-[color:var(--muted)]">
+                  최근 시그널의 이후 수익률과 액션 적합도를 간단히 비교합니다.
+                </p>
+              </div>
+              <Separator />
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                    <tr>
+                      <th className="pb-3 pr-4 font-semibold">기준일</th>
+                      <th className="pb-3 pr-4 font-semibold">사용자</th>
+                      <th className="pb-3 pr-4 font-semibold">종목</th>
+                      <th className="pb-3 pr-4 font-semibold">액션</th>
+                      <th className="pb-3 pr-4 font-semibold">점수</th>
+                      <th className="pb-3 pr-4 font-semibold">이후 수익률</th>
+                      <th className="pb-3 font-semibold">판정</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[color:var(--line)]">
+                    {snapshot.recentStrategySnapshots.length === 0 ? (
+                      <tr>
+                        <td className="py-4 text-[color:var(--muted)]" colSpan={7}>
+                          아직 저장된 전략 스냅샷이 없습니다.
+                        </td>
+                      </tr>
+                    ) : (
+                      snapshot.recentStrategySnapshots.map((strategy) => (
+                        <tr key={strategy.id}>
+                          <td className="py-3 pr-4 align-top">{strategy.runDate}</td>
+                          <td className="py-3 pr-4 align-top">{strategy.displayName}</td>
+                          <td className="py-3 pr-4 align-top">
+                            <div className="space-y-1">
+                              <p>{strategy.companyName}</p>
+                              {strategy.symbol ? (
+                                <p className="text-xs text-[color:var(--muted)]">
+                                  {strategy.symbol}
+                                  {strategy.exchange ? ` · ${strategy.exchange}` : ""}
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4 align-top">
+                            <Badge tone={actionTone(strategy.action)}>
+                              {strategy.action}
+                            </Badge>
+                          </td>
+                          <td className="py-3 pr-4 align-top">
+                            {strategy.totalScore > 0 ? "+" : ""}
+                            {strategy.totalScore.toFixed(2)}
+                          </td>
+                          <td className="py-3 pr-4 align-top">
+                            {strategy.realizedReturnPct === null
+                              ? "-"
+                              : `${strategy.realizedReturnPct > 0 ? "+" : ""}${strategy.realizedReturnPct.toFixed(2)}%`}
+                          </td>
+                          <td className="py-3 align-top">
+                            <Badge tone={outcomeTone(strategy.outcome)}>
+                              {formatOutcome(strategy.outcome)}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </main>
     );
   } catch {
@@ -265,5 +366,46 @@ function statusTone(
     case "partial_success":
     case "running":
       return "neutral";
+  }
+}
+
+function actionTone(
+  action: "ACCUMULATE" | "DEFENSIVE" | "HOLD" | "REDUCE"
+): "positive" | "negative" | "neutral" {
+  switch (action) {
+    case "ACCUMULATE":
+      return "positive";
+    case "REDUCE":
+      return "negative";
+    case "HOLD":
+    case "DEFENSIVE":
+      return "neutral";
+  }
+}
+
+function outcomeTone(
+  outcome: "loss" | "neutral" | "unavailable" | "win"
+): "positive" | "negative" | "neutral" {
+  switch (outcome) {
+    case "win":
+      return "positive";
+    case "loss":
+      return "negative";
+    case "neutral":
+    case "unavailable":
+      return "neutral";
+  }
+}
+
+function formatOutcome(outcome: "loss" | "neutral" | "unavailable" | "win"): string {
+  switch (outcome) {
+    case "win":
+      return "win";
+    case "loss":
+      return "loss";
+    case "neutral":
+      return "neutral";
+    case "unavailable":
+      return "n/a";
   }
 }

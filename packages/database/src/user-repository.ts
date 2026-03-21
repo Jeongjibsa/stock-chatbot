@@ -8,9 +8,11 @@ export type UpsertUserInput = {
   dailyReportHour?: number;
   dailyReportMinute?: number;
   displayName: string;
+  includePublicBriefingLink?: boolean;
   locale?: string;
   preferredDeliveryChatId?: string;
   preferredDeliveryChatType?: string;
+  reportDetailLevel?: "compact" | "standard";
   telegramUserId: string;
   timezone?: string;
 };
@@ -19,6 +21,8 @@ export type UpdateUserReportSettingsInput = {
   dailyReportEnabled?: boolean;
   dailyReportHour?: number;
   dailyReportMinute?: number;
+  includePublicBriefingLink?: boolean;
+  reportDetailLevel?: "compact" | "standard";
   telegramUserId: string;
   timezone?: string;
 };
@@ -63,6 +67,14 @@ export class UserRepository {
       updateSet.timezone = input.timezone;
     }
 
+    if (input.reportDetailLevel !== undefined) {
+      updateSet.reportDetailLevel = input.reportDetailLevel;
+    }
+
+    if (input.includePublicBriefingLink !== undefined) {
+      updateSet.includePublicBriefingLink = input.includePublicBriefingLink;
+    }
+
     const [updated] = await this.db
       .update(users)
       .set(updateSet)
@@ -84,6 +96,8 @@ export class UserRepository {
       dailyReportEnabled: input.dailyReportEnabled ?? true,
       dailyReportHour: input.dailyReportHour ?? 9,
       dailyReportMinute: input.dailyReportMinute ?? 0,
+      reportDetailLevel: input.reportDetailLevel ?? "standard",
+      includePublicBriefingLink: input.includePublicBriefingLink ?? true,
       updatedAt: sql`now()`
     };
 
@@ -106,7 +120,9 @@ export class UserRepository {
         timezone: input.timezone ?? "Asia/Seoul",
         dailyReportEnabled: input.dailyReportEnabled ?? true,
         dailyReportHour: input.dailyReportHour ?? 9,
-        dailyReportMinute: input.dailyReportMinute ?? 0
+        dailyReportMinute: input.dailyReportMinute ?? 0,
+        reportDetailLevel: input.reportDetailLevel ?? "standard",
+        includePublicBriefingLink: input.includePublicBriefingLink ?? true
       })
       .onConflictDoUpdate({
         target: users.telegramUserId,

@@ -51,14 +51,21 @@
 
 ### 5. 운영 콘솔
 
-- `/admin`에서 최근 공개 브리핑과 최근 리포트 실행 로그를 확인할 수 있습니다.
+- `/admin`에서 최근 공개 브리핑, 최근 리포트 실행 로그, 최근 전략 스냅샷 회고를 확인할 수 있습니다.
 - production에서는 Basic Auth로 보호할 수 있습니다.
 - 운영 콘솔도 개인 포트폴리오 상세 정보는 노출하지 않습니다.
 
-### 5. 스케줄 기반 무인 운영
+### 6. 전략 성과 추적
 
-- GitHub Actions가 CI와 daily report orchestration을 담당합니다.
-- worker가 공개 브리핑 생성, Telegram delivery, 실행 로그 기록을 수행합니다.
+- 생성된 퀀트 점수카드는 `strategy_snapshots` 읽기 모델에 저장합니다.
+- 운영 콘솔은 최근 시그널의 이후 수익률과 액션 적합도를 간단한 heuristic 기준으로 회고합니다.
+- 이 결과는 프롬프트와 점수 규칙을 튜닝하기 위한 운영 지표로 사용합니다.
+
+### 7. 스케줄 기반 무인 운영
+
+- Vercel이 공개 웹, Telegram webhook, primary cron 진입점을 담당합니다.
+- GitHub Actions는 CI와 backup/reconcile/manual rerun 역할을 담당합니다.
+- worker와 shared application 계층이 공개 브리핑 생성, Telegram delivery, 실행 로그 기록을 수행합니다.
 - 개발과 테스트는 로컬 Docker PostgreSQL 기준으로 진행하고, production은 Neon을 사용합니다.
 
 ## 주요 시그널 및 분석 항목
@@ -97,11 +104,16 @@
 운영 플로우:
 
 ```text
-GitHub Actions cron / workflow_dispatch
-  -> public briefing 생성
-  -> reports read model 저장
-  -> Telegram 개인화 리포트 생성 / 발송
+Vercel webhook / Vercel Cron
+  -> Telegram 명령 처리 / daily report 생성
+  -> reports / strategy_snapshots / report_runs 저장
+  -> Telegram 개인화 리포트 발송
   -> 공개 웹은 reports 테이블을 읽어 feed/detail 제공
+
+GitHub Actions
+  -> CI
+  -> backup/reconcile
+  -> manual rerun / smoke test
 ```
 
 ## 기술 스택
@@ -216,6 +228,20 @@ make dev-api
 make dev-bot
 make dev-worker
 COREPACK_HOME=/tmp/corepack pnpm dev:web
+```
+
+### 4. 주요 Telegram 명령
+
+```text
+/register         개인화 리포트 등록
+/report           지금 브리핑 생성
+/report_settings  정기 브리핑 설정 확인
+/report_time      발송 시간 변경
+/report_mode      standard / compact 전환
+/report_link_on   공개 상세 링크 표시
+/report_link_off  공개 상세 링크 숨김
+/portfolio_add    보유 종목 추가
+/portfolio_list   보유 종목 확인
 ```
 
 ### 4. 전체 검증

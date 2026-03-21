@@ -22,6 +22,10 @@ export const users = pgTable("users", {
   dailyReportEnabled: boolean("daily_report_enabled").notNull().default(true),
   dailyReportHour: integer("daily_report_hour").notNull().default(9),
   dailyReportMinute: integer("daily_report_minute").notNull().default(0),
+  reportDetailLevel: text("report_detail_level").notNull().default("standard"),
+  includePublicBriefingLink: boolean("include_public_briefing_link")
+    .notNull()
+    .default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
@@ -130,6 +134,29 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 });
 
+export const strategySnapshots = pgTable("strategy_snapshots", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  reportRunId: uuid("report_run_id")
+    .notNull()
+    .references(() => reportRuns.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  runDate: date("run_date").notNull(),
+  scheduleType: text("schedule_type").notNull(),
+  companyName: text("company_name").notNull(),
+  exchange: text("exchange"),
+  symbol: text("symbol"),
+  action: text("action").notNull(),
+  actionSummary: text("action_summary").notNull(),
+  macroScore: numeric("macro_score").notNull(),
+  trendScore: numeric("trend_score").notNull(),
+  eventScore: numeric("event_score").notNull(),
+  flowScore: numeric("flow_score").notNull(),
+  totalScore: numeric("total_score").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+});
+
 export const telegramConversationStates = pgTable("telegram_conversation_states", {
   telegramUserId: text("telegram_user_id").primaryKey(),
   state: jsonb("state").$type<Record<string, unknown>>().notNull(),
@@ -149,6 +176,8 @@ export type ReportRunRecord = typeof reportRuns.$inferSelect;
 export type NewReportRunRecord = typeof reportRuns.$inferInsert;
 export type ReportRecord = typeof reports.$inferSelect;
 export type NewReportRecord = typeof reports.$inferInsert;
+export type StrategySnapshotRecord = typeof strategySnapshots.$inferSelect;
+export type NewStrategySnapshotRecord = typeof strategySnapshots.$inferInsert;
 export type TelegramConversationStateRecord =
   typeof telegramConversationStates.$inferSelect;
 export type NewTelegramConversationStateRecord =
