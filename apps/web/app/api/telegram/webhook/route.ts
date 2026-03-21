@@ -4,7 +4,13 @@ import {
   buildTelegramBotApp,
   TELEGRAM_ALLOWED_UPDATES
 } from "@stock-chatbot/telegram-bot/build-bot";
+import {
+  createDatabase,
+  createPool,
+  TelegramProcessedUpdateRepository
+} from "@stock-chatbot/database";
 import { isAuthorizedTelegramWebhookRequest } from "../../../../lib/telegram-webhook-auth";
+import { extractTelegramUpdateId } from "../../../../lib/telegram-update";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,6 +18,9 @@ export const runtime = "nodejs";
 declare global {
   var __stockChatbotWebhookHandler:
     | ((request: Request) => Promise<Response>)
+    | undefined;
+  var __stockChatbotTelegramUpdateRepository:
+    | TelegramProcessedUpdateRepository
     | undefined;
 }
 
@@ -45,6 +54,24 @@ async function getWebhookHandler() {
   return globalThis.__stockChatbotWebhookHandler as (request: Request) => Promise<Response>;
 }
 
+function getProcessedUpdateRepository() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    return undefined;
+  }
+
+  if (!globalThis.__stockChatbotTelegramUpdateRepository) {
+    const pool = createPool(databaseUrl);
+    const db = createDatabase(pool);
+
+    globalThis.__stockChatbotTelegramUpdateRepository =
+      new TelegramProcessedUpdateRepository(db);
+  }
+
+  return globalThis.__stockChatbotTelegramUpdateRepository;
+}
+
 export async function GET() {
   return Response.json({
     ok: true,
@@ -60,6 +87,26 @@ export async function POST(request: Request) {
     });
   }
 
+  const body = await request.text();
+  const updateId = extractTelegramUpdateId(body);
+  const processedUpdateRepository = getProcessedUpdateRepository();
+
+  if (updateId && processedUpdateRepository) {
+    const created = await processedUpdateRepository.markProcessed(updateId);
+
+    if (!created) {
+      return new Response(null, {
+        status: 200
+      });
+    }
+  }
+
   const handler = await getWebhookHandler();
-  return handler(request);
+  return handler(
+    new Request(request.url, {
+      method: request.method,
+      headers: request.headers,
+      body
+    })
+  );
 }

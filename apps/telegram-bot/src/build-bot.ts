@@ -35,7 +35,8 @@ import {
 } from "./onboarding.js";
 import {
   buildTelegramReportRuntime,
-  getRunDateForTimezone
+  getRunDateForTimezone,
+  resolveTelegramReportFollowUpMessage
 } from "./report-service.js";
 import {
   formatHourMinute,
@@ -206,17 +207,10 @@ export function buildTelegramBotApp(
         runDate
       });
 
-      if (result.status === "failed") {
-        await context.reply(
-          "브리핑 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
-        );
-        return;
-      }
+      const followUpMessage = resolveTelegramReportFollowUpMessage(result);
 
-      if (!result.reportText) {
-        await context.reply(
-          "브리핑을 준비했지만 표시할 내용이 없습니다. 잠시 후 다시 시도해 주세요."
-        );
+      if (followUpMessage) {
+        await context.reply(followUpMessage);
         return;
       }
 

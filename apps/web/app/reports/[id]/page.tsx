@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
 import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { MarkdownReport } from "../../../components/markdown-report";
 import { normalizeMarketRegime, scoreTone } from "../../../lib/report-feed";
@@ -30,17 +33,29 @@ export default async function ReportDetailPage({
     const totalScoreTone = scoreTone(report.totalScore);
 
     return (
-      <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-5xl pb-12">
         <div className="space-y-6">
-          <header className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
-              Report Detail
-            </p>
-            <h1 className="text-4xl font-semibold tracking-tight">{report.reportDate}</h1>
-            <p className="max-w-3xl text-sm leading-7 text-[color:var(--muted)]">
+          <header className="surface-panel rounded-[32px] p-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="kicker">
+                  Report Detail
+                </p>
+                <h1 className="gradient-title mt-4 text-4xl font-semibold tracking-tight">
+                  {report.reportDate}
+                </h1>
+              </div>
+              <Button asChild variant="secondary" size="sm">
+                <Link href="/">
+                  <ArrowLeft className="h-4 w-4" />
+                  피드로 돌아가기
+                </Link>
+              </Button>
+            </div>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-[color:var(--muted)]">
               {report.summary}
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               <Badge tone={regimeTone}>{marketRegime}</Badge>
               <Badge tone={totalScoreTone}>
                 Total {report.totalScore > 0 ? "+" : ""}
@@ -49,21 +64,37 @@ export default async function ReportDetailPage({
             </div>
           </header>
 
-          <Card>
-            <CardContent className="space-y-5">
-              <div className="flex flex-wrap gap-2">
-                {report.signals.map((signal) => (
-                  <span
-                    key={signal}
-                    className="rounded-full border border-[color:var(--line)] bg-[color:var(--surface-strong)] px-3 py-1 text-xs text-[color:var(--muted)]"
-                  >
-                    {signal}
-                  </span>
-                ))}
-              </div>
-              <MarkdownReport content={report.contentMarkdown} />
-            </CardContent>
-          </Card>
+          <div className="grid gap-4 lg:grid-cols-[0.75fr_1.25fr]">
+            <Card>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="kicker">Signals</p>
+                  <p className="mt-2 text-sm leading-7 text-[color:var(--muted)]">
+                    이번 브리핑에서 핵심으로 추린 시그널입니다.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {report.signals.map((signal) => (
+                    <span key={signal} className="signal-chip">
+                      {signal}
+                    </span>
+                  ))}
+                </div>
+                <Button asChild size="sm">
+                  <Link href="/admin">
+                    운영 콘솔
+                    <ArrowUpRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <MarkdownReport content={report.contentMarkdown} />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
     );

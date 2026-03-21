@@ -230,4 +230,6 @@
 - 2026-03-21: 사용자 설정을 `report_detail_level`, `include_public_briefing_link`까지 확장하고 `/report_mode`, `/report_link_on`, `/report_link_off` 명령과 compact 텔레그램 렌더링을 추가
 - 2026-03-21: root `AGENTS.md`를 추가하고, 하네스를 `harness/suite-contracts.json` 기준의 suite 계약 구조로 강화해 active/planned suite와 grader/snapshot 불변성을 검증 스크립트에서 강제
 - 2026-03-21: `apps/web`를 Vercel production(`https://web-three-tau-58.vercel.app`)에 실제 배포하고, Neon production branch에 baseline schema를 적용한 뒤 public alias, webhook, cron, reconcile, admin auth gate, GitHub Actions backup run까지 production smoke 완료
+- 2026-03-22: Telegram `/report`의 duplicate webhook update를 `telegram_processed_updates` 저장 모델로 dedupe하고, duplicate on-demand run 응답을 `이미 생성 중`으로 정정
+- 2026-03-22: 공개 웹 frontend를 Pretendard와 shadcn/ui 스타일 컴포넌트 기준으로 재정비하고 feed/detail 레이아웃을 현대적인 금융 브리핑 톤으로 갱신
 - 2026-03-21: 실제 Telegram 운영 검증용 `docs/telegram-production-test-scenarios.md`를 추가해 DM/그룹/공개 웹/개인정보 경계/E2E 기대 결과를 운영 체크리스트로 정리

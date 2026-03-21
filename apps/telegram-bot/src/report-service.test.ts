@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   getRunDateForTimezone,
+  resolveTelegramReportFollowUpMessage,
   TelegramReportService
 } from "./report-service.js";
 
@@ -73,5 +74,37 @@ describe("getRunDateForTimezone", () => {
     expect(
       getRunDateForTimezone("Asia/Seoul", new Date("2026-03-20T16:00:00.000Z"))
     ).toBe("2026-03-21");
+  });
+});
+
+describe("resolveTelegramReportFollowUpMessage", () => {
+  it("returns an in-progress message when a duplicate report has no text yet", () => {
+    expect(
+      resolveTelegramReportFollowUpMessage({
+        status: "skipped_duplicate",
+        reportRun: {
+          id: "run-1",
+          status: "running"
+        },
+        reportText: "",
+        marketResults: [],
+        portfolioNewsBriefs: []
+      })
+    ).toBe("이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.");
+  });
+
+  it("returns null when a completed report contains text", () => {
+    expect(
+      resolveTelegramReportFollowUpMessage({
+        status: "completed",
+        reportRun: {
+          id: "run-1",
+          status: "completed"
+        },
+        reportText: "hello",
+        marketResults: [],
+        portfolioNewsBriefs: []
+      })
+    ).toBeNull();
   });
 });

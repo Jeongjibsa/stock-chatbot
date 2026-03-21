@@ -49,6 +49,7 @@ export {
   type ReportRunStatus,
   type StartReportRunInput
 } from "./report-run-repository.js";
+export { TelegramProcessedUpdateRepository } from "./telegram-processed-update-repository.js";
 export {
   UserRepository,
   type UpdateUserReportSettingsInput,

@@ -8,11 +8,11 @@ type MarkdownReportProps = {
 
 export function MarkdownReport({ content }: MarkdownReportProps) {
   return (
-    <div className="prose prose-stone max-w-none dark:prose-invert prose-headings:font-semibold prose-p:leading-7 prose-li:leading-7">
+    <div className="report-prose prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-m-20 prose-p:leading-7 prose-li:leading-7 prose-strong:font-semibold prose-code:font-medium">
       <ReactMarkdown
         components={{
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-[color:var(--line)] pl-4 text-[color:var(--muted)]">
+            <blockquote className="border-l-4 pl-4 text-[color:var(--muted)]">
               {children}
             </blockquote>
           )

@@ -154,6 +154,24 @@ export function getRunDateForTimezone(
   }).format(now);
 }
 
+export function resolveTelegramReportFollowUpMessage(
+  result: DailyReportOrchestratorResult
+): string | null {
+  if (result.status === "failed") {
+    return "브리핑 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+  }
+
+  if (result.status === "skipped_duplicate" && !result.reportText) {
+    return "이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.";
+  }
+
+  if (!result.reportText) {
+    return "브리핑을 준비했지만 표시할 내용이 없습니다. 잠시 후 다시 시도해 주세요.";
+  }
+
+  return null;
+}
+
 function buildLlmClient(env: Environment) {
   const llmProvider = env.LLM_PROVIDER;
   const openAiApiKey = readOptionalApiKey(env.OPENAI_API_KEY);

@@ -164,6 +164,11 @@ export const telegramConversationStates = pgTable("telegram_conversation_states"
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
 
+export const telegramProcessedUpdates = pgTable("telegram_processed_updates", {
+  updateId: text("update_id").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+});
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
@@ -182,3 +187,7 @@ export type TelegramConversationStateRecord =
   typeof telegramConversationStates.$inferSelect;
 export type NewTelegramConversationStateRecord =
   typeof telegramConversationStates.$inferInsert;
+export type TelegramProcessedUpdateRecord =
+  typeof telegramProcessedUpdates.$inferSelect;
+export type NewTelegramProcessedUpdateRecord =
+  typeof telegramProcessedUpdates.$inferInsert;

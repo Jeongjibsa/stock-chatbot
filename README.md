@@ -157,11 +157,12 @@ GitHub Actions
 
 - `Next.js App Router`
 - `Tailwind CSS`
+- `Pretendard`
 - `shadcn/ui` 스타일 컴포넌트
 - `React Markdown`
 
 선택 이유:
-- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다.
+- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다. Pretendard와 shadcn/ui 스타일 컴포넌트로 금융 리포트 톤의 밀도 높은 화면을 일관되게 유지합니다.
 
 ### Infra / Ops
 
@@ -489,6 +490,7 @@ ADMIN_DASHBOARD_PASSWORD=strong-password
 - production에서는 Neon connection string을 Vercel의 `DATABASE_URL`에 넣고, 개발과 테스트는 계속 로컬 Docker PostgreSQL을 사용합니다.
 - 현재 public alias 기준 운영 URL은 `https://web-three-tau-58.vercel.app`입니다.
 - `pnpm telegram:webhook:register`는 `setWebhook`과 `getWebhookInfo`를 연속 호출해 현재 webhook 설정을 바로 확인합니다. `TELEGRAM_WEBHOOK_SECRET_TOKEN`은 선택값이며, production에서 secret header 검증 문제가 있으면 비운 상태로 등록할 수 있습니다.
+- Telegram webhook route는 `telegram_processed_updates` read model로 같은 `update_id`를 dedupe하므로, webhook 재시도로 같은 command가 두 번 실행되지 않아야 합니다.
 - 운영 콘솔은 `https://your-vercel-domain.vercel.app/admin` 경로입니다.
 - 실제 Telegram 운영 검증 순서는 [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)를 기준으로 진행합니다.
 
