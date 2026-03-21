@@ -53,11 +53,11 @@ export const GOOGLE_PROVIDER_PROFILE: LlmProviderProfile = {
   reasoningSupport: true,
   structuredOutputMode: "native",
   models: {
-    "news-event-extraction": "gemini-2.5-flash-lite",
-    "news-summary": "gemini-2.5-flash",
-    "risk-checkpoint-review": "gemini-2.5-flash",
-    "market-report-composition": "gemini-2.5-flash",
-    "market-report-fallback": "gemini-2.5-pro"
+    "news-event-extraction": "gemini-3-flash-preview",
+    "news-summary": "gemini-3-flash-preview",
+    "risk-checkpoint-review": "gemini-3-flash-preview",
+    "market-report-composition": "gemini-3-flash-preview",
+    "market-report-fallback": "gemini-3-flash-preview"
   }
 };
 

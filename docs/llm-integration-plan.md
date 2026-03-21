@@ -14,6 +14,7 @@
 
 - 2026-03-20 기준 기본 LLM 공급자는 `OpenAI`이고 기본 호출 API 기준선은 `Responses API`다.
 - 2026-03-21 기준 `Gemini`용 첫 adapter가 추가됐고, worker는 `LLM_PROVIDER=openai|google`와 API key 존재 여부를 기준으로 공급자를 선택할 수 있다.
+- 2026-03-21 기준 Google provider의 모델 ID는 공식 문서 기준 `gemini-3-flash-preview`로 맞춘다.
 - 구현은 `provider profile + task routing policy` 구조로 유지해 Gemini 등 다른 공급자로 쉽게 교체할 수 있어야 한다.
 - 텔레그램 command 입력 플로우 자체는 LLM 없이 규칙 기반으로 유지한다.
 - 수치 계산과 데이터 정합성 검증은 코드가 담당하고, LLM은 요약/설명/리포트 문장 조합에만 사용한다.
@@ -74,6 +75,7 @@
 - 공급자별 SDK 호출 차이는 adapter layer에서만 흡수한다.
 - structured output이 native가 아니면 adapter에서 schema validation을 수행한다.
 - 현재 Gemini adapter는 공식 `generateContent` REST 경로를 사용하고, `system_instruction`과 `generationConfig.responseMimeType=application/json`을 통해 현재 structured output contract를 맞춘다.
+- 현재 Google provider는 `gemini-3-flash-preview`를 모든 텍스트 작업의 기준 모델로 사용한다. 이 모델은 preview 상태이므로 추후 GA 모델이 나오면 별도 변경 기록과 함께 교체한다.
 
 ### 6.3 Background Mode
 

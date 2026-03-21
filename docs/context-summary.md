@@ -94,6 +94,7 @@
 - mock telegram report의 기본 포트폴리오는 사용자 제공 예시인 삼성전자, SK하이닉스, 현대차, 에코프로, 현대글로비스, HMM 기준으로 맞춰졌다.
 - 텔레그램의 보유 종목 섹션과 퀀트 점수카드 헤더는 회사명만 노출하고, 종목 코드는 사용자 노출에서 제외한다.
 - LLM 계층은 이제 `LLM_PROVIDER=openai|google`와 `OPENAI_API_KEY` / `GEMINI_API_KEY`를 통해 OpenAI와 Gemini를 선택할 수 있다.
+- Google provider의 현재 기준 모델은 공식 문서 기준 `gemini-3-flash-preview`다.
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.
