@@ -66,6 +66,7 @@
 | CHG-0039 | 2026-03-21 | UPDATE | 브리핑 구조를 `시장 / 매크로 / 자금 / 이벤트` 카테고리까지 확장하고, 텔레그램 렌더러·LLM prompt v3·mock/harness snapshot을 새 섹션 구조에 맞게 갱신 | PRD, Change Log, Context, LLM Plan, Code | yes |
 | CHG-0040 | 2026-03-21 | UPDATE | 시장 데이터 수집을 FRED 단일 어댑터에서 `FRED + Yahoo Finance scraping` 혼합 어댑터로 확장하고, 지수성 자산은 Yahoo 우선 라우팅하도록 worker를 갱신 | PRD, Change Log, Context, Code | yes |
 | CHG-0041 | 2026-03-21 | UPDATE | 매일 1회 브리핑 성격에 맞게 텔레그램 리포트 제목과 거시 시장 스냅샷에서 일자 노출을 제거하고, `시장/매크로/자금/이벤트`를 PRD 브리핑 흐름에 맞는 직관적 섹션 제목으로 정리 | PRD, Change Log, Context, Code | yes |
+| CHG-0042 | 2026-03-21 | UPDATE | 거시 시장 스냅샷에서 환율과 달러인덱스를 하단으로 재정렬하고, FX 해설 문구를 `전반적 달러 강세` 중심으로 더 자연스럽게 수정 | PRD, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

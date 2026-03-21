@@ -87,6 +87,7 @@
 - 지수성 자산(`S&P500`, `NASDAQ`, `DOW`, `VIX`, `KOSPI`, `KOSDAQ`)은 Yahoo Finance scraping을 우선 사용하고, 금리/환율/원자재는 FRED를 우선 사용한다.
 - 텔레그램 브리핑 구조는 이제 `한 줄 요약 -> 거시 시장 스냅샷 -> 시장 브리핑 -> 매크로 브리핑 -> 자금 브리핑 -> 주요 일정 및 이벤트 브리핑 -> 보유 종목 -> 기사 요약 -> 전략 -> 리스크 -> 면책 문구` 순서를 따른다.
 - 매일 1회 정기 브리핑 성격에 맞춰 텔레그램 리포트 제목과 거시 시장 스냅샷에는 별도 일자 라벨을 노출하지 않는다.
+- `거시 시장 스냅샷`에서는 `USD/KRW`와 `달러인덱스`를 하단에 연속 배치하고, 두 지표를 함께 해석하는 FX 문장을 바로 아래에 붙인다.
 - `market-report-composition` prompt는 v3로 올라갔고, `시장 / 매크로 / 자금 / 이벤트` 섹션을 별도 structured output 배열로 반환한다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.
 - telegram-bot에는 command별 in-memory 대화 상태 저장소와 상태 전이 로직이 추가됐다.

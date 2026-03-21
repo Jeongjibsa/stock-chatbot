@@ -120,7 +120,9 @@ function renderMarketSnapshot(
     return ["• 수집된 시장 지표가 아직 없습니다."];
   }
 
-  const lines = results.map((result) => {
+  const lines = [...results]
+    .sort(compareMarketSnapshotItems)
+    .map((result) => {
     const changeText = formatChangeBadge(result.data.changePercent);
     const valueText = formatValueTransition(
       result.data.previousValue,
@@ -128,7 +130,7 @@ function renderMarketSnapshot(
     );
 
     return `• ${result.data.itemName}: ${valueText}${changeText ? `  ${changeText}` : ""}`;
-  });
+    });
 
   const fxInsight = buildFxInsight(results);
 
@@ -372,20 +374,45 @@ function buildFxInsight(
   }
 
   if (usdKrw.data.changePercent > 0 && dxy.data.changePercent > 0) {
-    return "달러인덱스도 함께 올라 원화만 약한 장은 아니고, 달러 강세 영향이 같이 반영되고 있습니다.";
+    return "달러인덱스와 USD/KRW가 함께 올라 전반적인 달러 강세 영향이 같이 반영된 흐름으로 보입니다.";
   }
 
   if (usdKrw.data.changePercent > 0 && dxy.data.changePercent <= 0) {
-    return "달러인덱스 대비로도 USD/KRW가 올라 원화 쪽 약세 압력이 더 크게 작동한 흐름입니다.";
+    return "달러인덱스보다 USD/KRW 상승폭이 더 커 원화 약세 압력이 상대적으로 더 크게 작동한 흐름입니다.";
   }
 
   if (usdKrw.data.changePercent < 0 && dxy.data.changePercent > 0) {
-    return "달러는 강한데 USD/KRW는 내려 원화가 상대적으로 선방한 흐름입니다.";
+    return "달러는 강한데 USD/KRW는 내려 원화가 상대적으로 더 견조했던 흐름으로 보입니다.";
   }
 
   if (usdKrw.data.changePercent < 0 && dxy.data.changePercent <= 0) {
-    return "달러 약세와 함께 USD/KRW도 내려 원화 강세가 같이 나타난 흐름입니다.";
+    return "달러 약세와 함께 USD/KRW도 내려 원화 강세가 같이 나타난 흐름으로 보입니다.";
   }
 
   return "USD/KRW 변동이 제한적이라 원화의 상대 강도 판단은 중립에 가깝습니다.";
+}
+
+function compareMarketSnapshotItems(
+  left: Extract<MarketDataFetchResult, { status: "ok" }>,
+  right: Extract<MarketDataFetchResult, { status: "ok" }>
+): number {
+  const leftRank = getMarketSnapshotRank(left.data.itemCode);
+  const rightRank = getMarketSnapshotRank(right.data.itemCode);
+
+  if (leftRank !== rightRank) {
+    return leftRank - rightRank;
+  }
+
+  return left.data.itemName.localeCompare(right.data.itemName, "ko");
+}
+
+function getMarketSnapshotRank(itemCode: string): number {
+  switch (itemCode) {
+    case "USD_KRW":
+      return 98;
+    case "DXY":
+      return 99;
+    default:
+      return 0;
+  }
 }

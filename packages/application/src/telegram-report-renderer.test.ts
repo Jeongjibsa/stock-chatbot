@@ -48,6 +48,67 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 
+  it("places fx items at the bottom of the market snapshot and adds the fx insight after them", () => {
+    const report = renderTelegramDailyReport({
+      displayName: "Jisung",
+      runDate: "2026-03-20",
+      holdings: [],
+      marketResults: [
+        {
+          status: "ok",
+          data: {
+            itemCode: "USD_KRW",
+            itemName: "USD/KRW 환율",
+            source: "fred",
+            sourceKey: "fx:USDKRW",
+            asOfDate: "2026-03-20",
+            previousValue: 1470.2,
+            value: 1480.85,
+            changePercent: 0.7244
+          }
+        },
+        {
+          status: "ok",
+          data: {
+            itemCode: "NASDAQ",
+            itemName: "나스닥 종합",
+            source: "fred",
+            sourceKey: "index:NASDAQ:IXIC",
+            asOfDate: "2026-03-20",
+            previousValue: 17777.78,
+            value: 18000,
+            changePercent: 1.25
+          }
+        },
+        {
+          status: "ok",
+          data: {
+            itemCode: "DXY",
+            itemName: "달러인덱스",
+            source: "fred",
+            sourceKey: "index:DXY",
+            asOfDate: "2026-03-20",
+            previousValue: 120.1,
+            value: 121.5,
+            changePercent: 1.1657
+          }
+        }
+      ]
+    });
+
+    const nasdaqIndex = report.indexOf("• 나스닥 종합:");
+    const usdKrwIndex = report.indexOf("• USD/KRW 환율:");
+    const dxyIndex = report.indexOf("• 달러인덱스:");
+    const insightIndex = report.indexOf(
+      "↳ 달러인덱스와 USD/KRW가 함께 올라 전반적인 달러 강세 영향이 같이 반영된 흐름으로 보입니다."
+    );
+
+    expect(nasdaqIndex).toBeGreaterThan(-1);
+    expect(usdKrwIndex).toBeGreaterThan(nasdaqIndex);
+    expect(dxyIndex).toBeGreaterThan(usdKrwIndex);
+    expect(insightIndex).toBeGreaterThan(dxyIndex);
+  });
+
   it("renders missing source section when failures exist", () => {
     const report = renderTelegramDailyReport({
       displayName: "Jisung",
@@ -174,6 +235,9 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며");
     expect(report).toContain("외국인·기관 수급과 ETF flow는 아직 별도 데이터 소스 연결 전입니다.");
     expect(report).toContain("예정 실적 발표 일정 데이터는 아직 연결되지 않았습니다.");
+    expect(report).toContain(
+      "달러인덱스와 USD/KRW가 함께 올라 전반적인 달러 강세 영향이 같이 반영된 흐름으로 보입니다."
+    );
     expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 });
