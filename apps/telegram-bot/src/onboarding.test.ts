@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildGroupRegistrationReminder,
   buildNewMemberWelcomeMessage,
+  extractNewlyJoinedMemberName,
   GroupRegistrationReminderStore,
   isGroupChat
 } from "./onboarding.js";
@@ -34,5 +35,40 @@ describe("telegram onboarding helpers", () => {
     expect(isGroupChat("supergroup")).toBe(true);
     expect(isGroupChat("private")).toBe(false);
     expect(isGroupChat("channel")).toBe(false);
+  });
+
+  it("extracts a joined member name from chat_member updates", () => {
+    expect(
+      extractNewlyJoinedMemberName({
+        oldStatus: "left",
+        newStatus: "member",
+        user: {
+          first_name: "Jisung",
+          is_bot: false
+        }
+      })
+    ).toBe("Jisung");
+
+    expect(
+      extractNewlyJoinedMemberName({
+        oldStatus: "member",
+        newStatus: "administrator",
+        user: {
+          first_name: "Already In",
+          is_bot: false
+        }
+      })
+    ).toBeNull();
+
+    expect(
+      extractNewlyJoinedMemberName({
+        oldStatus: "left",
+        newStatus: "member",
+        user: {
+          first_name: "Bot",
+          is_bot: true
+        }
+      })
+    ).toBeNull();
   });
 });

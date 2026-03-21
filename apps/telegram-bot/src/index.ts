@@ -22,6 +22,7 @@ import { loadTelegramBotEnv } from "./load-env.js";
 import {
   buildGroupRegistrationReminder,
   buildNewMemberWelcomeMessage,
+  extractNewlyJoinedMemberName,
   GroupRegistrationReminderStore,
   isGroupChat
 } from "./onboarding.js";
@@ -249,6 +250,26 @@ async function main(): Promise<void> {
     }
 
     await context.reply(buildNewMemberWelcomeMessage(memberNames));
+  });
+
+  bot.on("chat_member", async (context) => {
+    const chatMemberUpdate = context.update.chat_member;
+
+    if (!chatMemberUpdate || !isGroupChat(chatMemberUpdate.chat.type)) {
+      return;
+    }
+
+    const joinedMemberName = extractNewlyJoinedMemberName({
+      oldStatus: chatMemberUpdate.old_chat_member.status,
+      newStatus: chatMemberUpdate.new_chat_member.status,
+      user: chatMemberUpdate.new_chat_member.user
+    });
+
+    if (!joinedMemberName) {
+      return;
+    }
+
+    await context.reply(buildNewMemberWelcomeMessage([joinedMemberName]));
   });
 
   bot.on("message:text", async (context) => {

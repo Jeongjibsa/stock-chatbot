@@ -33,3 +33,49 @@ export function buildNewMemberWelcomeMessage(memberNames: string[]): string {
 export function isGroupChat(chatType: string): boolean {
   return chatType === "group" || chatType === "supergroup";
 }
+
+export function extractNewlyJoinedMemberName(input: {
+  newStatus?: string;
+  oldStatus?: string;
+  user?: {
+    first_name?: string;
+    is_bot?: boolean;
+    last_name?: string;
+    username?: string;
+  };
+}): string | null {
+  if (!input.user || input.user.is_bot) {
+    return null;
+  }
+
+  if (!didBecomeActiveMember(input.oldStatus, input.newStatus)) {
+    return null;
+  }
+
+  return (
+    [input.user.first_name, input.user.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim() ||
+    input.user.username ||
+    "새 사용자"
+  );
+}
+
+function didBecomeActiveMember(
+  oldStatus?: string,
+  newStatus?: string
+): boolean {
+  const activeStatuses = new Set([
+    "administrator",
+    "creator",
+    "member",
+    "restricted"
+  ]);
+
+  if (!newStatus || !activeStatuses.has(newStatus)) {
+    return false;
+  }
+
+  return !oldStatus || !activeStatuses.has(oldStatus);
+}
