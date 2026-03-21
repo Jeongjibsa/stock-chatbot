@@ -10,11 +10,11 @@ const toneClassMap: Record<NonNullable<BadgeProps["tone"]>, string> = {
   default:
     "border-[color:var(--line)] bg-[color:var(--surface-strong)] text-[color:var(--foreground)]",
   positive:
-    "border-red-200/80 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-950/40 dark:text-red-200",
+    "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black",
   negative:
-    "border-sky-200/80 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-950/40 dark:text-sky-200",
+    "border-black bg-white text-black dark:border-white dark:bg-black dark:text-white",
   neutral:
-    "border-stone-200/80 bg-stone-50 text-stone-700 dark:border-stone-500/30 dark:bg-stone-950/40 dark:text-stone-200"
+    "border-[color:var(--line-strong)] bg-[color:var(--surface-muted)] text-[color:var(--foreground)]"
 };
 
 export function Badge({

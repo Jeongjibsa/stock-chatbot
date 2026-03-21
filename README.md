@@ -163,7 +163,7 @@ GitHub Actions
 - `React Markdown`
 
 선택 이유:
-- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다. Pretendard와 shadcn/ui 스타일 컴포넌트로 금융 리포트 톤의 밀도 높은 화면을 일관되게 유지합니다.
+- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다. Pretendard와 shadcn/ui 스타일 컴포넌트, 흑백 중심 팔레트로 금융 리포트 톤의 밀도 높은 화면을 일관되게 유지합니다.
 
 ### Infra / Ops
 

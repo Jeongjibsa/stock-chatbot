@@ -125,6 +125,7 @@
 | CHG-0098 | 2026-03-22 | FIX | Telegram `/report`가 webhook 재시도로 두 번 실행되며 `브리핑을 생성하고 있습니다` 안내가 중복되고 duplicate run이 `표시할 내용이 없습니다`로 잘못 떨어지던 문제를 수정하기 위해 `telegram_processed_updates` 저장 모델 기반 update dedupe를 추가하고, duplicate on-demand run은 `이미 생성 중` 안내로 정정 | PRD, Change Log, Context, README, Code, Tests | yes |
 | CHG-0099 | 2026-03-22 | UPDATE | 공개 웹 frontend를 Pretendard 기반 타이포그래피와 shadcn/ui 스타일 컴포넌트(`components.json`, `Button`, `Card`, `Badge`, `Separator`)를 중심으로 재정비해 feed/detail 화면의 금융 리포트 가독성과 운영 콘솔 진입 경험을 개선 | PRD, Change Log, Context, README, Code, Tests | yes |
 | CHG-0100 | 2026-03-22 | UPDATE | 공개 웹에서는 일반 사용자에게 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 진입하도록 UX를 정리 | Change Log, Context, README, Code | yes |
+| CHG-0101 | 2026-03-22 | FIX | `/admin`이 Postgres `date` 컬럼을 raw `Date` 객체로 렌더링해 client-side exception을 일으키던 문제를 날짜 문자열 정규화로 수정하고, 공개 웹 전체 팔레트를 shadcn/ui 기본 감성에 가까운 흑백 톤으로 재정비 | Change Log, Context, README, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 

@@ -20,6 +20,14 @@ type AdminSummaryRow = {
   total_count: string;
 };
 
+function normalizeDateOnly(value: Date | string): string {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  return value;
+}
+
 export function mapAdminSummaryRow(row: AdminSummaryRow): AdminDashboardSummary {
   return {
     completedCount: Number.parseInt(row.completed_count, 10),
@@ -45,7 +53,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
         created_at: Date;
         id: string;
         market_regime: string;
-        report_date: string;
+        report_date: Date | string;
         summary: string;
         total_score: string;
       }>(
@@ -60,7 +68,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
         created_at: Date;
         id: string;
         market_regime: string;
-        report_date: string;
+        report_date: Date | string;
         summary: string;
         total_score: string;
       }>(
@@ -76,7 +84,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
         display_name: string;
         error_message: string | null;
         id: string;
-        run_date: string;
+        run_date: Date | string;
         schedule_type: string;
         started_at: Date;
         status: "completed" | "failed" | "partial_success" | "running";
@@ -115,7 +123,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
         display_name: string;
         exchange: string | null;
         id: string;
-        run_date: string;
+        run_date: Date | string;
         symbol: string | null;
         total_score: string;
       }>(
@@ -160,13 +168,13 @@ function mapRecentPublicReport(report: {
   created_at: Date;
   id: string;
   market_regime: string;
-  report_date: string;
+  report_date: Date | string;
   summary: string;
   total_score: string;
 }): AdminRecentPublicReport {
   return {
     id: report.id,
-    reportDate: report.report_date,
+    reportDate: normalizeDateOnly(report.report_date),
     summary: report.summary,
     marketRegime: report.market_regime,
     totalScore: Number.parseFloat(report.total_score),
@@ -179,7 +187,7 @@ function mapRecentRun(run: {
   display_name: string;
   error_message: string | null;
   id: string;
-  run_date: string;
+  run_date: Date | string;
   schedule_type: string;
   started_at: Date;
   status: "completed" | "failed" | "partial_success" | "running";
@@ -187,7 +195,7 @@ function mapRecentRun(run: {
   return {
     id: run.id,
     displayName: run.display_name,
-    runDate: run.run_date,
+    runDate: normalizeDateOnly(run.run_date),
     scheduleType: run.schedule_type,
     status: run.status,
     startedAt: run.started_at.toISOString(),
@@ -203,13 +211,13 @@ function mapStrategySnapshotInput(snapshot: {
   display_name: string;
   exchange: string | null;
   id: string;
-  run_date: string;
+  run_date: Date | string;
   symbol: string | null;
   total_score: string;
 }): StrategyBacktestSnapshotInput & { createdAt: string; displayName: string } {
   return {
     id: snapshot.id,
-    runDate: snapshot.run_date,
+    runDate: normalizeDateOnly(snapshot.run_date),
     companyName: snapshot.company_name,
     symbol: snapshot.symbol,
     exchange: snapshot.exchange,

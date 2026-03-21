@@ -148,6 +148,7 @@
 - GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
 - `apps/web`에는 Basic Auth 기반 read-only 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
 - 공개 웹 feed/detail에는 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 들어간다.
+- `/admin`은 Postgres `date` 컬럼을 문자열로 정규화해 렌더링하며, 공개 웹 전체 톤은 Pretendard + shadcn/ui 스타일의 흑백 팔레트로 정리됐다.
 - GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `public web frontend=공개 상세 archive/feed`, `future authenticated web=포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
 - 현재 `apps/web`는 `Next.js App Router` 기반 공개 웹으로 전환됐고, Vercel 배포를 primary public frontend로 사용한다.
