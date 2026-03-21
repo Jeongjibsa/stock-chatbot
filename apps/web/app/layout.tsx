@@ -38,12 +38,6 @@ export default function RootLayout({
               >
                 Feed
               </Link>
-              <Link
-                className="rounded-full px-3 py-2 text-sm font-medium text-[color:var(--muted)] transition hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)]"
-                href="/admin"
-              >
-                Admin
-              </Link>
             </nav>
           </header>
           {children}

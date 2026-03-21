@@ -124,6 +124,7 @@
 | CHG-0096 | 2026-03-21 | ADD | 실제 Telegram 연동 검증을 위한 production E2E 테스트 시나리오 문서를 추가하고, DM/그룹/공개 웹/스케줄/개인정보 경계 기준을 운영 체크리스트로 명시 | Change Log, Context, Docs | yes |
 | CHG-0098 | 2026-03-22 | FIX | Telegram `/report`가 webhook 재시도로 두 번 실행되며 `브리핑을 생성하고 있습니다` 안내가 중복되고 duplicate run이 `표시할 내용이 없습니다`로 잘못 떨어지던 문제를 수정하기 위해 `telegram_processed_updates` 저장 모델 기반 update dedupe를 추가하고, duplicate on-demand run은 `이미 생성 중` 안내로 정정 | PRD, Change Log, Context, README, Code, Tests | yes |
 | CHG-0099 | 2026-03-22 | UPDATE | 공개 웹 frontend를 Pretendard 기반 타이포그래피와 shadcn/ui 스타일 컴포넌트(`components.json`, `Button`, `Card`, `Badge`, `Separator`)를 중심으로 재정비해 feed/detail 화면의 금융 리포트 가독성과 운영 콘솔 진입 경험을 개선 | PRD, Change Log, Context, README, Code, Tests | yes |
+| CHG-0100 | 2026-03-22 | UPDATE | 공개 웹에서는 일반 사용자에게 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 진입하도록 UX를 정리 | Change Log, Context, README, Code | yes |
 
 ## 4. Open Change Notes
 

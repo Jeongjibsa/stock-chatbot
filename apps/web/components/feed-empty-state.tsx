@@ -19,9 +19,6 @@ export function FeedEmptyState() {
         </div>
         <div className="flex flex-wrap gap-3">
           <Button asChild variant="default">
-            <Link href="/admin">운영 콘솔에서 상태 보기</Link>
-          </Button>
-          <Button asChild variant="secondary">
             <Link href="https://t.me/JungStock_bot">Telegram 봇 열기</Link>
           </Button>
         </div>

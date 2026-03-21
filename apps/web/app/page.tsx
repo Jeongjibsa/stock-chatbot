@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, ArrowUpRight, LayoutDashboard } from "lucide-react";
+import { Activity, ArrowUpRight } from "lucide-react";
 
 import { FeedEmptyState } from "../components/feed-empty-state";
 import { FeedErrorState } from "../components/feed-error-state";
@@ -38,8 +38,8 @@ export default async function HomePage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button asChild size="sm">
-                    <Link href="/admin">
-                      운영 콘솔
+                    <Link href="https://t.me/JungStock_bot">
+                      Telegram 봇 열기
                       <ArrowUpRight className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -74,12 +74,6 @@ export default async function HomePage() {
                 <Link href={`/reports/${latestReport.id}`}>
                   최신 브리핑 보기
                   <ArrowUpRight className="h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/admin">
-                  운영 콘솔
-                  <LayoutDashboard className="h-4 w-4" />
                 </Link>
               </Button>
             </div>

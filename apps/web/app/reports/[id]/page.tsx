@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
@@ -80,12 +80,6 @@ export default async function ReportDetailPage({
                     </span>
                   ))}
                 </div>
-                <Button asChild size="sm">
-                  <Link href="/admin">
-                    운영 콘솔
-                    <ArrowUpRight className="h-4 w-4" />
-                  </Link>
-                </Button>
               </CardContent>
             </Card>
 
