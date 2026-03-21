@@ -131,6 +131,8 @@
 - GitHub Actions `Daily Report` workflow는 `public briefing build -> Pages deploy(fallback) -> daily report generate` 순서로 동작할 수 있으며, 생성된 텔레그램 본문은 `reports` 조회 성공 시 `PUBLIC_BRIEFING_BASE_URL + /reports/[id]` 링크를, 실패 시 legacy `/briefings/YYYY-MM-DD/` fallback 링크를 하단에 붙인다.
 - `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입하는 것을 기준으로 한다.
 - GitHub Actions와 Telegram 링크가 새 공개 웹을 가리키도록 하려면 repository variable `PUBLIC_BRIEFING_BASE_URL`을 실제 Vercel 배포 URL로 맞춰야 한다.
+- 사용자 수 10명 이하 가정을 전제로 다음 런타임 기준선은 `Vercel webhook + Vercel Cron primary + GitHub Actions backup/reconcile`이다.
+- Telegram command runtime은 polling이 아니라 webhook으로 전환할 예정이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 다음 구현 진입점이다.
 - GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `public web frontend=공개 상세 archive/feed`, `future authenticated web=포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
 - 현재 `apps/web`는 `Next.js App Router` 기반 공개 웹으로 전환됐고, Vercel 배포를 primary public frontend로 사용한다.
