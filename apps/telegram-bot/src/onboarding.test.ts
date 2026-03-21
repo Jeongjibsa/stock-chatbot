@@ -19,6 +19,7 @@ describe("telegram onboarding helpers", () => {
 
     expect(message).toContain("안녕하세요. StockManager 봇입니다.");
     expect(message).toContain("1. /register - 개인 발송 대상 등록");
+    expect(message).toContain("2. /report - 지금 브리핑 확인");
     expect(message).toContain("/portfolio_add - 보유 종목 추가");
   });
 
@@ -27,6 +28,7 @@ describe("telegram onboarding helpers", () => {
 
     expect(message).toContain("사용 방법은 간단합니다.");
     expect(message).toContain("1. /register 로 등록");
+    expect(message).toContain("2. /report 로 브리핑 확인");
     expect(message).toContain("/market_items - 추적 지표 확인");
   });
 
@@ -34,8 +36,10 @@ describe("telegram onboarding helpers", () => {
     const message = buildPrivateRegisterSuccessMessage();
 
     expect(message).toContain("등록이 완료되었습니다.");
+    expect(message).toContain("/report 로 오늘 브리핑");
     expect(message).toContain("/portfolio_add");
     expect(message).toContain("/portfolio_list");
+    expect(message).toContain("보유 종목이 없어도");
   });
 
   it("builds a group register success message that redirects to DM", () => {

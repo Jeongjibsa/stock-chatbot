@@ -137,7 +137,7 @@
 
 ### Phase 7. Optional Expansion
 
-- [ ] 온디맨드 `/report` 요청 처리 추가
+- [x] 온디맨드 `/report` 요청 처리 추가
 - [ ] 사용자별 예약 리포트 전송
 - [ ] GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
 - [ ] 웹 클라이언트 구현
@@ -148,15 +148,14 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 7`의 사용자별 예약 리포트 전송과 실제 DM delivery 경로 완성 항목이다.
+현재 권장 시작점은 `Phase 7`의 사용자별 예약 리포트 전송 항목이다.
 
 우선순위:
 
 1. 사용자별 예약 리포트 전송과 실제 DM delivery 경로 완성
-2. 온디맨드 `/report` 요청 처리 추가
-3. GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
-4. 웹 클라이언트 구현
-5. 모바일 앱 구현
+2. GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
+3. 웹 클라이언트 구현
+4. 모바일 앱 구현
 
 ## 6. Completion Log
 

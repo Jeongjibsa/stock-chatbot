@@ -129,6 +129,7 @@
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
 - 계정 확장 전략은 현재 `telegram_user_id` 중심 MVP를 유지하되, 이후 `core user + channel identity` 구조로 확장할 수 있게 `preferred_delivery_chat_id` 같은 채널 delivery 속성을 별도 identity 성격 데이터로 취급하는 방향이다.
 - Telegram DM의 기본 UX는 한국어 온보딩 기준으로 유지한다. `/start`와 `/help`는 `등록 -> 종목 추가 -> 목록 확인 -> 관심 지표 추가 -> 브리핑 수신` 흐름과 명령별 짧은 설명을 함께 안내하고, `/register` 성공 후에도 같은 다음 단계가 이어져야 한다.
+- Telegram DM에서는 `/report`를 바로 사용할 수 있다. 등록만 완료되어 있으면 보유 종목이 없어도 실행 가능하며, 이 경우 보유 종목 관련 섹션을 제외한 시장 중심 브리핑을 생성한다.
 - 그룹 온보딩은 `new_chat_members`와 `chat_member`를 둘 다 구독하되, 같은 사용자와 그룹 조합에는 짧은 시간 안에 한 번만 환영 메시지를 보내도록 dedupe한다.
 - `거시 시장 스냅샷`은 `NASDAQ -> S&P500 -> DOW -> VIX -> KOSPI -> KOSDAQ -> 미국 10년물 금리 -> 국제 유가(WTI) -> 천연가스 -> 구리 -> USD/KRW -> 달러인덱스` 순서를 기본으로 하고, 그룹 사이를 빈 줄로 구분한다.
 - `거시 시장 스냅샷`에서는 `USD/KRW`와 `달러인덱스`를 하단에 연속 배치하고, 두 지표를 함께 해석하는 FX 문장을 바로 아래에 붙인다.

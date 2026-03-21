@@ -33,6 +33,7 @@ export class GroupJoinWelcomeStore {
 
 const COMMAND_SUMMARIES = [
   "/register - 개인화 리포트 등록",
+  "/report - 지금 브리핑 받기",
   "/portfolio_add - 보유 종목 추가",
   "/portfolio_list - 내 종목 확인",
   "/portfolio_remove - 보유 종목 삭제",
@@ -46,10 +47,11 @@ export function buildStartMessage(): string {
     "안녕하세요. StockManager 봇입니다.",
     "개인화 리포트는 아래 순서로 설정해 주세요.",
     "1. /register - 개인 발송 대상 등록",
-    "2. /portfolio_add - 보유 종목 추가",
-    "3. /portfolio_list - 저장 결과 확인",
-    "4. /market_add - 관심 지표 추가",
-    "5. 매일 오전 브리핑 수신",
+    "2. /report - 지금 브리핑 확인",
+    "3. /portfolio_add - 보유 종목 추가",
+    "4. /portfolio_list - 저장 결과 확인",
+    "5. /market_add - 관심 지표 추가",
+    "6. 매일 오전 브리핑 수신",
     "",
     "지원 명령:",
     ...COMMAND_SUMMARIES
@@ -60,9 +62,10 @@ export function buildHelpMessage(): string {
   return [
     "사용 방법은 간단합니다.",
     "1. /register 로 등록",
-    "2. /portfolio_add 로 종목 추가",
-    "3. /portfolio_list 로 확인",
-    "4. 필요하면 /market_add 로 관심 지표 추가",
+    "2. /report 로 브리핑 확인",
+    "3. /portfolio_add 로 종목 추가",
+    "4. /portfolio_list 로 확인",
+    "5. 필요하면 /market_add 로 관심 지표 추가",
     "",
     "지원 명령:",
     ...COMMAND_SUMMARIES
@@ -74,9 +77,11 @@ export function buildPrivateRegisterSuccessMessage(): string {
     "등록이 완료되었습니다.",
     "앞으로 개인화 리포트는 이 1:1 대화로 발송됩니다.",
     "다음 단계:",
-    "1. /portfolio_add 로 보유 종목을 추가해 주세요.",
-    "2. /portfolio_list 로 저장 결과를 확인해 주세요.",
-    "3. 필요하면 /market_add 로 관심 지표를 추가해 주세요."
+    "1. /report 로 오늘 브리핑을 바로 확인해 보세요.",
+    "2. /portfolio_add 로 보유 종목을 추가해 주세요.",
+    "3. /portfolio_list 로 저장 결과를 확인해 주세요.",
+    "4. 필요하면 /market_add 로 관심 지표를 추가해 주세요.",
+    "보유 종목이 없어도 시장 브리핑은 먼저 받아보실 수 있습니다."
   ].join("\n");
 }
 

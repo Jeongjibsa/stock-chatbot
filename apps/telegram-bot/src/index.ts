@@ -31,6 +31,10 @@ import {
   GroupRegistrationReminderStore,
   isGroupChat
 } from "./onboarding.js";
+import {
+  buildTelegramReportRuntime,
+  getRunDateForTimezone
+} from "./report-service.js";
 import { readToken } from "./token.js";
 import { TelegramUserPortfolioService } from "./user-portfolio-service.js";
 
@@ -58,6 +62,9 @@ async function main(): Promise<void> {
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
     userMarketWatchRepository: new UserMarketWatchItemRepository(db)
   });
+  let reportRuntime:
+    | ReturnType<typeof buildTelegramReportRuntime>
+    | undefined;
 
   const getUserKey = (userId?: number): string | null => {
     if (!userId) {
@@ -88,6 +95,11 @@ async function main(): Promise<void> {
 
     conversationStateStore.set(userKey, createInitialConversationState(command));
     await reply(getConversationStartMessage(command));
+  };
+
+  const getReportRuntime = () => {
+    reportRuntime ??= buildTelegramReportRuntime();
+    return reportRuntime;
   };
 
   bot.command("start", async (context) => {
@@ -133,6 +145,64 @@ async function main(): Promise<void> {
     }
 
     await context.reply(buildGroupRegisterSuccessMessage());
+  });
+
+  bot.command("report", async (context) => {
+    if (!context.chat || context.chat.type !== "private") {
+      await context.reply(
+        "개인화 브리핑은 봇과의 1:1 대화에서만 제공됩니다. DM에서 /register 후 /report 를 실행해 주세요."
+      );
+      return;
+    }
+
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    const registeredUser = await userPortfolioService.findRegisteredUser(userKey);
+
+    if (!registeredUser) {
+      await context.reply("먼저 /register 를 실행해 계정을 등록해 주세요.");
+      return;
+    }
+
+    if (registeredUser.preferredDeliveryChatId !== String(context.chat.id)) {
+      await context.reply(
+        "이 1:1 대화를 개인 브리핑 수신 대상으로 확정하려면 먼저 /register 를 다시 실행해 주세요."
+      );
+      return;
+    }
+
+    await context.reply("브리핑을 생성하고 있습니다. 잠시만 기다려 주세요.");
+
+    try {
+      const runDate = getRunDateForTimezone("Asia/Seoul");
+      const result = await getReportRuntime().reportService.runForTelegramUser({
+        telegramUserId: userKey,
+        runDate
+      });
+
+      if (result.status === "failed") {
+        await context.reply(
+          "브리핑 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        );
+        return;
+      }
+
+      if (!result.reportText) {
+        await context.reply(
+          "브리핑을 준비했지만 표시할 내용이 없습니다. 잠시 후 다시 시도해 주세요."
+        );
+        return;
+      }
+
+      await context.reply(result.reportText);
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
   });
 
   bot.command("portfolio_add", async (context) =>
@@ -358,6 +428,9 @@ async function main(): Promise<void> {
 
   const shutdown = async () => {
     bot.stop();
+    if (reportRuntime) {
+      await reportRuntime.close();
+    }
     await pool.end();
   };
 

@@ -99,6 +99,7 @@
 | CHG-0072 | 2026-03-21 | ADD | daily report worker가 `preferred_delivery_chat_id`가 있는 사용자에게 생성된 리포트를 Telegram DM으로 실제 발송하고, job summary에 `delivered`, `deliverySkipped`, `deliveryFailed` 집계를 남기도록 확장 | README, Change Log, Code, Tests | yes |
 | CHG-0073 | 2026-03-21 | UPDATE | Telegram DM의 `/start`, `/help`, `/register` 응답을 한국어 온보딩 문구로 정리하고, `/register -> /portfolio_add -> /portfolio_list -> /market_add` 권장 흐름을 명시 | README, Change Log, Context, Code, Tests | yes |
 | CHG-0074 | 2026-03-21 | FIX | 그룹 조인 시 `new_chat_members`와 `chat_member`가 함께 들어와도 같은 사용자·그룹 조합의 환영 메시지가 중복 발송되지 않도록 짧은 시간 dedupe를 추가 | README, Change Log, Context, Code, Tests | yes |
+| CHG-0075 | 2026-03-21 | ADD | Telegram DM 전용 `/report` 명령을 추가하고, 등록만 완료된 사용자는 보유 종목이 없어도 보유 종목 섹션을 제외한 시장 중심 브리핑을 즉시 조회할 수 있도록 on-demand report runtime과 안내 문구를 확장 | PRD, Plan, README, Change Log, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

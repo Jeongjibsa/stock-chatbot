@@ -105,6 +105,8 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
   - 명령 요약 확인
 - `/register`
   - 개인화 리포트 수신 대상 등록
+- `/report`
+  - 오늘 브리핑 바로 받기
 - `/portfolio_add`
   - 보유 종목 추가
 - `/portfolio_list`
@@ -129,10 +131,11 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
 
 1. DM에서 `/start`
 2. DM에서 `/register`
-3. `/portfolio_add`로 보유 종목 입력
-4. `/portfolio_list`로 저장 결과 확인
-5. 필요하면 `/market_add`로 관심 지표 추가
-6. 이후 개인화 브리핑은 DM으로 수신
+3. `/report`로 오늘 브리핑 바로 확인
+4. `/portfolio_add`로 보유 종목 입력
+5. `/portfolio_list`로 저장 결과 확인
+6. 필요하면 `/market_add`로 관심 지표 추가
+7. 이후 개인화 브리핑은 DM으로 수신
 
 실 Telegram smoke test:
 
