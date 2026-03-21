@@ -66,6 +66,7 @@ describe("processDailyReportJob", () => {
   it("reads runtime env defaults and required keys", () => {
     expect(readDatabaseUrl({})).toContain("postgresql://");
     expect(readRunDate({ REPORT_RUN_DATE: "2026-03-20" })).toBe("2026-03-20");
+    expect(readRunDate({ REPORT_RUN_DATE: "" })).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(readScheduleType({})).toBe("daily-9am");
     expect(readScheduleType({ REPORT_TRIGGER_TYPE: "workflow_dispatch" })).toBe(
       "manual-dispatch"

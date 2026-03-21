@@ -103,7 +103,13 @@ export function readLlmProvider(
 }
 
 export function readRunDate(env: Environment = process.env): string {
-  return env.REPORT_RUN_DATE ?? new Date().toISOString().slice(0, 10);
+  const runDate = env.REPORT_RUN_DATE?.trim();
+
+  if (runDate) {
+    return runDate;
+  }
+
+  return new Date().toISOString().slice(0, 10);
 }
 
 export function readScheduleType(
