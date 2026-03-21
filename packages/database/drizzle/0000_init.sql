@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS "users" (
   "display_name" text NOT NULL,
   "locale" text DEFAULT 'ko-KR' NOT NULL,
   "timezone" text DEFAULT 'Asia/Seoul' NOT NULL,
+  "daily_report_enabled" boolean DEFAULT true NOT NULL,
+  "daily_report_hour" integer DEFAULT 9 NOT NULL,
+  "daily_report_minute" integer DEFAULT 0 NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "users_telegram_user_id_unique" UNIQUE("telegram_user_id")
@@ -15,6 +18,9 @@ CREATE TABLE IF NOT EXISTS "users" (
 
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_id" text;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_type" text;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_enabled" boolean DEFAULT true NOT NULL;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_hour" integer DEFAULT 9 NOT NULL;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_minute" integer DEFAULT 0 NOT NULL;
 
 CREATE TABLE IF NOT EXISTS "portfolio_holdings" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

@@ -2,7 +2,7 @@ name: Daily Report
 
 on:
   schedule:
-    - cron: "7 0 * * *"
+    - cron: "7 * * * *"
   workflow_dispatch:
     inputs:
       report_run_date:
@@ -102,6 +102,8 @@ jobs:
 
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DAILY_REPORT_TRIGGER_TOKEN: ${{ secrets.DAILY_REPORT_TRIGGER_TOKEN }}
+      DAILY_REPORT_TRIGGER_URL: ${{ secrets.DAILY_REPORT_TRIGGER_URL }}
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
@@ -117,21 +119,34 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup pnpm
+        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
         uses: pnpm/action-setup@v4
         with:
           version: 10.15.1
 
       - name: Setup Node.js
+        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
         uses: actions/setup-node@v4
         with:
           node-version: 24.14.0
           cache: pnpm
 
       - name: Install dependencies
+        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
         run: pnpm install --frozen-lockfile
 
       - name: Build worker
+        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
         run: pnpm build
 
       - name: Run daily report job
+        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
         run: pnpm --filter @stock-chatbot/worker run run:daily-report
+
+      - name: Trigger dedicated worker
+        if: ${{ env.DAILY_REPORT_TRIGGER_URL != '' }}
+        run: |
+          curl -fsS -X POST "${DAILY_REPORT_TRIGGER_URL}" \
+            -H "content-type: application/json" \
+            -H "authorization: Bearer ${DAILY_REPORT_TRIGGER_TOKEN}" \
+            -d "{\"triggerType\":\"${REPORT_TRIGGER_TYPE}\",\"reportRunDate\":\"${REPORT_RUN_DATE}\",\"source\":\"github-actions\"}"

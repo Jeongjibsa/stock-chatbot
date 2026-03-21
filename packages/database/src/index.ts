@@ -32,7 +32,11 @@ export {
   type ReportRunStatus,
   type StartReportRunInput
 } from "./report-run-repository.js";
-export { UserRepository, type UpsertUserInput } from "./user-repository.js";
+export {
+  UserRepository,
+  type UpdateUserReportSettingsInput,
+  type UpsertUserInput
+} from "./user-repository.js";
 export {
   UserMarketWatchItemRepository,
   type AddCustomUserMarketWatchItemInput,

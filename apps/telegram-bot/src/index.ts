@@ -35,6 +35,11 @@ import {
   buildTelegramReportRuntime,
   getRunDateForTimezone
 } from "./report-service.js";
+import {
+  formatHourMinute,
+  formatReportSettings,
+  parseReportTimeArgument
+} from "./report-settings.js";
 import { readToken } from "./token.js";
 import { TelegramUserPortfolioService } from "./user-portfolio-service.js";
 
@@ -200,6 +205,112 @@ async function main(): Promise<void> {
       }
 
       await context.reply(result.reportText);
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
+
+  bot.command("report_settings", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const user = await userPortfolioService.findRegisteredUser(userKey);
+
+      if (!user) {
+        await context.reply("먼저 /register 를 실행해 계정을 등록해 주세요.");
+        return;
+      }
+
+      await context.reply(formatReportSettings(user));
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
+
+  bot.command("report_on", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
+        dailyReportEnabled: true
+      });
+
+      await context.reply(
+        [
+          "정기 브리핑 발송을 켰습니다.",
+          formatReportSettings(updated)
+        ].join("\n\n")
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
+
+  bot.command("report_off", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
+        dailyReportEnabled: false
+      });
+
+      await context.reply(
+        [
+          "정기 브리핑 발송을 껐습니다.",
+          formatReportSettings(updated)
+        ].join("\n\n")
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
+
+  bot.command("report_time", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    const parsedTime = parseReportTimeArgument(context.match);
+
+    if (!parsedTime) {
+      await context.reply("사용 예시: /report_time 09:00");
+      return;
+    }
+
+    try {
+      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
+        dailyReportEnabled: true,
+        dailyReportHour: parsedTime.hour,
+        dailyReportMinute: parsedTime.minute
+      });
+
+      await context.reply(
+        [
+          `정기 브리핑 시간을 ${formatHourMinute(
+            parsedTime.hour,
+            parsedTime.minute
+          )}로 변경했습니다.`,
+          formatReportSettings(updated)
+        ].join("\n\n")
+      );
     } catch (error) {
       await context.reply(resolveTelegramCommandError(error));
     }

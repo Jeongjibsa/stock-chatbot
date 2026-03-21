@@ -6,12 +6,16 @@ describe("TelegramUserPortfolioService", () => {
   it("stores private chat as preferred delivery target on register", async () => {
     const userRepository = {
       getByTelegramUserId: vi.fn(),
+      updateReportSettings: vi.fn(),
       upsert: vi.fn(async (input) => ({
         id: "user-1",
         telegramUserId: input.telegramUserId,
         displayName: input.displayName,
         preferredDeliveryChatId: input.preferredDeliveryChatId ?? null,
-        preferredDeliveryChatType: input.preferredDeliveryChatType ?? null
+        preferredDeliveryChatType: input.preferredDeliveryChatType ?? null,
+        dailyReportEnabled: true,
+        dailyReportHour: 9,
+        dailyReportMinute: 0
       }))
     };
     const service = new TelegramUserPortfolioService({
@@ -50,12 +54,16 @@ describe("TelegramUserPortfolioService", () => {
   it("registers group users without setting personal delivery chat", async () => {
     const userRepository = {
       getByTelegramUserId: vi.fn(),
+      updateReportSettings: vi.fn(),
       upsert: vi.fn(async (input) => ({
         id: "user-1",
         telegramUserId: input.telegramUserId,
         displayName: input.displayName,
         preferredDeliveryChatId: null,
-        preferredDeliveryChatType: null
+        preferredDeliveryChatType: null,
+        dailyReportEnabled: true,
+        dailyReportHour: 9,
+        dailyReportMinute: 0
       }))
     };
     const service = new TelegramUserPortfolioService({
@@ -100,6 +108,7 @@ describe("TelegramUserPortfolioService", () => {
           telegramUserId: "1001",
           displayName: "Jisung"
         })),
+        updateReportSettings: vi.fn(),
         upsert: vi.fn()
       },
       portfolioHoldingRepository,
@@ -133,6 +142,7 @@ describe("TelegramUserPortfolioService", () => {
     const service = new TelegramUserPortfolioService({
       userRepository: {
         getByTelegramUserId: vi.fn(async () => null),
+        updateReportSettings: vi.fn(),
         upsert: vi.fn()
       },
       portfolioHoldingRepository: {
@@ -150,5 +160,50 @@ describe("TelegramUserPortfolioService", () => {
     await expect(service.listPortfolioHoldings("1001")).rejects.toThrow(
       "USER_NOT_REGISTERED"
     );
+  });
+
+  it("updates daily report settings for a registered user", async () => {
+    const userRepository = {
+      getByTelegramUserId: vi.fn(async () => ({
+        id: "user-1",
+        telegramUserId: "1001",
+        displayName: "Jisung"
+      })),
+      updateReportSettings: vi.fn(async (input) => ({
+        id: "user-1",
+        telegramUserId: input.telegramUserId,
+        displayName: "Jisung",
+        dailyReportEnabled: input.dailyReportEnabled ?? true,
+        dailyReportHour: input.dailyReportHour ?? 9,
+        dailyReportMinute: input.dailyReportMinute ?? 0,
+        timezone: input.timezone ?? "Asia/Seoul"
+      })),
+      upsert: vi.fn()
+    };
+    const service = new TelegramUserPortfolioService({
+      userRepository,
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(),
+        remove: vi.fn(),
+        upsert: vi.fn()
+      },
+      userMarketWatchRepository: {
+        addCustomItem: vi.fn(),
+        listEffectiveByUserId: vi.fn(),
+        showDefaultItem: vi.fn()
+      }
+    });
+
+    const result = await service.updateDailyReportSettings("1001", {
+      dailyReportEnabled: false,
+      dailyReportHour: 21,
+      dailyReportMinute: 30
+    });
+
+    expect(result).toMatchObject({
+      dailyReportEnabled: false,
+      dailyReportHour: 21,
+      dailyReportMinute: 30
+    });
   });
 });

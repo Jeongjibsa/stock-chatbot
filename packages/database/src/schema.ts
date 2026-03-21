@@ -18,6 +18,9 @@ export const users = pgTable("users", {
   displayName: text("display_name").notNull(),
   locale: text("locale").notNull().default("ko-KR"),
   timezone: text("timezone").notNull().default("Asia/Seoul"),
+  dailyReportEnabled: boolean("daily_report_enabled").notNull().default(true),
+  dailyReportHour: integer("daily_report_hour").notNull().default(9),
+  dailyReportMinute: integer("daily_report_minute").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });

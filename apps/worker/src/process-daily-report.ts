@@ -53,9 +53,13 @@ type ReportDeliveryAdapterPort = {
 type UserRepositoryPort = {
   listUsers(): Promise<
     Array<{
+      dailyReportEnabled?: boolean;
+      dailyReportHour?: number;
+      dailyReportMinute?: number;
       displayName: string;
       id: string;
       preferredDeliveryChatId?: string | null;
+      timezone?: string | null;
     }>
   >;
 };
@@ -66,12 +70,15 @@ export type DailyReportJobSummary = {
   deliveryFailedCount: number;
   deliverySkippedCount: number;
   failedCount: number;
+  notDueCount: number;
   partialSuccessCount: number;
   skippedDuplicateCount: number;
   userCount: number;
 };
 
 export type DailyReportScheduleType = "daily-9am" | "manual-dispatch";
+
+type SchedulableUser = Awaited<ReturnType<UserRepositoryPort["listUsers"]>>[number];
 
 export function readDatabaseUrl(env: Environment = process.env): string {
   return env.DATABASE_URL ?? "postgresql://stockbot:stockbot@localhost:5432/stockbot";
@@ -163,11 +170,66 @@ export function readScheduleType(
     : "daily-9am";
 }
 
+export function readScheduleWindowMinutes(
+  env: Environment = process.env
+): number {
+  const raw = env.DAILY_REPORT_WINDOW_MINUTES?.trim();
+
+  if (!raw) {
+    return 15;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+
+  if (!Number.isFinite(parsed) || parsed < 1 || parsed > 59) {
+    return 15;
+  }
+
+  return parsed;
+}
+
+export function isUserDueForScheduledReport(input: {
+  now: Date;
+  user: SchedulableUser;
+  windowMinutes?: number;
+}): boolean {
+  if (input.user.dailyReportEnabled === false) {
+    return false;
+  }
+
+  const timeZone = input.user.timezone ?? "Asia/Seoul";
+  const dueHour = input.user.dailyReportHour ?? 9;
+  const dueMinute = input.user.dailyReportMinute ?? 0;
+  const windowMinutes = input.windowMinutes ?? 15;
+  const formatter = new Intl.DateTimeFormat("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone
+  });
+  const parts = formatter.formatToParts(input.now);
+  const currentHour = Number.parseInt(
+    parts.find((part) => part.type === "hour")?.value ?? "0",
+    10
+  );
+  const currentMinute = Number.parseInt(
+    parts.find((part) => part.type === "minute")?.value ?? "0",
+    10
+  );
+  const scheduledTotalMinutes = dueHour * 60 + dueMinute;
+  const currentTotalMinutes = currentHour * 60 + currentMinute;
+  const diff = currentTotalMinutes - scheduledTotalMinutes;
+
+  return diff >= 0 && diff < windowMinutes;
+}
+
 export async function processDailyReportJob(
   dependencies: {
     deliveryAdapter?: ReportDeliveryAdapterPort;
+    now?: Date;
     orchestrator: OrchestratorPort;
     runDate: string;
+    scheduleWindowMinutes?: number;
     scheduleType: DailyReportScheduleType;
     userRepository: UserRepositoryPort;
   }
@@ -180,11 +242,36 @@ export async function processDailyReportJob(
     deliveryFailedCount: 0,
     deliverySkippedCount: 0,
     failedCount: 0,
+    notDueCount: 0,
     partialSuccessCount: 0,
     skippedDuplicateCount: 0
   };
+  const now = dependencies.now ?? new Date();
+  const usersToProcess =
+    dependencies.scheduleType === "daily-9am"
+      ? users.filter((user) => {
+          const due = isUserDueForScheduledReport(
+            dependencies.scheduleWindowMinutes === undefined
+              ? {
+                  now,
+                  user
+                }
+              : {
+                  now,
+                  user,
+                  windowMinutes: dependencies.scheduleWindowMinutes
+                }
+          );
 
-  for (const user of users) {
+          if (!due) {
+            summary.notDueCount += 1;
+          }
+
+          return due;
+        })
+      : users;
+
+  for (const user of usersToProcess) {
     const result = await dependencies.orchestrator.runForUser({
       promptVersion: DEFAULT_DAILY_REPORT_PROMPT_VERSION,
       skillVersion: DEFAULT_DAILY_REPORT_SKILL_VERSION,
@@ -244,6 +331,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const llmProvider = readLlmProvider(env);
   const runDate = readRunDate(env);
   const scheduleType = readScheduleType(env);
+  const scheduleWindowMinutes = readScheduleWindowMinutes(env);
   const publicBriefingBaseUrl = readPublicBriefingBaseUrl(env);
   const pool = createPool(databaseUrl);
   const db = createDatabase(pool);
@@ -305,6 +393,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
         orchestrator,
         runDate,
         scheduleType,
+        scheduleWindowMinutes,
         userRepository
       });
     } finally {

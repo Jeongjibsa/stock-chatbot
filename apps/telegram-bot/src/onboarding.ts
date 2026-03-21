@@ -34,6 +34,10 @@ export class GroupJoinWelcomeStore {
 const COMMAND_SUMMARIES = [
   "/register - 개인화 리포트 등록",
   "/report - 지금 브리핑 받기",
+  "/report_settings - 브리핑 설정 확인",
+  "/report_on - 정기 브리핑 켜기",
+  "/report_off - 정기 브리핑 끄기",
+  "/report_time - 브리핑 시간 변경",
   "/portfolio_add - 보유 종목 추가",
   "/portfolio_list - 내 종목 확인",
   "/portfolio_remove - 보유 종목 삭제",

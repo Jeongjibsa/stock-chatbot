@@ -34,6 +34,8 @@ public repository 기준으로 아래 workflow를 사용한다.
 - `OPENAI_API_KEY`
 - `REDIS_URL`
 - `TELEGRAM_BOT_TOKEN`
+- `DAILY_REPORT_TRIGGER_URL`
+- `DAILY_REPORT_TRIGGER_TOKEN`
 
 Actions용 일 배치 진입점:
 
@@ -41,6 +43,7 @@ Actions용 일 배치 진입점:
 - `pnpm --filter @stock-chatbot/worker run run:public-briefing`
 
 현재 GitHub Actions 런너는 queue 없이 직접 일 배치 작업을 실행한다. 정확한 정시성보다 저비용 운영을 우선하며, schedule 지연은 저장 계층 중복 방지로 흡수한다.
+`DAILY_REPORT_TRIGGER_URL`이 secret으로 설정되면 local worker 대신 외부 전용 worker trigger endpoint를 호출하는 방식으로 전환할 수 있다.
 공개 브리핑은 같은 `runDate`에 대해 canonical `/briefings/YYYY-MM-DD/`와 archive `/briefings/YYYY/MM/DD/`를 동일하게 재생성하며, root `/`와 `/briefings/` index도 함께 갱신한다.
 daily report runner는 생성 성공 후 `preferred_delivery_chat_id`가 있는 사용자에게만 Telegram DM delivery를 시도하고, 로그에는 `delivered`, `deliverySkipped`, `deliveryFailed` 집계를 함께 남긴다.
 현재 app runtime 스크립트는 workspace ESM 해석 이슈를 피하기 위해 `tsx` source entrypoint를 사용하고, `pnpm build`는 검증용 단계로 유지한다.
@@ -107,6 +110,14 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
   - 개인화 리포트 수신 대상 등록
 - `/report`
   - 오늘 브리핑 바로 받기
+- `/report_settings`
+  - 정기 브리핑 설정 확인
+- `/report_on`
+  - 정기 브리핑 켜기
+- `/report_off`
+  - 정기 브리핑 끄기
+- `/report_time`
+  - 정기 브리핑 시간 변경
 - `/portfolio_add`
   - 보유 종목 추가
 - `/portfolio_list`
@@ -125,6 +136,7 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
 조인 이벤트가 `new_chat_members`와 `chat_member`로 중복 들어오는 경우를 대비해, 같은 사용자와 그룹 조합의 환영 메시지는 짧은 시간 안에 1회만 전송한다.
 이 자동 안내가 동작하려면 봇이 해당 그룹의 관리자 권한을 가져야 하고, polling은 `chat_member` 업데이트를 구독해야 한다.
 `/portfolio_add`, `/portfolio_remove`, `/market_add`는 단계별 입력 플로우를 유지하면서 실제 DB 저장/조회와 연결된다.
+`/report_settings`, `/report_on`, `/report_off`, `/report_time HH:MM`으로 사용자별 정기 브리핑 발송 여부와 시간을 조정할 수 있다.
 `/mock_report`는 실제 Telegram provider 연동 없이 현재 리포트 템플릿을 미리보기로 보여준다.
 
 권장 사용자 흐름:
@@ -135,7 +147,8 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
 4. `/portfolio_add`로 보유 종목 입력
 5. `/portfolio_list`로 저장 결과 확인
 6. 필요하면 `/market_add`로 관심 지표 추가
-7. 이후 개인화 브리핑은 DM으로 수신
+7. 필요하면 `/report_time 09:00` 등으로 정기 브리핑 시간을 조정
+8. 이후 개인화 브리핑은 DM으로 수신
 
 실 Telegram smoke test:
 
@@ -171,6 +184,8 @@ smoke test는 먼저 `getMe`로 봇 신원을 검증하고, 이어서 현재 템
   - worker에서 일 배치 스케줄 등록 여부 제어
 - `DAILY_REPORT_PATTERN`
   - BullMQ scheduler cron pattern
+- `DAILY_REPORT_WINDOW_MINUTES`
+  - 사용자별 예약 발송 허용 윈도우 분 단위. 기본값은 `15`
 - `REPORT_TIMEZONE`
   - 스케줄 계산 타임존
 - `REPORT_RUN_DATE`

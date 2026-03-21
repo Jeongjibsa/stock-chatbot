@@ -4,16 +4,30 @@ import type {
 } from "@stock-chatbot/application";
 
 type UserRecord = {
+  dailyReportEnabled?: boolean;
+  dailyReportHour?: number;
+  dailyReportMinute?: number;
   displayName: string;
   id: string;
   preferredDeliveryChatId?: string | null;
   preferredDeliveryChatType?: string | null;
   telegramUserId: string;
+  timezone?: string;
 };
 
 type UserRepositoryPort = {
   getByTelegramUserId(telegramUserId: string): Promise<UserRecord | null>;
+  updateReportSettings(input: {
+    dailyReportEnabled?: boolean;
+    dailyReportHour?: number;
+    dailyReportMinute?: number;
+    telegramUserId: string;
+    timezone?: string;
+  }): Promise<UserRecord>;
   upsert(input: {
+    dailyReportEnabled?: boolean;
+    dailyReportHour?: number;
+    dailyReportMinute?: number;
     displayName: string;
     locale?: string;
     preferredDeliveryChatId?: string;
@@ -191,6 +205,23 @@ export class TelegramUserPortfolioService {
     const user = await this.requireUser(telegramUserId);
 
     return this.dependencies.userMarketWatchRepository.listEffectiveByUserId(user.id);
+  }
+
+  async updateDailyReportSettings(
+    telegramUserId: string,
+    input: {
+      dailyReportEnabled?: boolean;
+      dailyReportHour?: number;
+      dailyReportMinute?: number;
+      timezone?: string;
+    }
+  ): Promise<UserRecord> {
+    await this.requireUser(telegramUserId);
+
+    return this.dependencies.userRepository.updateReportSettings({
+      telegramUserId,
+      ...input
+    });
   }
 
   private async requireUser(telegramUserId: string): Promise<UserRecord> {

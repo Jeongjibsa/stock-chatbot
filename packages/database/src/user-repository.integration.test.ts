@@ -45,6 +45,9 @@ describeIntegration("UserRepository integration", () => {
     expect(user.telegramUserId).toBe("1001");
     expect(user.locale).toBe("ko-KR");
     expect(user.preferredDeliveryChatId).toBe("chat-1001");
+    expect(user.dailyReportEnabled).toBe(true);
+    expect(user.dailyReportHour).toBe(9);
+    expect(user.dailyReportMinute).toBe(0);
   });
 
   it("updates an existing user without duplicating telegram id", async () => {
@@ -59,7 +62,10 @@ describeIntegration("UserRepository integration", () => {
       locale: "en-US",
       timezone: "UTC",
       preferredDeliveryChatId: "chat-2002",
-      preferredDeliveryChatType: "private"
+      preferredDeliveryChatType: "private",
+      dailyReportEnabled: false,
+      dailyReportHour: 21,
+      dailyReportMinute: 30
     });
     const users = await repository.listUsers();
 
@@ -71,7 +77,33 @@ describeIntegration("UserRepository integration", () => {
       locale: "en-US",
       timezone: "UTC",
       preferredDeliveryChatId: "chat-2002",
-      preferredDeliveryChatType: "private"
+      preferredDeliveryChatType: "private",
+      dailyReportEnabled: false,
+      dailyReportHour: 21,
+      dailyReportMinute: 30
+    });
+  });
+
+  it("updates report schedule settings for an existing user", async () => {
+    await repository.upsert({
+      telegramUserId: "1001",
+      displayName: "Old Name"
+    });
+
+    const updated = await repository.updateReportSettings({
+      telegramUserId: "1001",
+      dailyReportEnabled: false,
+      dailyReportHour: 7,
+      dailyReportMinute: 15,
+      timezone: "America/New_York"
+    });
+
+    expect(updated).toMatchObject({
+      telegramUserId: "1001",
+      dailyReportEnabled: false,
+      dailyReportHour: 7,
+      dailyReportMinute: 15,
+      timezone: "America/New_York"
     });
   });
 });

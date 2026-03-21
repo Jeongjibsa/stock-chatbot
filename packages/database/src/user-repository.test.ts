@@ -47,7 +47,10 @@ describe("UserRepository", () => {
         preferredDeliveryChatType: "private",
         displayName: "Jisung",
         locale: "ko-KR",
-        timezone: "Asia/Seoul"
+        timezone: "Asia/Seoul",
+        dailyReportEnabled: true,
+        dailyReportHour: 9,
+        dailyReportMinute: 0
       }
     ];
     const repository = new UserRepository(db);
@@ -64,6 +67,43 @@ describe("UserRepository", () => {
       preferredDeliveryChatId: "chat-1",
       preferredDeliveryChatType: "private",
       displayName: "Jisung"
+    });
+  });
+
+  it("returns the updated user from report settings update", async () => {
+    const state = {
+      result: [
+        {
+          telegramUserId: "123",
+          dailyReportEnabled: false,
+          dailyReportHour: 21,
+          dailyReportMinute: 15
+        }
+      ] as unknown[]
+    };
+    const db = {
+      update: () => ({
+        set: () => ({
+          where: () => ({
+            returning: async () => state.result
+          })
+        })
+      })
+    } as unknown as DatabaseClient;
+    const repository = new UserRepository(db);
+
+    await expect(
+      repository.updateReportSettings({
+        telegramUserId: "123",
+        dailyReportEnabled: false,
+        dailyReportHour: 21,
+        dailyReportMinute: 15
+      })
+    ).resolves.toMatchObject({
+      telegramUserId: "123",
+      dailyReportEnabled: false,
+      dailyReportHour: 21,
+      dailyReportMinute: 15
     });
   });
 });

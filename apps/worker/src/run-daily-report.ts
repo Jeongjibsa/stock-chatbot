@@ -41,6 +41,7 @@ export function formatDailyReportJobSummary(input: {
     `delivered=${input.summary.deliveredCount}`,
     `deliverySkipped=${input.summary.deliverySkippedCount}`,
     `deliveryFailed=${input.summary.deliveryFailedCount}`,
+    `notDue=${input.summary.notDueCount}`,
     `partialSuccess=${input.summary.partialSuccessCount}`,
     `failed=${input.summary.failedCount}`,
     `skippedDuplicate=${input.summary.skippedDuplicateCount}`

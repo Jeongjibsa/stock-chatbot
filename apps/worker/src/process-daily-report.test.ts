@@ -5,6 +5,7 @@ import {
   DEFAULT_DAILY_REPORT_SKILL_VERSION
 } from "@stock-chatbot/application";
 import {
+  isUserDueForScheduledReport,
   processDailyReportJob,
   readDatabaseUrl,
   readFredApiKey,
@@ -14,7 +15,8 @@ import {
   readPublicBriefingBaseUrl,
   readTelegramBotToken,
   readRunDate,
-  readScheduleType
+  readScheduleType,
+  readScheduleWindowMinutes
 } from "./process-daily-report.js";
 
 describe("processDailyReportJob", () => {
@@ -42,7 +44,7 @@ describe("processDailyReportJob", () => {
       },
       orchestrator,
       runDate: "2026-03-20",
-      scheduleType: "daily-9am",
+      scheduleType: "manual-dispatch",
       userRepository: {
         listUsers: vi.fn(async () => [
           { id: "user-1", displayName: "A", preferredDeliveryChatId: "chat-1" },
@@ -60,6 +62,7 @@ describe("processDailyReportJob", () => {
       deliverySkippedCount: 0,
       partialSuccessCount: 1,
       failedCount: 0,
+      notDueCount: 0,
       skippedDuplicateCount: 1
     });
     expect(orchestrator.runForUser).toHaveBeenNthCalledWith(
@@ -94,7 +97,7 @@ describe("processDailyReportJob", () => {
       deliveryAdapter,
       orchestrator,
       runDate: "2026-03-20",
-      scheduleType: "daily-9am",
+      scheduleType: "manual-dispatch",
       userRepository: {
         listUsers: vi.fn(async () => [
           { id: "user-1", displayName: "A", preferredDeliveryChatId: "chat-1" },
@@ -111,9 +114,74 @@ describe("processDailyReportJob", () => {
       deliverySkippedCount: 1,
       partialSuccessCount: 1,
       failedCount: 0,
+      notDueCount: 0,
       skippedDuplicateCount: 0
     });
     expect(deliveryAdapter.deliver).toHaveBeenCalledTimes(1);
+  });
+
+  it("filters scheduled users by enabled flag and local delivery time", async () => {
+    const orchestrator = {
+      runForUser: vi.fn().mockResolvedValue({
+        status: "completed",
+        reportText: "report-1"
+      })
+    };
+
+    const summary = await processDailyReportJob({
+      deliveryAdapter: {
+        deliver: vi.fn(async () => undefined)
+      },
+      now: new Date("2026-03-21T00:07:00.000Z"),
+      orchestrator,
+      runDate: "2026-03-21",
+      scheduleType: "daily-9am",
+      scheduleWindowMinutes: 15,
+      userRepository: {
+        listUsers: vi.fn(async () => [
+          {
+            id: "user-1",
+            displayName: "A",
+            preferredDeliveryChatId: "chat-1",
+            dailyReportEnabled: true,
+            dailyReportHour: 9,
+            dailyReportMinute: 0,
+            timezone: "Asia/Seoul"
+          },
+          {
+            id: "user-2",
+            displayName: "B",
+            preferredDeliveryChatId: "chat-2",
+            dailyReportEnabled: false,
+            dailyReportHour: 9,
+            dailyReportMinute: 0,
+            timezone: "Asia/Seoul"
+          },
+          {
+            id: "user-3",
+            displayName: "C",
+            preferredDeliveryChatId: "chat-3",
+            dailyReportEnabled: true,
+            dailyReportHour: 10,
+            dailyReportMinute: 0,
+            timezone: "Asia/Seoul"
+          }
+        ])
+      }
+    });
+
+    expect(summary).toEqual({
+      userCount: 3,
+      completedCount: 1,
+      deliveredCount: 1,
+      deliveryFailedCount: 0,
+      deliverySkippedCount: 0,
+      failedCount: 0,
+      notDueCount: 2,
+      partialSuccessCount: 0,
+      skippedDuplicateCount: 0
+    });
+    expect(orchestrator.runForUser).toHaveBeenCalledTimes(1);
   });
 
   it("reads runtime env defaults and required keys", () => {
@@ -134,6 +202,10 @@ describe("processDailyReportJob", () => {
     expect(readTelegramBotToken({ TELEGRAM_BOT_TOKEN: "telegram-token" })).toBe(
       "telegram-token"
     );
+    expect(readScheduleWindowMinutes({})).toBe(15);
+    expect(readScheduleWindowMinutes({ DAILY_REPORT_WINDOW_MINUTES: "10" })).toBe(
+      10
+    );
     expect(readLlmProvider({})).toBeUndefined();
     expect(readLlmProvider({ LLM_PROVIDER: "google" })).toBe("google");
     expect(readLlmProvider({ LLM_PROVIDER: "openai" })).toBe("openai");
@@ -143,5 +215,37 @@ describe("processDailyReportJob", () => {
         PUBLIC_BRIEFING_BASE_URL: "https://jeongjibsa.github.io/stock-chatbot/"
       })
     ).toBe("https://jeongjibsa.github.io/stock-chatbot");
+  });
+
+  it("matches local scheduled time within the allowed window", () => {
+    expect(
+      isUserDueForScheduledReport({
+        now: new Date("2026-03-21T00:07:00.000Z"),
+        user: {
+          id: "user-1",
+          displayName: "A",
+          dailyReportEnabled: true,
+          dailyReportHour: 9,
+          dailyReportMinute: 0,
+          timezone: "Asia/Seoul"
+        },
+        windowMinutes: 15
+      })
+    ).toBe(true);
+
+    expect(
+      isUserDueForScheduledReport({
+        now: new Date("2026-03-21T00:20:00.000Z"),
+        user: {
+          id: "user-1",
+          displayName: "A",
+          dailyReportEnabled: true,
+          dailyReportHour: 9,
+          dailyReportMinute: 0,
+          timezone: "Asia/Seoul"
+        },
+        windowMinutes: 15
+      })
+    ).toBe(false);
   });
 });
