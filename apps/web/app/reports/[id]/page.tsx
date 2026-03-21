@@ -35,11 +35,11 @@ export default async function ReportDetailPage({
     return (
       <main className="pb-12">
         <div className="space-y-8">
-          <header className="report-shell soft-grid overflow-hidden p-8 sm:p-10">
+          <header className="report-shell overflow-hidden p-8 sm:p-10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="section-label">Report Detail</p>
-                <h1 className="gradient-title mt-4 text-[2.4rem] font-semibold">
+                <h1 className="gradient-title mt-4 text-[2.55rem] font-semibold tracking-[-0.05em]">
                   {report.reportDate}
                 </h1>
               </div>
@@ -50,7 +50,7 @@ export default async function ReportDetailPage({
                 </Link>
               </Button>
             </div>
-            <p className="mt-5 max-w-3xl text-[1rem] leading-8 text-[color:var(--muted)]">
+            <p className="mt-5 max-w-3xl text-[1.02rem] leading-8 text-[color:var(--muted)]">
               {report.summary}
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
@@ -67,7 +67,7 @@ export default async function ReportDetailPage({
               <CardContent className="space-y-5">
                 <div>
                   <p className="section-label">Signals</p>
-                  <p className="mt-3 text-sm leading-7 text-[color:var(--muted)]">
+                  <p className="mt-3 text-[0.9rem] leading-7 text-[color:var(--muted)]">
                     이번 브리핑에서 핵심으로 추린 시그널입니다.
                   </p>
                 </div>

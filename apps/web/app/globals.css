@@ -7,16 +7,16 @@
   --surface-strong: #ffffff;
   --surface-muted: #f1f5f9;
   --foreground: #0f172a;
-  --muted: #475569;
-  --line: #e2e8f0;
-  --line-strong: #cbd5e1;
-  --accent: #3b82f6;
-  --accent-strong: #2563eb;
-  --accent-soft: rgba(59, 130, 246, 0.08);
-  --ring: rgba(59, 130, 246, 0.28);
-  --shadow-sm: 0 10px 30px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 16px 42px rgba(15, 23, 42, 0.07);
-  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.08);
+  --muted: #526174;
+  --line: #e5ebf2;
+  --line-strong: #d6dee8;
+  --accent: #4f7cff;
+  --accent-strong: #416ee9;
+  --accent-soft: rgba(79, 124, 255, 0.07);
+  --ring: rgba(79, 124, 255, 0.24);
+  --shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 12px 32px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.06);
 }
 
 html {
@@ -27,7 +27,7 @@ html {
 body {
   color: var(--foreground);
   background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.06), transparent 26%),
+    radial-gradient(circle at top left, rgba(79, 124, 255, 0.035), transparent 24%),
     linear-gradient(180deg, #fbfdff 0%, var(--background) 20%, var(--background) 100%);
   font-family:
     "Pretendard Variable",
@@ -74,14 +74,14 @@ button:not(:disabled),
 }
 
 .surface-panel {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.82);
   border: 1px solid var(--line);
   box-shadow: var(--shadow-sm);
 }
 
 .signal-chip {
   border: 1px solid var(--line);
-  background: var(--surface-muted);
+  background: color-mix(in srgb, var(--surface-muted) 78%, white);
   color: color-mix(in srgb, var(--foreground) 84%, var(--muted));
   border-radius: 999px;
   padding: 0.42rem 0.82rem;
@@ -94,7 +94,7 @@ button:not(:disabled),
   color: var(--muted);
   font-size: 0.69rem;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
@@ -191,28 +191,28 @@ button:not(:disabled),
 .report-shell {
   border: 1px solid var(--line);
   border-radius: 1.75rem;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 1));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 1));
   box-shadow: var(--shadow-md);
 }
 
 .soft-grid {
   background-image:
-    linear-gradient(to right, rgba(226, 232, 240, 0.55) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(226, 232, 240, 0.55) 1px, transparent 1px);
-  background-size: 28px 28px;
+    linear-gradient(to right, rgba(226, 232, 240, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.18) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 .feed-stripe {
   background:
-    linear-gradient(90deg, rgba(59, 130, 246, 0.14), rgba(59, 130, 246, 0.03)),
+    linear-gradient(90deg, rgba(79, 124, 255, 0.08), rgba(79, 124, 255, 0.015)),
     var(--surface);
 }
 
 .section-label {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 

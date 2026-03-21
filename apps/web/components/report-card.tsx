@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, BarChart3 } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 import type { PublicReport } from "../types/report";
 import { normalizeMarketRegime, scoreTone } from "../lib/report-feed";
@@ -24,21 +24,20 @@ export function ReportCard({ report }: { report: PublicReport }) {
         : "neutral";
 
   return (
-    <Card className="group overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
-      <CardContent className="space-y-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+    <Card className="group overflow-hidden hover:-translate-y-px hover:shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
+      <CardContent className="space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-3xl space-y-3">
-            <div className="flex flex-wrap items-center gap-2 text-[0.78rem] font-medium text-[color:var(--muted)]">
+            <div className="flex flex-wrap items-center gap-2 text-[0.75rem] font-medium text-[color:var(--muted)]">
               <span>{report.reportDate}</span>
               <span className="inline-flex h-1 w-1 rounded-full bg-[color:var(--line-strong)]" />
               <span>{formatCreatedAt(report.createdAt)}</span>
             </div>
-            <h3 className="text-balance text-[1.6rem] font-semibold leading-8 tracking-[-0.04em] text-[color:var(--foreground)]">
+            <h3 className="max-w-[42rem] text-balance text-[1.72rem] font-semibold leading-[1.32] tracking-[-0.045em] text-[color:var(--foreground)]">
               {report.summary}
             </h3>
-            <p className="flex items-center gap-2 text-sm text-[color:var(--muted)]">
-              <BarChart3 className="h-4 w-4" />
-              최신 공개 브리핑 요약과 핵심 시그널만 간결하게 보여줍니다.
+            <p className="text-[0.93rem] leading-7 text-[color:var(--muted)]">
+              공개 브리핑에서 먼저 읽어야 할 핵심 시그널과 레짐만 압축해서 보여줍니다.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -63,8 +62,10 @@ export function ReportCard({ report }: { report: PublicReport }) {
           ) : null}
         </div>
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-[color:var(--muted)]">
-            시그널 {Math.min(report.signals.length, 3)}개 · 공개 아카이브 기준
+          <p className="text-[0.82rem] font-medium text-[color:var(--muted)]">
+            {report.signals.length > 0
+              ? `핵심 시그널 ${Math.min(report.signals.length, 3)}개`
+              : "핵심 시그널 정리 대기"}
           </p>
           <Button asChild size="sm">
             <Link href={`/reports/${report.id}`}>

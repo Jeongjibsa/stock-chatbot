@@ -9,7 +9,7 @@ export function FeedEmptyState() {
       <CardContent className="space-y-6">
         <p className="section-label">Empty State</p>
         <div className="space-y-2">
-          <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--foreground)]">
+          <h2 className="max-w-[18ch] text-[2rem] font-semibold tracking-[-0.045em] text-[color:var(--foreground)]">
             아직 공개 브리핑이 없습니다.
           </h2>
           <p className="max-w-2xl text-[0.95rem] leading-8 text-[color:var(--muted)]">

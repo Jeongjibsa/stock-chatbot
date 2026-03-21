@@ -17,7 +17,7 @@ export default async function HomePage() {
       return (
         <main className="pb-12">
           <header className="mb-10 grid gap-5 lg:grid-cols-[1.35fr_0.85fr]">
-            <div className="report-shell soft-grid overflow-hidden p-8 sm:p-10">
+            <div className="report-shell overflow-hidden p-8 sm:p-10">
               <p className="section-label">Stock Briefing Archive</p>
               <h1 className="gradient-title mt-4 text-balance text-[2.7rem] font-semibold sm:text-[3.4rem]">
                 공개 브리핑 피드
@@ -60,9 +60,9 @@ export default async function HomePage() {
     return (
       <main className="pb-12">
         <header className="mb-12 grid gap-5 lg:grid-cols-[1.38fr_0.82fr]">
-          <div className="report-shell soft-grid overflow-hidden p-8 sm:p-10">
+          <div className="report-shell overflow-hidden p-8 sm:p-10">
             <p className="section-label">Stock Briefing Archive</p>
-            <h1 className="gradient-title mt-4 text-balance text-[2.7rem] font-semibold sm:text-[3.5rem]">
+            <h1 className="gradient-title mt-4 max-w-[10ch] text-balance text-[2.85rem] font-semibold leading-[1.04] sm:text-[3.6rem]">
               최신순 공개 브리핑 피드
             </h1>
             <p className="mt-5 max-w-3xl text-[0.98rem] leading-8 text-[color:var(--muted)]">
@@ -82,11 +82,11 @@ export default async function HomePage() {
             <Card className="feed-stripe overflow-hidden">
               <CardContent className="space-y-4">
                 <p className="section-label">Latest Summary</p>
-                <p className="text-[1.15rem] font-semibold tracking-[-0.03em] text-[color:var(--foreground)]">
+                <p className="text-[1.18rem] font-semibold leading-7 tracking-[-0.03em] text-[color:var(--foreground)]">
                   {latestReport.summary}
                 </p>
-                <p className="text-sm leading-7 text-[color:var(--muted)]">
-                  가장 최근에 저장된 공개 브리핑의 요약입니다.
+                <p className="text-[0.88rem] leading-7 text-[color:var(--muted)]">
+                  가장 최근에 저장된 공개 브리핑의 대표 요약입니다.
                 </p>
               </CardContent>
             </Card>
@@ -119,12 +119,12 @@ export default async function HomePage() {
               <div className="flex items-end gap-4">
                 <div className="space-y-1">
                   <p className="section-label">Date Group</p>
-                  <h2 className="text-[1.75rem] font-semibold tracking-[-0.04em] text-[color:var(--foreground)]">
+                  <h2 className="text-[1.7rem] font-semibold tracking-[-0.045em] text-[color:var(--foreground)]">
                     {group.reportDate}
                   </h2>
                 </div>
                 <div className="mb-2 h-px flex-1 bg-[color:var(--line)]" />
-                <p className="mb-1 text-sm font-medium text-[color:var(--muted)]">
+                <p className="mb-1 text-[0.82rem] font-medium text-[color:var(--muted)]">
                   {group.reports.length} items
                 </p>
               </div>
