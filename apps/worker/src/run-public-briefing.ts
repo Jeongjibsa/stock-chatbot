@@ -69,15 +69,22 @@ export async function buildPublicBriefing(
   let composition: DailyReportComposition | undefined;
 
   if (dependencies.reportCompositionService) {
-    composition = await dependencies.reportCompositionService.compose({
-      holdings: [],
-      marketResults,
-      newsBriefs: [],
-      quantScorecards,
-      quantScenarios,
-      riskCheckpoints: [],
-      runDate: dependencies.runDate
-    });
+    try {
+      composition = await dependencies.reportCompositionService.compose({
+        holdings: [],
+        marketResults,
+        newsBriefs: [],
+        quantScorecards,
+        quantScenarios,
+        riskCheckpoints: [],
+        runDate: dependencies.runDate
+      });
+    } catch (error) {
+      console.warn(
+        "[public-briefing] falling back to rule-based summary",
+        error instanceof Error ? error.message : error
+      );
+    }
   }
 
   return buildPublicDailyBriefing({

@@ -109,6 +109,61 @@ describe("run-public-briefing", () => {
     ]);
   });
 
+  it("falls back to rule-based output when composition fails", async () => {
+    const marketResults: MarketDataFetchResult[] = [
+      {
+        status: "ok",
+        data: {
+          itemCode: "NASDAQ",
+          itemName: "나스닥 종합",
+          source: "yahoo_finance",
+          sourceKey: "index:NASDAQ:IXIC",
+          asOfDate: "2026-03-20",
+          previousValue: 22090.6895,
+          value: 21647.6113,
+          changePercent: -2.01
+        }
+      },
+      {
+        status: "ok",
+        data: {
+          itemCode: "VIX",
+          itemName: "VIX",
+          source: "yahoo_finance",
+          sourceKey: "index:CBOE:VIX",
+          asOfDate: "2026-03-20",
+          previousValue: 24.06,
+          value: 26.78,
+          changePercent: 11.31
+        }
+      }
+    ];
+
+    const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const briefing = await buildPublicBriefing({
+      runDate: "2026-03-20",
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => marketResults)
+      },
+      reportCompositionService: {
+        compose: vi.fn(async () => {
+          throw new Error("Gemini API request failed with status 429");
+        })
+      }
+    });
+
+    expect(briefing.summaryLine).toBe(
+      "미국 성장주 약세와 변동성 확대가 겹쳐 있어 신규 매수는 보수적으로 접근하시는 편이 좋습니다."
+    );
+    expect(briefing.marketBullets).toEqual([]);
+    expect(briefing.riskBullets).toEqual([]);
+    expect(warning).toHaveBeenCalledWith(
+      "[public-briefing] falling back to rule-based summary",
+      "Gemini API request failed with status 429"
+    );
+  });
+
   it("formats a concise build summary for workflow logs", () => {
     expect(
       formatPublicBriefingBuildSummary({
