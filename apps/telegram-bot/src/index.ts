@@ -4,6 +4,13 @@ import {
   buildMockTelegramReportPreview,
   StaticInstrumentResolver
 } from "@stock-chatbot/application";
+import {
+  createDatabase,
+  createPool,
+  PortfolioHoldingRepository,
+  UserMarketWatchItemRepository,
+  UserRepository
+} from "@stock-chatbot/database";
 
 import {
   advanceConversation,
@@ -13,8 +20,11 @@ import {
 } from "./conversation-state.js";
 import { loadTelegramBotEnv } from "./load-env.js";
 import { readToken } from "./token.js";
+import { TelegramUserPortfolioService } from "./user-portfolio-service.js";
 
 loadTelegramBotEnv();
+
+const DEFAULT_DATABASE_URL = "postgresql://stockbot:stockbot@localhost:5432/stockbot";
 
 async function main(): Promise<void> {
   const token = readToken();
@@ -27,6 +37,13 @@ async function main(): Promise<void> {
   const bot = new Bot(token);
   const conversationStateStore = new InMemoryConversationStateStore();
   const instrumentResolver = new StaticInstrumentResolver();
+  const pool = createPool(process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL);
+  const db = createDatabase(pool);
+  const userPortfolioService = new TelegramUserPortfolioService({
+    userRepository: new UserRepository(db),
+    portfolioHoldingRepository: new PortfolioHoldingRepository(db),
+    userMarketWatchRepository: new UserMarketWatchItemRepository(db)
+  });
 
   const getUserKey = (userId?: number): string | null => {
     if (!userId) {
@@ -44,7 +61,14 @@ async function main(): Promise<void> {
     const userKey = getUserKey(userId);
 
     if (!userKey) {
-      await reply("사용자 식별 정보를 확인하지 못했어.");
+      await reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    const registeredUser = await userPortfolioService.findRegisteredUser(userKey);
+
+    if (!registeredUser) {
+      await reply("먼저 /register 를 실행해 계정을 등록해 주세요.");
       return;
     }
 
@@ -58,8 +82,10 @@ async function main(): Promise<void> {
         "stock-chatbot bot is running.",
         "Current bootstrap commands:",
         "/start",
+        "/register",
         "/help",
         "/portfolio_add",
+        "/portfolio_list",
         "/portfolio_remove",
         "/market_add",
         "/market_items",
@@ -72,7 +98,9 @@ async function main(): Promise<void> {
     await context.reply(
       [
         "지원 중인 명령:",
+        "/register",
         "/portfolio_add",
+        "/portfolio_list",
         "/portfolio_remove",
         "/market_add",
         "/market_items",
@@ -81,9 +109,84 @@ async function main(): Promise<void> {
     );
   });
 
+  bot.command("register", async (context) => {
+    if (!context.from || !context.chat) {
+      await context.reply("사용자 또는 채팅 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    const displayName = [context.from.first_name, context.from.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || context.from.username || "Telegram User";
+    const registerInput: {
+      chatId: string;
+      chatType: string;
+      displayName: string;
+      languageCode?: string;
+      telegramUserId: string;
+    } = {
+      telegramUserId: String(context.from.id),
+      displayName,
+      chatId: String(context.chat.id),
+      chatType: context.chat.type
+    };
+
+    if (context.from.language_code) {
+      registerInput.languageCode = context.from.language_code;
+    }
+
+    const result = await userPortfolioService.registerTelegramUser(registerInput);
+
+    if (result.deliveryMode === "private_ready") {
+      await context.reply(
+        "등록이 완료되었습니다. 앞으로 개인화 리포트는 이 1:1 대화로 발송됩니다."
+      );
+      return;
+    }
+
+    await context.reply(
+      "계정 등록은 완료되었습니다. 개인정보 보호를 위해 개인화 리포트는 봇과 1:1 대화에서 /register 를 다시 실행하신 뒤 발송됩니다."
+    );
+  });
+
   bot.command("portfolio_add", async (context) =>
     startConversation(context.from?.id, "portfolio_add", (text) => context.reply(text))
   );
+
+  bot.command("portfolio_list", async (context) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const holdings = await userPortfolioService.listPortfolioHoldings(userKey);
+
+      if (holdings.length === 0) {
+        await context.reply("현재 등록된 보유 종목이 없습니다. /portfolio_add 로 추가해 주세요.");
+        return;
+      }
+
+      await context.reply(
+        [
+          "현재 등록된 보유 종목입니다.",
+          ...holdings.map((holding) => {
+            const details = [
+              holding.quantity ? `수량 ${holding.quantity}` : null,
+              holding.avgPrice ? `평단 ${holding.avgPrice}` : null
+            ].filter(Boolean);
+
+            return `- ${holding.companyName} (${holding.symbol}, ${holding.exchange})${details.length > 0 ? ` · ${details.join(" / ")}` : ""}`;
+          })
+        ].join("\n")
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  });
 
   bot.command("portfolio_remove", async (context) =>
     startConversation(context.from?.id, "portfolio_remove", (text) =>
@@ -96,9 +199,25 @@ async function main(): Promise<void> {
   );
 
   bot.command("market_items", async (context) => {
-    await context.reply(
-      "시장 지표 조회는 저장 계층이 준비됐고, 다음 단계에서 텔레그램 응답과 연결할 예정이야."
-    );
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const items = await userPortfolioService.listMarketIndicators(userKey);
+
+      await context.reply(
+        [
+          "현재 추적 중인 시장 지표입니다.",
+          ...items.map((item) => `- ${item.itemName} (${item.itemCode})${item.isDefault ? "" : " · custom"}`)
+        ].join("\n")
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
   });
 
   bot.command("mock_report", async (context) => {
@@ -115,7 +234,7 @@ async function main(): Promise<void> {
     const userKey = getUserKey(context.from?.id);
 
     if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했어.");
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
       return;
     }
 
@@ -129,7 +248,44 @@ async function main(): Promise<void> {
 
     if (transition.status === "completed") {
       conversationStateStore.clear(userKey);
-      await context.reply(transition.message);
+
+      try {
+        switch (transition.completion.command) {
+          case "portfolio_add":
+            await userPortfolioService.addPortfolioHolding(
+              userKey,
+              transition.completion.draft
+            );
+            await context.reply(
+              `${transition.completion.draft.companyName} 보유 종목을 저장했습니다.`
+            );
+            break;
+          case "portfolio_remove": {
+            const removed = await userPortfolioService.removePortfolioHolding(
+              userKey,
+              transition.completion.resolution
+            );
+            await context.reply(
+              removed
+                ? `${transition.completion.resolution.companyName} 보유 종목을 삭제했습니다.`
+                : `${transition.completion.resolution.companyName} 종목은 현재 등록되어 있지 않습니다.`
+            );
+            break;
+          }
+          case "market_add":
+            await userPortfolioService.addMarketIndicator(
+              userKey,
+              transition.completion.resolution
+            );
+            await context.reply(
+              `${transition.completion.resolution.itemName} 지표를 추적 항목에 반영했습니다.`
+            );
+            break;
+        }
+      } catch (error) {
+        await context.reply(resolveTelegramCommandError(error));
+      }
+
       return;
     }
 
@@ -137,10 +293,23 @@ async function main(): Promise<void> {
     await context.reply(transition.message);
   });
 
-  process.once("SIGINT", () => bot.stop());
-  process.once("SIGTERM", () => bot.stop());
+  const shutdown = async () => {
+    bot.stop();
+    await pool.end();
+  };
+
+  process.once("SIGINT", () => void shutdown());
+  process.once("SIGTERM", () => void shutdown());
 
   await bot.start();
+}
+
+function resolveTelegramCommandError(error: unknown): string {
+  if (error instanceof Error && error.message === "USER_NOT_REGISTERED") {
+    return "먼저 /register 를 실행해 계정을 등록해 주세요.";
+  }
+
+  return "요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
 }
 
 const isEntrypoint = process.argv[1] === fileURLToPath(import.meta.url);

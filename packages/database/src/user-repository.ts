@@ -6,6 +6,8 @@ import { users, type UserRecord } from "./schema.js";
 export type UpsertUserInput = {
   displayName: string;
   locale?: string;
+  preferredDeliveryChatId?: string;
+  preferredDeliveryChatType?: string;
   telegramUserId: string;
   timezone?: string;
 };
@@ -28,22 +30,34 @@ export class UserRepository {
   }
 
   async upsert(input: UpsertUserInput): Promise<UserRecord> {
+    const updateSet: Record<string, unknown> = {
+      displayName: input.displayName,
+      locale: input.locale ?? "ko-KR",
+      timezone: input.timezone ?? "Asia/Seoul",
+      updatedAt: sql`now()`
+    };
+
+    if (input.preferredDeliveryChatId !== undefined) {
+      updateSet.preferredDeliveryChatId = input.preferredDeliveryChatId;
+    }
+
+    if (input.preferredDeliveryChatType !== undefined) {
+      updateSet.preferredDeliveryChatType = input.preferredDeliveryChatType;
+    }
+
     const [result] = await this.db
       .insert(users)
       .values({
         telegramUserId: input.telegramUserId,
+        preferredDeliveryChatId: input.preferredDeliveryChatId,
+        preferredDeliveryChatType: input.preferredDeliveryChatType,
         displayName: input.displayName,
         locale: input.locale ?? "ko-KR",
         timezone: input.timezone ?? "Asia/Seoul"
       })
       .onConflictDoUpdate({
         target: users.telegramUserId,
-        set: {
-          displayName: input.displayName,
-          locale: input.locale ?? "ko-KR",
-          timezone: input.timezone ?? "Asia/Seoul",
-          updatedAt: sql`now()`
-        }
+        set: updateSet
       })
       .returning();
 
@@ -54,4 +68,3 @@ export class UserRepository {
     return result;
   }
 }
-

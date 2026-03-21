@@ -43,6 +43,8 @@ describe("UserRepository", () => {
     state.result = [
       {
         telegramUserId: "123",
+        preferredDeliveryChatId: "chat-1",
+        preferredDeliveryChatType: "private",
         displayName: "Jisung",
         locale: "ko-KR",
         timezone: "Asia/Seoul"
@@ -53,10 +55,14 @@ describe("UserRepository", () => {
     await expect(
       repository.upsert({
         telegramUserId: "123",
-        displayName: "Jisung"
+        displayName: "Jisung",
+        preferredDeliveryChatId: "chat-1",
+        preferredDeliveryChatType: "private"
       })
     ).resolves.toMatchObject({
       telegramUserId: "123",
+      preferredDeliveryChatId: "chat-1",
+      preferredDeliveryChatType: "private",
       displayName: "Jisung"
     });
   });

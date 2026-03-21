@@ -71,6 +71,8 @@
 - [x] 사용자별 지표 추가/삭제 플로우 구현
 - [x] 티커 및 지표 해석 계층 구현
 - [x] 명령별 대화 상태 관리 구조 구현
+- [x] 텔레그램 `/register` 기반 사용자 등록 및 개인 발송 대상 chat 정책 구현
+- [x] 텔레그램 포트폴리오/시장 지표 명령을 실제 DB 저장/조회와 연결
 
 ### Phase 3. Daily Scheduled Report Pipeline
 
@@ -145,7 +147,7 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 5`의 GitHub Pages 배포 및 링크 연결 항목이다.
+현재 권장 시작점은 다시 `Phase 5`의 GitHub Pages 배포 및 링크 연결 항목이다.
 
 우선순위:
 
@@ -196,3 +198,5 @@
 - 2026-03-21: GitHub Pages 공개 상세 브리핑 구조, canonical/archive permalink 규칙, Telegram 전용 제외 섹션 목록을 code-first로 정의
 - 2026-03-21: GitHub Pages 공개 상세 브리핑 HTML renderer와 `scripts/pages/build-public-briefing.mjs`를 추가해 canonical/archive 정적 파일 출력 경로를 실제 코드로 정의
 - 2026-03-21: managed Postgres free-tier 후보를 비교한 결과 현재 MVP 운영 기본안은 `Neon`, 추후 앱/Auth/Storage 확장 대안은 `Supabase`로 정리
+- 2026-03-21: 텔레그램 `/register`를 추가하고, 그룹 채팅에서는 계정만 등록하되 DM에서 다시 `/register`할 때 개인 발송 대상 chat을 저장하는 정책을 실제 코드와 스키마에 반영
+- 2026-03-21: 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고 관련 unit/integration 검증을 통과

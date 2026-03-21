@@ -3,6 +3,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS "users" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "telegram_user_id" text NOT NULL,
+  "preferred_delivery_chat_id" text,
+  "preferred_delivery_chat_type" text,
   "display_name" text NOT NULL,
   "locale" text DEFAULT 'ko-KR' NOT NULL,
   "timezone" text DEFAULT 'Asia/Seoul' NOT NULL,
@@ -10,6 +12,9 @@ CREATE TABLE IF NOT EXISTS "users" (
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "users_telegram_user_id_unique" UNIQUE("telegram_user_id")
 );
+
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_id" text;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_type" text;
 
 CREATE TABLE IF NOT EXISTS "portfolio_holdings" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

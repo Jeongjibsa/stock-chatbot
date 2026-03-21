@@ -88,6 +88,9 @@
 | CHG-0061 | 2026-03-21 | ADD | GitHub Pages 공개 상세 브리핑을 위한 code-first 정보 구조, Telegram 전용 제외 섹션 목록, canonical/archive permalink 규칙을 추가해 공개 브리핑 채널과 개인화 텔레그램 채널의 분리를 구현 기준으로 고정 | PRD, Plan, Change Log, Context, Code, Tests | yes |
 | CHG-0062 | 2026-03-21 | DECISION | managed Postgres free-tier 후보를 공식 문서 기준으로 비교한 결과, 현재 MVP 운영 기본안은 branching과 scale-to-zero가 유리한 `Neon`, 추후 웹/앱에서 Auth·Storage·Realtime가 필요해질 경우 대안은 `Supabase`로 정리 | PRD, Plan, Change Log, Context | yes |
 | CHG-0063 | 2026-03-21 | ADD | GitHub Pages 공개 상세 브리핑 HTML renderer와 `build-public-briefing` script를 추가해 canonical(`/briefings/YYYY-MM-DD/`)과 archive(`/briefings/YYYY/MM/DD/`) 정적 산출물을 생성하는 build 경로를 실제 코드로 정의 | PRD, Plan, Change Log, Context, Code, Tests | yes |
+| CHG-0064 | 2026-03-21 | UPDATE | 텔레그램 그룹 채팅 확장 요구를 반영해 `/register`를 MVP 필수 명령으로 승격하고, 그룹 채팅에서는 계정만 등록하되 개인화 리포트 발송 대상 chat은 `private` DM에서 다시 `/register`할 때만 확정하는 정책과 후속 구현 항목을 plan에 추가 | PRD, Plan, Change Log, Context | yes |
+| CHG-0065 | 2026-03-21 | ADD | `users` 스키마에 `preferred_delivery_chat_id`와 `preferred_delivery_chat_type`를 추가하고, 텔레그램 `/register`가 private chat에서는 개인 발송 대상을 저장하고 group/supergroup에서는 계정만 등록하도록 bot/service/repository를 연결 | PRD, Plan, Change Log, Context, Code, Tests | yes |
+| CHG-0066 | 2026-03-21 | ADD | 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고, 미등록 사용자는 `/register`를 먼저 요구하도록 bot runtime과 service 계층을 확장 | PRD, Plan, Change Log, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

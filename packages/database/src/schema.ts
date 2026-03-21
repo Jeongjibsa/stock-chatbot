@@ -13,6 +13,8 @@ import {
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   telegramUserId: text("telegram_user_id").notNull().unique(),
+  preferredDeliveryChatId: text("preferred_delivery_chat_id"),
+  preferredDeliveryChatType: text("preferred_delivery_chat_type"),
   displayName: text("display_name").notNull(),
   locale: text("locale").notNull().default("ko-KR"),
   timezone: text("timezone").notNull().default("Asia/Seoul"),

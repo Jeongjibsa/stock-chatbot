@@ -37,11 +37,14 @@ describeIntegration("UserRepository integration", () => {
   it("creates a new user", async () => {
     const user = await repository.upsert({
       telegramUserId: "1001",
-      displayName: "Jisung"
+      displayName: "Jisung",
+      preferredDeliveryChatId: "chat-1001",
+      preferredDeliveryChatType: "private"
     });
 
     expect(user.telegramUserId).toBe("1001");
     expect(user.locale).toBe("ko-KR");
+    expect(user.preferredDeliveryChatId).toBe("chat-1001");
   });
 
   it("updates an existing user without duplicating telegram id", async () => {
@@ -54,7 +57,9 @@ describeIntegration("UserRepository integration", () => {
       telegramUserId: "1001",
       displayName: "New Name",
       locale: "en-US",
-      timezone: "UTC"
+      timezone: "UTC",
+      preferredDeliveryChatId: "chat-2002",
+      preferredDeliveryChatType: "private"
     });
     const users = await repository.listUsers();
 
@@ -64,7 +69,9 @@ describeIntegration("UserRepository integration", () => {
       telegramUserId: "1001",
       displayName: "New Name",
       locale: "en-US",
-      timezone: "UTC"
+      timezone: "UTC",
+      preferredDeliveryChatId: "chat-2002",
+      preferredDeliveryChatType: "private"
     });
   });
 });
