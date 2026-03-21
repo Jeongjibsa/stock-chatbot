@@ -19,6 +19,12 @@ import {
   InMemoryConversationStateStore
 } from "./conversation-state.js";
 import { loadTelegramBotEnv } from "./load-env.js";
+import {
+  buildGroupRegistrationReminder,
+  buildNewMemberWelcomeMessage,
+  GroupRegistrationReminderStore,
+  isGroupChat
+} from "./onboarding.js";
 import { readToken } from "./token.js";
 import { TelegramUserPortfolioService } from "./user-portfolio-service.js";
 
@@ -36,6 +42,7 @@ async function main(): Promise<void> {
 
   const bot = new Bot(token);
   const conversationStateStore = new InMemoryConversationStateStore();
+  const groupRegistrationReminderStore = new GroupRegistrationReminderStore();
   const instrumentResolver = new StaticInstrumentResolver();
   const pool = createPool(process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL);
   const db = createDatabase(pool);
@@ -224,6 +231,26 @@ async function main(): Promise<void> {
     await context.reply(buildMockTelegramReportPreview().renderedText);
   });
 
+  bot.on("message:new_chat_members", async (context) => {
+    if (!isGroupChat(context.chat.type)) {
+      return;
+    }
+
+    const memberNames = context.message.new_chat_members
+      .filter((member) => !member.is_bot)
+      .map((member) =>
+        [member.first_name, member.last_name].filter(Boolean).join(" ").trim() ||
+        member.username ||
+        "새 사용자"
+      );
+
+    if (memberNames.length === 0) {
+      return;
+    }
+
+    await context.reply(buildNewMemberWelcomeMessage(memberNames));
+  });
+
   bot.on("message:text", async (context) => {
     const text = context.message.text.trim();
 
@@ -241,6 +268,20 @@ async function main(): Promise<void> {
     const state = conversationStateStore.get(userKey);
 
     if (!state) {
+      if (isGroupChat(context.chat.type)) {
+        const registeredUser = await userPortfolioService.findRegisteredUser(userKey);
+
+        if (
+          !registeredUser &&
+          groupRegistrationReminderStore.shouldRemind(
+            userKey,
+            String(context.chat.id)
+          )
+        ) {
+          await context.reply(buildGroupRegistrationReminder());
+        }
+      }
+
       return;
     }
 

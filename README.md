@@ -109,6 +109,7 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
 - `/mock_report`
 
 `/register`는 MVP 필수 등록 단계다. group/supergroup에서는 계정만 만들고, 개인화 리포트 발송 대상 chat은 private DM에서 다시 `/register`할 때 저장한다.
+새 사용자가 그룹에 들어오면 봇은 `/register` 안내 메시지를 자동으로 보내고, 미등록 사용자가 그룹에서 일반 메시지를 남기면 1회 등록 안내를 다시 보낸다.
 `/portfolio_add`, `/portfolio_remove`, `/market_add`는 단계별 입력 플로우를 유지하면서 실제 DB 저장/조회와 연결된다.
 `/mock_report`는 실제 Telegram provider 연동 없이 현재 리포트 템플릿을 미리보기로 보여준다.
 

@@ -113,6 +113,7 @@
 - managed Postgres free-tier 기본 추천은 현재 `Neon`이다. 이유는 PostgreSQL 전용 구조, branching, scale-to-zero, GitHub Actions/preview branch와의 궁합 때문이다. `Supabase`는 추후 웹/앱에서 Auth·Storage·Realtime까지 함께 필요해질 때 재검토하는 대안으로 유지한다.
 - 텔레그램 그룹 채팅 확장 요구에 따라 `/register`가 MVP 필수 명령으로 올라갔다. 그룹 채팅에서의 `/register`는 계정만 만들고, 개인화 리포트 발송 대상 `preferred_delivery_chat_id`는 DM(`private` chat)에서 다시 `/register`할 때만 저장하는 정책이 기준선이다.
 - 텔레그램 실운영 채널 정책은 `채널=공개 브리핑`, `그룹=온보딩/안내`, `DM=개인화 delivery` 3계층을 기본으로 한다.
+- 그룹에 새 사용자가 들어오면 봇이 `/register` 안내 메시지를 자동으로 보내고, 미등록 사용자가 그룹에서 일반 메시지를 남기면 1회 등록 안내를 다시 보내는 보조 온보딩 흐름이 추가됐다.
 - `users` 스키마에는 `preferred_delivery_chat_id`, `preferred_delivery_chat_type`이 추가됐다.
 - telegram-bot은 이제 `/register`, `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB와 연결한다.
 - 미등록 사용자가 포트폴리오/시장 지표 명령을 호출하면 `/register`를 먼저 요구한다.
