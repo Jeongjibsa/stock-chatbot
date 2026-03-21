@@ -10,7 +10,10 @@ describe("DailyReportCompositionService", () => {
       model: "gpt-5-mini",
       outputText: JSON.stringify({
         oneLineSummary: "시장 지표와 보유 종목 기준으로 핵심 흐름을 정리했습니다.",
-        keyIndicatorBullets: ["달러와 환율이 함께 올라 외환 압력이 이어지고 있습니다."],
+        marketBullets: ["미국 지수와 변동성 지표를 함께 보면 위험 선호가 약해졌습니다."],
+        macroBullets: ["달러와 환율이 함께 올라 외환 압력이 이어지고 있습니다."],
+        fundFlowBullets: ["한국 수급과 ETF flow 데이터는 아직 입력되지 않았습니다."],
+        eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
         holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
         articleSummaryBullets: ["Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다."],
         strategyBullets: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
@@ -47,7 +50,10 @@ describe("DailyReportCompositionService", () => {
     );
     expect(result).toEqual({
       oneLineSummary: "시장 지표와 보유 종목 기준으로 핵심 흐름을 정리했습니다.",
-      keyIndicatorBullets: ["달러와 환율이 함께 올라 외환 압력이 이어지고 있습니다."],
+      marketBullets: ["미국 지수와 변동성 지표를 함께 보면 위험 선호가 약해졌습니다."],
+      macroBullets: ["달러와 환율이 함께 올라 외환 압력이 이어지고 있습니다."],
+      fundFlowBullets: ["한국 수급과 ETF flow 데이터는 아직 입력되지 않았습니다."],
+      eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
       holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
       articleSummaryBullets: ["Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다."],
       strategyBullets: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],

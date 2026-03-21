@@ -2,7 +2,11 @@ import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
 
 export type TelegramReportRenderInput = {
+  eventBullets?: string[];
   displayName: string;
+  fundFlowBullets?: string[];
+  macroBullets?: string[];
+  marketBullets?: string[];
   articleSummaryBullets?: string[];
   holdings: Array<{
     companyName: string;
@@ -49,8 +53,27 @@ export function renderTelegramDailyReport(
     "🌍 거시 시장 스냅샷",
     ...renderMarketSnapshot(successfulMarketItems),
     "",
-    "🧭 주요 지표 변동 요약",
-    ...renderKeyIndicatorSummary(successfulMarketItems, input.keyIndicatorSummaries),
+    "📊 시장",
+    ...renderCustomBulletSection(input.marketBullets, [
+      "S&P500, NASDAQ, KOSPI, KOSDAQ, DOW, VIX 해석 데이터가 아직 충분하지 않습니다."
+    ]),
+    "",
+    "🏦 매크로",
+    ...renderMacroSection(
+      successfulMarketItems,
+      input.macroBullets,
+      input.keyIndicatorSummaries
+    ),
+    "",
+    "💸 자금",
+    ...renderCustomBulletSection(input.fundFlowBullets, [
+      "외국인·기관 수급과 ETF flow 데이터가 아직 연결되지 않았습니다."
+    ]),
+    "",
+    "🗓️ 이벤트",
+    ...renderCustomBulletSection(input.eventBullets, [
+      "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
+    ]),
     "",
     "📈 보유 종목별 최근 동향",
     ...renderHoldings(input.holdings, input.holdingTrendBullets)
@@ -216,11 +239,12 @@ function renderRiskLines(riskCheckpoints?: string[]): string[] {
   return riskCheckpoints.map((checkpoint) => `• ${checkpoint}`);
 }
 
-function renderKeyIndicatorSummary(
+function renderMacroSection(
   results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>,
-  customSummaries?: string[]
+  customBullets?: string[],
+  supplementalBullets?: string[]
 ): string[] {
-  const lines: string[] = [];
+  const lines = customBullets ? [...customBullets] : [];
   const rankedMovers = [...results]
     .filter((result) => result.data.changePercent !== undefined)
     .sort(
@@ -240,18 +264,29 @@ function renderKeyIndicatorSummary(
   const fxInsight = buildFxInsight(results);
 
   if (fxInsight) {
-    lines.push(`• ${fxInsight}`);
+    lines.push(fxInsight);
   }
 
-  if (customSummaries && customSummaries.length > 0) {
-    lines.push(...customSummaries.map((summary) => `• ${summary}`));
+  if (supplementalBullets && supplementalBullets.length > 0) {
+    lines.push(...supplementalBullets);
   }
 
   if (lines.length === 0) {
     return ["• 아직 강조할 만한 지표 변화 요약이 없습니다."];
   }
 
-  return [...new Set(lines)];
+  return [...new Set(lines)].map((line) => `• ${line}`);
+}
+
+function renderCustomBulletSection(
+  bullets: string[] | undefined,
+  fallbackLines: string[]
+): string[] {
+  if (!bullets || bullets.length === 0) {
+    return fallbackLines.map((line) => `• ${line}`);
+  }
+
+  return bullets.map((bullet) => `• ${bullet}`);
 }
 
 function renderDisclaimer(): string[] {

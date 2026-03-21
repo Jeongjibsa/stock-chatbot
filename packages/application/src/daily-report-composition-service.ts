@@ -8,8 +8,11 @@ import {
 
 export type DailyReportComposition = {
   articleSummaryBullets: string[];
+  eventBullets: string[];
+  fundFlowBullets: string[];
   holdingTrendBullets: string[];
-  keyIndicatorBullets: string[];
+  macroBullets: string[];
+  marketBullets: string[];
   llmResponseId?: string;
   oneLineSummary: string;
   riskBullets: string[];
@@ -52,7 +55,10 @@ export class DailyReportCompositionService {
     const parsed = parseDailyReportStructuredOutput(llmResponse.outputText);
     const result: DailyReportComposition = {
       oneLineSummary: parsed.oneLineSummary,
-      keyIndicatorBullets: parsed.keyIndicatorBullets,
+      marketBullets: parsed.marketBullets,
+      macroBullets: parsed.macroBullets,
+      fundFlowBullets: parsed.fundFlowBullets,
+      eventBullets: parsed.eventBullets,
       holdingTrendBullets: parsed.holdingTrendBullets,
       articleSummaryBullets: parsed.articleSummaryBullets,
       strategyBullets: parsed.strategyBullets,

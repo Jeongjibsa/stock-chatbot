@@ -209,8 +209,24 @@ export class DailyReportOrchestrator {
       renderInput.holdingTrendBullets = composition.holdingTrendBullets;
     }
 
-    if (composition?.keyIndicatorBullets) {
-      renderInput.keyIndicatorSummaries = composition.keyIndicatorBullets;
+    if (composition?.marketBullets) {
+      renderInput.marketBullets = composition.marketBullets;
+    }
+
+    if (composition?.macroBullets) {
+      renderInput.macroBullets = composition.macroBullets;
+    }
+
+    if (composition?.fundFlowBullets) {
+      renderInput.fundFlowBullets = composition.fundFlowBullets;
+    }
+
+    if (composition?.eventBullets) {
+      renderInput.eventBullets = composition.eventBullets;
+    }
+
+    if (composition?.macroBullets) {
+      renderInput.keyIndicatorSummaries = composition.macroBullets;
     }
 
     if (composition?.articleSummaryBullets) {

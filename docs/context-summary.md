@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-21
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -84,6 +84,8 @@
 - telegram-bot 앱에는 `TELEGRAM_TEST_CHAT_ID` 기반 smoke runner가 추가됐고, 로컬 `make test-telegram`과 GitHub Actions `Telegram Smoke Test` workflow로 같은 검증을 실행할 수 있다.
 - 기본 거시 시장 카탈로그에는 `코스피`, `코스닥`, `S&P 500`, `국제 유가 (WTI)`, `천연가스 (Henry Hub)`, `구리`가 포함된다.
 - `commodity:COPPER`는 FRED `PCOPPUSDM`으로 연결돼 있고 월간 지표로 해석한다.
+- 텔레그램 브리핑 구조는 이제 `한 줄 요약 -> 거시 시장 스냅샷 -> 시장 -> 매크로 -> 자금 -> 이벤트 -> 보유 종목 -> 기사 요약 -> 전략 -> 리스크 -> 면책 문구` 순서를 따른다.
+- `market-report-composition` prompt는 v3로 올라갔고, `시장 / 매크로 / 자금 / 이벤트` 섹션을 별도 structured output 배열로 반환한다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.
 - telegram-bot에는 command별 in-memory 대화 상태 저장소와 상태 전이 로직이 추가됐다.
 - telegram-bot에는 `/mock_report` 예시 명령이 추가됐다.

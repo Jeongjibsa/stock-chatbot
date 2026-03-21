@@ -34,6 +34,21 @@ export function buildMockTelegramReportPreview(input?: {
       keyIndicatorSummaries: [
         "중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있습니다."
       ],
+      marketBullets: [
+        "S&P500과 NASDAQ은 기술주 중심으로 흔들렸고, VIX는 위험 회피 심리를 시사하고 있습니다.",
+        "KOSPI와 KOSDAQ은 국내 수급 민감도가 큰 장으로 해석하시는 편이 좋습니다."
+      ],
+      macroBullets: [
+        "미국 10년물 금리와 달러 인덱스를 함께 보면 긴축 경계가 완전히 해소되진 않았습니다.",
+        "CPI와 기준금리 관련 새 발표가 없는 날에는 기존 금리 부담이 그대로 해석에 반영됩니다."
+      ],
+      fundFlowBullets: [
+        "외국인·기관 수급과 ETF flow 데이터는 아직 연결 전이므로 정량 해석은 보수적으로 보시는 편이 좋습니다."
+      ],
+      eventBullets: [
+        "주요 뉴스는 중동 지정학 리스크, AI·반도체 수요 기대, 원자재 가격 변동에 집중되고 있습니다.",
+        "예정 실적 발표 일정 데이터는 아직 연결되지 않아 별도 캘린더 확인이 필요합니다."
+      ],
       marketResults: [
         {
           status: "ok",
@@ -46,6 +61,32 @@ export function buildMockTelegramReportPreview(input?: {
             previousValue: 17777.78,
             value: 18000,
             changePercent: 1.25
+          }
+        },
+        {
+          status: "ok",
+          data: {
+            itemCode: "SP500",
+            itemName: "S&P 500",
+            source: "fred",
+            sourceKey: "index:SP:SPX",
+            asOfDate: runDate,
+            previousValue: 5711.2,
+            value: 5662.4,
+            changePercent: -0.8544
+          }
+        },
+        {
+          status: "ok",
+          data: {
+            itemCode: "VIX",
+            itemName: "VIX",
+            source: "fred",
+            sourceKey: "index:CBOE:VIX",
+            asOfDate: runDate,
+            previousValue: 18.2,
+            value: 21.6,
+            changePercent: 18.6813
           }
         },
         {

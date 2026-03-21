@@ -172,3 +172,4 @@
 - 2026-03-21: GitHub Actions `CI`와 `Daily Report` workflow, `workflow_dispatch`, secret/env 주입 규칙, direct daily report runner 엔트리포인트를 추가 완료
 - 2026-03-21: FRED series 매핑 점검 문서를 추가하고, 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 실제 daily report worker 경로에 연결 완료
 - 2026-03-21: 실 Telegram provider adapter, `make test-telegram`, GitHub Actions `Telegram Smoke Test` workflow, smoke runner/unit test를 추가해 실채널 검증 자동화 완료
+- 2026-03-21: 브리핑 구조를 `시장 / 매크로 / 자금 / 이벤트` 섹션까지 확장하고, LLM prompt v3, 텔레그램 렌더러, mock preview, harness snapshot을 새 구조로 갱신 완료
