@@ -30,7 +30,7 @@ jobs:
       LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       PUBLIC_BRIEFING_OUTPUT_PATH: artifacts/public-briefing/public-daily-briefing.json
-      REPORT_RUN_DATE: ${{ inputs.report_run_date }}
+      REPORT_RUN_DATE: ${{ github.event.inputs.report_run_date || '' }}
       REPORT_TRIGGER_TYPE: ${{ github.event_name }}
 
     steps:
@@ -110,7 +110,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       PUBLIC_BRIEFING_BASE_URL: ${{ env.PUBLIC_BRIEFING_BASE_URL }}
       REDIS_URL: ${{ secrets.REDIS_URL }}
-      REPORT_RUN_DATE: ${{ inputs.report_run_date }}
+      REPORT_RUN_DATE: ${{ github.event.inputs.report_run_date || '' }}
       REPORT_TRIGGER_TYPE: ${{ github.event_name }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 

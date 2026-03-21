@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-21
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -62,7 +62,8 @@
 - `Phase 3`는 완료됐다.
 - `Phase 4`는 완료됐다.
 - `Phase 5`는 진행 중이다.
-- `Phase 6`은 부분적으로 시작됐다.
+- `Phase 6`은 완료됐다.
+- `Phase 7`은 부분 완료 상태다.
 - `Phase 2`에서 사용자 모델, 포트폴리오 보유 종목, 기본 시장 지표 카탈로그, 사용자별 시장 지표 override에 대한 Drizzle 저장 계층과 unit/integration 테스트가 추가됐다.
 - application 계층에는 정적 alias registry와 코드 정규화 기반의 포트폴리오/시장 지표 resolver가 추가됐다.
 - application 계층에는 task별 provider-agnostic LLM 라우팅 정책 함수가 추가됐다.
@@ -126,7 +127,9 @@
 - 공개 상세 브리핑 permalink는 canonical `/briefings/YYYY-MM-DD/`, archive `/briefings/YYYY/MM/DD/`를 함께 유지하고, 같은 `runDate` 재실행 시 동일 경로를 덮어쓰는 방식으로 idempotent하게 운영한다.
 - 공개 브리핑 build 스크립트는 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
 - GitHub Actions `Daily Report` workflow는 이제 `public briefing build -> Pages deploy -> daily report generate` 순서로 동작하며, 생성된 텔레그램 본문은 `PUBLIC_BRIEFING_BASE_URL + /briefings/YYYY-MM-DD/` 링크를 하단에 붙인다.
+- GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
+- GitHub Pages 공개 웹사이트는 `/app/` 경로에서 최신 공개 브리핑 요약과 아카이브 진입점을 제공하며, `/app/admin.html`은 공개 브리핑 운영 개요를 보여준다.
 - 계정 확장 전략은 현재 `telegram_user_id` 중심 MVP를 유지하되, 이후 `core user + channel identity` 구조로 확장할 수 있게 `preferred_delivery_chat_id` 같은 채널 delivery 속성을 별도 identity 성격 데이터로 취급하는 방향이다.
 - Telegram DM의 기본 UX는 한국어 온보딩 기준으로 유지한다. `/start`와 `/help`는 `등록 -> 종목 추가 -> 목록 확인 -> 관심 지표 추가 -> 브리핑 수신` 흐름과 명령별 짧은 설명을 함께 안내하고, `/register` 성공 후에도 같은 다음 단계가 이어져야 한다.
 - Telegram DM에서는 `/report`를 바로 사용할 수 있다. 등록만 완료되어 있으면 보유 종목이 없어도 실행 가능하며, 이 경우 보유 종목 관련 섹션을 제외한 시장 중심 브리핑을 생성한다.
@@ -143,7 +146,7 @@
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 4`는 뉴스 요약 및 퀀트 전략 엔진 구현 단계였고 현재 완료됐다.
 - `Phase 5`는 하네스, 평가, 운영 자동화 구축 단계이며 fixture, grader, snapshot 비교 흐름이 이미 들어갔다.
-- `Phase 7`의 다음 우선순위는 온디맨드 `/report` 또는 사용자별 예약 리포트 전송 정책 정의다.
+- `Phase 7`의 다음 우선순위는 사용자 설정 고도화, 전략 성과 추적 및 백테스트이며, 모바일 앱은 후속 phase로 유지한다.
 - `Phase 6`은 멀티채널 준비 단계이며 mock delivery와 공통 report query model, API 계약 초안까지 들어간 상태다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
 - `Phase 7`은 온디맨드 `/report`, 웹 클라이언트, 모바일 앱 같은 후순위 확장 단계다.

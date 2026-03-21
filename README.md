@@ -47,8 +47,28 @@ Actions용 일 배치 진입점:
 공개 브리핑은 같은 `runDate`에 대해 canonical `/briefings/YYYY-MM-DD/`와 archive `/briefings/YYYY/MM/DD/`를 동일하게 재생성하며, root `/`와 `/briefings/` index도 함께 갱신한다.
 daily report runner는 생성 성공 후 `preferred_delivery_chat_id`가 있는 사용자에게만 Telegram DM delivery를 시도하고, 로그에는 `delivered`, `deliverySkipped`, `deliveryFailed` 집계를 함께 남긴다.
 현재 app runtime 스크립트는 workspace ESM 해석 이슈를 피하기 위해 `tsx` source entrypoint를 사용하고, `pnpm build`는 검증용 단계로 유지한다.
+현재 공개 웹사이트는 GitHub Pages 정적 배포를 기준으로 하며, `/app/` 경로에서 최신 공개 브리핑 요약과 아카이브 진입점을 제공한다.
 
 Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 workflow는 외부 DB 없이 GitHub-hosted runner 안에서 PostgreSQL service를 띄우고, mock 사용자와 포트폴리오를 seed한 뒤 `pnpm --filter @stock-chatbot/worker run run:daily-report`를 실행한다.
+
+## GitHub Pages Website
+
+현재 웹 클라이언트 범위는 GitHub Pages 공개 웹사이트까지다. 모바일 앱은 후속 phase로 미룬다.
+
+- `/`
+  - 최신 공개 브리핑 진입 페이지
+- `/briefings/YYYY-MM-DD/`
+  - canonical 공개 브리핑 페이지
+- `/briefings/YYYY/MM/DD/`
+  - archive permalink
+- `/briefings/`
+  - 날짜 아카이브 index
+- `/app/`
+  - 공개 브리핑 요약 웹사이트
+- `/app/admin.html`
+  - 공개 브리핑 운영 개요 페이지
+
+공개 웹사이트에는 개인화 데이터가 포함되지 않는다. `보유 종목별 최근 동향`, `종목 기사 요약`, 개인별 퀀트 의견은 Telegram DM 전용이다.
 
 ## Make Commands
 

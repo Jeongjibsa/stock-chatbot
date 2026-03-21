@@ -102,6 +102,8 @@
 | CHG-0075 | 2026-03-21 | ADD | Telegram DM 전용 `/report` 명령을 추가하고, 등록만 완료된 사용자는 보유 종목이 없어도 보유 종목 섹션을 제외한 시장 중심 브리핑을 즉시 조회할 수 있도록 on-demand report runtime과 안내 문구를 확장 | PRD, Plan, README, Change Log, Context, Code, Tests | yes |
 | CHG-0076 | 2026-03-21 | ADD | 사용자별 정기 브리핑 설정(`enabled/hour/minute/timezone`)과 Telegram `/report_settings`, `/report_on`, `/report_off`, `/report_time` 명령을 추가하고, hourly GitHub Actions schedule과 due-user filtering으로 사용자별 예약 리포트 전송을 구현 | PRD, Plan, README, Change Log, Context, Workflow, Code, Tests | yes |
 | CHG-0077 | 2026-03-21 | ADD | dedicated worker 이관 기준 문서와 external trigger contract를 정의하고, `DAILY_REPORT_TRIGGER_URL` secret이 있을 때 GitHub Actions `Daily Report`가 local worker 대신 외부 worker endpoint를 호출하도록 전환 경로를 추가 | Plan, README, Change Log, Context, Workflow, Docs | yes |
+| CHG-0078 | 2026-03-21 | FIX | GitHub Actions `Daily Report` workflow가 `push`와 `schedule` 이벤트에서 `github.event.inputs.report_run_date`를 직접 참조해 즉시 실패하던 문제를 수정하고, 빈 문자열 fallback과 외부 worker trigger 분기 로직을 함께 정리 | Plan, README, Change Log, Context, Workflow | yes |
+| CHG-0079 | 2026-03-21 | ADD | GitHub Pages 공개 브리핑 JSON을 기반으로 `/app/` 정적 웹사이트와 `/app/admin.html` 운영 개요 페이지를 추가하고, Pages build script가 공개 웹 자산과 최신 브리핑 데이터를 함께 배포하도록 확장 | PRD, Plan, README, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

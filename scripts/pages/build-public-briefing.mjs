@@ -1,6 +1,5 @@
-/* global console, process */
-
 import {
+  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -21,10 +20,21 @@ const briefing = JSON.parse(readFileSync(inputPath, "utf8"));
 const html = renderPublicDailyBriefingHtml(briefing);
 const canonicalTarget = join(outputRoot, toRelativePath(briefing.canonicalPath), "index.html");
 const archiveTarget = join(outputRoot, toRelativePath(briefing.archivePath), "index.html");
+const webAppSource = join(process.cwd(), "apps", "web", "dist");
+const webAppTarget = join(outputRoot, "app");
+const latestBriefingDataTarget = join(webAppTarget, "data", "latest-briefing.json");
 
 for (const target of [canonicalTarget, archiveTarget]) {
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, html);
+}
+
+if (existsSync(webAppSource)) {
+  cpSync(webAppSource, webAppTarget, {
+    recursive: true
+  });
+  mkdirSync(dirname(latestBriefingDataTarget), { recursive: true });
+  writeFileSync(latestBriefingDataTarget, JSON.stringify(briefing, null, 2));
 }
 
 writeArchiveIndex(outputRoot, briefing.runDate);
@@ -36,6 +46,7 @@ console.log(
     {
       canonicalTarget,
       archiveTarget,
+      latestBriefingDataTarget,
       archiveIndexTarget: join(outputRoot, "briefings", "index.html"),
       rootIndexTarget: join(outputRoot, "index.html")
     },
@@ -126,6 +137,7 @@ function writeRootIndex(outputRoot, latestRunDate) {
       `      <p>최신 공개 기준일은 ${escapeHtml(latestRunDate)}입니다. 텔레그램 요약본과 연결되는 시장·매크로·자금·이벤트 상세 브리핑을 확인하실 수 있습니다.</p>`,
       '      <div class="links">',
       `        <a class="button primary" href="${escapeHtml(`./briefings/${latestRunDate}/`)}">최신 브리핑 보기</a>`,
+      '        <a class="button secondary" href="./app/">공개 웹사이트 보기</a>',
       '        <a class="button secondary" href="./briefings/">아카이브 보기</a>',
       "      </div>",
       "    </section>",

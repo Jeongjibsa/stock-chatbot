@@ -1,0 +1,12 @@
+{
+  "name": "@stock-chatbot/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.9.2"
+  }
+}

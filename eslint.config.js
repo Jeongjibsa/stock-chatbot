@@ -9,6 +9,32 @@ export default [
   },
   js.configs.recommended,
   {
+    files: ["apps/web/public/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      globals: {
+        ...globals.browser
+      },
+      sourceType: "module"
+    },
+    rules: {
+      "no-console": "off"
+    }
+  },
+  {
+    files: ["**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      globals: {
+        ...globals.node
+      },
+      sourceType: "module"
+    },
+    rules: {
+      "no-console": "off"
+    }
+  },
+  {
     files: ["**/*.ts"],
     languageOptions: {
       ecmaVersion: "latest",

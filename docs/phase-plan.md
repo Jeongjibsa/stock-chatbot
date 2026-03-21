@@ -37,9 +37,9 @@
 | Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | done |
 | Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | done |
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | done |
-| Phase 5 | GitHub Actions 기반 CI/스케줄 운영 자동화 구축 | in progress |
-| Phase 6 | 멀티채널 확장 준비 | in progress |
-| Phase 7 | 선택형 확장 기능 구축 | backlog |
+| Phase 5 | GitHub Actions 기반 CI/스케줄 운영 자동화 구축 | done |
+| Phase 6 | 멀티채널 확장 준비 | done |
+| Phase 7 | 선택형 확장 기능 구축 | in progress |
 
 ## 4. Detailed Plan
 
@@ -140,7 +140,7 @@
 - [x] 온디맨드 `/report` 요청 처리 추가
 - [x] 사용자별 예약 리포트 전송
 - [x] GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
-- [ ] 웹 클라이언트 구현
+- [x] GitHub Pages 기반 공개 웹사이트 구현
 - [ ] 모바일 앱 구현
 - [ ] 웹 관리 콘솔
 - [ ] 전략 성과 추적 및 백테스트
@@ -148,13 +148,13 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 7`의 웹 클라이언트 구현 항목이다.
+현재 권장 시작점은 `Phase 7`의 사용자 설정 고도화 또는 전략 성과 추적 항목이다.
 
 우선순위:
 
-1. 웹 클라이언트 구현
-2. 모바일 앱 구현
-3. 웹 관리 콘솔
+1. 사용자 설정 고도화
+2. 전략 성과 추적 및 백테스트
+3. 모바일 앱 구현은 후속 phase로 유지
 
 ## 6. Completion Log
 
@@ -203,3 +203,4 @@
 - 2026-03-21: 멀티채널 역할을 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 관리·조회`로 분리하고, 사용자 확장 전략을 `core user + channel identity` 방향으로 문서화
 - 2026-03-21: 텔레그램 실운영 검증을 위한 `채널=공개`, `그룹=온보딩`, `DM=개인화 delivery` 정책과 멀티 사용자 등록/포트폴리오 입력/개인 리포트 검증 체크리스트 문서를 추가
 - 2026-03-21: dedicated worker 이관 기준 문서와 external trigger contract를 추가하고, `DAILY_REPORT_TRIGGER_URL` secret이 있을 때 GitHub Actions가 local worker 대신 외부 worker endpoint를 호출하도록 전환 경로를 구현
+- 2026-03-21: GitHub Actions `Daily Report` workflow의 `REPORT_RUN_DATE` 입력 참조 오류를 수정하고, GitHub Pages `/app/` 공개 웹사이트와 `/app/admin.html` 운영 개요 페이지를 추가
