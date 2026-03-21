@@ -137,11 +137,12 @@
 - 현재 production public alias는 `https://web-three-tau-58.vercel.app`이고, direct deployment URL은 팀 정책에 따라 401이 걸릴 수 있으므로 Telegram webhook과 공개 링크는 alias를 기준으로 삼는다.
 - Neon production branch에는 baseline schema가 이미 적용됐고, Vercel production smoke 기준 `/` empty state, `/api/telegram/webhook` 200, `/api/cron/daily-report` 200, `/api/cron/reconcile` 200, `/admin` 401(Basic Auth gate)까지 확인됐다.
 - Telegram webhook은 이미 `https://web-three-tau-58.vercel.app/api/telegram/webhook`로 등록됐다.
+- 2026-03-22 기준 Telegram webhook command runtime은 production alias에서 정상 동작하며, `getWebhookInfo` 기준 `pending_update_count=0` 상태다. Vercel production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN` 강제를 비활성화한 상태로 운영한다.
 - 실제 Telegram 운영 점검은 `docs/telegram-production-test-scenarios.md`를 기준으로 진행한다.
 - root `AGENTS.md`가 추가됐고, 이 파일은 source-of-truth 문서, 런타임 역할, 검증 규칙, git 마감 단계를 빠르게 찾는 저장소 운영 맵 역할을 한다.
 - Telegram command runtime은 webhook으로 전환 가능한 상태이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 구현됐다.
 - `apps/telegram-bot/src/build-bot.ts`는 polling과 webhook 양쪽에서 공통으로 쓰는 command runtime entrypoint로 정리됐다.
-- Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화할 수 있다.
+- Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, 선택적 `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화할 수 있다.
 - GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
 - `apps/web`에는 Basic Auth 기반 read-only 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
 - GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.

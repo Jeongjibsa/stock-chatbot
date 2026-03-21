@@ -38,6 +38,7 @@ Vercel 프로젝트에는 최소 아래 값이 필요하다.
 ```bash
 DATABASE_URL=postgresql://neondb_owner:***@ep-***.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 TELEGRAM_BOT_TOKEN=123456:telegram-bot-token
+# optional: production에서는 secret mismatch 시 비워둘 수 있음
 TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token
 CRON_SECRET=vercel-cron-shared-secret
 ADMIN_DASHBOARD_USERNAME=operator
@@ -47,7 +48,7 @@ ADMIN_DASHBOARD_PASSWORD=strong-password
 메모:
 
 - 공개 웹은 `DATABASE_URL`을 읽는다.
-- webhook/cron route는 `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `CRON_SECRET`을 사용한다.
+- webhook/cron route는 `TELEGRAM_BOT_TOKEN`, 선택적 `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `CRON_SECRET`을 사용한다.
 - 개인화 브리핑 생성은 여전히 기존 worker/application 로직을 재사용한다.
 
 ## GitHub Actions 연동
@@ -92,7 +93,7 @@ TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token \
 COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 ```
 
-이 스크립트는 `setWebhook` 실행 후 `getWebhookInfo`까지 바로 출력한다.
+이 스크립트는 `setWebhook` 실행 후 `getWebhookInfo`까지 바로 출력한다. `TELEGRAM_WEBHOOK_SECRET_TOKEN`은 선택값이며, Vercel production에서 secret header 검증이 불안정하면 비운 상태로 등록해도 된다.
 
 ## 배포 후 검증 체크리스트
 
