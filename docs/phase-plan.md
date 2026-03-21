@@ -132,6 +132,7 @@
 - [x] future web/app API 계약 초안 정의
 - [x] GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의
 - [x] 사용자 계정 확장 전략 초안 정의
+- [x] 텔레그램 `채널 / 그룹 / DM` 운영 역할과 멀티 사용자 테스트 시나리오 문서화
 - [x] 공통 리포트 조회 모델과 히스토리 모델 정의
 
 ### Phase 7. Optional Expansion
@@ -147,15 +148,15 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 7`의 온디맨드 `/report` 요청 처리 또는 사용자별 예약 리포트 전송 정책 정의 항목이다.
+현재 권장 시작점은 `Phase 7`의 사용자별 예약 리포트 전송과 실제 DM delivery 경로 완성 항목이다.
 
 우선순위:
 
-1. GitHub Pages 배포 workflow 또는 Pages deploy job 정의
-2. 텔레그램 메시지 하단에 상세 브리핑 링크를 삽입하는 전달 규칙 정의
-3. 날짜별 상세 브리핑 재실행 idempotency 규칙 정의
-4. 상세 브리핑 index/archive 페이지 구조 정의
-5. schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
+1. 사용자별 예약 리포트 전송과 실제 DM delivery 경로 완성
+2. 온디맨드 `/report` 요청 처리 추가
+3. GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
+4. 웹 클라이언트 구현
+5. 모바일 앱 구현
 
 ## 6. Completion Log
 
@@ -202,3 +203,4 @@
 - 2026-03-21: 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고 관련 unit/integration 검증을 통과
 - 2026-03-21: 공개 브리핑 JSON 생성 worker 엔트리포인트, root/archive index 재생성 로직, GitHub Pages deploy job, 텔레그램 하단 상세 브리핑 링크 주입 규칙을 추가해 `공개 상세 브리핑 생성 -> Pages 배포 -> 텔레그램 요약 생성` 순서를 workflow 기준선으로 고정
 - 2026-03-21: 멀티채널 역할을 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 관리·조회`로 분리하고, 사용자 확장 전략을 `core user + channel identity` 방향으로 문서화
+- 2026-03-21: 텔레그램 실운영 검증을 위한 `채널=공개`, `그룹=온보딩`, `DM=개인화 delivery` 정책과 멀티 사용자 등록/포트폴리오 입력/개인 리포트 검증 체크리스트 문서를 추가

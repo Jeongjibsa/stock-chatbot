@@ -112,9 +112,11 @@
 - 공개 브리핑에는 HTML renderer와 `build-public-briefing` script가 추가돼 canonical/archive 두 경로에 동일한 정적 페이지를 출력할 수 있다.
 - managed Postgres free-tier 기본 추천은 현재 `Neon`이다. 이유는 PostgreSQL 전용 구조, branching, scale-to-zero, GitHub Actions/preview branch와의 궁합 때문이다. `Supabase`는 추후 웹/앱에서 Auth·Storage·Realtime까지 함께 필요해질 때 재검토하는 대안으로 유지한다.
 - 텔레그램 그룹 채팅 확장 요구에 따라 `/register`가 MVP 필수 명령으로 올라갔다. 그룹 채팅에서의 `/register`는 계정만 만들고, 개인화 리포트 발송 대상 `preferred_delivery_chat_id`는 DM(`private` chat)에서 다시 `/register`할 때만 저장하는 정책이 기준선이다.
+- 텔레그램 실운영 채널 정책은 `채널=공개 브리핑`, `그룹=온보딩/안내`, `DM=개인화 delivery` 3계층을 기본으로 한다.
 - `users` 스키마에는 `preferred_delivery_chat_id`, `preferred_delivery_chat_type`이 추가됐다.
 - telegram-bot은 이제 `/register`, `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB와 연결한다.
 - 미등록 사용자가 포트폴리오/시장 지표 명령을 호출하면 `/register`를 먼저 요구한다.
+- 멀티 사용자 실채널 테스트 체크리스트는 `docs/telegram-multi-user-test-scenarios.md`를 기준으로 사용한다.
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.
