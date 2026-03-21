@@ -262,6 +262,19 @@ COREPACK_HOME=/tmp/corepack pnpm --filter @stock-chatbot/web build
 make test-integration
 ```
 
+### 7. 하네스 검증
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm harness:check
+COREPACK_HOME=/tmp/corepack pnpm test -- scripts/harness/fixture-utils.test.js
+```
+
+관련 기준 문서:
+
+- [AGENTS.md](/Users/jisung/Projects/stock-chatbot/AGENTS.md)
+- [docs/harness-engineering.md](/Users/jisung/Projects/stock-chatbot/docs/harness-engineering.md)
+- [harness/suite-contracts.json](/Users/jisung/Projects/stock-chatbot/harness/suite-contracts.json)
+
 ## 환경 변수 설정
 
 ```bash
@@ -325,6 +338,15 @@ DAILY_REPORT_WINDOW_MINUTES=15
 - `DATABASE_URL`이 없으면 local worker fallback 단계는 skip
 - 공개 웹은 개인화 데이터를 저장하거나 노출하지 않음
 - Telegram polling runtime은 local development나 비상 fallback용으로만 사용하고, production primary runtime은 webhook 기준
+
+## 하네스 엔지니어링
+
+이 저장소의 하네스는 snapshot 비교만으로 끝나지 않습니다.
+
+- suite 기준선은 [harness/suite-contracts.json](/Users/jisung/Projects/stock-chatbot/harness/suite-contracts.json)에 둡니다.
+- `active` suite는 fixture, grader, snapshot 요구사항을 모두 만족해야 합니다.
+- `report_render_cases`처럼 렌더링 품질이 중요한 suite는 `snapshotFile`, `renderedText`, grader 연결을 함께 검증합니다.
+- 하네스 세부 운영 기준은 [docs/harness-engineering.md](/Users/jisung/Projects/stock-chatbot/docs/harness-engineering.md)에 정리합니다.
 
 ## Telegram 브리핑 예시
 

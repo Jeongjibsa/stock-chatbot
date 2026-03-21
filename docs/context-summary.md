@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-21
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083, CHG-0084, CHG-0085, CHG-0086, CHG-0087, CHG-0088, CHG-0089, CHG-0090
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083, CHG-0084, CHG-0085, CHG-0086, CHG-0087, CHG-0088, CHG-0089, CHG-0090, CHG-0091, CHG-0092
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -132,6 +132,7 @@
 - `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입하는 것을 기준으로 한다.
 - GitHub Actions와 Telegram 링크가 새 공개 웹을 가리키도록 하려면 repository variable `PUBLIC_BRIEFING_BASE_URL`을 실제 Vercel 배포 URL로 맞춰야 한다.
 - 사용자 수 10명 이하 가정을 전제로 현재 런타임 기준선은 `Vercel webhook + Vercel Cron primary + GitHub Actions backup/reconcile`이다.
+- root `AGENTS.md`가 추가됐고, 이 파일은 source-of-truth 문서, 런타임 역할, 검증 규칙, git 마감 단계를 빠르게 찾는 저장소 운영 맵 역할을 한다.
 - Telegram command runtime은 webhook으로 전환 가능한 상태이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 구현됐다.
 - `apps/telegram-bot/src/build-bot.ts`는 polling과 webhook 양쪽에서 공통으로 쓰는 command runtime entrypoint로 정리됐다.
 - Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화할 수 있다.
@@ -157,6 +158,8 @@
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 4`는 뉴스 요약 및 퀀트 전략 엔진 구현 단계였고 현재 완료됐다.
 - `Phase 5`는 하네스, 평가, 운영 자동화 구축 단계이며 fixture, grader, snapshot 비교 흐름이 이미 들어갔다.
+- 하네스는 이제 `harness/suite-contracts.json` 기준의 suite 계약 구조를 사용한다. active/planned suite 상태, 필수 expected key, grader 존재성, snapshot 요구사항을 검증 스크립트에서 기계적으로 강제한다.
+- 하네스 세부 운영 기준은 `docs/harness-engineering.md`를 기준으로 삼는다.
 - `Phase 7`의 계획 항목은 모두 구현 완료 상태다. 다음 우선순위는 production Vercel webhook/cron smoke, Neon production 연결 smoke, 전략 스코어 튜닝이다.
 - `Phase 6`은 멀티채널 준비 단계이며 mock delivery와 공통 report query model, API 계약 초안까지 들어간 상태다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.

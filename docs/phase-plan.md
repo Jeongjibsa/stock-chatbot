@@ -168,6 +168,7 @@
 1. Vercel production webhook / cron smoke 검증
 2. Neon production 연결 및 read/write smoke 검증
 3. 전략 스코어 튜닝과 운영 지표 보강
+4. active harness suite 확장과 grader 정밀도 개선
 
 ## 6. Completion Log
 
@@ -227,3 +228,4 @@
 - 2026-03-21: `apps/web`에 Basic Auth 기반 read-only `/admin` 운영 콘솔을 추가해 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그를 조회할 수 있게 하고 관련 env/runbook을 정리
 - 2026-03-21: `strategy_snapshots` 저장 모델을 추가하고 daily report가 생성한 퀀트 점수카드를 스냅샷으로 저장한 뒤 `/admin`에서 최근 시그널의 이후 수익률과 액션 적합도를 회고할 수 있게 함
 - 2026-03-21: 사용자 설정을 `report_detail_level`, `include_public_briefing_link`까지 확장하고 `/report_mode`, `/report_link_on`, `/report_link_off` 명령과 compact 텔레그램 렌더링을 추가
+- 2026-03-21: root `AGENTS.md`를 추가하고, 하네스를 `harness/suite-contracts.json` 기준의 suite 계약 구조로 강화해 active/planned suite와 grader/snapshot 불변성을 검증 스크립트에서 강제

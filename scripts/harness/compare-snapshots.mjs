@@ -7,7 +7,7 @@ import { loadAndValidateFixtures } from "./fixture-utils.mjs";
 const projectRoot = process.cwd();
 const fixturesRoot = path.resolve(projectRoot, "harness", "fixtures");
 const snapshotsRoot = path.resolve(projectRoot, "harness", "snapshots");
-const { errors, fixtures } = await loadAndValidateFixtures(fixturesRoot);
+const { errors, fixtures } = await loadAndValidateFixtures(fixturesRoot, projectRoot);
 
 if (errors.length > 0) {
   globalThis.console.error(

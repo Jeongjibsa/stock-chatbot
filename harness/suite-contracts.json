@@ -1,0 +1,29 @@
+{
+  "daily_schedule_cases": {
+    "status": "active",
+    "description": "스케줄 실행, 중복 방지, 부분 실패 같은 orchestration 결과를 검증합니다.",
+    "requiredExpectedKeys": ["jobStatus", "userStatus"]
+  },
+  "market_snapshot_cases": {
+    "status": "planned",
+    "description": "시장 스냅샷 전용 정합성과 휴장일/장중 상태를 검증할 예정입니다.",
+    "requiredExpectedKeys": []
+  },
+  "portfolio_news_cases": {
+    "status": "active",
+    "description": "뉴스 정규화, 중복 제거, 이벤트 추출 결과를 검증합니다.",
+    "requiredExpectedKeys": ["dedupedArticles", "eventCount"]
+  },
+  "quant_signal_cases": {
+    "status": "active",
+    "description": "규칙 기반 퀀트 시그널과 전략 시나리오 출력을 검증합니다.",
+    "requiredExpectedKeys": ["signalTypes", "strategyLines"]
+  },
+  "report_render_cases": {
+    "status": "active",
+    "description": "텔레그램 리포트의 구조와 스냅샷 일치를 검증합니다.",
+    "requiredExpectedKeys": ["snapshotFile", "renderedText"],
+    "requiresSnapshot": true,
+    "grader": "report-structure-grader.md"
+  }
+}
