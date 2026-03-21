@@ -248,7 +248,7 @@ function renderHoldings(
       ? `: ${transition}${changeText ? `  ${changeText}` : ""}`
       : ": 시세 스냅샷 연결 전입니다";
 
-    lines.push(`• ${holding.companyName} (${holding.symbol}, ${holding.exchange})${detailText}`);
+    lines.push(`• ${holding.companyName}${detailText}`);
 
     if (holding.trendSummary) {
       lines.push(`  ${holding.trendSummary}`);
@@ -318,9 +318,7 @@ function renderScenarioLines(
 
   if (quantScorecards && quantScorecards.length > 0) {
     for (const scorecard of quantScorecards) {
-      lines.push(
-        `• ${scorecard.companyName}${scorecard.symbol ? ` (${scorecard.symbol})` : ""}`
-      );
+      lines.push(`• ${scorecard.companyName}`);
       lines.push(
         `  Macro: ${formatSignedScore(scorecard.macroScore)} / Trend: ${formatSignedScore(scorecard.trendScore)} / Event: ${formatSignedScore(scorecard.eventScore)} / Flow: ${formatSignedScore(scorecard.flowScore)}`
       );

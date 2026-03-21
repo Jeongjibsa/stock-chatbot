@@ -43,7 +43,7 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("🗓️ 주요 일정 및 이벤트 브리핑");
     expect(report).toContain("→ 오늘은 시장 지표와 보유 종목 기준으로 핵심 흐름만 간단히 정리했습니다.");
     expect(report).toContain("나스닥 종합: 17,777.78 → 18,000  🔴▲ 1.25%");
-    expect(report).toContain("• Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
+    expect(report).toContain("• Apple Inc.: 248.96 → 247.99  🔵▼ 0.39%");
     expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 
