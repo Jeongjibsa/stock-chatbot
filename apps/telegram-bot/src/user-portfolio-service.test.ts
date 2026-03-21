@@ -2,35 +2,54 @@ import { describe, expect, it, vi } from "vitest";
 
 import { TelegramUserPortfolioService } from "./user-portfolio-service.js";
 
+function createService() {
+  const userRepository = {
+    deleteByTelegramUserId: vi.fn(async () => true),
+    getByTelegramUserId: vi.fn(),
+    updateReportSettings: vi.fn(),
+    upsert: vi.fn()
+  };
+  const portfolioHoldingRepository = {
+    getByUserAndSymbol: vi.fn(),
+    listByUserId: vi.fn(),
+    remove: vi.fn(),
+    upsert: vi.fn(async () => undefined)
+  };
+  const userMarketWatchRepository = {
+    addCustomItem: vi.fn(),
+    listEffectiveByUserId: vi.fn(),
+    showDefaultItem: vi.fn()
+  };
+
+  const service = new TelegramUserPortfolioService({
+    userRepository,
+    portfolioHoldingRepository,
+    userMarketWatchRepository
+  });
+
+  return {
+    service,
+    userRepository,
+    portfolioHoldingRepository,
+    userMarketWatchRepository
+  };
+}
+
 describe("TelegramUserPortfolioService", () => {
   it("stores private chat as preferred delivery target on register", async () => {
-    const userRepository = {
-      getByTelegramUserId: vi.fn(),
-      updateReportSettings: vi.fn(),
-      upsert: vi.fn(async (input) => ({
-        id: "user-1",
-        telegramUserId: input.telegramUserId,
-        displayName: input.displayName,
-        preferredDeliveryChatId: input.preferredDeliveryChatId ?? null,
-        preferredDeliveryChatType: input.preferredDeliveryChatType ?? null,
-        dailyReportEnabled: true,
-        dailyReportHour: 9,
-        dailyReportMinute: 0
-      }))
-    };
-    const service = new TelegramUserPortfolioService({
-      userRepository,
-      portfolioHoldingRepository: {
-        listByUserId: vi.fn(),
-        remove: vi.fn(),
-        upsert: vi.fn()
-      },
-      userMarketWatchRepository: {
-        addCustomItem: vi.fn(),
-        listEffectiveByUserId: vi.fn(),
-        showDefaultItem: vi.fn()
-      }
-    });
+    const { service, userRepository, portfolioHoldingRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue(null);
+    userRepository.upsert.mockImplementation(async (input) => ({
+      id: "user-1",
+      telegramUserId: input.telegramUserId,
+      displayName: input.displayName,
+      preferredDeliveryChatId: input.preferredDeliveryChatId ?? null,
+      preferredDeliveryChatType: input.preferredDeliveryChatType ?? null,
+      dailyReportEnabled: true,
+      dailyReportHour: 9,
+      dailyReportMinute: 0
+    }));
 
     const result = await service.registerTelegramUser({
       telegramUserId: "1001",
@@ -41,6 +60,7 @@ describe("TelegramUserPortfolioService", () => {
     });
 
     expect(result.deliveryMode).toBe("private_ready");
+    expect(result.alreadyRegistered).toBe(false);
     expect(userRepository.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         telegramUserId: "1001",
@@ -49,36 +69,52 @@ describe("TelegramUserPortfolioService", () => {
         locale: "ko-KR"
       })
     );
+    expect(portfolioHoldingRepository.upsert).not.toHaveBeenCalled();
+  });
+
+  it("marks an already registered private user without blocking the upsert path", async () => {
+    const { service, userRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung",
+      preferredDeliveryChatId: "2001",
+      preferredDeliveryChatType: "private"
+    });
+    userRepository.upsert.mockImplementation(async (input) => ({
+      id: "user-1",
+      telegramUserId: input.telegramUserId,
+      displayName: input.displayName,
+      preferredDeliveryChatId: input.preferredDeliveryChatId ?? null,
+      preferredDeliveryChatType: input.preferredDeliveryChatType ?? null
+    }));
+
+    const result = await service.registerTelegramUser({
+      telegramUserId: "1001",
+      displayName: "Jisung",
+      chatId: "2001",
+      chatType: "private"
+    });
+
+    expect(result.alreadyRegistered).toBe(true);
+    expect(result.deliveryMode).toBe("private_ready");
   });
 
   it("registers group users without setting personal delivery chat", async () => {
-    const userRepository = {
-      getByTelegramUserId: vi.fn(),
-      updateReportSettings: vi.fn(),
-      upsert: vi.fn(async (input) => ({
-        id: "user-1",
-        telegramUserId: input.telegramUserId,
-        displayName: input.displayName,
-        preferredDeliveryChatId: null,
-        preferredDeliveryChatType: null,
-        dailyReportEnabled: true,
-        dailyReportHour: 9,
-        dailyReportMinute: 0
-      }))
-    };
-    const service = new TelegramUserPortfolioService({
-      userRepository,
-      portfolioHoldingRepository: {
-        listByUserId: vi.fn(),
-        remove: vi.fn(),
-        upsert: vi.fn()
-      },
-      userMarketWatchRepository: {
-        addCustomItem: vi.fn(),
-        listEffectiveByUserId: vi.fn(),
-        showDefaultItem: vi.fn()
-      }
-    });
+    const { service, userRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue(null);
+    userRepository.upsert.mockImplementation(async (input) => ({
+      id: "user-1",
+      telegramUserId: input.telegramUserId,
+      displayName: input.displayName,
+      preferredDeliveryChatId: null,
+      preferredDeliveryChatType: null,
+      dailyReportEnabled: true,
+      dailyReportHour: 9,
+      dailyReportMinute: 0
+    }));
 
     const result = await service.registerTelegramUser({
       telegramUserId: "1001",
@@ -88,6 +124,7 @@ describe("TelegramUserPortfolioService", () => {
     });
 
     expect(result.deliveryMode).toBe("registration_only");
+    expect(result.alreadyRegistered).toBe(false);
     expect(userRepository.upsert).toHaveBeenCalledWith(
       expect.not.objectContaining({
         preferredDeliveryChatId: "-100999"
@@ -95,28 +132,20 @@ describe("TelegramUserPortfolioService", () => {
     );
   });
 
+  it("unregisters an existing user", async () => {
+    const { service, userRepository } = createService();
+
+    await expect(service.unregisterTelegramUser("1001")).resolves.toBe(true);
+    expect(userRepository.deleteByTelegramUserId).toHaveBeenCalledWith("1001");
+  });
+
   it("persists holdings for a registered user", async () => {
-    const portfolioHoldingRepository = {
-      listByUserId: vi.fn(),
-      remove: vi.fn(),
-      upsert: vi.fn(async () => undefined)
-    };
-    const service = new TelegramUserPortfolioService({
-      userRepository: {
-        getByTelegramUserId: vi.fn(async () => ({
-          id: "user-1",
-          telegramUserId: "1001",
-          displayName: "Jisung"
-        })),
-        updateReportSettings: vi.fn(),
-        upsert: vi.fn()
-      },
-      portfolioHoldingRepository,
-      userMarketWatchRepository: {
-        addCustomItem: vi.fn(),
-        listEffectiveByUserId: vi.fn(),
-        showDefaultItem: vi.fn()
-      }
+    const { service, userRepository, portfolioHoldingRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung"
     });
 
     await service.addPortfolioHolding("1001", {
@@ -138,24 +167,54 @@ describe("TelegramUserPortfolioService", () => {
     );
   });
 
-  it("throws if a user is not registered", async () => {
-    const service = new TelegramUserPortfolioService({
-      userRepository: {
-        getByTelegramUserId: vi.fn(async () => null),
-        updateReportSettings: vi.fn(),
-        upsert: vi.fn()
-      },
-      portfolioHoldingRepository: {
-        listByUserId: vi.fn(),
-        remove: vi.fn(),
-        upsert: vi.fn()
-      },
-      userMarketWatchRepository: {
-        addCustomItem: vi.fn(),
-        listEffectiveByUserId: vi.fn(),
-        showDefaultItem: vi.fn()
-      }
+  it("adds multiple holdings in bulk and skips existing ones", async () => {
+    const { service, userRepository, portfolioHoldingRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung"
     });
+    portfolioHoldingRepository.getByUserAndSymbol
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        companyName: "SK hynix",
+        exchange: "KR",
+        symbol: "000660"
+      });
+
+    const result = await service.addPortfolioHoldingsBulk("1001", [
+      {
+        companyName: "Samsung Electronics",
+        exchange: "KR",
+        symbol: "005930",
+        confidence: "high",
+        matchedBy: "alias"
+      },
+      {
+        companyName: "SK hynix",
+        exchange: "KR",
+        symbol: "000660",
+        confidence: "high",
+        matchedBy: "alias"
+      }
+    ]);
+
+    expect(result.added).toHaveLength(1);
+    expect(result.skippedExisting).toHaveLength(1);
+    expect(portfolioHoldingRepository.upsert).toHaveBeenCalledTimes(1);
+    expect(portfolioHoldingRepository.upsert).toHaveBeenCalledWith({
+      userId: "user-1",
+      companyName: "Samsung Electronics",
+      symbol: "005930",
+      exchange: "KR"
+    });
+  });
+
+  it("throws if a user is not registered", async () => {
+    const { service, userRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue(null);
 
     await expect(service.listPortfolioHoldings("1001")).rejects.toThrow(
       "USER_NOT_REGISTERED"
@@ -163,36 +222,22 @@ describe("TelegramUserPortfolioService", () => {
   });
 
   it("updates daily report settings for a registered user", async () => {
-    const userRepository = {
-      getByTelegramUserId: vi.fn(async () => ({
-        id: "user-1",
-        telegramUserId: "1001",
-        displayName: "Jisung"
-      })),
-      updateReportSettings: vi.fn(async (input) => ({
-        id: "user-1",
-        telegramUserId: input.telegramUserId,
-        displayName: "Jisung",
-        dailyReportEnabled: input.dailyReportEnabled ?? true,
-        dailyReportHour: input.dailyReportHour ?? 9,
-        dailyReportMinute: input.dailyReportMinute ?? 0,
-        timezone: input.timezone ?? "Asia/Seoul"
-      })),
-      upsert: vi.fn()
-    };
-    const service = new TelegramUserPortfolioService({
-      userRepository,
-      portfolioHoldingRepository: {
-        listByUserId: vi.fn(),
-        remove: vi.fn(),
-        upsert: vi.fn()
-      },
-      userMarketWatchRepository: {
-        addCustomItem: vi.fn(),
-        listEffectiveByUserId: vi.fn(),
-        showDefaultItem: vi.fn()
-      }
+    const { service, userRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung"
     });
+    userRepository.updateReportSettings.mockImplementation(async (input) => ({
+      id: "user-1",
+      telegramUserId: input.telegramUserId,
+      displayName: "Jisung",
+      dailyReportEnabled: input.dailyReportEnabled ?? true,
+      dailyReportHour: input.dailyReportHour ?? 9,
+      dailyReportMinute: input.dailyReportMinute ?? 0,
+      timezone: input.timezone ?? "Asia/Seoul"
+    }));
 
     const result = await service.updateDailyReportSettings("1001", {
       dailyReportEnabled: false,

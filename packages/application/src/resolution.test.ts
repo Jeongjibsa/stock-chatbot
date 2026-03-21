@@ -17,6 +17,12 @@ describe("StaticInstrumentResolver", () => {
       exchange: "KR",
       matchedBy: "alias"
     });
+
+    expect(resolver.resolvePortfolioTicker("현대차")).toMatchObject({
+      symbol: "005380",
+      exchange: "KR",
+      matchedBy: "alias"
+    });
   });
 
   it("honors preferred exchange when resolving tickers", () => {

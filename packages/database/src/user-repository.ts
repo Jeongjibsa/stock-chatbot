@@ -44,6 +44,15 @@ export class UserRepository {
     return this.db.select().from(users).orderBy(desc(users.createdAt));
   }
 
+  async deleteByTelegramUserId(telegramUserId: string): Promise<boolean> {
+    const result = await this.db
+      .delete(users)
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning({ id: users.id });
+
+    return result.length > 0;
+  }
+
   async updateReportSettings(
     input: UpdateUserReportSettingsInput
   ): Promise<UserRecord> {

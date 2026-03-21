@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildAlreadyRegisteredMessage,
   buildGroupRegisterSuccessMessage,
   buildGroupRegistrationReminder,
   buildHelpMessage,
@@ -8,6 +9,8 @@ import {
   buildNewMemberWelcomeMessage,
   buildPrivateRegisterSuccessMessage,
   buildStartMessage,
+  buildUnregisterMissingMessage,
+  buildUnregisterSuccessMessage,
   extractNewlyJoinedMemberName,
   GroupRegistrationReminderStore,
   isGroupChat
@@ -21,6 +24,7 @@ describe("telegram onboarding helpers", () => {
     expect(message).toContain("1. /register - 개인 발송 대상 등록");
     expect(message).toContain("2. /report - 지금 브리핑 확인");
     expect(message).toContain("/portfolio_add - 보유 종목 추가");
+    expect(message).toContain("/portfolio_bulk - 여러 종목 한번에 추가");
   });
 
   it("builds a concise help message", () => {
@@ -30,6 +34,7 @@ describe("telegram onboarding helpers", () => {
     expect(message).toContain("1. /register 로 등록");
     expect(message).toContain("2. /report 로 브리핑 확인");
     expect(message).toContain("/market_items - 추적 지표 확인");
+    expect(message).toContain("/unregister - 등록 초기화");
   });
 
   it("builds a private register success message with next actions", () => {
@@ -38,8 +43,23 @@ describe("telegram onboarding helpers", () => {
     expect(message).toContain("등록이 완료되었습니다.");
     expect(message).toContain("/report 로 오늘 브리핑");
     expect(message).toContain("/portfolio_add");
+    expect(message).toContain("/portfolio_bulk");
     expect(message).toContain("/portfolio_list");
     expect(message).toContain("보유 종목이 없어도");
+  });
+
+  it("builds an already registered message with reset guidance", () => {
+    const message = buildAlreadyRegisteredMessage();
+
+    expect(message).toContain("이미 등록된 계정입니다.");
+    expect(message).toContain("/report");
+    expect(message).toContain("/unregister");
+  });
+
+  it("builds unregister follow-up messages", () => {
+    expect(buildUnregisterSuccessMessage()).toContain("초기화했습니다.");
+    expect(buildUnregisterSuccessMessage()).toContain("/register");
+    expect(buildUnregisterMissingMessage()).toContain("초기화할 등록 정보가 없습니다.");
   });
 
   it("builds a group register success message that redirects to DM", () => {

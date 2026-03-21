@@ -46,6 +46,30 @@ const PORTFOLIO_TICKER_DEFINITIONS: PortfolioTickerDefinition[] = [
     aliases: ["000660", "sk하이닉스", "sk hynix", "hynix"]
   },
   {
+    symbol: "005380",
+    exchange: "KR",
+    companyName: "Hyundai Motor",
+    aliases: ["005380", "현대차", "현대자동차", "hyundai motor", "hyundai"]
+  },
+  {
+    symbol: "086520",
+    exchange: "KR",
+    companyName: "EcoPro",
+    aliases: ["086520", "에코프로", "ecopro"]
+  },
+  {
+    symbol: "086280",
+    exchange: "KR",
+    companyName: "Hyundai Glovis",
+    aliases: ["086280", "현대글로비스", "hyundai glovis", "glovis"]
+  },
+  {
+    symbol: "011200",
+    exchange: "KR",
+    companyName: "HMM",
+    aliases: ["011200", "hmm", "에이치엠엠"]
+  },
+  {
     symbol: "AAPL",
     exchange: "US",
     companyName: "Apple Inc.",

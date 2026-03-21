@@ -18,6 +18,7 @@ type UserRecord = {
 };
 
 type UserRepositoryPort = {
+  deleteByTelegramUserId(telegramUserId: string): Promise<boolean>;
   getByTelegramUserId(telegramUserId: string): Promise<UserRecord | null>;
   updateReportSettings(input: {
     dailyReportEnabled?: boolean;
@@ -44,6 +45,18 @@ type UserRepositoryPort = {
 };
 
 type PortfolioHoldingRepositoryPort = {
+  getByUserAndSymbol(
+    userId: string,
+    symbol: string,
+    exchange: string
+  ): Promise<
+    | {
+        companyName: string;
+        exchange: string;
+        symbol: string;
+      }
+    | null
+  >;
   listByUserId(userId: string): Promise<
     Array<{
       avgPrice?: string | null;
@@ -85,6 +98,7 @@ type UserMarketWatchRepositoryPort = {
 };
 
 export type RegisterTelegramUserResult = {
+  alreadyRegistered: boolean;
   deliveryMode: "private_ready" | "registration_only";
   user: UserRecord;
 };
@@ -109,6 +123,9 @@ export class TelegramUserPortfolioService {
     languageCode?: string;
     telegramUserId: string;
   }): Promise<RegisterTelegramUserResult> {
+    const existingUser = await this.dependencies.userRepository.getByTelegramUserId(
+      input.telegramUserId
+    );
     const locale = toLocale(input.languageCode);
     const upsertInput: {
       displayName: string;
@@ -131,10 +148,19 @@ export class TelegramUserPortfolioService {
     const user = await this.dependencies.userRepository.upsert(upsertInput);
 
     return {
+      alreadyRegistered:
+        existingUser !== null &&
+        input.chatType === "private" &&
+        existingUser.preferredDeliveryChatId === input.chatId &&
+        existingUser.preferredDeliveryChatType === input.chatType,
       user,
       deliveryMode:
         input.chatType === "private" ? "private_ready" : "registration_only"
     };
+  }
+
+  async unregisterTelegramUser(telegramUserId: string): Promise<boolean> {
+    return this.dependencies.userRepository.deleteByTelegramUserId(telegramUserId);
   }
 
   async addPortfolioHolding(
@@ -174,6 +200,45 @@ export class TelegramUserPortfolioService {
     }
 
     await this.dependencies.portfolioHoldingRepository.upsert(upsertInput);
+  }
+
+  async addPortfolioHoldingsBulk(
+    telegramUserId: string,
+    holdings: PortfolioTickerResolution[]
+  ): Promise<{
+    added: PortfolioTickerResolution[];
+    skippedExisting: PortfolioTickerResolution[];
+  }> {
+    const user = await this.requireUser(telegramUserId);
+    const added: PortfolioTickerResolution[] = [];
+    const skippedExisting: PortfolioTickerResolution[] = [];
+
+    for (const holding of holdings) {
+      const existing =
+        await this.dependencies.portfolioHoldingRepository.getByUserAndSymbol(
+          user.id,
+          holding.symbol,
+          holding.exchange
+        );
+
+      if (existing) {
+        skippedExisting.push(holding);
+        continue;
+      }
+
+      await this.dependencies.portfolioHoldingRepository.upsert({
+        userId: user.id,
+        companyName: holding.companyName,
+        symbol: holding.symbol,
+        exchange: holding.exchange
+      });
+      added.push(holding);
+    }
+
+    return {
+      added,
+      skippedExisting
+    };
   }
 
   async removePortfolioHolding(

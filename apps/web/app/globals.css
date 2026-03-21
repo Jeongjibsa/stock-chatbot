@@ -2,10 +2,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f5f4;
-  --surface: rgba(255, 255, 255, 0.92);
+  --background: #ffffff;
+  --surface: #ffffff;
   --surface-strong: #ffffff;
-  --surface-muted: #f0f0ef;
+  --surface-muted: #f4f4f5;
   --foreground: #111111;
   --muted: #52525b;
   --line: rgba(24, 24, 27, 0.12);
@@ -16,33 +16,14 @@
   --ring: rgba(17, 17, 17, 0.24);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --surface: rgba(24, 24, 27, 0.92);
-    --surface-strong: #18181b;
-    --surface-muted: #27272a;
-    --foreground: #fafafa;
-    --muted: #a1a1aa;
-    --line: rgba(244, 244, 245, 0.1);
-    --line-strong: rgba(244, 244, 245, 0.18);
-    --accent: #fafafa;
-    --accent-strong: #ffffff;
-    --accent-soft: rgba(250, 250, 250, 0.06);
-    --ring: rgba(250, 250, 250, 0.24);
-  }
-}
-
 html {
   background: var(--background);
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 body {
   color: var(--foreground);
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--accent-soft) 100%, transparent), transparent 30%),
-    linear-gradient(180deg, color-mix(in srgb, var(--background) 96%, white) 0%, var(--background) 100%);
+  background: var(--background);
   font-family:
     "Pretendard Variable",
     Pretendard,
@@ -51,19 +32,6 @@ body {
     "Apple SD Gothic Neo",
     "Segoe UI",
     sans-serif;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, color-mix(in srgb, var(--line) 90%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in srgb, var(--line) 90%, transparent) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 85%);
-  opacity: 0.16;
 }
 
 main {

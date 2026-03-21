@@ -33,6 +33,7 @@ export class GroupJoinWelcomeStore {
 
 const COMMAND_SUMMARIES = [
   "/register - 개인화 리포트 등록",
+  "/unregister - 등록 초기화",
   "/report - 지금 브리핑 받기",
   "/report_settings - 브리핑 설정 확인",
   "/report_on - 정기 브리핑 켜기",
@@ -42,6 +43,7 @@ const COMMAND_SUMMARIES = [
   "/report_link_on - 상세 링크 표시",
   "/report_link_off - 상세 링크 숨김",
   "/portfolio_add - 보유 종목 추가",
+  "/portfolio_bulk - 종목 여러 개 빠르게 추가",
   "/portfolio_list - 내 종목 확인",
   "/portfolio_remove - 보유 종목 삭제",
   "/market_add - 관심 지표 추가",
@@ -56,9 +58,10 @@ export function buildStartMessage(): string {
     "1. /register - 개인 발송 대상 등록",
     "2. /report - 지금 브리핑 확인",
     "3. /portfolio_add - 보유 종목 추가",
-    "4. /portfolio_list - 저장 결과 확인",
-    "5. /market_add - 관심 지표 추가",
-    "6. 매일 오전 브리핑 수신",
+    "4. /portfolio_bulk - 여러 종목 한번에 추가",
+    "5. /portfolio_list - 저장 결과 확인",
+    "6. /market_add - 관심 지표 추가",
+    "7. 매일 오전 브리핑 수신",
     "",
     "지원 명령:",
     ...COMMAND_SUMMARIES
@@ -71,8 +74,9 @@ export function buildHelpMessage(): string {
     "1. /register 로 등록",
     "2. /report 로 브리핑 확인",
     "3. /portfolio_add 로 종목 추가",
-    "4. /portfolio_list 로 확인",
-    "5. 필요하면 /market_add 로 관심 지표 추가",
+    "4. /portfolio_bulk 로 여러 종목 빠르게 추가",
+    "5. /portfolio_list 로 확인",
+    "6. 필요하면 /market_add 로 관심 지표 추가",
     "",
     "지원 명령:",
     ...COMMAND_SUMMARIES
@@ -86,11 +90,31 @@ export function buildPrivateRegisterSuccessMessage(): string {
     "다음 단계:",
     "1. /report 로 오늘 브리핑을 바로 확인해 보세요.",
     "2. /portfolio_add 로 보유 종목을 추가해 주세요.",
-    "3. /portfolio_list 로 저장 결과를 확인해 주세요.",
-    "4. 필요하면 /market_add 로 관심 지표를 추가해 주세요.",
-    "5. /report_mode compact 로 더 짧은 브리핑으로 바꿀 수 있습니다.",
+    "3. /portfolio_bulk 삼성전자, SK하이닉스, 현대차 처럼 여러 종목을 한번에 추가할 수 있습니다.",
+    "4. /portfolio_list 로 저장 결과를 확인해 주세요.",
+    "5. 필요하면 /market_add 로 관심 지표를 추가해 주세요.",
+    "6. /report_mode compact 로 더 짧은 브리핑으로 바꿀 수 있습니다.",
     "보유 종목이 없어도 시장 브리핑은 먼저 받아보실 수 있습니다."
   ].join("\n");
+}
+
+export function buildAlreadyRegisteredMessage(): string {
+  return [
+    "이미 등록된 계정입니다.",
+    "바로 /report 로 브리핑을 받아보시거나 /portfolio_list 로 현재 종목을 확인해 주세요.",
+    "등록을 처음부터 다시 시작하려면 /unregister 로 초기화할 수 있습니다."
+  ].join("\n");
+}
+
+export function buildUnregisterSuccessMessage(): string {
+  return [
+    "등록 정보와 개인 설정을 초기화했습니다.",
+    "다시 시작하려면 /register 를 실행해 주세요."
+  ].join("\n");
+}
+
+export function buildUnregisterMissingMessage(): string {
+  return "현재 초기화할 등록 정보가 없습니다. 먼저 /register 로 등록해 주세요.";
 }
 
 export function buildGroupRegisterSuccessMessage(): string {

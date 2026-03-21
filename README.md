@@ -39,7 +39,7 @@
 
 ### 3. Telegram 개인화 delivery
 
-- `/register`, `/portfolio_add`, `/report` 흐름으로 사용자별 입력을 받습니다.
+- `/register`, `/unregister`, `/portfolio_add`, `/portfolio_bulk`, `/report` 흐름으로 사용자별 입력을 받습니다.
 - 개인화 리포트는 Telegram DM으로만 전송합니다.
 - 그룹은 온보딩, DM은 개인화 delivery, 웹은 공개 archive 역할로 분리됩니다.
 
@@ -163,7 +163,7 @@ GitHub Actions
 - `React Markdown`
 
 선택 이유:
-- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다. Pretendard와 shadcn/ui 스타일 컴포넌트, 흑백 중심 팔레트로 금융 리포트 톤의 밀도 높은 화면을 일관되게 유지합니다.
+- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다. Pretendard와 shadcn/ui 스타일 컴포넌트, 화이트/블랙 중심 팔레트로 금융 리포트 톤의 밀도 높은 화면을 일관되게 유지합니다.
 
 ### Infra / Ops
 
@@ -236,6 +236,7 @@ COREPACK_HOME=/tmp/corepack pnpm dev:web
 
 ```text
 /register         개인화 리포트 등록
+/unregister       등록 및 설정 초기화
 /report           지금 브리핑 생성
 /report_settings  정기 브리핑 설정 확인
 /report_time      발송 시간 변경
@@ -243,6 +244,7 @@ COREPACK_HOME=/tmp/corepack pnpm dev:web
 /report_link_on   공개 상세 링크 표시
 /report_link_off  공개 상세 링크 숨김
 /portfolio_add    보유 종목 추가
+/portfolio_bulk   여러 종목 빠르게 추가
 /portfolio_list   보유 종목 확인
 ```
 
