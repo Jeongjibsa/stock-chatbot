@@ -28,7 +28,7 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      PUBLIC_BRIEFING_OUTPUT_PATH: artifacts/public-briefing/public-daily-briefing.json
+      PUBLIC_BRIEFING_OUTPUT_PATH: ""
       REPORT_RUN_DATE: ""
       REPORT_TRIGGER_TYPE: ${{ github.event_name }}
 
@@ -68,10 +68,13 @@ jobs:
         run: pnpm build
 
       - name: Build public briefing JSON
-        run: pnpm --filter @stock-chatbot/worker run run:public-briefing
+        run: |
+          PUBLIC_BRIEFING_OUTPUT_PATH="$GITHUB_WORKSPACE/artifacts/public-briefing/public-daily-briefing.json" \
+            pnpm --filter @stock-chatbot/worker run run:public-briefing
 
       - name: Build public briefing site
-        run: pnpm pages:build artifacts/public-briefing/public-daily-briefing.json public-site
+        run: |
+          pnpm pages:build "$GITHUB_WORKSPACE/artifacts/public-briefing/public-daily-briefing.json" public-site
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
