@@ -40,7 +40,7 @@ export function renderTelegramDailyReport(
   );
 
   const lines = [
-    "🗞️ 오늘의 브리핑",
+    `🗞️ 오늘의 브리핑 (${input.runDate} 기준)`,
     "",
     `📌 한 줄 요약`,
     buildSummaryLine(
@@ -53,27 +53,11 @@ export function renderTelegramDailyReport(
     "🌍 거시 시장 스냅샷",
     ...renderMarketSnapshot(successfulMarketItems),
     "",
-    "📊 시장 브리핑",
-    ...renderCustomBulletSection(input.marketBullets, [
-      "S&P500, NASDAQ, KOSPI, KOSDAQ, DOW, VIX 해석 데이터가 아직 충분하지 않습니다."
-    ]),
-    "",
-    "🏦 매크로 브리핑",
-    ...renderMacroSection(
+    "📍 주요 지표 변동 요약",
+    ...renderIndicatorSummarySection(
       successfulMarketItems,
-      input.macroBullets,
       input.keyIndicatorSummaries
     ),
-    "",
-    "💸 자금 브리핑",
-    ...renderCustomBulletSection(input.fundFlowBullets, [
-      "외국인·기관 수급과 ETF flow 데이터가 아직 연결되지 않았습니다."
-    ]),
-    "",
-    "🗓️ 주요 일정 및 이벤트 브리핑",
-    ...renderCustomBulletSection(input.eventBullets, [
-      "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
-    ]),
     "",
     "📈 보유 종목별 최근 동향",
     ...renderHoldings(input.holdings, input.holdingTrendBullets)
@@ -81,11 +65,27 @@ export function renderTelegramDailyReport(
 
   lines.push(
     "",
-    "📰 종목 관련 핵심 기사 요약",
+    "📰 종목 관련 핵심 기사 및 이벤트 요약",
     ...renderPortfolioNews(input.portfolioNewsBriefs, input.articleSummaryBullets)
   );
   lines.push("", "🧠 퀀트 기반 시그널 및 매매 아이디어", ...renderScenarioLines(input.quantScenarios));
-  lines.push("", "⚠️ 리스크 체크포인트", ...renderRiskLines(input.riskCheckpoints));
+  lines.push("", "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
+  lines.push(
+    "",
+    "🧭 시장, 매크로, 자금 브리핑",
+    ...renderCombinedBriefingSection(
+      input.marketBullets,
+      input.macroBullets,
+      input.fundFlowBullets
+    )
+  );
+  lines.push(
+    "",
+    "🗓️ 주요 일정 및 이벤트 브리핑",
+    ...renderCustomBulletSection(input.eventBullets, [
+      "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
+    ])
+  );
 
   if (failedMarketItems.length > 0) {
     lines.push("", "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
@@ -120,21 +120,59 @@ function renderMarketSnapshot(
     return ["• 수집된 시장 지표가 아직 없습니다."];
   }
 
-  const lines = [...results]
-    .sort(compareMarketSnapshotItems)
-    .map((result) => {
-    const changeText = formatChangeBadge(result.data.changePercent);
-    const valueText = formatValueTransition(
-      result.data.previousValue,
-      result.data.value
-    );
+  const groups = [
+    ["NASDAQ", "SP500", "DOW", "VIX"],
+    ["KOSPI", "KOSDAQ"],
+    ["US10Y", "WTI", "NATGAS", "COPPER"],
+    ["USD_KRW", "DXY"]
+  ] as const;
 
-    return `• ${result.data.itemName}: ${valueText}${changeText ? `  ${changeText}` : ""}`;
-    });
+  const resultMap = new Map(results.map((result) => [result.data.itemCode, result]));
+  const seen = new Set<string>();
+  const lines: string[] = [];
+
+  for (const group of groups) {
+    const groupLines = group
+      .map((itemCode) => resultMap.get(itemCode))
+      .filter((result): result is Extract<MarketDataFetchResult, { status: "ok" }> =>
+        result !== undefined
+      )
+      .map((result) => {
+        seen.add(result.data.itemCode);
+        return renderSnapshotLine(result);
+      });
+
+    if (groupLines.length === 0) {
+      continue;
+    }
+
+    if (lines.length > 0) {
+      lines.push("");
+    }
+
+    lines.push(...groupLines);
+  }
+
+  const remainingLines = results
+    .filter((result) => !seen.has(result.data.itemCode))
+    .sort((left, right) => left.data.itemName.localeCompare(right.data.itemName, "ko"))
+    .map((result) => renderSnapshotLine(result));
+
+  if (remainingLines.length > 0) {
+    if (lines.length > 0) {
+      lines.push("");
+    }
+
+    lines.push(...remainingLines);
+  }
 
   const fxInsight = buildFxInsight(results);
 
   if (fxInsight) {
+    if (lines.length > 0 && lines[lines.length - 1] !== "") {
+      lines.push("");
+    }
+
     lines.push(`  ↳ ${fxInsight}`);
   }
 
@@ -235,20 +273,24 @@ function renderScenarioLines(quantScenarios?: string[]): string[] {
 
 function renderRiskLines(riskCheckpoints?: string[]): string[] {
   if (!riskCheckpoints || riskCheckpoints.length === 0) {
-    return ["• 현재 추가 리스크 체크포인트는 없습니다."];
+    return ["• 현재 추가 리스크 체크리스트는 없습니다."];
   }
 
   return riskCheckpoints.map((checkpoint) => `• ${checkpoint}`);
 }
 
-function renderMacroSection(
+function renderIndicatorSummarySection(
   results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>,
-  customBullets?: string[],
   supplementalBullets?: string[]
 ): string[] {
-  const lines = customBullets ? [...customBullets] : [];
+  const lines: string[] = [];
   const rankedMovers = [...results]
-    .filter((result) => result.data.changePercent !== undefined)
+    .filter(
+      (result) =>
+        result.data.changePercent !== undefined &&
+        result.data.itemCode !== "USD_KRW" &&
+        result.data.itemCode !== "DXY"
+    )
     .sort(
       (left, right) =>
         Math.abs((right.data.changePercent ?? 0)) - Math.abs((left.data.changePercent ?? 0))
@@ -263,21 +305,41 @@ function renderMacroSection(
     );
   }
 
-  const fxInsight = buildFxInsight(results);
-
-  if (fxInsight) {
-    lines.push(fxInsight);
-  }
-
   if (supplementalBullets && supplementalBullets.length > 0) {
-    lines.push(...supplementalBullets);
+    lines.push(...supplementalBullets.map((line) => `• ${line}`));
   }
 
   if (lines.length === 0) {
     return ["• 아직 강조할 만한 지표 변화 요약이 없습니다."];
   }
 
-  return [...new Set(lines)].map((line) => `• ${line}`);
+  return [...new Set(lines)];
+}
+
+function renderCombinedBriefingSection(
+  marketBullets?: string[],
+  macroBullets?: string[],
+  fundFlowBullets?: string[]
+): string[] {
+  const lines = [
+    ...prefixBullets("시장", marketBullets),
+    ...prefixBullets("매크로", macroBullets),
+    ...prefixBullets("자금", fundFlowBullets)
+  ];
+
+  if (lines.length === 0) {
+    return ["• 시장, 매크로, 자금 브리핑 데이터가 아직 충분하지 않습니다."];
+  }
+
+  return lines;
+}
+
+function prefixBullets(label: string, bullets?: string[]): string[] {
+  if (!bullets || bullets.length === 0) {
+    return [];
+  }
+
+  return bullets.map((bullet) => `• [${label}] ${bullet}`);
 }
 
 function renderCustomBulletSection(
@@ -392,27 +454,11 @@ function buildFxInsight(
   return "USD/KRW 변동이 제한적이라 원화의 상대 강도 판단은 중립에 가깝습니다.";
 }
 
-function compareMarketSnapshotItems(
-  left: Extract<MarketDataFetchResult, { status: "ok" }>,
-  right: Extract<MarketDataFetchResult, { status: "ok" }>
-): number {
-  const leftRank = getMarketSnapshotRank(left.data.itemCode);
-  const rightRank = getMarketSnapshotRank(right.data.itemCode);
+function renderSnapshotLine(
+  result: Extract<MarketDataFetchResult, { status: "ok" }>
+): string {
+  const changeText = formatChangeBadge(result.data.changePercent);
+  const valueText = formatValueTransition(result.data.previousValue, result.data.value);
 
-  if (leftRank !== rightRank) {
-    return leftRank - rightRank;
-  }
-
-  return left.data.itemName.localeCompare(right.data.itemName, "ko");
-}
-
-function getMarketSnapshotRank(itemCode: string): number {
-  switch (itemCode) {
-    case "USD_KRW":
-      return 98;
-    case "DXY":
-      return 99;
-    default:
-      return 0;
-  }
+  return `• ${result.data.itemName}: ${valueText}${changeText ? `  ${changeText}` : ""}`;
 }

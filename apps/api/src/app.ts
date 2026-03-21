@@ -53,7 +53,8 @@ export function buildApp(dependencies: HealthCheckDependencies) {
     toReportHistoryItem({
       id: "mock-run-previous",
       promptVersion: "daily-report/v1",
-      reportText: "🗞️ 오늘의 브리핑\n\n📌 한 줄 요약\n시장 지표 1개와 보유 종목 1개 기준으로 정리했습니다.",
+      reportText:
+        "🗞️ 오늘의 브리핑 (2026-03-20 기준)\n\n📌 한 줄 요약\n시장 지표 1개와 보유 종목 1개 기준으로 정리했습니다.",
       runDate: "2026-03-20",
       scheduleType: "daily-9am",
       skillVersion: "daily-report-orchestrator/v1",
