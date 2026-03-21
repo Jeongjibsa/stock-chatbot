@@ -147,6 +147,7 @@
 - [x] 공개 detail `/reports/[id]` 구현
 - [x] Telegram 공개 상세 링크를 새 웹으로 전환
 - [x] README 및 운영 문서를 Vercel + Neon 기준으로 갱신
+- [x] Vercel 배포 설정 및 운영 runbook 정리
 - [ ] 웹 관리 콘솔
 - [ ] 전략 성과 추적 및 백테스트
 - [ ] 사용자 설정 고도화
@@ -212,3 +213,4 @@
 - 2026-03-21: 모바일 앱을 현재 MVP 범위에서 제거하고, 공개 채널 확장은 `Telegram + 공개 웹 frontend`까지만 유지하는 방향으로 plan을 재정렬
 - 2026-03-21: 개발 및 테스트는 로컬 Docker PostgreSQL 기준으로 유지하고, Neon은 최종 production 배포 시에만 연결하는 운영 원칙을 기준선으로 고정
 - 2026-03-21: `reports` 읽기 모델과 공개 브리핑 저장 경로를 추가하고, `apps/web`를 Next.js App Router 기반 공개 feed/detail 웹으로 전환했으며, Telegram 공개 상세 링크와 README를 새 공개 웹 기준으로 갱신
+- 2026-03-21: `apps/web`용 Vercel 배포 설정, Neon 친화적 웹 DB 연결 옵션, 웹 전용 env 예시, 배포 runbook을 추가하고 `PUBLIC_BRIEFING_BASE_URL` 운영 기준을 문서화

@@ -373,15 +373,26 @@ Macro: -0.60 / Trend: -0.40 / Event: +0.20 / Flow: -0.30
 
 1. Vercel에서 repo import
 2. Root Directory를 `apps/web`로 설정
-3. Environment Variables에 최소 아래를 설정
+3. Node.js Version은 `24.x`로 설정
+4. Environment Variables에 최소 아래를 설정
 
 ```bash
 DATABASE_URL=postgresql://neondb_owner:***@ep-***.neon.tech/neondb?sslmode=require
+```
+
+5. build는 기본 `pnpm build`
+6. 공개 웹은 `reports` 테이블만 읽고, 개인화 Telegram 기능은 계속 worker가 담당
+7. GitHub repository variable `PUBLIC_BRIEFING_BASE_URL`을 배포된 Vercel URL로 설정
+
+```bash
 PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
 ```
 
-4. build는 기본 `next build`
-5. 공개 웹은 `reports` 테이블만 읽고, 개인화 Telegram 기능은 계속 worker가 담당
+추가 메모:
+
+- `apps/web/vercel.json`에 install/build 명령이 고정돼 있습니다.
+- `apps/web/.env.local.example`는 로컬 웹 실행용 최소 env 예시입니다.
+- production에서는 Neon connection string을 Vercel의 `DATABASE_URL`에 넣고, 개발과 테스트는 계속 로컬 Docker PostgreSQL을 사용합니다.
 
 ## 라이선스
 

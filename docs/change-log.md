@@ -108,6 +108,7 @@
 | CHG-0081 | 2026-03-21 | DECISION | managed Postgres는 개발·테스트 중 직접 연결하지 않고 로컬 Docker PostgreSQL을 기준으로 구현과 검증을 완료한 뒤, 최종 production 배포 시에만 Neon connection string을 사용하도록 운영 원칙을 고정 | PRD, Plan, README, Change Log, Context | yes |
 | CHG-0082 | 2026-03-21 | UPDATE | 공개 브리핑 채널을 GitHub Pages 정적 공개 웹에서 `Vercel + Next.js App Router + Neon(배포 대상)` 기반 공개 웹 frontend로 단계 전환하고, `reports` 읽기 모델과 feed/detail 웹을 현재 Phase 7 최우선 작업으로 승격 | PRD, Plan, README, Change Log, Context, Code | yes |
 | CHG-0083 | 2026-03-21 | ADD | `reports` 읽기 모델과 공개 브리핑 저장 경로를 추가하고, `apps/web`를 Next.js App Router 기반 공개 feed/detail 웹으로 전환했으며, Telegram 공개 상세 링크와 README/운영 문서를 새 공개 웹 기준으로 갱신 | PRD, Plan, README, Change Log, Context, Workflow, Code, Tests | yes |
+| CHG-0084 | 2026-03-21 | ADD | `apps/web` Vercel 배포를 위해 Node 24 engine 선언, `vercel.json`, 웹 전용 `.env.local.example`, Neon 친화 SSL 연결 설정, Vercel runbook을 추가하고 GitHub Actions의 `PUBLIC_BRIEFING_BASE_URL` 연동 기준을 문서화 | PRD, Plan, README, Change Log, Context, Code, Docs | yes |
 
 ## 4. Open Change Notes
 

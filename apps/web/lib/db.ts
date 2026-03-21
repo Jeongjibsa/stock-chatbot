@@ -4,6 +4,10 @@ declare global {
   var __stockChatbotWebPool: Pool | undefined;
 }
 
+function shouldUseSsl(databaseUrl: string) {
+  return databaseUrl.includes("sslmode=require") || databaseUrl.includes(".neon.tech");
+}
+
 export function getWebPool() {
   const databaseUrl = process.env.DATABASE_URL;
 
@@ -14,7 +18,9 @@ export function getWebPool() {
   const pool =
     globalThis.__stockChatbotWebPool ??
     new Pool({
-      connectionString: databaseUrl
+      connectionString: databaseUrl,
+      max: 1,
+      ssl: shouldUseSsl(databaseUrl) ? { rejectUnauthorized: false } : undefined
     });
 
   if (!globalThis.__stockChatbotWebPool) {
