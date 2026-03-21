@@ -53,7 +53,7 @@ describe("DailyReportOrchestrator", () => {
         articles: [],
         events: [],
         status: "unavailable",
-        errorMessage: "관련 뉴스를 찾지 못했어."
+        errorMessage: "관련 뉴스를 찾지 못했습니다."
       }
     ];
     const orchestrator = new DailyReportOrchestrator({
@@ -99,7 +99,7 @@ describe("DailyReportOrchestrator", () => {
     expect(result.status).toBe("partial_success");
     expect(result.reportText).toContain("📰 종목 관련 핵심 기사 요약");
     expect(result.reportText).toContain("🧩 누락 또는 지연 항목");
-    expect(result.reportText).toContain("ℹ️ 면책 문구");
+    expect(result.reportText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
     expect(reportRunRepository.completeRun).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "partial_success",
@@ -194,7 +194,7 @@ describe("DailyReportOrchestrator", () => {
             eventType: "product",
             headline: "신제품 공개",
             sentiment: "positive",
-            summary: "수요 기대가 커지고 있어.",
+            summary: "수요 기대가 커지고 있습니다.",
             supportingArticleIds: ["a1"]
           }
         ],
@@ -242,5 +242,6 @@ describe("DailyReportOrchestrator", () => {
     expect(result.portfolioNewsBriefs).toHaveLength(1);
     expect(result.reportText).toContain("📰 종목 관련 핵심 기사 요약");
     expect(result.reportText).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
+    expect(result.reportText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 });

@@ -12,7 +12,7 @@ describe("report query model", () => {
       id: "run-1",
       promptVersion: "daily-report/v1",
       reportText:
-        "오늘의 브리핑 (2026-03-21)\n한 줄 요약: 시장 지표 1개와 보유 종목 1개 기준으로 정리했어.",
+        "오늘의 브리핑 (2026-03-21)\n한 줄 요약: 시장 지표 1개와 보유 종목 1개 기준으로 정리했습니다.",
       runDate: "2026-03-21",
       scheduleType: "daily-9am",
       skillVersion: "daily-report-orchestrator/v1",
@@ -27,7 +27,7 @@ describe("report query model", () => {
       scheduleType: "daily-9am",
       skillVersion: "daily-report-orchestrator/v1",
       status: "completed",
-      summaryLine: "한 줄 요약: 시장 지표 1개와 보유 종목 1개 기준으로 정리했어."
+      summaryLine: "한 줄 요약: 시장 지표 1개와 보유 종목 1개 기준으로 정리했습니다."
     });
   });
 

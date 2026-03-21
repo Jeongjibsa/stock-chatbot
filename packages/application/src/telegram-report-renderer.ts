@@ -56,7 +56,7 @@ export function renderTelegramDailyReport(
     lines.push("", "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
   }
 
-  lines.push("", "ℹ️ 면책 문구", ...renderDisclaimer());
+  lines.push("", ...renderDisclaimer());
 
   return lines.join("\n");
 }
@@ -67,17 +67,17 @@ function buildSummaryLine(
   holdingCount: number
 ): string {
   if (marketErrorCount === 0) {
-    return `시장 지표 ${marketOkCount}개와 보유 종목 ${holdingCount}개 기준으로 정리했어.`;
+    return `시장 지표 ${marketOkCount}개와 보유 종목 ${holdingCount}개 기준으로 정리했습니다.`;
   }
 
-  return `시장 지표 ${marketOkCount}개를 반영했고 ${marketErrorCount}개는 누락됐어. 보유 종목 ${holdingCount}개 기준으로 정리했어.`;
+  return `시장 지표 ${marketOkCount}개를 반영했고 ${marketErrorCount}개는 누락됐습니다. 보유 종목 ${holdingCount}개 기준으로 정리했습니다.`;
 }
 
 function renderMarketSnapshot(
   results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>
 ): string[] {
   if (results.length === 0) {
-    return ["• 수집된 시장 지표가 아직 없어."];
+    return ["• 수집된 시장 지표가 아직 없습니다."];
   }
 
   const lines = results.map((result) => {
@@ -111,7 +111,7 @@ function renderHoldings(
   }>
 ): string[] {
   if (holdings.length === 0) {
-    return ["• 등록된 보유 종목이 없어."];
+    return ["• 등록된 보유 종목이 없습니다."];
   }
 
   const lines: string[] = [];
@@ -124,7 +124,7 @@ function renderHoldings(
     const changeText = formatChangeBadge(holding.changePercent);
     const detailText = transition
       ? `: ${transition}${changeText ? `  ${changeText}` : ""}`
-      : ": 시세 스냅샷 연결 전";
+      : ": 시세 스냅샷 연결 전입니다";
 
     lines.push(`• ${holding.companyName} (${holding.symbol}, ${holding.exchange})${detailText}`);
 
@@ -144,7 +144,7 @@ function renderFailures(
 
 function renderPortfolioNews(briefs?: HoldingNewsBrief[]): string[] {
   if (!briefs || briefs.length === 0) {
-    return ["• 관련 기사 요약이 아직 없어."];
+    return ["• 관련 기사 요약이 아직 없습니다."];
   }
 
   const lines: string[] = [];
@@ -152,7 +152,7 @@ function renderPortfolioNews(briefs?: HoldingNewsBrief[]): string[] {
   for (const brief of briefs) {
     if (brief.events.length === 0) {
       lines.push(
-        `• ${brief.holding.companyName}: ${brief.errorMessage ?? "핵심 이벤트를 찾지 못했어."}`
+        `• ${brief.holding.companyName}: ${brief.errorMessage ?? "핵심 이벤트를 찾지 못했습니다."}`
       );
       continue;
     }
@@ -173,7 +173,7 @@ function renderPortfolioNews(briefs?: HoldingNewsBrief[]): string[] {
 
 function renderScenarioLines(quantScenarios?: string[]): string[] {
   if (!quantScenarios || quantScenarios.length === 0) {
-    return ["• 규칙 기반 시그널이 아직 없어."];
+    return ["• 규칙 기반 시그널이 아직 없습니다."];
   }
 
   return quantScenarios.map((scenario) => `• ${scenario}`);
@@ -181,7 +181,7 @@ function renderScenarioLines(quantScenarios?: string[]): string[] {
 
 function renderRiskLines(riskCheckpoints?: string[]): string[] {
   if (!riskCheckpoints || riskCheckpoints.length === 0) {
-    return ["• 현재 추가 리스크 체크포인트는 없어."];
+    return ["• 현재 추가 리스크 체크포인트는 없습니다."];
   }
 
   return riskCheckpoints.map((checkpoint) => `• ${checkpoint}`);
@@ -204,7 +204,7 @@ function renderKeyIndicatorSummary(
     const changePercent = mover.data.changePercent ?? 0;
     const direction = changePercent > 0 ? "상승" : changePercent < 0 ? "하락" : "보합";
     lines.push(
-      `• ${mover.data.itemName}이 ${Math.abs(changePercent).toFixed(2)}% ${direction}하며 상대적으로 움직임이 컸어.`
+      `• ${mover.data.itemName}이 ${Math.abs(changePercent).toFixed(2)}% ${direction}하며 상대적으로 움직임이 컸습니다.`
     );
   }
 
@@ -219,14 +219,14 @@ function renderKeyIndicatorSummary(
   }
 
   if (lines.length === 0) {
-    return ["• 아직 강조할 만한 지표 변화 요약이 없어."];
+    return ["• 아직 강조할 만한 지표 변화 요약이 없습니다."];
   }
 
   return [...new Set(lines)];
 }
 
 function renderDisclaimer(): string[] {
-  return ["• 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있어."];
+  return ["❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."];
 }
 
 function formatValue(value: number): string {
@@ -297,31 +297,31 @@ function buildFxInsight(
 
   if (!dxy || dxy.data.changePercent === undefined) {
     if (usdKrw.data.changePercent > 0) {
-      return "원화 약세가 보이지만 달러인덱스가 없어 상대 약세까지는 확정하기 어려워.";
+      return "원화 약세가 보이지만 달러인덱스가 없어 상대 약세까지는 확정하기 어렵습니다.";
     }
 
     if (usdKrw.data.changePercent < 0) {
-      return "원화 강세가 보이지만 달러인덱스가 없어 달러 전반 약세와의 구분은 제한적이야.";
+      return "원화 강세가 보이지만 달러인덱스가 없어 달러 전반 약세와의 구분은 제한적입니다.";
     }
 
     return undefined;
   }
 
   if (usdKrw.data.changePercent > 0 && dxy.data.changePercent > 0) {
-    return "달러인덱스도 함께 올라 원화만 약한 장은 아니고, 달러 강세 영향이 같이 반영되고 있어.";
+    return "달러인덱스도 함께 올라 원화만 약한 장은 아니고, 달러 강세 영향이 같이 반영되고 있습니다.";
   }
 
   if (usdKrw.data.changePercent > 0 && dxy.data.changePercent <= 0) {
-    return "달러인덱스 대비로도 USD/KRW가 올라 원화 쪽 약세 압력이 더 크게 작동한 흐름이야.";
+    return "달러인덱스 대비로도 USD/KRW가 올라 원화 쪽 약세 압력이 더 크게 작동한 흐름입니다.";
   }
 
   if (usdKrw.data.changePercent < 0 && dxy.data.changePercent > 0) {
-    return "달러는 강한데 USD/KRW는 내려 원화가 상대적으로 선방한 흐름이야.";
+    return "달러는 강한데 USD/KRW는 내려 원화가 상대적으로 선방한 흐름입니다.";
   }
 
   if (usdKrw.data.changePercent < 0 && dxy.data.changePercent <= 0) {
-    return "달러 약세와 함께 USD/KRW도 내려 원화 강세가 같이 나타난 흐름이야.";
+    return "달러 약세와 함께 USD/KRW도 내려 원화 강세가 같이 나타난 흐름입니다.";
   }
 
-  return "USD/KRW 변동이 제한적이라 원화의 상대 강도 판단은 중립에 가까워.";
+  return "USD/KRW 변동이 제한적이라 원화의 상대 강도 판단은 중립에 가깝습니다.";
 }

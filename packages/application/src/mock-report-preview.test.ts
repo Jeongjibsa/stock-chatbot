@@ -16,5 +16,6 @@ describe("buildMockTelegramReportPreview", () => {
     expect(preview.renderedText).toContain("⚠️ 리스크 체크포인트");
     expect(preview.renderedText).toContain("Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
     expect(preview.renderedText).toContain("중동 이란 전쟁 이슈");
+    expect(preview.renderedText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 });

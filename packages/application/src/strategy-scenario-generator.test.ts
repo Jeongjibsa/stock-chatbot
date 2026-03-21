@@ -29,8 +29,8 @@ describe("generateStrategyScenarios", () => {
 
     expect(scenarios).toEqual(
       expect.arrayContaining([
-        "Apple는 추세 유지 시 눌림목 구간에서 분할 진입을 관찰해.",
-        "Apple는 변동성이 높아서 신규 진입보다 기존 포지션 관리 중심으로 접근해."
+        "Apple는 추세 유지 시 눌림목 구간에서 분할 진입을 관찰하는 전략이 적절합니다.",
+        "Apple는 변동성이 높아서 신규 진입보다 기존 포지션 관리 중심으로 접근하는 편이 적절합니다."
       ])
     );
   });

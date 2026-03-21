@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -70,6 +70,7 @@
 - 시장 지표 렌더링은 `전일값 → 현재값` 형식으로 표시하고, `USD/KRW`는 `DXY`와 함께 상대 강도를 해석하도록 확장됐다.
 - 텔레그램 리포트는 PRD 6.4 순서를 따르도록 재정렬됐고, 보유 종목도 `전일 종가 → 현재가`와 등락률을 표시할 수 있게 확장됐다.
 - `주요 지표 변동 요약`과 `면책 문구`는 항상 출력되며, 현재 mock preview에는 중동 이란 전쟁 이슈를 당일 거시 이슈 예시로 포함한다.
+- 텔레그램 리포트 전체 문체는 존댓말로 통일됐고, 면책 문구는 별도 헤더 없이 `❗` 한 줄 형식으로 출력된다.
 - worker에는 BullMQ job scheduler 기반 오전 9시 트리거와 env 기반 패턴/타임존 설정이 추가됐다.
 - worker에는 뉴스 brief 연동과 prompt/skill version 기록 연결이 추가됐다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.

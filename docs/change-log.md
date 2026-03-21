@@ -57,6 +57,7 @@
 | CHG-0030 | 2026-03-21 | UPDATE | 텔레그램 report 렌더링을 이모지, 방향 기호, 가독성 중심 레이아웃으로 개선하고 실채널 POC 발송으로 검증 | PRD, Change Log, Context, Code | yes |
 | CHG-0031 | 2026-03-21 | UPDATE | 시장 지표를 전일값→현재값으로 표기하고 USD/KRW는 달러인덱스와 함께 상대 강도를 해석하도록 렌더링 규칙과 DXY 지원을 확장 | PRD, Change Log, Context, Code | yes |
 | CHG-0032 | 2026-03-21 | UPDATE | 텔레그램 리포트를 PRD 6.4 순서에 맞게 재정렬하고 보유 종목도 전일 종가→현재가로 표시할 수 있게 확장했으며 주요 지표 변동 요약과 면책 문구를 항상 포함하도록 수정 | PRD, Change Log, Context, Code | yes |
+| CHG-0033 | 2026-03-21 | UPDATE | 텔레그램 리포트 전체 문체를 존댓말로 통일하고 면책 문구를 별도 타이틀 없이 `❗` 한 줄 형식으로 조정 | PRD, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

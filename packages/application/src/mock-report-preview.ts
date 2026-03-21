@@ -28,11 +28,11 @@ export function buildMockTelegramReportPreview(input?: {
           previousClose: 248.96,
           symbol: "AAPL",
           trendSummary:
-            "이란 전쟁발 지정학 리스크와 대형 기술주 약세가 겹치며 전일 대비 조정받았어."
+            "이란 전쟁발 지정학 리스크와 대형 기술주 약세가 겹치며 전일 대비 조정받았습니다."
         }
       ],
       keyIndicatorSummaries: [
-        "중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있어."
+        "중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있습니다."
       ],
       marketResults: [
         {
@@ -89,15 +89,15 @@ export function buildMockTelegramReportPreview(input?: {
               eventType: "product",
               headline: "신제품 공개",
               sentiment: "positive",
-              summary: "수요 기대가 커지고 있어.",
+              summary: "수요 기대가 커지고 있습니다.",
               supportingArticleIds: ["mock-article-1"]
             }
           ],
           status: "ok"
         }
       ],
-      quantScenarios: ["추세 유지 시 분할 매수 관찰"],
-      riskCheckpoints: ["변동성 급등 시 비중 확대를 보류"]
+      quantScenarios: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
+      riskCheckpoints: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."]
     })
   };
 }
