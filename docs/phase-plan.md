@@ -188,3 +188,4 @@
 - 2026-03-21: build된 worker가 workspace 내부 패키지를 런타임에 해석할 수 있도록 internal package의 `main`/`types`/`exports` entry를 보강
 - 2026-03-21: GitHub Actions와 현재 운영 경로에서는 workspace ESM 해석 이슈를 줄이기 위해 app runtime 스크립트를 `tsx` source entrypoint 기준으로 전환하고, `build`는 검증 단계로 유지
 - 2026-03-21: `workflow_dispatch`에서 비워 둔 `REPORT_RUN_DATE`가 빈 문자열로 전달될 때 worker가 오늘 날짜로 폴백하도록 수정해 Postgres date 파싱 오류를 제거
+- 2026-03-21: 모든 GitHub Actions workflow에 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`를 추가해 Node 20 action runtime deprecation 경고를 줄이도록 조정

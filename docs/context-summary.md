@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-21
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -101,6 +101,7 @@
 - build된 app runtime이 workspace 내부 패키지를 정상적으로 import하도록 `packages/application`, `packages/database`, `packages/core-types`의 package.json에 `main`/`types`/`exports` entry가 추가됐다.
 - 현재 운영용 실행 스크립트는 compiled `dist` 대신 `tsx` source entrypoint를 사용한다. `pnpm build`는 여전히 타입/산출물 검증용으로 유지되지만, Actions와 로컬 런타임은 workspace ESM 해석 이슈를 줄이기 위해 source 실행을 기준으로 삼는다.
 - worker의 `readRunDate`는 이제 `REPORT_RUN_DATE`가 비어 있거나 공백만 있어도 오늘 날짜로 폴백한다. 따라서 GitHub Actions `workflow_dispatch` 입력을 비워 둔 경우에도 Postgres `date` 컬럼에 빈 문자열이 들어가지 않는다.
+- GitHub Actions workflow에는 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`가 추가돼 `actions/checkout@v4`, `actions/setup-node@v4`의 Node 20 deprecation 경고를 사전에 흡수하도록 조정됐다.
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.

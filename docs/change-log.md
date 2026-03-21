@@ -80,6 +80,7 @@
 | CHG-0053 | 2026-03-21 | FIX | build된 worker가 workspace 내부 패키지(`@stock-chatbot/application`, `@stock-chatbot/database`, `@stock-chatbot/core-types`)를 런타임에 해석할 수 있도록 각 package.json에 `main`/`types`/`exports` entry를 추가 | Change Log, Context, Code | yes |
 | CHG-0054 | 2026-03-21 | FIX | GitHub Actions와 현재 운영 경로에서 workspace ESM 해석 이슈를 피하기 위해 `api`, `telegram-bot`, `worker`의 실제 실행 스크립트를 compiled `dist` 대신 `tsx` source entrypoint로 전환하고, `build`는 검증용 단계로 유지 | Change Log, Context, README, Code | yes |
 | CHG-0055 | 2026-03-21 | FIX | `workflow_dispatch`에서 비워 둔 `REPORT_RUN_DATE`가 빈 문자열로 전달돼 Postgres date 파싱 오류를 내던 문제를 수정하고, worker가 빈 값일 때 오늘 날짜로 자동 폴백하도록 보강 | Change Log, Context, Code, Tests | yes |
+| CHG-0056 | 2026-03-21 | FIX | GitHub Actions 경고 제거를 위해 모든 workflow에 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`를 추가해 `actions/checkout@v4`와 `actions/setup-node@v4`가 Node 24 action runtime으로 실행되도록 고정 | Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 
