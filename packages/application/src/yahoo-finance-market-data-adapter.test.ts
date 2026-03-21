@@ -56,6 +56,57 @@ describe("YahooFinanceScrapingMarketDataAdapter", () => {
     });
   });
 
+  it("deduplicates repeated timestamps from the same market date", async () => {
+    const fetchFn = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          chart: {
+            result: [
+              {
+                timestamp: [1773927000, 1774013400, 1774040720],
+                indicators: {
+                  quote: [
+                    {
+                      close: [6606.49, 6506.48, 6506.48]
+                    }
+                  ]
+                }
+              }
+            ],
+            error: null
+          }
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json"
+          }
+        }
+      )
+    );
+    const adapter = new YahooFinanceScrapingMarketDataAdapter({
+      fetchFn
+    });
+
+    const [result] = await adapter.fetchMany([
+      {
+        itemCode: "SP500",
+        itemName: "S&P 500",
+        sourceKey: "index:SP:SPX"
+      }
+    ]);
+
+    expect(result).toMatchObject({
+      status: "ok",
+      data: {
+        previousValue: 6606.49,
+        value: 6506.48,
+        changeValue: -100.01,
+        changePercent: -1.5138
+      }
+    });
+  });
+
   it("marks unsupported source keys explicitly", async () => {
     const adapter = new YahooFinanceScrapingMarketDataAdapter({
       fetchFn: vi.fn()

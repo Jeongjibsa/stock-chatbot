@@ -103,8 +103,10 @@
 - worker의 `readRunDate`는 이제 `REPORT_RUN_DATE`가 비어 있거나 공백만 있어도 오늘 날짜로 폴백한다. 따라서 GitHub Actions `workflow_dispatch` 입력을 비워 둔 경우에도 Postgres `date` 컬럼에 빈 문자열이 들어가지 않는다.
 - GitHub Actions workflow에는 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`가 추가돼 `actions/checkout@v4`, `actions/setup-node@v4`의 Node 20 deprecation 경고를 사전에 흡수하도록 조정됐다.
 - 텔레그램 리포트는 섹션 구조는 유지하되 제목/섹션 사이의 불필요한 빈 줄을 줄였고, 거시 시장 스냅샷의 원자재 그룹 정렬은 `미국 10년물 -> WTI -> 천연가스 -> 구리 -> FX` 순서로 다시 고정됐다.
+- Yahoo Finance daily chart 응답은 같은 거래일의 종가 시점과 후속 메타 시점을 함께 반환할 수 있으므로, 지수성 자산의 전일 대비 계산은 timestamp가 아니라 `asOfDate` 기준으로 중복 제거한 뒤 마지막 두 거래일을 비교하도록 보정됐다.
 - live Gemini 검증 경로는 로컬 Docker PostgreSQL에 mock 포트폴리오를 seed한 뒤 worker를 `LLM_PROVIDER=google`로 실행하고, 생성된 `report_runs.report_text`를 Telegram Bot API로 직접 발송하는 방식으로 확인했다.
 - 2026-03-21 live Gemini 검증에서는 종목 뉴스 이벤트 추출 단계에서 `Gemini API request failed with status 429`가 발생해 기사 섹션이 fallback 문구로 내려간 사례가 확인됐다.
+- 2026-03-20 기준 재검증에서는 Yahoo 중복 거래일 제거 이후 `NASDAQ -2.01%`, `S&P500 -1.51%`, `DOW -0.96%`, `VIX +11.31%`, `KOSPI +0.31%`, `KOSDAQ +1.58%`가 정상 복구됐고, Gemini의 한 줄 요약도 `미국 증시 급락 + 공포지수 급등 -> 반등 시 비중 축소 및 리스크 관리` 방향으로 더 날카롭게 바뀌었다.
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.

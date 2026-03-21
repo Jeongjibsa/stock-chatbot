@@ -144,14 +144,15 @@ function buildYahooMarketDataPoint(
       };
     })
     .filter((entry): entry is { asOfDate: string; value: number } => entry !== null);
+  const dedupedByDate = [...new Map(paired.map((entry) => [entry.asOfDate, entry])).values()];
 
-  const latest = paired.at(-1);
+  const latest = dedupedByDate.at(-1);
 
   if (!latest) {
     return null;
   }
 
-  const previous = paired.at(-2);
+  const previous = dedupedByDate.at(-2);
   const dataPoint: MarketDataPoint = {
     itemCode: item.itemCode,
     itemName: item.itemName,

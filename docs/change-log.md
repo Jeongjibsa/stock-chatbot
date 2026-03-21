@@ -83,6 +83,7 @@
 | CHG-0056 | 2026-03-21 | FIX | GitHub Actions 경고 제거를 위해 모든 workflow에 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`를 추가해 `actions/checkout@v4`와 `actions/setup-node@v4`가 Node 24 action runtime으로 실행되도록 고정 | Change Log, Context, Code | yes |
 | CHG-0057 | 2026-03-21 | FIX | 텔레그램 리포트에서 섹션 사이 과한 빈 줄을 줄이고, 거시 시장 스냅샷의 `천연가스` 정렬 키를 바로잡아 `미국 10년물 -> WTI -> 천연가스 -> 구리 -> FX` 순서가 유지되도록 수정 | Change Log, Context, Code, Tests | yes |
 | CHG-0058 | 2026-03-21 | DECISION | 로컬 Docker + live FRED/Yahoo/Gemini 호출로 daily report를 생성해 텔레그램 실채널에 검증 메시지를 발송했고, 이번 실행에서는 Gemini 뉴스 이벤트 추출이 `429`로 제한돼 종목 기사 섹션이 fallback 상태임을 확인 | Change Log, Context, Code, Ops | yes |
+| CHG-0059 | 2026-03-21 | FIX | Yahoo Finance chart 응답이 같은 거래일의 종가 시점과 후속 메타 시점을 중복으로 반환해 전일 대비가 `0`으로 계산되던 문제를 수정하고, 날짜 기준 중복 제거 로직과 회귀 테스트를 추가해 2026-03-20 기준 지수 등락이 다시 정상 계산되도록 보정 | Change Log, Context, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 
