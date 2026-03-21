@@ -165,8 +165,8 @@
 
 다음 권장 작업:
 
-1. Vercel production webhook / cron smoke 검증
-2. Neon production 연결 및 read/write smoke 검증
+1. 실제 Telegram E2E 운영 점검
+2. 첫 공개 브리핑 저장 확인 및 feed/detail 실데이터 점검
 3. 전략 스코어 튜닝과 운영 지표 보강
 4. active harness suite 확장과 grader 정밀도 개선
 
@@ -229,3 +229,5 @@
 - 2026-03-21: `strategy_snapshots` 저장 모델을 추가하고 daily report가 생성한 퀀트 점수카드를 스냅샷으로 저장한 뒤 `/admin`에서 최근 시그널의 이후 수익률과 액션 적합도를 회고할 수 있게 함
 - 2026-03-21: 사용자 설정을 `report_detail_level`, `include_public_briefing_link`까지 확장하고 `/report_mode`, `/report_link_on`, `/report_link_off` 명령과 compact 텔레그램 렌더링을 추가
 - 2026-03-21: root `AGENTS.md`를 추가하고, 하네스를 `harness/suite-contracts.json` 기준의 suite 계약 구조로 강화해 active/planned suite와 grader/snapshot 불변성을 검증 스크립트에서 강제
+- 2026-03-21: `apps/web`를 Vercel production(`https://web-three-tau-58.vercel.app`)에 실제 배포하고, Neon production branch에 baseline schema를 적용한 뒤 public alias, webhook, cron, reconcile, admin auth gate, GitHub Actions backup run까지 production smoke 완료
+- 2026-03-21: 실제 Telegram 운영 검증용 `docs/telegram-production-test-scenarios.md`를 추가해 DM/그룹/공개 웹/개인정보 경계/E2E 기대 결과를 운영 체크리스트로 정리

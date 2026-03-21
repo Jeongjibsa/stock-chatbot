@@ -11,6 +11,7 @@
 - 배포 대상 앱: `apps/web`
 - Telegram webhook command runtime도 `apps/web` 내부 route handler를 사용한다.
 - Vercel Cron이 `daily-report` primary scheduler를 담당한다.
+- 현재 production public alias: `https://web-three-tau-58.vercel.app`
 
 ## Vercel 프로젝트 생성
 
@@ -72,6 +73,14 @@ GitHub repository secret에는 아래 값도 필요하다.
 CRON_SECRET=vercel-cron-shared-secret
 ```
 
+현재 기준으로 GitHub repository variable/secret은 아래처럼 맞춰져 있어야 한다.
+
+```bash
+PUBLIC_BRIEFING_BASE_URL=https://web-three-tau-58.vercel.app
+VERCEL_RECONCILE_URL=https://web-three-tau-58.vercel.app/api/cron/reconcile
+CRON_SECRET=<same-shared-secret>
+```
+
 ## Telegram webhook 등록
 
 배포 후 Telegram bot은 polling 대신 webhook으로 등록해야 한다.
@@ -95,6 +104,17 @@ COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 6. `DATABASE_URL`이 Neon으로 연결돼도 500 없이 조회되는지 확인
 7. GitHub Actions `PUBLIC_BRIEFING_BASE_URL`과 `VERCEL_RECONCILE_URL`이 새 Vercel URL을 가리키는지 확인
 8. `/admin`이 Basic Auth 없이 열리지 않는지 확인
+
+현재 smoke 기준으로 아래는 이미 확인됐다.
+
+- `/`는 empty state 또는 공개 feed를 정상 렌더링
+- `/api/telegram/webhook` `GET` 200
+- `/api/cron/daily-report` 200
+- `/api/cron/reconcile` 200
+- `/admin` 401
+- Telegram webhook 등록 완료
+
+실제 Telegram 사용자 플로우 점검은 [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)를 따른다.
 
 ## 비범위
 

@@ -486,8 +486,10 @@ ADMIN_DASHBOARD_PASSWORD=strong-password
 - `apps/web/vercel.json`에 install/build 명령이 고정돼 있습니다.
 - `apps/web/.env.local.example`는 로컬 웹 실행용 최소 env 예시입니다.
 - production에서는 Neon connection string을 Vercel의 `DATABASE_URL`에 넣고, 개발과 테스트는 계속 로컬 Docker PostgreSQL을 사용합니다.
+- 현재 public alias 기준 운영 URL은 `https://web-three-tau-58.vercel.app`입니다.
 - `pnpm telegram:webhook:register`는 `setWebhook`과 `getWebhookInfo`를 연속 호출해 현재 webhook 설정을 바로 확인합니다.
 - 운영 콘솔은 `https://your-vercel-domain.vercel.app/admin` 경로입니다.
+- 실제 Telegram 운영 검증 순서는 [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)를 기준으로 진행합니다.
 
 ## 라이선스
 

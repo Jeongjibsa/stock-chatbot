@@ -117,6 +117,10 @@
 | CHG-0090 | 2026-03-21 | ADD | 사용자 설정을 `report_detail_level(standard/compact)`과 `include_public_briefing_link`까지 확장하고, `/report_mode`, `/report_link_on`, `/report_link_off` 명령과 실제 텔레그램 렌더링 반영 규칙을 추가 | PRD, Plan, README, Change Log, Context, Code, Tests | yes |
 | CHG-0091 | 2026-03-21 | ADD | 저장소 작업 기준을 빠르게 찾을 수 있도록 root `AGENTS.md`를 추가하고, source-of-truth 문서/검증/git/runtime 규칙을 현재 MVP 기준으로 요약 | PRD, Change Log, Context, README, Docs | yes |
 | CHG-0092 | 2026-03-21 | UPDATE | 하네스 엔지니어링을 suite 계약 기반으로 강화해 active/planned suite 상태, 필수 expected key, grader 존재성, snapshot 불변성을 `harness/suite-contracts.json`과 검증 스크립트로 기계적으로 강제 | PRD, Plan, Change Log, Context, README, Docs, Code, Tests | yes |
+| CHG-0093 | 2026-03-21 | FIX | Vercel production build가 `Next.js 15.5.2` 보안 차단으로 실패하던 문제를 해결하기 위해 `apps/web`의 Next.js를 최신 15.5.x 패치 라인으로 상향하고 배포 경로를 재검증 | Change Log, Context, Code, Tests, Deployment | yes |
+| CHG-0094 | 2026-03-21 | FIX | Next.js App Router route에서 `...process.env`를 퍼뜨리며 production runtime env가 누락돼 cron/webhook 경로가 `localhost` fallback으로 잘못 연결되던 문제를 수정하고, web route가 필요한 env key만 명시적으로 전달하도록 보강 | Change Log, Context, Code, Tests, Deployment | yes |
+| CHG-0095 | 2026-03-21 | ADD | `apps/web`를 Vercel production에 실제 배포하고, Neon production branch에 baseline schema를 적용한 뒤, public alias(`/` empty state), `/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`, `/admin` auth gate, GitHub Actions backup run까지 production smoke를 완료 | Change Log, Plan, Context, README, Deployment, Docs, Ops | yes |
+| CHG-0096 | 2026-03-21 | ADD | 실제 Telegram 연동 검증을 위한 production E2E 테스트 시나리오 문서를 추가하고, DM/그룹/공개 웹/스케줄/개인정보 경계 기준을 운영 체크리스트로 명시 | Change Log, Context, Docs | yes |
 
 ## 4. Open Change Notes
 

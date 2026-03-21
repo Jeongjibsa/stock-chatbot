@@ -23,7 +23,22 @@ async function getWebhookHandler() {
   }
 
   if (!globalThis.__stockChatbotWebhookHandler) {
-    const app = buildTelegramBotApp(token, process.env);
+    const app = buildTelegramBotApp(token, {
+      ADMIN_DASHBOARD_PASSWORD: process.env.ADMIN_DASHBOARD_PASSWORD,
+      ADMIN_DASHBOARD_USERNAME: process.env.ADMIN_DASHBOARD_USERNAME,
+      CRON_SECRET: process.env.CRON_SECRET,
+      DAILY_REPORT_WINDOW_MINUTES: process.env.DAILY_REPORT_WINDOW_MINUTES,
+      DATABASE_URL: process.env.DATABASE_URL,
+      FRED_API_KEY: process.env.FRED_API_KEY,
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      LLM_PROVIDER: process.env.LLM_PROVIDER,
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      PUBLIC_BRIEFING_BASE_URL: process.env.PUBLIC_BRIEFING_BASE_URL,
+      REDIS_URL: process.env.REDIS_URL,
+      REPORT_TIMEZONE: process.env.REPORT_TIMEZONE,
+      TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+      TELEGRAM_WEBHOOK_SECRET_TOKEN: process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN
+    });
     globalThis.__stockChatbotWebhookHandler = webhookCallback(app.bot, "std/http");
   }
 
