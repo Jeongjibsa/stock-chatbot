@@ -7,6 +7,6 @@ describe("buildMockReportReply", () => {
     const preview = buildMockReportReply();
 
     expect(preview).toContain("오늘의 브리핑");
-    expect(preview).toContain("[보유 종목 뉴스]");
+    expect(preview).toContain("📰 보유 종목 뉴스");
   });
 });

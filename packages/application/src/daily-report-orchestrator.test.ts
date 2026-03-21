@@ -97,8 +97,8 @@ describe("DailyReportOrchestrator", () => {
     });
 
     expect(result.status).toBe("partial_success");
-    expect(result.reportText).toContain("[보유 종목 뉴스]");
-    expect(result.reportText).toContain("[누락 또는 지연 항목]");
+    expect(result.reportText).toContain("📰 보유 종목 뉴스");
+    expect(result.reportText).toContain("🧩 누락 또는 지연 항목");
     expect(reportRunRepository.completeRun).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "partial_success",
@@ -239,6 +239,6 @@ describe("DailyReportOrchestrator", () => {
 
     expect(result.status).toBe("completed");
     expect(result.portfolioNewsBriefs).toHaveLength(1);
-    expect(result.reportText).toContain("[보유 종목 뉴스]");
+    expect(result.reportText).toContain("📰 보유 종목 뉴스");
   });
 });

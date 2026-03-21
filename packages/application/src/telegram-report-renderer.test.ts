@@ -30,9 +30,10 @@ describe("renderTelegramDailyReport", () => {
       ]
     });
 
-    expect(report).toContain("오늘의 브리핑 (2026-03-20)");
-    expect(report).toContain("나스닥 종합: 18000 (+1.25%)");
-    expect(report).toContain("Apple Inc. (AAPL, US)");
+    expect(report).toContain("🗞️ 오늘의 브리핑 | 2026-03-20");
+    expect(report).toContain("📌 한 줄 요약");
+    expect(report).toContain("나스닥 종합: 18,000  🔴▲ 1.25%");
+    expect(report).toContain("• Apple Inc. (AAPL, US)");
   });
 
   it("renders missing source section when failures exist", () => {
@@ -50,7 +51,7 @@ describe("renderTelegramDailyReport", () => {
       ]
     });
 
-    expect(report).toContain("[누락 또는 지연 항목]");
+    expect(report).toContain("🧩 누락 또는 지연 항목");
     expect(report).toContain("index:KRX:KOSPI: unsupported");
     expect(report).toContain("등록된 보유 종목이 없어.");
   });
@@ -92,9 +93,10 @@ describe("renderTelegramDailyReport", () => {
       riskCheckpoints: ["변동성 급등 시 비중 확대를 보류"],
     });
 
-    expect(report).toContain("[보유 종목 뉴스]");
-    expect(report).toContain("[전략 시나리오]");
-    expect(report).toContain("[리스크 체크포인트]");
+    expect(report).toContain("📰 보유 종목 뉴스");
+    expect(report).toContain("🧠 전략 시나리오");
+    expect(report).toContain("⚠️ 리스크 체크포인트");
+    expect(report).toContain("🔴호재 신제품 공개 신뢰도 높음");
     expect(report).not.toContain("다음 단계에서 연결 예정");
   });
 });

@@ -10,8 +10,8 @@ describe("buildMockTelegramReportPreview", () => {
     });
 
     expect(preview.userId).toBe("user-1");
-    expect(preview.renderedText).toContain("[보유 종목 뉴스]");
-    expect(preview.renderedText).toContain("[전략 시나리오]");
-    expect(preview.renderedText).toContain("[리스크 체크포인트]");
+    expect(preview.renderedText).toContain("📰 보유 종목 뉴스");
+    expect(preview.renderedText).toContain("🧠 전략 시나리오");
+    expect(preview.renderedText).toContain("⚠️ 리스크 체크포인트");
   });
 });

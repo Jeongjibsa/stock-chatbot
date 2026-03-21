@@ -54,7 +54,7 @@ export function buildApp(dependencies: HealthCheckDependencies) {
       id: "mock-run-previous",
       promptVersion: "daily-report/v1",
       reportText:
-        "오늘의 브리핑 (2026-03-20)\n한 줄 요약: 시장 지표 1개와 보유 종목 1개 기준으로 정리했어.",
+        "🗞️ 오늘의 브리핑 | 2026-03-20\n\n📌 한 줄 요약\n시장 지표 1개와 보유 종목 1개 기준으로 정리했어.",
       runDate: "2026-03-20",
       scheduleType: "daily-9am",
       skillVersion: "daily-report-orchestrator/v1",
