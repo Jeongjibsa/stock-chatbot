@@ -2,6 +2,7 @@ import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js"
 import type { DailyReportComposition } from "./daily-report-composition-service.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
+import { buildPublicBriefingUrl } from "./public-daily-briefing.js";
 import {
   buildQuantScorecards,
   toQuantStrategyBullets
@@ -101,6 +102,7 @@ export class DailyReportOrchestrator {
       marketDataAdapter: MarketDataAdapter;
       portfolioHoldingRepository: PortfolioHoldingRepositoryPort;
       portfolioNewsBriefService?: PortfolioNewsBriefServicePort;
+      publicBriefingBaseUrl?: string;
       reportCompositionService?: ReportCompositionServicePort;
       reportRunRepository: ReportRunRepositoryPort;
       userMarketWatchRepository: UserMarketWatchRepositoryPort;
@@ -259,6 +261,13 @@ export class DailyReportOrchestrator {
 
     if (composition?.riskBullets) {
       renderInput.riskCheckpoints = composition.riskBullets;
+    }
+
+    if (this.dependencies.publicBriefingBaseUrl) {
+      renderInput.publicBriefingUrl = buildPublicBriefingUrl(
+        this.dependencies.publicBriefingBaseUrl,
+        input.runDate
+      );
     }
 
     const reportText = renderTelegramDailyReport(renderInput);

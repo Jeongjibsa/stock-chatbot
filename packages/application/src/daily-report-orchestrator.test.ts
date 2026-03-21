@@ -244,4 +244,47 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
     expect(result.reportText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
+
+  it("appends a public briefing link when a base url is configured", async () => {
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [])
+      },
+      publicBriefingBaseUrl: "https://jeongjibsa.github.io/stock-chatbot/",
+      reportRunRepository: {
+        startRun: vi.fn(async () => ({
+          created: true,
+          run: {
+            id: "run-3",
+            status: "running"
+          }
+        })),
+        completeRun: vi.fn(async (input) => ({
+          id: input.id,
+          status: input.status,
+          reportText: input.reportText,
+          errorMessage: input.errorMessage
+        }))
+      },
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-20",
+      scheduleType: "daily-9am"
+    });
+
+    expect(result.reportText).toContain(
+      "🔎 상세 브리핑: https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/"
+    );
+  });
 });

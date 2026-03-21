@@ -12,9 +12,91 @@ on:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  PUBLIC_BRIEFING_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
+  build-public-briefing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      PUBLIC_BRIEFING_OUTPUT_PATH: artifacts/public-briefing/public-daily-briefing.json
+      REPORT_RUN_DATE: ${{ inputs.report_run_date }}
+      REPORT_TRIGGER_TYPE: ${{ github.event_name }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Checkout existing Pages branch
+        uses: actions/checkout@v4
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: public-site
+
+      - name: Ensure Pages working directory
+        run: |
+          if [ -d public-site/.git ]; then
+            rm -rf public-site/.git
+          fi
+          mkdir -p public-site
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace
+        run: pnpm build
+
+      - name: Build public briefing JSON
+        run: pnpm --filter @stock-chatbot/worker run run:public-briefing
+
+      - name: Build public briefing site
+        run: pnpm pages:build artifacts/public-briefing/public-daily-briefing.json public-site
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public-site
+
+  deploy-public-briefing:
+    needs: build-public-briefing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
   run-daily-report:
+    needs: deploy-public-briefing
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -24,6 +106,7 @@ jobs:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      PUBLIC_BRIEFING_BASE_URL: ${{ env.PUBLIC_BRIEFING_BASE_URL }}
       REDIS_URL: ${{ secrets.REDIS_URL }}
       REPORT_RUN_DATE: ${{ inputs.report_run_date }}
       REPORT_TRIGGER_TYPE: ${{ github.event_name }}

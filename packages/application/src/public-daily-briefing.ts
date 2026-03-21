@@ -81,6 +81,12 @@ export function buildPublicBriefingCanonicalPath(runDate: string): string {
   return `/briefings/${runDate}/`;
 }
 
+export function buildPublicBriefingUrl(baseUrl: string, runDate: string): string {
+  const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
+
+  return `${normalizedBaseUrl}${buildPublicBriefingCanonicalPath(runDate)}`;
+}
+
 export function buildPublicBriefingArchivePath(runDate: string): string {
   const [year, month, day] = runDate.split("-");
 

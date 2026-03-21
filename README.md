@@ -19,7 +19,7 @@ public repository 기준으로 아래 workflow를 사용한다.
 - `CI`
   - push / pull_request 시 `pnpm verify` 실행
 - `Daily Report`
-  - 매일 `00:07 UTC`에 실행되어 `09:07 KST` 근처 일 배치 리포트 런너를 호출
+  - 매일 `00:07 UTC`에 실행되어 `09:07 KST` 근처 공개 브리핑 생성·배포 후 일 배치 리포트 런너를 호출
   - `workflow_dispatch`로 수동 실행 가능
 - `Daily Report Smoke`
   - `workflow_dispatch` 전용
@@ -38,8 +38,10 @@ public repository 기준으로 아래 workflow를 사용한다.
 Actions용 일 배치 진입점:
 
 - `pnpm --filter @stock-chatbot/worker run run:daily-report`
+- `pnpm --filter @stock-chatbot/worker run run:public-briefing`
 
 현재 GitHub Actions 런너는 queue 없이 직접 일 배치 작업을 실행한다. 정확한 정시성보다 저비용 운영을 우선하며, schedule 지연은 저장 계층 중복 방지로 흡수한다.
+공개 브리핑은 같은 `runDate`에 대해 canonical `/briefings/YYYY-MM-DD/`와 archive `/briefings/YYYY/MM/DD/`를 동일하게 재생성하며, root `/`와 `/briefings/` index도 함께 갱신한다.
 현재 app runtime 스크립트는 workspace ESM 해석 이슈를 피하기 위해 `tsx` source entrypoint를 사용하고, `pnpm build`는 검증용 단계로 유지한다.
 
 Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 workflow는 외부 DB 없이 GitHub-hosted runner 안에서 PostgreSQL service를 띄우고, mock 사용자와 포트폴리오를 seed한 뒤 `pnpm --filter @stock-chatbot/worker run run:daily-report`를 실행한다.
@@ -98,13 +100,16 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
 
 - `/start`
 - `/help`
+- `/register`
 - `/portfolio_add`
+- `/portfolio_list`
 - `/portfolio_remove`
 - `/market_add`
 - `/market_items`
 - `/mock_report`
 
-`/portfolio_add`, `/portfolio_remove`, `/market_add`는 in-memory 대화 상태 저장소 기반으로 단계별 입력 플로우를 유지한다.
+`/register`는 MVP 필수 등록 단계다. group/supergroup에서는 계정만 만들고, 개인화 리포트 발송 대상 chat은 private DM에서 다시 `/register`할 때 저장한다.
+`/portfolio_add`, `/portfolio_remove`, `/market_add`는 단계별 입력 플로우를 유지하면서 실제 DB 저장/조회와 연결된다.
 `/mock_report`는 실제 Telegram provider 연동 없이 현재 리포트 템플릿을 미리보기로 보여준다.
 
 실 Telegram smoke test:
@@ -147,6 +152,10 @@ smoke test는 먼저 `getMe`로 봇 신원을 검증하고, 이어서 현재 템
   - 특정 날짜로 job을 재현할 때만 선택적으로 사용
 - `REPORT_TRIGGER_TYPE`
   - `schedule`, `workflow_dispatch`, `manual` 같은 실행 트리거 구분값
+- `PUBLIC_BRIEFING_BASE_URL`
+  - 텔레그램 하단에 넣을 GitHub Pages 공개 브리핑 기준 URL
+- `PUBLIC_BRIEFING_OUTPUT_PATH`
+  - 공개 브리핑 JSON 산출 경로
 
 `.env`를 셸에서 직접 불러야 할 때는 공백이 포함된 값이 있으므로 파일 안의 quoted 값을 유지해야 한다. Node 실행은 가능하면 `node --env-file=.env ...` 또는 앱 내부 `dotenv/config` 로딩을 사용한다.
 

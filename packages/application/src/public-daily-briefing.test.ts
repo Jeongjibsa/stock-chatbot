@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildPublicBriefingArchivePath,
   buildPublicBriefingCanonicalPath,
+  buildPublicBriefingUrl,
   buildPublicDailyBriefing
 } from "./public-daily-briefing.js";
 
@@ -52,5 +53,8 @@ describe("public daily briefing", () => {
   it("builds canonical and archive paths from run date", () => {
     expect(buildPublicBriefingCanonicalPath("2026-03-20")).toBe("/briefings/2026-03-20/");
     expect(buildPublicBriefingArchivePath("2026-03-20")).toBe("/briefings/2026/03/20/");
+    expect(
+      buildPublicBriefingUrl("https://jeongjibsa.github.io/stock-chatbot/", "2026-03-20")
+    ).toBe("https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/");
   });
 });

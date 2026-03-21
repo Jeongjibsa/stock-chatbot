@@ -6,6 +6,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "run:daily-report": "tsx src/run-daily-report.ts",
+    "run:public-briefing": "tsx src/run-public-briefing.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

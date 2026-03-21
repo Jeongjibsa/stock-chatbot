@@ -118,6 +118,9 @@
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.
+- 공개 상세 브리핑 permalink는 canonical `/briefings/YYYY-MM-DD/`, archive `/briefings/YYYY/MM/DD/`를 함께 유지하고, 같은 `runDate` 재실행 시 동일 경로를 덮어쓰는 방식으로 idempotent하게 운영한다.
+- 공개 브리핑 build 스크립트는 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
+- GitHub Actions `Daily Report` workflow는 이제 `public briefing build -> Pages deploy -> daily report send` 순서로 동작하며, 텔레그램 본문은 `PUBLIC_BRIEFING_BASE_URL + /briefings/YYYY-MM-DD/` 링크를 하단에 붙인다.
 - `거시 시장 스냅샷`은 `NASDAQ -> S&P500 -> DOW -> VIX -> KOSPI -> KOSDAQ -> 미국 10년물 금리 -> 국제 유가(WTI) -> 천연가스 -> 구리 -> USD/KRW -> 달러인덱스` 순서를 기본으로 하고, 그룹 사이를 빈 줄로 구분한다.
 - `거시 시장 스냅샷`에서는 `USD/KRW`와 `달러인덱스`를 하단에 연속 배치하고, 두 지표를 함께 해석하는 FX 문장을 바로 아래에 붙인다.
 - `market-report-composition` prompt는 v3로 올라갔고, `시장 / 매크로 / 자금 / 이벤트` 섹션을 별도 structured output 배열로 반환한다.
@@ -128,7 +131,7 @@
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 4`는 뉴스 요약 및 퀀트 전략 엔진 구현 단계였고 현재 완료됐다.
 - `Phase 5`는 하네스, 평가, 운영 자동화 구축 단계이며 fixture, grader, snapshot 비교 흐름이 이미 들어갔다.
-- `Phase 5`의 다음 우선순위는 GitHub Pages 공개 상세 브리핑 생성/배포와 텔레그램 링크 연결이다.
+- `Phase 6`의 다음 우선순위는 GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의다.
 - `Phase 6`은 멀티채널 준비 단계이며 mock delivery와 공통 report query model, API 계약 초안까지 들어간 상태다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
 - `Phase 7`은 온디맨드 `/report`, 웹 클라이언트, 모바일 앱 같은 후순위 확장 단계다.

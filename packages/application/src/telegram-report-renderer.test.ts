@@ -302,4 +302,25 @@ describe("renderTelegramDailyReport", () => {
     );
     expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
+
+  it("renders a public briefing link before the disclaimer when provided", () => {
+    const report = renderTelegramDailyReport({
+      displayName: "Jisung",
+      runDate: "2026-03-20",
+      holdings: [],
+      publicBriefingUrl:
+        "https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/",
+      marketResults: []
+    });
+
+    const linkIndex = report.indexOf(
+      "🔎 상세 브리핑: https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/"
+    );
+    const disclaimerIndex = report.indexOf(
+      "❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
+    );
+
+    expect(linkIndex).toBeGreaterThan(-1);
+    expect(disclaimerIndex).toBeGreaterThan(linkIndex);
+  });
 });

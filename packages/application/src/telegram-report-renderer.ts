@@ -11,6 +11,7 @@ export type TelegramReportRenderInput = {
   macroBullets?: string[];
   marketBullets?: string[];
   articleSummaryBullets?: string[];
+  publicBriefingUrl?: string;
   holdings: Array<{
     companyName: string;
     currentPrice?: number;
@@ -97,6 +98,13 @@ export function renderTelegramDailyReport(
 
   if (failedMarketItems.length > 0) {
     lines.push(SECTION_DIVIDER, "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
+  }
+
+  if (input.publicBriefingUrl) {
+    lines.push(
+      SECTION_DIVIDER,
+      `🔎 상세 브리핑: ${input.publicBriefingUrl}`
+    );
   }
 
   lines.push(SECTION_DIVIDER, ...renderDisclaimer());

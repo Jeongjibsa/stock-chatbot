@@ -112,6 +112,18 @@ export function readRunDate(env: Environment = process.env): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+export function readPublicBriefingBaseUrl(
+  env: Environment = process.env
+): string | undefined {
+  const baseUrl = env.PUBLIC_BRIEFING_BASE_URL?.trim();
+
+  if (!baseUrl) {
+    return undefined;
+  }
+
+  return baseUrl.replace(/\/+$/, "");
+}
+
 export function readScheduleType(
   env: Environment = process.env
 ): DailyReportScheduleType {
@@ -173,6 +185,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const llmProvider = readLlmProvider(env);
   const runDate = readRunDate(env);
   const scheduleType = readScheduleType(env);
+  const publicBriefingBaseUrl = readPublicBriefingBaseUrl(env);
   const pool = createPool(databaseUrl);
   const db = createDatabase(pool);
   const userRepository = new UserRepository(db);
@@ -186,6 +199,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
       yahooFinanceAdapter: new YahooFinanceScrapingMarketDataAdapter()
     }),
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
+    ...(publicBriefingBaseUrl ? { publicBriefingBaseUrl } : {}),
     reportRunRepository: new ReportRunRepository(db),
     userMarketWatchRepository: new UserMarketWatchItemRepository(db)
   };

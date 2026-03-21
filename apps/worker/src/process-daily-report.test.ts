@@ -11,6 +11,7 @@ import {
   readGeminiApiKey,
   readLlmProvider,
   readOpenAiApiKey,
+  readPublicBriefingBaseUrl,
   readRunDate,
   readScheduleType
 } from "./process-daily-report.js";
@@ -80,5 +81,11 @@ describe("processDailyReportJob", () => {
     expect(readLlmProvider({})).toBeUndefined();
     expect(readLlmProvider({ LLM_PROVIDER: "google" })).toBe("google");
     expect(readLlmProvider({ LLM_PROVIDER: "openai" })).toBe("openai");
+    expect(readPublicBriefingBaseUrl({})).toBeUndefined();
+    expect(
+      readPublicBriefingBaseUrl({
+        PUBLIC_BRIEFING_BASE_URL: "https://jeongjibsa.github.io/stock-chatbot/"
+      })
+    ).toBe("https://jeongjibsa.github.io/stock-chatbot");
   });
 });

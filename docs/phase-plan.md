@@ -109,20 +109,20 @@
 - [x] GitHub Actions `workflow_dispatch` 수동 실행 경로 정의
 - [x] GitHub Actions secret/env 주입 규칙 정의
 - [x] GitHub Actions `workflow_dispatch` 기반 Gemini daily report smoke workflow와 seeded mock portfolio 검증 경로 정의
-- [ ] schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
+- [x] schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
 - [x] GitHub Actions에서 daily report runner를 호출하는 실행 진입점 구현
-- [ ] 주기 보고서 자동화 설계 고도화
+- [x] 주기 보고서 자동화 설계 고도화
 - [x] 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 actual daily report 경로에 연결
 - [x] 실 Telegram provider smoke test 자동화와 로컬/Actions 실행 경로 정의
 - [x] change-log 기반 컨텍스트 요약 및 롤업 흐름 구축
 - [x] GitHub Pages용 공개 상세 브리핑 정보 구조 정의
 - [x] 텔레그램 요약본과 GitHub Pages 상세 브리핑의 채널별 포함/제외 규칙 구현 설계
 - [x] GitHub Actions에서 날짜별 공개 상세 브리핑 정적 파일을 생성하는 build 경로 정의
-- [ ] GitHub Pages 배포 workflow 또는 Pages deploy job 정의
+- [x] GitHub Pages 배포 workflow 또는 Pages deploy job 정의
 - [x] 날짜별 상세 브리핑 permalink 규칙 정의
-- [ ] 날짜별 상세 브리핑 재실행 idempotency 규칙 정의
-- [ ] 상세 브리핑 index/archive 페이지 구조 정의
-- [ ] 텔레그램 메시지 하단에 GitHub Pages 상세 브리핑 링크를 삽입하는 전달 규칙 정의
+- [x] 날짜별 상세 브리핑 재실행 idempotency 규칙 정의
+- [x] 상세 브리핑 index/archive 페이지 구조 정의
+- [x] 텔레그램 메시지 하단에 GitHub Pages 상세 브리핑 링크를 삽입하는 전달 규칙 정의
 - [x] 공개 페이지에서 개인화 정보(보유 종목/개인 기사 요약)를 제외하는 privacy guardrail 정의
 - [x] managed Postgres free-tier 후보(Neon, Supabase) 비교 및 현재 운영 권장안 정의
 
@@ -147,7 +147,7 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 다시 `Phase 5`의 GitHub Pages 배포 및 링크 연결 항목이다.
+현재 권장 시작점은 `Phase 6`의 GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의 항목이다.
 
 우선순위:
 
@@ -200,3 +200,4 @@
 - 2026-03-21: managed Postgres free-tier 후보를 비교한 결과 현재 MVP 운영 기본안은 `Neon`, 추후 앱/Auth/Storage 확장 대안은 `Supabase`로 정리
 - 2026-03-21: 텔레그램 `/register`를 추가하고, 그룹 채팅에서는 계정만 등록하되 DM에서 다시 `/register`할 때 개인 발송 대상 chat을 저장하는 정책을 실제 코드와 스키마에 반영
 - 2026-03-21: 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고 관련 unit/integration 검증을 통과
+- 2026-03-21: 공개 브리핑 JSON 생성 worker 엔트리포인트, root/archive index 재생성 로직, GitHub Pages deploy job, 텔레그램 하단 상세 브리핑 링크 주입 규칙을 추가해 `공개 상세 브리핑 생성 -> Pages 배포 -> 텔레그램 요약 발송` 순서를 workflow 기준선으로 고정

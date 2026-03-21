@@ -1,6 +1,12 @@
 /* global console, process */
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  writeFileSync
+} from "node:fs";
 import { dirname, join } from "node:path";
 
 import { renderPublicDailyBriefingHtml } from "../../packages/application/dist/index.js";
@@ -21,13 +27,17 @@ for (const target of [canonicalTarget, archiveTarget]) {
   writeFileSync(target, html);
 }
 
+writeArchiveIndex(outputRoot, briefing.runDate);
+writeRootIndex(outputRoot, briefing.runDate);
 writeFileSync(join(outputRoot, ".nojekyll"), "");
 
 console.log(
   JSON.stringify(
     {
       canonicalTarget,
-      archiveTarget
+      archiveTarget,
+      archiveIndexTarget: join(outputRoot, "briefings", "index.html"),
+      rootIndexTarget: join(outputRoot, "index.html")
     },
     null,
     2
@@ -36,4 +46,114 @@ console.log(
 
 function toRelativePath(pathname) {
   return pathname.replace(/^\/+/, "");
+}
+
+function writeArchiveIndex(outputRoot, latestRunDate) {
+  const runDates = readAvailableRunDates(outputRoot);
+  const items = runDates
+    .map(
+      (runDate) =>
+        `        <li><a href="${escapeHtml(`./${runDate}/`)}">${escapeHtml(runDate)}</a></li>`
+    )
+    .join("\n");
+  const target = join(outputRoot, "briefings", "index.html");
+
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(
+    target,
+    [
+      "<!doctype html>",
+      '<html lang="ko">',
+      "<head>",
+      '  <meta charset="utf-8" />',
+      '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
+      "  <title>브리핑 아카이브</title>",
+      "  <style>",
+      "    body { margin: 0; font-family: 'Iowan Old Style', 'Noto Serif KR', serif; background: #f7f4ee; color: #181511; }",
+      "    main { max-width: 860px; margin: 0 auto; padding: 48px 20px 80px; }",
+      "    .card { background: #fffaf1; border: 1px solid #ded4c6; border-radius: 20px; padding: 24px; }",
+      "    h1 { margin: 0 0 12px; font-size: clamp(2rem, 4vw, 3rem); }",
+      "    p { color: #5a534a; line-height: 1.6; }",
+      "    ul { margin: 16px 0 0; padding-left: 1.2rem; }",
+      "    li { margin: 0.45rem 0; }",
+      "    a { color: #9a2c20; text-decoration: none; }",
+      "  </style>",
+      "</head>",
+      "<body>",
+      "  <main>",
+      '    <section class="card">',
+      "      <h1>브리핑 아카이브</h1>",
+      `      <p>최신 공개 브리핑 기준일은 ${escapeHtml(latestRunDate)}입니다.</p>`,
+      "      <ul>",
+      items || "        <li>아직 생성된 브리핑이 없습니다.</li>",
+      "      </ul>",
+      "    </section>",
+      "  </main>",
+      "</body>",
+      "</html>"
+    ].join("\n")
+  );
+}
+
+function writeRootIndex(outputRoot, latestRunDate) {
+  const target = join(outputRoot, "index.html");
+
+  writeFileSync(
+    target,
+    [
+      "<!doctype html>",
+      '<html lang="ko">',
+      "<head>",
+      '  <meta charset="utf-8" />',
+      '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
+      "  <title>Stock Chatbot Briefings</title>",
+      "  <style>",
+      "    body { margin: 0; font-family: 'Iowan Old Style', 'Noto Serif KR', serif; background: radial-gradient(circle at top, #fff4d9, #f7f4ee 52%); color: #181511; }",
+      "    main { max-width: 860px; margin: 0 auto; padding: 56px 20px 80px; }",
+      "    .hero { background: #fffaf1; border: 1px solid #ded4c6; border-radius: 24px; padding: 28px; box-shadow: 0 14px 40px rgba(0, 0, 0, 0.05); }",
+      "    h1 { margin: 0 0 12px; font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.05; }",
+      "    p { color: #5a534a; line-height: 1.6; }",
+      "    .links { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }",
+      "    .button { display: inline-block; padding: 12px 16px; border-radius: 999px; text-decoration: none; font-weight: 700; }",
+      "    .primary { background: #9a2c20; color: #fffaf1; }",
+      "    .secondary { border: 1px solid #ded4c6; color: #181511; background: rgba(255,255,255,0.8); }",
+      "  </style>",
+      "</head>",
+      "<body>",
+      "  <main>",
+      '    <section class="hero">',
+      "      <h1>오늘의 공개 브리핑</h1>",
+      `      <p>최신 공개 기준일은 ${escapeHtml(latestRunDate)}입니다. 텔레그램 요약본과 연결되는 시장·매크로·자금·이벤트 상세 브리핑을 확인하실 수 있습니다.</p>`,
+      '      <div class="links">',
+      `        <a class="button primary" href="${escapeHtml(`./briefings/${latestRunDate}/`)}">최신 브리핑 보기</a>`,
+      '        <a class="button secondary" href="./briefings/">아카이브 보기</a>',
+      "      </div>",
+      "    </section>",
+      "  </main>",
+      "</body>",
+      "</html>"
+    ].join("\n")
+  );
+}
+
+function readAvailableRunDates(outputRoot) {
+  const briefingsRoot = join(outputRoot, "briefings");
+
+  if (!existsSync(briefingsRoot)) {
+    return [];
+  }
+
+  return readdirSync(briefingsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(entry.name))
+    .map((entry) => entry.name)
+    .sort((left, right) => right.localeCompare(left));
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
 }

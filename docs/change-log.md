@@ -91,6 +91,8 @@
 | CHG-0064 | 2026-03-21 | UPDATE | 텔레그램 그룹 채팅 확장 요구를 반영해 `/register`를 MVP 필수 명령으로 승격하고, 그룹 채팅에서는 계정만 등록하되 개인화 리포트 발송 대상 chat은 `private` DM에서 다시 `/register`할 때만 확정하는 정책과 후속 구현 항목을 plan에 추가 | PRD, Plan, Change Log, Context | yes |
 | CHG-0065 | 2026-03-21 | ADD | `users` 스키마에 `preferred_delivery_chat_id`와 `preferred_delivery_chat_type`를 추가하고, 텔레그램 `/register`가 private chat에서는 개인 발송 대상을 저장하고 group/supergroup에서는 계정만 등록하도록 bot/service/repository를 연결 | PRD, Plan, Change Log, Context, Code, Tests | yes |
 | CHG-0066 | 2026-03-21 | ADD | 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고, 미등록 사용자는 `/register`를 먼저 요구하도록 bot runtime과 service 계층을 확장 | PRD, Plan, Change Log, Context, Code, Tests | yes |
+| CHG-0067 | 2026-03-21 | ADD | 공개 상세 브리핑 JSON 생성 worker 엔트리포인트와 GitHub Pages root/archive index 재생성 로직을 추가해 같은 날짜 재실행 시 canonical/archive 경로를 idempotent하게 덮어쓰는 공개 배포 경로를 실제 코드로 정의 | PRD, Plan, Change Log, Context, README, Code, Tests | yes |
+| CHG-0068 | 2026-03-21 | ADD | `Daily Report` workflow에 GitHub Pages build/deploy job을 선행 단계로 추가하고, daily report worker가 `PUBLIC_BRIEFING_BASE_URL` 기반 상세 브리핑 permalink를 텔레그램 하단에 삽입하도록 연결 | PRD, Plan, Change Log, Context, README, Code, Tests | yes |
 
 ## 4. Open Change Notes
 
