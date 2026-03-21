@@ -62,6 +62,7 @@
 | CHG-0035 | 2026-03-21 | ADD | GitHub Actions `CI`와 `Daily Report` workflow, direct daily report runner 엔트리포인트, workflow_dispatch 입력, Actions secret/env 규칙, README 운영 가이드를 추가 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0036 | 2026-03-21 | UPDATE | FRED series 매핑을 점검해 환율/달러인덱스 해석 기준을 문서화하고, 텔레그램 템플릿 구조에 맞춘 일 리포트 LLM prompt v2와 composition service를 실제 daily report 경로에 연결 | PRD, Plan, Change Log, Context, LLM Plan, Code | yes |
 | CHG-0037 | 2026-03-21 | ADD | 실 Telegram provider adapter, 로컬 `make test-telegram`, GitHub Actions `Telegram Smoke Test` workflow를 추가해 mock 검증과 별도로 실채널 smoke test 자동화를 구축 | PRD, Plan, Change Log, Context, Code | yes |
+| CHG-0038 | 2026-03-21 | UPDATE | 거시 시장 기본 지표에 구리를 추가하고, 국제 유가/천연가스/구리 별칭을 보강했으며 FRED 구리 시세 매핑과 관련 테스트를 추가 | PRD, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

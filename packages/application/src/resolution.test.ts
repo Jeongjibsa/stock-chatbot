@@ -47,6 +47,21 @@ describe("StaticInstrumentResolver", () => {
       itemCode: "DXY",
       matchedBy: "alias"
     });
+
+    expect(resolver.resolveMarketIndicator("국제 유가")).toMatchObject({
+      itemCode: "WTI",
+      matchedBy: "alias"
+    });
+
+    expect(resolver.resolveMarketIndicator("천연가스")).toMatchObject({
+      itemCode: "HENRY_HUB_NATURAL_GAS",
+      matchedBy: "alias"
+    });
+
+    expect(resolver.resolveMarketIndicator("구리")).toMatchObject({
+      itemCode: "COPPER",
+      matchedBy: "alias"
+    });
   });
 
   it("returns null for unsupported inputs", () => {

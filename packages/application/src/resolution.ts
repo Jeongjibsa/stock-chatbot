@@ -109,22 +109,31 @@ const MARKET_INDICATOR_DEFINITIONS: MarketIndicatorDefinition[] = [
   },
   {
     itemCode: "WTI",
-    itemName: "WTI 유가",
+    itemName: "국제 유가 (WTI)",
     assetType: "commodity",
     sourceKey: "commodity:WTI",
-    aliases: ["wti", "유가", "wti유가"]
+    aliases: ["wti", "유가", "국제유가", "국제 유가", "원유", "wti유가"]
   },
   {
     itemCode: "HENRY_HUB_NATURAL_GAS",
-    itemName: "Henry Hub 천연가스",
+    itemName: "천연가스 (Henry Hub)",
     assetType: "commodity",
     sourceKey: "commodity:HENRY_HUB_NATURAL_GAS",
     aliases: [
       "henry hub",
       "henry hub natural gas",
       "천연가스",
-      "헨리허브천연가스"
+      "헨리허브천연가스",
+      "헨리허브 가스",
+      "natural gas"
     ]
+  },
+  {
+    itemCode: "COPPER",
+    itemName: "구리",
+    assetType: "commodity",
+    sourceKey: "commodity:COPPER",
+    aliases: ["copper", "구리", "구리시세", "구리 가격"]
   },
   {
     itemCode: "USD_KRW",

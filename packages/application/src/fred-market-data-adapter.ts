@@ -6,6 +6,7 @@ import type {
 } from "./market-data.js";
 
 const FRED_SERIES_BY_SOURCE_KEY: Record<string, string> = {
+  "commodity:COPPER": "PCOPPUSDM",
   "commodity:HENRY_HUB_NATURAL_GAS": "DHHNGSP",
   "commodity:WTI": "DCOILWTICO",
   "fx:USDKRW": "DEXKOUS",

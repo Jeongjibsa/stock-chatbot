@@ -128,4 +128,43 @@ describe("FredMarketDataAdapter", () => {
       }
     });
   });
+
+  it("supports copper commodity series", async () => {
+    const adapter = new FredMarketDataAdapter({
+      apiKey: "fred-key",
+      fetchFn: vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            observations: [
+              { date: "2026-01-01", value: "12986.60682" },
+              { date: "2025-12-01", value: "11790.96409" }
+            ]
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json"
+            }
+          }
+        )
+      )
+    });
+
+    const [result] = await adapter.fetchMany([
+      {
+        itemCode: "COPPER",
+        itemName: "구리",
+        sourceKey: "commodity:COPPER"
+      }
+    ]);
+
+    expect(result).toMatchObject({
+      status: "ok",
+      data: {
+        itemCode: "COPPER",
+        previousValue: 11790.96409,
+        value: 12986.60682
+      }
+    });
+  });
 });

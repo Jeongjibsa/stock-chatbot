@@ -15,6 +15,7 @@
 | U.S. 10Y Treasury | `rate:US10Y` | `DGS10` | valid | 금리 방향 확인용으로 적절 |
 | WTI Crude Oil | `commodity:WTI` | `DCOILWTICO` | valid | 에너지/중동 리스크 해석용으로 적절 |
 | Henry Hub Natural Gas | `commodity:HENRY_HUB_NATURAL_GAS` | `DHHNGSP` | valid | 천연가스 흐름 확인용으로 적절 |
+| Copper | `commodity:COPPER` | `PCOPPUSDM` | valid with caveat | IMF 기반 글로벌 구리 가격 series, 월간 지표 |
 | USD/KRW | `fx:USDKRW` | `DEXKOUS` | valid | FRED 설명상 `South Korean Won to One U.S. Dollar`; 현재 `USD/KRW` 해석이 맞다 |
 | Broad Dollar Index Proxy | `fx:DXY` | `DTWEXBGS` | valid with caveat | ICE DXY 자체는 아니고 broad goods/services dollar index proxy다 |
 
@@ -22,6 +23,7 @@
 
 - `DEXKOUS`는 원화 기준 1달러당 환율로 해석하는 현재 구현이 맞다.
 - `DTWEXBGS`는 널리 알려진 ICE DXY와 동일한 지수는 아니지만, 달러 전반 강도 proxy로는 충분히 쓸 수 있다.
+- `PCOPPUSDM`은 일간이 아니라 월간 series라서, 구리는 단기 변동보다 원자재 레짐 참고 지표로 해석하는 편이 맞다.
 - 따라서 `USD/KRW`와 `DTWEXBGS`를 함께 보면, 원화만의 상대 약세인지 광범위한 달러 강세인지 분리 해석할 수 있다.
 
 ## 4. Known Gaps

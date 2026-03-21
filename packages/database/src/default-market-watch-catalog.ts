@@ -44,17 +44,24 @@ export const DEFAULT_MARKET_WATCH_CATALOG: DefaultMarketWatchCatalogItem[] = [
   },
   {
     itemCode: "WTI",
-    itemName: "WTI 유가",
+    itemName: "국제 유가 (WTI)",
     assetType: "commodity",
     sourceKey: "commodity:WTI",
     sortOrder: 60
   },
   {
     itemCode: "HENRY_HUB_NATURAL_GAS",
-    itemName: "Henry Hub 천연가스",
+    itemName: "천연가스 (Henry Hub)",
     assetType: "commodity",
     sourceKey: "commodity:HENRY_HUB_NATURAL_GAS",
     sortOrder: 70
+  },
+  {
+    itemCode: "COPPER",
+    itemName: "구리",
+    assetType: "commodity",
+    sourceKey: "commodity:COPPER",
+    sortOrder: 75
   },
   {
     itemCode: "USD_KRW",
