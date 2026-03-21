@@ -16,6 +16,7 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:telegram": "pnpm --filter @stock-chatbot/telegram-bot run smoke",
     "test:watch": "vitest",
     "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm harness:check && docker compose config -q && docker compose --profile app config -q",
     "typecheck": "pnpm -r typecheck"

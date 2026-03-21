@@ -1,7 +1,7 @@
 SHELL := /bin/zsh
 COMPOSE := docker compose
 
-.PHONY: up down ps logs stack-up stack-down build typecheck lint format format-check test test-integration verify compose-validate dev-api dev-bot dev-worker test-up test-down harness-check
+.PHONY: up down ps logs stack-up stack-down build typecheck lint format format-check test test-integration test-telegram verify compose-validate dev-api dev-bot dev-worker test-up test-down harness-check
 
 up:
 	$(COMPOSE) up -d postgres redis
@@ -39,6 +39,9 @@ test:
 test-integration:
 	docker compose up -d --wait postgres
 	RUN_INTEGRATION_TESTS=1 COREPACK_HOME=/tmp/corepack pnpm test:integration
+
+test-telegram:
+	COREPACK_HOME=/tmp/corepack pnpm test:telegram
 
 typecheck:
 	pnpm typecheck

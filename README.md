@@ -58,6 +58,8 @@ Actions용 일 배치 진입점:
   - Vitest 실행
 - `make test-integration`
   - Docker PostgreSQL 기반 integration test 실행
+- `make test-telegram`
+  - 실 Telegram Bot API smoke test 실행
 - `make verify`
   - lint, typecheck, test, compose 검증을 한 번에 실행
 - `make harness-check`
@@ -96,6 +98,16 @@ Actions용 일 배치 진입점:
 
 `/portfolio_add`, `/portfolio_remove`, `/market_add`는 in-memory 대화 상태 저장소 기반으로 단계별 입력 플로우를 유지한다.
 `/mock_report`는 실제 Telegram provider 연동 없이 현재 리포트 템플릿을 미리보기로 보여준다.
+
+실 Telegram smoke test:
+
+- 로컬: `make test-telegram`
+- GitHub Actions: `Telegram Smoke Test` workflow 수동 실행
+- 필요 env/secrets:
+  - `TELEGRAM_BOT_TOKEN`
+  - `TELEGRAM_TEST_CHAT_ID`
+
+smoke test는 먼저 `getMe`로 봇 신원을 검증하고, 이어서 현재 템플릿 기반 preview report를 테스트 채팅으로 실제 발송한다.
 
 ## Mock Contracts
 

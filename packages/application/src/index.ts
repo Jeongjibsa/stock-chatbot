@@ -80,6 +80,10 @@ export {
 } from "./mock-report-preview.js";
 export {
   MockTelegramDeliveryAdapter,
+  TelegramBotApiClient,
+  TelegramReportDeliveryAdapter,
+  type TelegramBotProfile,
+  type TelegramSentMessage,
   type DeliveryChannel,
   type ReportDeliveryAdapter,
   type ReportDeliveryRequest,

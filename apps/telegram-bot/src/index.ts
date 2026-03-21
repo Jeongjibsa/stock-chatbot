@@ -1,5 +1,3 @@
-import "dotenv/config";
-
 import { fileURLToPath } from "node:url";
 import { Bot } from "grammy";
 import {
@@ -13,7 +11,10 @@ import {
   getConversationStartMessage,
   InMemoryConversationStateStore
 } from "./conversation-state.js";
+import { loadTelegramBotEnv } from "./load-env.js";
 import { readToken } from "./token.js";
+
+loadTelegramBotEnv();
 
 async function main(): Promise<void> {
   const token = readToken();
