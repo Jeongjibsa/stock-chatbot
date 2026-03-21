@@ -55,6 +55,7 @@
 | CHG-0028 | 2026-03-20 | ADD | harness fixture 포맷과 샘플 케이스, grader 기준, snapshot 비교 스크립트, verify 연동, prompt/skill version 기록 연결을 추가 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0029 | 2026-03-21 | ADD | mock telegram delivery adapter, reusable report preview 템플릿, future web/app API 계약 초안, 공통 report query model과 `/mock_report` 예시 명령을 추가 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0030 | 2026-03-21 | UPDATE | 텔레그램 report 렌더링을 이모지, 방향 기호, 가독성 중심 레이아웃으로 개선하고 실채널 POC 발송으로 검증 | PRD, Change Log, Context, Code | yes |
+| CHG-0031 | 2026-03-21 | UPDATE | 시장 지표를 전일값→현재값으로 표기하고 USD/KRW는 달러인덱스와 함께 상대 강도를 해석하도록 렌더링 규칙과 DXY 지원을 확장 | PRD, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

@@ -98,12 +98,23 @@ function renderMarketSnapshot(
     return ["• 수집된 시장 지표가 아직 없어."];
   }
 
-  return results.map((result) => {
+  const lines = results.map((result) => {
     const changeText = formatChangeBadge(result.data.changePercent);
-    const valueText = formatValue(result.data.value);
+    const valueText = formatValueTransition(
+      result.data.previousValue,
+      result.data.value
+    );
 
     return `• ${result.data.itemName}: ${valueText}${changeText ? `  ${changeText}` : ""}`;
   });
+
+  const fxInsight = buildFxInsight(results);
+
+  if (fxInsight) {
+    lines.push(`  ↳ ${fxInsight}`);
+  }
+
+  return lines;
 }
 
 function renderHoldings(
@@ -155,6 +166,14 @@ function formatValue(value: number): string {
   }).format(value);
 }
 
+function formatValueTransition(previousValue: number | undefined, value: number): string {
+  if (previousValue === undefined) {
+    return formatValue(value);
+  }
+
+  return `${formatValue(previousValue)} → ${formatValue(value)}`;
+}
+
 function formatChangeBadge(value?: number): string {
   if (value === undefined) {
     return "";
@@ -195,4 +214,45 @@ function formatConfidenceBadge(
   }
 
   return "신뢰도 낮음";
+}
+
+function buildFxInsight(
+  results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>
+): string | undefined {
+  const usdKrw = results.find((result) => result.data.itemCode === "USD_KRW");
+  const dxy = results.find((result) => result.data.itemCode === "DXY");
+
+  if (!usdKrw || usdKrw.data.changePercent === undefined) {
+    return undefined;
+  }
+
+  if (!dxy || dxy.data.changePercent === undefined) {
+    if (usdKrw.data.changePercent > 0) {
+      return "원화 약세가 보이지만 달러인덱스가 없어 상대 약세까지는 확정하기 어려워.";
+    }
+
+    if (usdKrw.data.changePercent < 0) {
+      return "원화 강세가 보이지만 달러인덱스가 없어 달러 전반 약세와의 구분은 제한적이야.";
+    }
+
+    return undefined;
+  }
+
+  if (usdKrw.data.changePercent > 0 && dxy.data.changePercent > 0) {
+    return "달러인덱스도 함께 올라 원화만 약한 장은 아니고, 달러 강세 영향이 같이 반영되고 있어.";
+  }
+
+  if (usdKrw.data.changePercent > 0 && dxy.data.changePercent <= 0) {
+    return "달러인덱스 대비로도 USD/KRW가 올라 원화 쪽 약세 압력이 더 크게 작동한 흐름이야.";
+  }
+
+  if (usdKrw.data.changePercent < 0 && dxy.data.changePercent > 0) {
+    return "달러는 강한데 USD/KRW는 내려 원화가 상대적으로 선방한 흐름이야.";
+  }
+
+  if (usdKrw.data.changePercent < 0 && dxy.data.changePercent <= 0) {
+    return "달러 약세와 함께 USD/KRW도 내려 원화 강세가 같이 나타난 흐름이야.";
+  }
+
+  return "USD/KRW 변동이 제한적이라 원화의 상대 강도 판단은 중립에 가까워.";
 }

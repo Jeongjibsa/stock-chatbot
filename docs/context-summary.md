@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -67,6 +67,7 @@
 - application 계층에는 Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진이 추가됐다.
 - application 계층에는 mock telegram delivery adapter, reusable report preview 템플릿, 공통 report query model이 추가됐다.
 - telegram report 렌더러는 이모지, 방향 기호, 섹션 중심 레이아웃으로 개선됐고 실채널 POC 메시지 발송으로 확인됐다.
+- 시장 지표 렌더링은 `전일값 → 현재값` 형식으로 표시하고, `USD/KRW`는 `DXY`와 함께 상대 강도를 해석하도록 확장됐다.
 - worker에는 BullMQ job scheduler 기반 오전 9시 트리거와 env 기반 패턴/타임존 설정이 추가됐다.
 - worker에는 뉴스 brief 연동과 prompt/skill version 기록 연결이 추가됐다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.

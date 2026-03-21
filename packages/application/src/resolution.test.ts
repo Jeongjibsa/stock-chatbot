@@ -42,6 +42,11 @@ describe("StaticInstrumentResolver", () => {
       itemCode: "USD_KRW",
       matchedBy: "itemCode"
     });
+
+    expect(resolver.resolveMarketIndicator("달러인덱스")).toMatchObject({
+      itemCode: "DXY",
+      matchedBy: "alias"
+    });
   });
 
   it("returns null for unsupported inputs", () => {

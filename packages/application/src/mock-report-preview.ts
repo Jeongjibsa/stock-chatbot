@@ -35,8 +35,35 @@ export function buildMockTelegramReportPreview(input?: {
             source: "fred",
             sourceKey: "index:NASDAQ:IXIC",
             asOfDate: runDate,
+            previousValue: 17777.78,
             value: 18000,
             changePercent: 1.25
+          }
+        },
+        {
+          status: "ok",
+          data: {
+            itemCode: "USD_KRW",
+            itemName: "USD/KRW 환율",
+            source: "fred",
+            sourceKey: "fx:USDKRW",
+            asOfDate: runDate,
+            previousValue: 1470.2,
+            value: 1480.85,
+            changePercent: 0.7244
+          }
+        },
+        {
+          status: "ok",
+          data: {
+            itemCode: "DXY",
+            itemName: "달러인덱스",
+            source: "fred",
+            sourceKey: "index:DXY",
+            asOfDate: runDate,
+            previousValue: 120.1,
+            value: 121.5,
+            changePercent: 1.1657
           }
         }
       ],

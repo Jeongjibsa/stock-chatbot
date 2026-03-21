@@ -64,6 +64,13 @@ export const DEFAULT_MARKET_WATCH_CATALOG: DefaultMarketWatchCatalogItem[] = [
     sortOrder: 80
   },
   {
+    itemCode: "DXY",
+    itemName: "달러인덱스",
+    assetType: "fx",
+    sourceKey: "index:DXY",
+    sortOrder: 85
+  },
+  {
     itemCode: "US10Y",
     itemName: "미국 10년물 국채금리",
     assetType: "rate",

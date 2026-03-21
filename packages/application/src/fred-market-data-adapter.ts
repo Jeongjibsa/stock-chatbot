@@ -10,6 +10,7 @@ const FRED_SERIES_BY_SOURCE_KEY: Record<string, string> = {
   "commodity:WTI": "DCOILWTICO",
   "fx:USDKRW": "DEXKOUS",
   "index:CBOE:VIX": "VIXCLS",
+  "index:DXY": "DTWEXBGS",
   "index:DJI": "DJIA",
   "index:NASDAQ:IXIC": "NASDAQCOM",
   "index:SP:SPX": "SP500",
@@ -141,6 +142,7 @@ function buildMarketDataPoint(
   };
 
   if (previous) {
+    dataPoint.previousValue = previous.value;
     dataPoint.changeValue = roundToFour(latest.value - previous.value);
 
     if (previous.value !== 0) {

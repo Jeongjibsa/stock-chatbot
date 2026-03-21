@@ -134,6 +134,13 @@ const MARKET_INDICATOR_DEFINITIONS: MarketIndicatorDefinition[] = [
     aliases: ["usdkrw", "usd/krw", "환율", "원달러환율", "달러원환율"]
   },
   {
+    itemCode: "DXY",
+    itemName: "달러인덱스",
+    assetType: "fx",
+    sourceKey: "index:DXY",
+    aliases: ["dxy", "달러인덱스", "dollar index", "달러지수"]
+  },
+  {
     itemCode: "US10Y",
     itemName: "미국 10년물 국채금리",
     assetType: "rate",

@@ -6,6 +6,7 @@ export type MarketDataPoint = {
   changeValue?: number;
   itemCode: string;
   itemName: string;
+  previousValue?: number;
   source: MarketDataSource;
   sourceKey: string;
   value: number;

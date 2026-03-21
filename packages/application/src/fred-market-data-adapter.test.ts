@@ -40,6 +40,7 @@ describe("FredMarketDataAdapter", () => {
       data: {
         itemCode: "NASDAQ",
         source: "fred",
+        previousValue: 5700.1234,
         value: 5800.1234,
         changeValue: 100,
         changePercent: 1.7543
@@ -86,6 +87,45 @@ describe("FredMarketDataAdapter", () => {
       status: "error",
       errorCode: "provider_error",
       sourceKey: "index:CBOE:VIX"
+    });
+  });
+
+  it("supports dollar index series", async () => {
+    const adapter = new FredMarketDataAdapter({
+      apiKey: "fred-key",
+      fetchFn: vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            observations: [
+              { date: "2026-03-20", value: "121.50" },
+              { date: "2026-03-19", value: "120.10" }
+            ]
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json"
+            }
+          }
+        )
+      )
+    });
+
+    const [result] = await adapter.fetchMany([
+      {
+        itemCode: "DXY",
+        itemName: "달러인덱스",
+        sourceKey: "index:DXY"
+      }
+    ]);
+
+    expect(result).toMatchObject({
+      status: "ok",
+      data: {
+        itemCode: "DXY",
+        previousValue: 120.1,
+        value: 121.5
+      }
     });
   });
 });
