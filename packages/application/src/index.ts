@@ -104,6 +104,15 @@ export {
   type ReportDeliveryResult
 } from "./report-delivery.js";
 export {
+  buildPublicDailyBriefing,
+  buildPublicBriefingArchivePath,
+  buildPublicBriefingCanonicalPath,
+  type PublicDailyBriefing
+} from "./public-daily-briefing.js";
+export {
+  renderPublicDailyBriefingHtml
+} from "./public-daily-briefing-renderer.js";
+export {
   toLatestReportView,
   toReportHistoryItem,
   type LatestReportView,

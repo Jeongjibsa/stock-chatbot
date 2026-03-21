@@ -84,6 +84,10 @@
 | CHG-0057 | 2026-03-21 | FIX | 텔레그램 리포트에서 섹션 사이 과한 빈 줄을 줄이고, 거시 시장 스냅샷의 `천연가스` 정렬 키를 바로잡아 `미국 10년물 -> WTI -> 천연가스 -> 구리 -> FX` 순서가 유지되도록 수정 | Change Log, Context, Code, Tests | yes |
 | CHG-0058 | 2026-03-21 | DECISION | 로컬 Docker + live FRED/Yahoo/Gemini 호출로 daily report를 생성해 텔레그램 실채널에 검증 메시지를 발송했고, 이번 실행에서는 Gemini 뉴스 이벤트 추출이 `429`로 제한돼 종목 기사 섹션이 fallback 상태임을 확인 | Change Log, Context, Code, Ops | yes |
 | CHG-0059 | 2026-03-21 | FIX | Yahoo Finance chart 응답이 같은 거래일의 종가 시점과 후속 메타 시점을 중복으로 반환해 전일 대비가 `0`으로 계산되던 문제를 수정하고, 날짜 기준 중복 제거 로직과 회귀 테스트를 추가해 2026-03-20 기준 지수 등락이 다시 정상 계산되도록 보정 | Change Log, Context, Code, Tests, Ops | yes |
+| CHG-0060 | 2026-03-21 | UPDATE | 일 리포트 structured output prompt를 v4로 조정해 입력에 실제 값이 없는 `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`는 빈 배열만 허용하도록 강화하고, `marketResults.asOfDate` 차이를 고려한 보수적 해석 원칙을 추가 | PRD, Plan, Change Log, Context, LLM Plan, Code, Tests | yes |
+| CHG-0061 | 2026-03-21 | ADD | GitHub Pages 공개 상세 브리핑을 위한 code-first 정보 구조, Telegram 전용 제외 섹션 목록, canonical/archive permalink 규칙을 추가해 공개 브리핑 채널과 개인화 텔레그램 채널의 분리를 구현 기준으로 고정 | PRD, Plan, Change Log, Context, Code, Tests | yes |
+| CHG-0062 | 2026-03-21 | DECISION | managed Postgres free-tier 후보를 공식 문서 기준으로 비교한 결과, 현재 MVP 운영 기본안은 branching과 scale-to-zero가 유리한 `Neon`, 추후 웹/앱에서 Auth·Storage·Realtime가 필요해질 경우 대안은 `Supabase`로 정리 | PRD, Plan, Change Log, Context | yes |
+| CHG-0063 | 2026-03-21 | ADD | GitHub Pages 공개 상세 브리핑 HTML renderer와 `build-public-briefing` script를 추가해 canonical(`/briefings/YYYY-MM-DD/`)과 archive(`/briefings/YYYY/MM/DD/`) 정적 산출물을 생성하는 build 경로를 실제 코드로 정의 | PRD, Plan, Change Log, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

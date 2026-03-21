@@ -94,6 +94,7 @@
 - 리포트 조합 단계는 최종 텔레그램 섹션 구조를 고정
 - 모델에게 매수/매도 확정 지시를 요구하지 않고 시나리오 제안 형식으로 제한
 - 현재 일 리포트 prompt v3의 출력 키는 `oneLineSummary`, `marketBullets`, `macroBullets`, `fundFlowBullets`, `eventBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `strategyBullets`, `riskBullets`로 고정한다.
+- 현재 일 리포트 prompt v4는 `입력 부재 시 빈 배열 강제` 규칙을 추가해 `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`에서 근거 없는 추론을 금지한다.
 - 리포트 조합 결과는 renderer가 그대로 섹션에 주입할 수 있어야 하며, 숫자 재계산 대신 해석 문장만 생성해야 한다.
 - 정보가 부족한 섹션은 빈 배열로 반환하도록 강제한다.
 
@@ -108,7 +109,7 @@
 
 현재 상태:
 
-- `market-report-composition` prompt v3가 텔레그램 템플릿 구조와 직접 매핑되는 structured output 계약으로 구현됐다.
+- `market-report-composition` prompt v4가 텔레그램 템플릿 구조와 직접 매핑되는 structured output 계약으로 구현됐고, 부재 데이터 추론을 더 강하게 억제한다.
 - `DailyReportCompositionService`가 실제 daily report worker 경로에 연결됐다.
 - `OPENAI_API_KEY`가 없거나 composition 단계가 실패하면 기존 규칙 기반 renderer fallback으로 계속 생성한다.
 - `GEMINI_API_KEY`와 `LLM_PROVIDER=google`를 설정하면 같은 worker 경로에서 Gemini 모델을 바로 사용할 수 있다.

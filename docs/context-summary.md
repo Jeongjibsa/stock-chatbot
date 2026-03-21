@@ -107,6 +107,10 @@
 - live Gemini 검증 경로는 로컬 Docker PostgreSQL에 mock 포트폴리오를 seed한 뒤 worker를 `LLM_PROVIDER=google`로 실행하고, 생성된 `report_runs.report_text`를 Telegram Bot API로 직접 발송하는 방식으로 확인했다.
 - 2026-03-21 live Gemini 검증에서는 종목 뉴스 이벤트 추출 단계에서 `Gemini API request failed with status 429`가 발생해 기사 섹션이 fallback 문구로 내려간 사례가 확인됐다.
 - 2026-03-20 기준 재검증에서는 Yahoo 중복 거래일 제거 이후 `NASDAQ -2.01%`, `S&P500 -1.51%`, `DOW -0.96%`, `VIX +11.31%`, `KOSPI +0.31%`, `KOSDAQ +1.58%`가 정상 복구됐고, Gemini의 한 줄 요약도 `미국 증시 급락 + 공포지수 급등 -> 반등 시 비중 축소 및 리스크 관리` 방향으로 더 날카롭게 바뀌었다.
+- 일 리포트 prompt v4는 데이터가 없는 섹션에 대해 더 엄격하다. `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`는 입력 부재 시 빈 배열만 허용하고, `marketResults.asOfDate`가 다르면 같은 시점의 사건처럼 과장하지 않도록 제한한다.
+- 공개 브리핑 채널은 code-first 모델로 정의됐다. canonical 경로는 `/briefings/YYYY-MM-DD/`, archive 경로는 `/briefings/YYYY/MM/DD/`이며, 공개본에서는 `holdings`, `holdingTrendBullets`, `articleSummaryBullets`, `portfolioNewsBriefs`, `personalizedQuantScorecards`를 제외한다.
+- 공개 브리핑에는 HTML renderer와 `build-public-briefing` script가 추가돼 canonical/archive 두 경로에 동일한 정적 페이지를 출력할 수 있다.
+- managed Postgres free-tier 기본 추천은 현재 `Neon`이다. 이유는 PostgreSQL 전용 구조, branching, scale-to-zero, GitHub Actions/preview branch와의 궁합 때문이다. `Supabase`는 추후 웹/앱에서 Auth·Storage·Realtime까지 함께 필요해질 때 재검토하는 대안으로 유지한다.
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.

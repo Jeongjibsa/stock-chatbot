@@ -50,6 +50,12 @@ export function buildDailyReportPromptContract(
       "articleSummaryBullets는 `종목 관련 핵심 기사 및 이벤트 요약` 섹션에 바로 들어갈 수 있게 작성한다.",
       "eventBullets는 `주요 일정 및 이벤트 브리핑` 섹션에 자연스럽게 들어갈 수 있는 문장으로 작성한다.",
       "입력에 없는 기업 사실, 기사 사실, 수치를 추측해서 만들지 않는다.",
+      "입력에 실제 자금 데이터가 없으면 fundFlowBullets는 반드시 빈 배열로 반환하고, 환율·지수 움직임만으로 외국인/기관/ETF flow를 추정하지 않는다.",
+      "입력에 실제 종목 기사나 이벤트가 없으면 articleSummaryBullets는 반드시 빈 배열로 반환한다.",
+      "입력에 종목별 시세나 전일 종가 정보가 없으면 holdingTrendBullets는 반드시 빈 배열로 반환하고, 업종 일반론으로 종목 동향을 추정하지 않는다.",
+      "입력에 명시적인 이벤트 데이터가 없으면 eventBullets는 반드시 빈 배열로 반환한다.",
+      "marketResults의 asOfDate가 서로 다르면, 같은 시점의 동시 움직임처럼 과장하지 말고 최근 가용 데이터 기준 해석이라는 전제를 유지한다.",
+      "한 줄 요약과 전략 문장은 가장 강한 2개 신호를 우선 반영하고, 근거가 약한 추론은 넣지 않는다.",
       "정보가 부족한 섹션은 빈 배열로 반환한다.",
       "배열 각 항목은 텔레그램에서 바로 bullet로 붙일 수 있게 독립 문장으로 작성한다.",
       "oneLineSummary는 가능하면 `현재 시장 상태 -> 권장 대응` 형태의 행동 문장으로 작성한다.",
@@ -103,8 +109,22 @@ export function parseDailyReportStructuredOutput(
 }
 
 function buildPromptPayload(input: DailyReportPromptInput) {
+  const marketAsOfDates = [
+    ...new Set(
+      input.marketResults.flatMap((result) =>
+        result.status === "ok" ? [result.data.asOfDate] : []
+      )
+    )
+  ].sort();
+
   return {
     runDate: input.runDate,
+    dataAvailability: {
+      eventInputAvailable: input.newsBriefs.some((brief) => brief.events.length > 0),
+      fundFlowInputAvailable: false,
+      holdingPriceInputAvailable: false,
+      marketAsOfDates
+    },
     holdings: input.holdings,
     marketResults: input.marketResults.map((result) =>
       result.status === "ok"

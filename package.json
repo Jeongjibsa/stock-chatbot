@@ -14,6 +14,7 @@
     "harness:fixtures": "node scripts/harness/validate-fixtures.mjs",
     "harness:snapshots": "node scripts/harness/compare-snapshots.mjs",
     "lint": "eslint .",
+    "pages:build": "node scripts/pages/build-public-briefing.mjs",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:telegram": "pnpm --filter @stock-chatbot/telegram-bot run smoke",

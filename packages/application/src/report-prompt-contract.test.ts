@@ -38,12 +38,24 @@ describe("report prompt contract", () => {
 
     expect(prompt.instructions).toContain("반드시 JSON 객체만 반환");
     expect(prompt.instructions).toContain("한국어 존댓말");
+    expect(prompt.instructions).toContain(
+      "입력에 실제 자금 데이터가 없으면 fundFlowBullets는 반드시 빈 배열"
+    );
+    expect(prompt.instructions).toContain(
+      "입력에 종목별 시세나 전일 종가 정보가 없으면 holdingTrendBullets는 반드시 빈 배열"
+    );
     expect(prompt.metadata).toEqual({
       promptKind: "market-report-composition",
       runDate: "2026-03-20"
     });
     expect(JSON.parse(prompt.input)).toEqual(
       expect.objectContaining({
+        dataAvailability: expect.objectContaining({
+          eventInputAvailable: false,
+          fundFlowInputAvailable: false,
+          holdingPriceInputAvailable: false,
+          marketAsOfDates: []
+        }),
         holdings: [
           expect.objectContaining({
             symbol: "AAPL"

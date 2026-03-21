@@ -113,14 +113,16 @@
 - [x] 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 actual daily report 경로에 연결
 - [x] 실 Telegram provider smoke test 자동화와 로컬/Actions 실행 경로 정의
 - [x] change-log 기반 컨텍스트 요약 및 롤업 흐름 구축
-- [ ] GitHub Pages용 공개 상세 브리핑 정보 구조 정의
-- [ ] 텔레그램 요약본과 GitHub Pages 상세 브리핑의 채널별 포함/제외 규칙 구현 설계
-- [ ] GitHub Actions에서 날짜별 공개 상세 브리핑 정적 파일을 생성하는 build 경로 정의
+- [x] GitHub Pages용 공개 상세 브리핑 정보 구조 정의
+- [x] 텔레그램 요약본과 GitHub Pages 상세 브리핑의 채널별 포함/제외 규칙 구현 설계
+- [x] GitHub Actions에서 날짜별 공개 상세 브리핑 정적 파일을 생성하는 build 경로 정의
 - [ ] GitHub Pages 배포 workflow 또는 Pages deploy job 정의
-- [ ] 날짜별 상세 브리핑 permalink 규칙과 재실행 idempotency 규칙 정의
+- [x] 날짜별 상세 브리핑 permalink 규칙 정의
+- [ ] 날짜별 상세 브리핑 재실행 idempotency 규칙 정의
 - [ ] 상세 브리핑 index/archive 페이지 구조 정의
 - [ ] 텔레그램 메시지 하단에 GitHub Pages 상세 브리핑 링크를 삽입하는 전달 규칙 정의
-- [ ] 공개 페이지에서 개인화 정보(보유 종목/개인 기사 요약)를 제외하는 privacy guardrail 정의
+- [x] 공개 페이지에서 개인화 정보(보유 종목/개인 기사 요약)를 제외하는 privacy guardrail 정의
+- [x] managed Postgres free-tier 후보(Neon, Supabase) 비교 및 현재 운영 권장안 정의
 
 ### Phase 6. Multi-Channel Readiness
 
@@ -143,14 +145,14 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 5`의 GitHub Pages 공개 상세 브리핑 도입 항목이다.
+현재 권장 시작점은 `Phase 5`의 GitHub Pages 배포 및 링크 연결 항목이다.
 
 우선순위:
 
-1. GitHub Pages용 공개 상세 브리핑 정보 구조 정의
-2. 텔레그램 요약본과 GitHub Pages 상세 브리핑의 채널별 포함/제외 규칙 구현 설계
-3. GitHub Actions에서 날짜별 공개 상세 브리핑 정적 파일을 생성하고 배포하는 경로 정의
-4. 텔레그램 메시지 하단에 상세 브리핑 링크를 삽입하는 전달 규칙 정의
+1. GitHub Pages 배포 workflow 또는 Pages deploy job 정의
+2. 텔레그램 메시지 하단에 상세 브리핑 링크를 삽입하는 전달 규칙 정의
+3. 날짜별 상세 브리핑 재실행 idempotency 규칙 정의
+4. 상세 브리핑 index/archive 페이지 구조 정의
 5. schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
 
 ## 6. Completion Log
@@ -189,3 +191,8 @@
 - 2026-03-21: GitHub Actions와 현재 운영 경로에서는 workspace ESM 해석 이슈를 줄이기 위해 app runtime 스크립트를 `tsx` source entrypoint 기준으로 전환하고, `build`는 검증 단계로 유지
 - 2026-03-21: `workflow_dispatch`에서 비워 둔 `REPORT_RUN_DATE`가 빈 문자열로 전달될 때 worker가 오늘 날짜로 폴백하도록 수정해 Postgres date 파싱 오류를 제거
 - 2026-03-21: 모든 GitHub Actions workflow에 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`를 추가해 Node 20 action runtime deprecation 경고를 줄이도록 조정
+- 2026-03-21: Yahoo Finance의 같은 거래일 중복 timestamp를 제거해 지수 전일 대비 계산을 바로잡고, `2026-03-20` 기준 live Gemini 한 줄 요약이 `미국 증시 급락 + 변동성 급등 -> 반등 시 비중 축소` 방향으로 복구됨을 확인
+- 2026-03-21: 일 리포트 structured output prompt를 추론 억제형 v4로 조정해 `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`가 입력 부재 시 빈 배열을 강제하도록 보강
+- 2026-03-21: GitHub Pages 공개 상세 브리핑 구조, canonical/archive permalink 규칙, Telegram 전용 제외 섹션 목록을 code-first로 정의
+- 2026-03-21: GitHub Pages 공개 상세 브리핑 HTML renderer와 `scripts/pages/build-public-briefing.mjs`를 추가해 canonical/archive 정적 파일 출력 경로를 실제 코드로 정의
+- 2026-03-21: managed Postgres free-tier 후보를 비교한 결과 현재 MVP 운영 기본안은 `Neon`, 추후 앱/Auth/Storage 확장 대안은 `Supabase`로 정리
