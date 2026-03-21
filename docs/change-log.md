@@ -129,6 +129,7 @@
 | CHG-0102 | 2026-03-22 | ADD | Telegram DM에서 `/register` 중복 등록을 감지해 `/unregister` 초기화 경로를 안내하고, `/portfolio_bulk`로 여러 종목을 한 번에 추가할 수 있도록 사용자 등록/포트폴리오 명령 semantics를 확장 | PRD, Change Log, Context, README, Code, Tests | yes |
 | CHG-0103 | 2026-03-22 | FIX | 정적 종목 resolver에 현대차, 에코프로, 현대글로비스, HMM을 추가해 한국 주식 alias 해석을 보강하고, 공개 웹 기본 팔레트를 완전한 화이트 배경 기준으로 정리해 버튼 대비를 복구 | PRD, Change Log, Context, README, Phase Plan, Code, Tests | yes |
 | CHG-0104 | 2026-03-22 | UPDATE | 공개 웹 frontend를 soft white/gray 기반의 premium fintech UI로 재정비하고, Pretendard + custom shadcn/ui 디자인 시스템으로 feed/detail/admin 전체의 시각 계층과 카드/배지/버튼 톤을 통일 | PRD, Change Log, Context, README, Code | yes |
+| CHG-0105 | 2026-03-22 | FIX | Telegram webhook 보안을 다시 강화해 Vercel production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN`이 없으면 webhook route가 fail-closed로 동작하도록 바꾸고, webhook 등록 스크립트도 secret 없이 실행되지 않게 고정 | PRD, Change Log, Context, README, Deployment, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 

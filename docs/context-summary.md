@@ -137,12 +137,12 @@
 - 현재 production public alias는 `https://web-three-tau-58.vercel.app`이고, direct deployment URL은 팀 정책에 따라 401이 걸릴 수 있으므로 Telegram webhook과 공개 링크는 alias를 기준으로 삼는다.
 - Neon production branch에는 baseline schema가 이미 적용됐고, Vercel production smoke 기준 `/` empty state, `/api/telegram/webhook` 200, `/api/cron/daily-report` 200, `/api/cron/reconcile` 200, `/admin` 401(Basic Auth gate)까지 확인됐다.
 - Telegram webhook은 이미 `https://web-three-tau-58.vercel.app/api/telegram/webhook`로 등록됐다.
-- 2026-03-22 기준 Telegram webhook command runtime은 production alias에서 정상 동작하며, `getWebhookInfo` 기준 `pending_update_count=0` 상태다. Vercel production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN` 강제를 비활성화한 상태로 운영한다.
+- 2026-03-22 기준 Telegram webhook command runtime은 production alias에서 정상 동작하며, production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN` header 검증을 필수로 사용한다. Vercel production에서 secret env가 빠지면 webhook route는 fail-closed(500)로 동작해야 한다.
 - 실제 Telegram 운영 점검은 `docs/telegram-production-test-scenarios.md`를 기준으로 진행한다.
 - root `AGENTS.md`가 추가됐고, 이 파일은 source-of-truth 문서, 런타임 역할, 검증 규칙, git 마감 단계를 빠르게 찾는 저장소 운영 맵 역할을 한다.
 - Telegram command runtime은 webhook으로 전환 가능한 상태이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 구현됐다.
 - `apps/telegram-bot/src/build-bot.ts`는 polling과 webhook 양쪽에서 공통으로 쓰는 command runtime entrypoint로 정리됐다.
-- Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, 선택적 `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화할 수 있다.
+- Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화한다. webhook 등록 스크립트는 secret 없이 실행되면 실패해야 한다.
 - Telegram webhook 경로는 이제 `telegram_processed_updates` 저장 모델로 `update_id`를 dedupe한다. 같은 Telegram update가 재전송돼도 command handler는 한 번만 실행돼야 한다.
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
 - GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.

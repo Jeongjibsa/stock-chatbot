@@ -13,6 +13,11 @@ if (!webhookUrl) {
   process.exit(1);
 }
 
+if (!secretToken) {
+  console.error("TELEGRAM_WEBHOOK_SECRET_TOKEN is missing");
+  process.exit(1);
+}
+
 const apiBaseUrl = `https://api.telegram.org/bot${token}`;
 const setWebhookPayload = {
   url: webhookUrl,
@@ -20,9 +25,7 @@ const setWebhookPayload = {
   drop_pending_updates: false
 };
 
-if (secretToken) {
-  setWebhookPayload.secret_token = secretToken;
-}
+setWebhookPayload.secret_token = secretToken;
 
 const setWebhookResponse = await fetch(`${apiBaseUrl}/setWebhook`, {
   method: "POST",

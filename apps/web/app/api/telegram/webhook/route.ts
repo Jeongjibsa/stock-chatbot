@@ -9,7 +9,11 @@ import {
   createPool,
   TelegramProcessedUpdateRepository
 } from "@stock-chatbot/database";
-import { isAuthorizedTelegramWebhookRequest } from "../../../../lib/telegram-webhook-auth";
+import {
+  hasTelegramWebhookSecret,
+  isAuthorizedTelegramWebhookRequest,
+  isTelegramWebhookSecretRequired
+} from "../../../../lib/telegram-webhook-auth";
 import { extractTelegramUpdateId } from "../../../../lib/telegram-update";
 
 export const dynamic = "force-dynamic";
@@ -48,7 +52,12 @@ async function getWebhookHandler() {
       TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
       TELEGRAM_WEBHOOK_SECRET_TOKEN: process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN
     });
-    globalThis.__stockChatbotWebhookHandler = webhookCallback(app.bot, "std/http");
+    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN?.trim();
+    globalThis.__stockChatbotWebhookHandler = webhookSecret
+      ? webhookCallback(app.bot, "std/http", {
+          secretToken: webhookSecret
+        })
+      : webhookCallback(app.bot, "std/http");
   }
 
   return globalThis.__stockChatbotWebhookHandler as (request: Request) => Promise<Response>;
@@ -81,7 +90,26 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (
+    isTelegramWebhookSecretRequired() &&
+    !hasTelegramWebhookSecret()
+  ) {
+    console.warn("telegram-webhook-secret-missing", {
+      required: true
+    });
+    return new Response("Webhook secret is not configured", {
+      status: 500
+    });
+  }
+
   if (!isAuthorizedTelegramWebhookRequest(request)) {
+    console.warn("telegram-webhook-unauthorized", {
+      hasHeader: Boolean(
+        request.headers.get("x-telegram-bot-api-secret-token")
+      ),
+      required: isTelegramWebhookSecretRequired(),
+      secretConfigured: hasTelegramWebhookSecret()
+    });
     return new Response("Unauthorized", {
       status: 401
     });

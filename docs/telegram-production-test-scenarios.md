@@ -18,8 +18,9 @@
 1. Telegram bot의 privacy mode가 `Disable` 상태다.
 2. bot이 그룹의 관리자다.
 3. webhook이 production URL로 등록되어 있다.
-4. Vercel env와 Neon production schema가 준비되어 있다.
-5. `/admin` Basic Auth 계정이 준비되어 있다.
+4. webhook 등록 시 `TELEGRAM_WEBHOOK_SECRET_TOKEN`이 함께 설정되어 있다.
+5. Vercel env와 Neon production schema가 준비되어 있다.
+6. `/admin` Basic Auth 계정이 준비되어 있다.
 
 ## 시나리오 1. DM 기본 온보딩
 
@@ -39,6 +40,19 @@
   - `/portfolio_list`
   - `/market_add`
 - 설명은 짧고 명확해야 한다.
+
+## 시나리오 0. webhook secret 보호 경계
+
+### 절차
+
+1. `/api/telegram/webhook`에 secret header 없이 POST를 보낸다.
+2. 같은 요청에 `x-telegram-bot-api-secret-token` 헤더를 정확히 넣어 다시 보낸다.
+
+### 기대 결과
+
+- header 없이 보낸 요청은 `401` 또는 `500`으로 차단돼야 한다.
+- 올바른 secret header가 있는 요청만 `200`으로 통과해야 한다.
+- production에서는 secret env가 빠진 상태로 webhook이 열려 있으면 안 된다.
 
 ## 시나리오 2. 등록 후 즉시 리포트
 

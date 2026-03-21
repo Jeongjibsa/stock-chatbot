@@ -292,7 +292,6 @@ LLM_PROVIDER=google
 TELEGRAM_BOT_TOKEN=123456:telegram-bot-token
 TELEGRAM_TEST_CHAT_ID=123456789
 TELEGRAM_WEBHOOK_URL=https://your-vercel-domain.vercel.app/api/telegram/webhook
-# optional
 TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token
 
 FRED_API_KEY=fred_api_key
@@ -339,7 +338,7 @@ DAILY_REPORT_WINDOW_MINUTES=15
 
 - `PUBLIC_BRIEFING_BASE_URL`은 Vercel 공개 웹 URL을 기준으로 설정
 - Vercel cron 보안을 위해 production에서는 `CRON_SECRET`을 설정
-- 필요하면 webhook 보안을 위해 `TELEGRAM_WEBHOOK_SECRET_TOKEN`을 설정
+- production webhook 보안을 위해 `TELEGRAM_WEBHOOK_SECRET_TOKEN`을 반드시 설정
 - `DATABASE_URL`이 없으면 local worker fallback 단계는 skip
 - 공개 웹은 개인화 데이터를 저장하거나 노출하지 않음
 - Telegram polling runtime은 local development나 비상 fallback용으로만 사용하고, production primary runtime은 webhook 기준
@@ -492,7 +491,7 @@ ADMIN_DASHBOARD_PASSWORD=strong-password
 - `apps/web/.env.local.example`는 로컬 웹 실행용 최소 env 예시입니다.
 - production에서는 Neon connection string을 Vercel의 `DATABASE_URL`에 넣고, 개발과 테스트는 계속 로컬 Docker PostgreSQL을 사용합니다.
 - 현재 public alias 기준 운영 URL은 `https://web-three-tau-58.vercel.app`입니다.
-- `pnpm telegram:webhook:register`는 `setWebhook`과 `getWebhookInfo`를 연속 호출해 현재 webhook 설정을 바로 확인합니다. `TELEGRAM_WEBHOOK_SECRET_TOKEN`은 선택값이며, production에서 secret header 검증 문제가 있으면 비운 상태로 등록할 수 있습니다.
+- `pnpm telegram:webhook:register`는 `setWebhook`과 `getWebhookInfo`를 연속 호출해 현재 webhook 설정을 바로 확인합니다. `TELEGRAM_WEBHOOK_SECRET_TOKEN`이 없으면 스크립트가 실패하며, production에서는 secret header 검증을 필수로 사용합니다.
 - Telegram webhook route는 `telegram_processed_updates` read model로 같은 `update_id`를 dedupe하므로, webhook 재시도로 같은 command가 두 번 실행되지 않아야 합니다.
 - 운영 콘솔은 `https://your-vercel-domain.vercel.app/admin` 경로입니다.
 - 실제 Telegram 운영 검증 순서는 [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)를 기준으로 진행합니다.
