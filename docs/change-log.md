@@ -97,6 +97,8 @@
 | CHG-0070 | 2026-03-21 | ADD | 텔레그램 실운영을 `채널=공개`, `그룹=온보딩`, `DM=개인화 delivery` 정책으로 고정하고, 다수 사용자 `/register`·포트폴리오 입력·개인 리포트 검증 체크리스트 문서를 추가 | PRD, Plan, Change Log, Context, Docs | yes |
 | CHG-0071 | 2026-03-21 | ADD | 그룹에 새 사용자가 들어오면 `/register`를 자동 안내하고, 미등록 사용자가 그룹에서 일반 메시지를 보내면 1회 등록 안내를 다시 보내는 온보딩 보조 흐름을 telegram-bot에 추가 | Change Log, README, Code, Tests | yes |
 | CHG-0072 | 2026-03-21 | ADD | daily report worker가 `preferred_delivery_chat_id`가 있는 사용자에게 생성된 리포트를 Telegram DM으로 실제 발송하고, job summary에 `delivered`, `deliverySkipped`, `deliveryFailed` 집계를 남기도록 확장 | README, Change Log, Code, Tests | yes |
+| CHG-0073 | 2026-03-21 | UPDATE | Telegram DM의 `/start`, `/help`, `/register` 응답을 한국어 온보딩 문구로 정리하고, `/register -> /portfolio_add -> /portfolio_list -> /market_add` 권장 흐름을 명시 | README, Change Log, Context, Code, Tests | yes |
+| CHG-0074 | 2026-03-21 | FIX | 그룹 조인 시 `new_chat_members`와 `chat_member`가 함께 들어와도 같은 사용자·그룹 조합의 환영 메시지가 중복 발송되지 않도록 짧은 시간 dedupe를 추가 | README, Change Log, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

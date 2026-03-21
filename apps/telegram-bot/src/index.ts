@@ -20,9 +20,14 @@ import {
 } from "./conversation-state.js";
 import { loadTelegramBotEnv } from "./load-env.js";
 import {
+  buildGroupRegisterSuccessMessage,
   buildGroupRegistrationReminder,
+  buildHelpMessage,
   buildNewMemberWelcomeMessage,
+  buildPrivateRegisterSuccessMessage,
+  buildStartMessage,
   extractNewlyJoinedMemberName,
+  GroupJoinWelcomeStore,
   GroupRegistrationReminderStore,
   isGroupChat
 } from "./onboarding.js";
@@ -43,6 +48,7 @@ async function main(): Promise<void> {
 
   const bot = new Bot(token);
   const conversationStateStore = new InMemoryConversationStateStore();
+  const groupJoinWelcomeStore = new GroupJoinWelcomeStore();
   const groupRegistrationReminderStore = new GroupRegistrationReminderStore();
   const instrumentResolver = new StaticInstrumentResolver();
   const pool = createPool(process.env.DATABASE_URL ?? DEFAULT_DATABASE_URL);
@@ -85,36 +91,11 @@ async function main(): Promise<void> {
   };
 
   bot.command("start", async (context) => {
-    await context.reply(
-      [
-        "stock-chatbot bot is running.",
-        "Current bootstrap commands:",
-        "/start",
-        "/register",
-        "/help",
-        "/portfolio_add",
-        "/portfolio_list",
-        "/portfolio_remove",
-        "/market_add",
-        "/market_items",
-        "/mock_report"
-      ].join("\n")
-    );
+    await context.reply(buildStartMessage());
   });
 
   bot.command("help", async (context) => {
-    await context.reply(
-      [
-        "지원 중인 명령:",
-        "/register",
-        "/portfolio_add",
-        "/portfolio_list",
-        "/portfolio_remove",
-        "/market_add",
-        "/market_items",
-        "/mock_report"
-      ].join("\n")
-    );
+    await context.reply(buildHelpMessage());
   });
 
   bot.command("register", async (context) => {
@@ -147,15 +128,11 @@ async function main(): Promise<void> {
     const result = await userPortfolioService.registerTelegramUser(registerInput);
 
     if (result.deliveryMode === "private_ready") {
-      await context.reply(
-        "등록이 완료되었습니다. 앞으로 개인화 리포트는 이 1:1 대화로 발송됩니다."
-      );
+      await context.reply(buildPrivateRegisterSuccessMessage());
       return;
     }
 
-    await context.reply(
-      "계정 등록은 완료되었습니다. 개인정보 보호를 위해 개인화 리포트는 봇과 1:1 대화에서 /register 를 다시 실행하신 뒤 발송됩니다."
-    );
+    await context.reply(buildGroupRegisterSuccessMessage());
   });
 
   bot.command("portfolio_add", async (context) =>
@@ -249,6 +226,21 @@ async function main(): Promise<void> {
       return;
     }
 
+    const shouldSendWelcome = context.message.new_chat_members.some((member) => {
+      if (member.is_bot) {
+        return false;
+      }
+
+      return groupJoinWelcomeStore.shouldWelcome(
+        String(member.id),
+        String(context.chat.id)
+      );
+    });
+
+    if (!shouldSendWelcome) {
+      return;
+    }
+
     await context.reply(buildNewMemberWelcomeMessage(memberNames));
   });
 
@@ -266,6 +258,15 @@ async function main(): Promise<void> {
     });
 
     if (!joinedMemberName) {
+      return;
+    }
+
+    if (
+      !groupJoinWelcomeStore.shouldWelcome(
+        String(chatMemberUpdate.new_chat_member.user.id),
+        String(chatMemberUpdate.chat.id)
+      )
+    ) {
       return;
     }
 

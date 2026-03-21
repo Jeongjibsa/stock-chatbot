@@ -100,20 +100,39 @@ Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 w
 현재 지원 명령:
 
 - `/start`
+  - 첫 사용 안내와 추천 순서 확인
 - `/help`
+  - 명령 요약 확인
 - `/register`
+  - 개인화 리포트 수신 대상 등록
 - `/portfolio_add`
+  - 보유 종목 추가
 - `/portfolio_list`
+  - 저장된 보유 종목 확인
 - `/portfolio_remove`
+  - 보유 종목 삭제
 - `/market_add`
+  - 관심 지표 추가
 - `/market_items`
+  - 추적 중인 지표 확인
 - `/mock_report`
+  - 예시 리포트 보기
 
 `/register`는 MVP 필수 등록 단계다. group/supergroup에서는 계정만 만들고, 개인화 리포트 발송 대상 chat은 private DM에서 다시 `/register`할 때 저장한다.
 새 사용자가 그룹에 들어오면 봇은 `/register` 안내 메시지를 자동으로 보내고, 미등록 사용자가 그룹에서 일반 메시지를 남기면 1회 등록 안내를 다시 보낸다.
+조인 이벤트가 `new_chat_members`와 `chat_member`로 중복 들어오는 경우를 대비해, 같은 사용자와 그룹 조합의 환영 메시지는 짧은 시간 안에 1회만 전송한다.
 이 자동 안내가 동작하려면 봇이 해당 그룹의 관리자 권한을 가져야 하고, polling은 `chat_member` 업데이트를 구독해야 한다.
 `/portfolio_add`, `/portfolio_remove`, `/market_add`는 단계별 입력 플로우를 유지하면서 실제 DB 저장/조회와 연결된다.
 `/mock_report`는 실제 Telegram provider 연동 없이 현재 리포트 템플릿을 미리보기로 보여준다.
+
+권장 사용자 흐름:
+
+1. DM에서 `/start`
+2. DM에서 `/register`
+3. `/portfolio_add`로 보유 종목 입력
+4. `/portfolio_list`로 저장 결과 확인
+5. 필요하면 `/market_add`로 관심 지표 추가
+6. 이후 개인화 브리핑은 DM으로 수신
 
 실 Telegram smoke test:
 
