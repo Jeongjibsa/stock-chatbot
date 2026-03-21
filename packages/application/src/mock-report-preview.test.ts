@@ -10,10 +10,10 @@ describe("buildMockTelegramReportPreview", () => {
     });
 
     expect(preview.userId).toBe("user-1");
-    expect(preview.renderedText).toContain("📊 시장");
-    expect(preview.renderedText).toContain("🏦 매크로");
-    expect(preview.renderedText).toContain("💸 자금");
-    expect(preview.renderedText).toContain("🗓️ 이벤트");
+    expect(preview.renderedText).toContain("📊 시장 브리핑");
+    expect(preview.renderedText).toContain("🏦 매크로 브리핑");
+    expect(preview.renderedText).toContain("💸 자금 브리핑");
+    expect(preview.renderedText).toContain("🗓️ 주요 일정 및 이벤트 브리핑");
     expect(preview.renderedText).toContain("📰 종목 관련 핵심 기사 요약");
     expect(preview.renderedText).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
     expect(preview.renderedText).toContain("⚠️ 리스크 체크포인트");

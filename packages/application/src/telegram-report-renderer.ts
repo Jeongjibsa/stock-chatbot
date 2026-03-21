@@ -40,7 +40,7 @@ export function renderTelegramDailyReport(
   );
 
   const lines = [
-    `🗞️ 오늘의 브리핑 | ${input.runDate}`,
+    "🗞️ 오늘의 브리핑",
     "",
     `📌 한 줄 요약`,
     buildSummaryLine(
@@ -53,24 +53,24 @@ export function renderTelegramDailyReport(
     "🌍 거시 시장 스냅샷",
     ...renderMarketSnapshot(successfulMarketItems),
     "",
-    "📊 시장",
+    "📊 시장 브리핑",
     ...renderCustomBulletSection(input.marketBullets, [
       "S&P500, NASDAQ, KOSPI, KOSDAQ, DOW, VIX 해석 데이터가 아직 충분하지 않습니다."
     ]),
     "",
-    "🏦 매크로",
+    "🏦 매크로 브리핑",
     ...renderMacroSection(
       successfulMarketItems,
       input.macroBullets,
       input.keyIndicatorSummaries
     ),
     "",
-    "💸 자금",
+    "💸 자금 브리핑",
     ...renderCustomBulletSection(input.fundFlowBullets, [
       "외국인·기관 수급과 ETF flow 데이터가 아직 연결되지 않았습니다."
     ]),
     "",
-    "🗓️ 이벤트",
+    "🗓️ 주요 일정 및 이벤트 브리핑",
     ...renderCustomBulletSection(input.eventBullets, [
       "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
     ]),

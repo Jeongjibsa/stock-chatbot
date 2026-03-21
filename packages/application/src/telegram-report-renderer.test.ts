@@ -35,12 +35,13 @@ describe("renderTelegramDailyReport", () => {
       ]
     });
 
-    expect(report).toContain("🗞️ 오늘의 브리핑 | 2026-03-20");
+    expect(report).toContain("🗞️ 오늘의 브리핑");
+    expect(report).not.toContain("🗞️ 오늘의 브리핑 | 2026-03-20");
     expect(report).toContain("📌 한 줄 요약");
-    expect(report).toContain("📊 시장");
-    expect(report).toContain("🏦 매크로");
-    expect(report).toContain("💸 자금");
-    expect(report).toContain("🗓️ 이벤트");
+    expect(report).toContain("📊 시장 브리핑");
+    expect(report).toContain("🏦 매크로 브리핑");
+    expect(report).toContain("💸 자금 브리핑");
+    expect(report).toContain("🗓️ 주요 일정 및 이벤트 브리핑");
     expect(report).toContain("오늘은 시장 지표와 보유 종목 기준으로 핵심 흐름만 간단히 정리했습니다.");
     expect(report).toContain("나스닥 종합: 17,777.78 → 18,000  🔴▲ 1.25%");
     expect(report).toContain("• Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
@@ -162,6 +163,10 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("📰 종목 관련 핵심 기사 요약");
     expect(report).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
     expect(report).toContain("⚠️ 리스크 체크포인트");
+    expect(report).toContain("📊 시장 브리핑");
+    expect(report).toContain("🏦 매크로 브리핑");
+    expect(report).toContain("💸 자금 브리핑");
+    expect(report).toContain("🗓️ 주요 일정 및 이벤트 브리핑");
     expect(report).toContain("• 미국 지수와 변동성 지표를 함께 보면 위험 선호가 약해졌습니다.");
     expect(report).toContain("오늘은 변동성이 큰 항목과 보유 종목 핵심 흐름만 추려서 정리했습니다.");
     expect(report).toContain("• Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다.");
