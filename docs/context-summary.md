@@ -65,7 +65,7 @@
 - application 계층에는 정적 alias registry와 코드 정규화 기반의 포트폴리오/시장 지표 resolver가 추가됐다.
 - application 계층에는 task별 provider-agnostic LLM 라우팅 정책 함수가 추가됐다.
 - application 계층에는 provider-agnostic LLM client interface와 OpenAI adapter 초안이 추가됐다.
-- application 계층에는 FRED 기반 market data adapter와 source key 매핑이 추가됐다.
+- application 계층에는 `FRED + Yahoo Finance scraping` 혼합 market data adapter가 추가됐다.
 - application 계층에는 daily report orchestrator와 텔레그램 렌더러가 추가됐다.
 - application 계층에는 Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진이 추가됐다.
 - application 계층에는 mock telegram delivery adapter, reusable report preview 템플릿, 공통 report query model이 추가됐다.
@@ -84,6 +84,7 @@
 - telegram-bot 앱에는 `TELEGRAM_TEST_CHAT_ID` 기반 smoke runner가 추가됐고, 로컬 `make test-telegram`과 GitHub Actions `Telegram Smoke Test` workflow로 같은 검증을 실행할 수 있다.
 - 기본 거시 시장 카탈로그에는 `코스피`, `코스닥`, `S&P 500`, `국제 유가 (WTI)`, `천연가스 (Henry Hub)`, `구리`가 포함된다.
 - `commodity:COPPER`는 FRED `PCOPPUSDM`으로 연결돼 있고 월간 지표로 해석한다.
+- 지수성 자산(`S&P500`, `NASDAQ`, `DOW`, `VIX`, `KOSPI`, `KOSDAQ`)은 Yahoo Finance scraping을 우선 사용하고, 금리/환율/원자재는 FRED를 우선 사용한다.
 - 텔레그램 브리핑 구조는 이제 `한 줄 요약 -> 거시 시장 스냅샷 -> 시장 -> 매크로 -> 자금 -> 이벤트 -> 보유 종목 -> 기사 요약 -> 전략 -> 리스크 -> 면책 문구` 순서를 따른다.
 - `market-report-composition` prompt는 v3로 올라갔고, `시장 / 매크로 / 자금 / 이벤트` 섹션을 별도 structured output 배열로 반환한다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.

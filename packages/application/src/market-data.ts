@@ -1,4 +1,4 @@
-export type MarketDataSource = "fred";
+export type MarketDataSource = "fred" | "yahoo_finance";
 
 export type MarketDataPoint = {
   asOfDate: string;

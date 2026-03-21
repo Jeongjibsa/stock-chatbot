@@ -124,6 +124,7 @@ smoke test는 먼저 `getMe`로 봇 신원을 검증하고, 이어서 현재 템
   - OpenAI adapter 사용 시 필요
 - `FRED_API_KEY`
   - FRED 기반 시장 데이터 어댑터 사용 시 필요
+- Yahoo Finance 지수 시세는 별도 API 키 없이 scraping 기반 chart endpoint를 사용
 - `ENABLE_DAILY_REPORT_SCHEDULER`
   - worker에서 일 배치 스케줄 등록 여부 제어
 - `DAILY_REPORT_PATTERN`

@@ -1,4 +1,5 @@
 import {
+  CompositeMarketDataAdapter,
   createLlmClient,
   DailyReportCompositionService,
   DailyReportOrchestrator,
@@ -6,7 +7,8 @@ import {
   DEFAULT_DAILY_REPORT_SKILL_VERSION,
   FredMarketDataAdapter,
   GoogleNewsRssAdapter,
-  PortfolioNewsBriefService
+  PortfolioNewsBriefService,
+  YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
 import {
   createDatabase,
@@ -144,8 +146,11 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const orchestratorDependencies: ConstructorParameters<
     typeof DailyReportOrchestrator
   >[0] = {
-    marketDataAdapter: new FredMarketDataAdapter({
-      apiKey: fredApiKey
+    marketDataAdapter: new CompositeMarketDataAdapter({
+      fredAdapter: new FredMarketDataAdapter({
+        apiKey: fredApiKey
+      }),
+      yahooFinanceAdapter: new YahooFinanceScrapingMarketDataAdapter()
     }),
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
     reportRunRepository: new ReportRunRepository(db),

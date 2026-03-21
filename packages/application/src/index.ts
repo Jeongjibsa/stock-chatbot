@@ -14,6 +14,9 @@ export {
   type DailyReportOrchestratorResult
 } from "./daily-report-orchestrator.js";
 export {
+  CompositeMarketDataAdapter
+} from "./composite-market-data-adapter.js";
+export {
   FredMarketDataAdapter
 } from "./fred-market-data-adapter.js";
 export {
@@ -46,6 +49,9 @@ export {
   type MarketDataPoint,
   type MarketDataSource
 } from "./market-data.js";
+export {
+  YahooFinanceScrapingMarketDataAdapter
+} from "./yahoo-finance-market-data-adapter.js";
 export {
   dedupeNewsArticles,
   normalizeNewsArticles
