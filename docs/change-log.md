@@ -112,6 +112,7 @@
 | CHG-0085 | 2026-03-21 | DECISION | 사용자 수 10명 이하 가정을 전제로 Telegram 명령 처리는 `Vercel webhook`, 일일 배치는 `Vercel Cron primary + GitHub Actions backup/reconcile` 하이브리드 구조로 전환하고, 기존 polling bot runtime은 단계적으로 제거하기로 결정 | PRD, Plan, Change Log, Context, Docs | yes |
 | CHG-0086 | 2026-03-21 | ADD | `apps/web`에 Telegram webhook route와 Vercel cron route를 추가하고, Telegram command 로직을 공유 `build-bot` runtime으로 정리했으며, GitHub Actions `Daily Report`를 Vercel reconcile backup 경로를 우선 사용하는 구조로 갱신 | PRD, Plan, README, Change Log, Context, Workflow, Code, Tests | yes |
 | CHG-0087 | 2026-03-21 | ADD | Telegram `setWebhook` 등록용 스크립트와 운영 절차를 추가해 polling 없이도 Vercel webhook 기반 Telegram command runtime을 배포 후 즉시 활성화할 수 있도록 정리 | PRD, Plan, README, Change Log, Context, Docs, Code | yes |
+| CHG-0088 | 2026-03-21 | ADD | `apps/web`에 Basic Auth 기반 read-only 운영 콘솔 `/admin`을 추가해 최근 공개 브리핑과 최근 개인화 리포트 실행 로그를 조회할 수 있게 하고, 운영용 인증 env와 문서를 갱신 | PRD, Plan, README, Change Log, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

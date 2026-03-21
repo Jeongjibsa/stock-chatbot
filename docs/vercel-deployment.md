@@ -39,6 +39,8 @@ DATABASE_URL=postgresql://neondb_owner:***@ep-***.ap-southeast-1.aws.neon.tech/n
 TELEGRAM_BOT_TOKEN=123456:telegram-bot-token
 TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token
 CRON_SECRET=vercel-cron-shared-secret
+ADMIN_DASHBOARD_USERNAME=operator
+ADMIN_DASHBOARD_PASSWORD=strong-password
 ```
 
 메모:
@@ -92,6 +94,7 @@ COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 5. 빈 DB 상태에서 empty state가 보이는지 확인
 6. `DATABASE_URL`이 Neon으로 연결돼도 500 없이 조회되는지 확인
 7. GitHub Actions `PUBLIC_BRIEFING_BASE_URL`과 `VERCEL_RECONCILE_URL`이 새 Vercel URL을 가리키는지 확인
+8. `/admin`이 Basic Auth 없이 열리지 않는지 확인
 
 ## 비범위
 

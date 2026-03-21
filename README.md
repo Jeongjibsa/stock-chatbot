@@ -49,6 +49,12 @@
 - 날짜별 최신순 top-down feed와 단건 detail 화면을 제공합니다.
 - 보유 종목 정보와 개인 기사 요약은 공개 웹에 저장하지 않습니다.
 
+### 5. 운영 콘솔
+
+- `/admin`에서 최근 공개 브리핑과 최근 리포트 실행 로그를 확인할 수 있습니다.
+- production에서는 Basic Auth로 보호할 수 있습니다.
+- 운영 콘솔도 개인 포트폴리오 상세 정보는 노출하지 않습니다.
+
 ### 5. 스케줄 기반 무인 운영
 
 - GitHub Actions가 CI와 daily report orchestration을 담당합니다.
@@ -249,6 +255,8 @@ FRED_API_KEY=fred_api_key
 
 PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
 CRON_SECRET=vercel-cron-shared-secret
+ADMIN_DASHBOARD_USERNAME=operator
+ADMIN_DASHBOARD_PASSWORD=strong-password
 REPORT_TIMEZONE=Asia/Seoul
 DAILY_REPORT_PATTERN="0 0 9 * * *"
 DAILY_REPORT_WINDOW_MINUTES=15
@@ -418,12 +426,20 @@ VERCEL_RECONCILE_URL=https://your-vercel-domain.vercel.app/api/cron/reconcile
 CRON_SECRET=vercel-cron-shared-secret
 ```
 
+10. 운영 콘솔 Basic Auth 설정
+
+```bash
+ADMIN_DASHBOARD_USERNAME=operator
+ADMIN_DASHBOARD_PASSWORD=strong-password
+```
+
 추가 메모:
 
 - `apps/web/vercel.json`에 install/build 명령이 고정돼 있습니다.
 - `apps/web/.env.local.example`는 로컬 웹 실행용 최소 env 예시입니다.
 - production에서는 Neon connection string을 Vercel의 `DATABASE_URL`에 넣고, 개발과 테스트는 계속 로컬 Docker PostgreSQL을 사용합니다.
 - `pnpm telegram:webhook:register`는 `setWebhook`과 `getWebhookInfo`를 연속 호출해 현재 webhook 설정을 바로 확인합니다.
+- 운영 콘솔은 `https://your-vercel-domain.vercel.app/admin` 경로입니다.
 
 ## 라이선스
 

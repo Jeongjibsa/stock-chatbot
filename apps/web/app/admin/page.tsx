@@ -1,0 +1,269 @@
+import Link from "next/link";
+
+import { FeedErrorState } from "../../components/feed-error-state";
+import { Badge } from "../../components/ui/badge";
+import { Card, CardContent } from "../../components/ui/card";
+import { Separator } from "../../components/ui/separator";
+import { getAdminDashboardSnapshot } from "../../lib/admin-dashboard";
+import { normalizeMarketRegime, scoreTone } from "../../lib/report-feed";
+
+export const dynamic = "force-dynamic";
+
+export default async function AdminPage() {
+  try {
+    const snapshot = await getAdminDashboardSnapshot();
+    const completionRate =
+      snapshot.runSummary24h.totalCount === 0
+        ? 0
+        : Math.round(
+            ((snapshot.runSummary24h.completedCount +
+              snapshot.runSummary24h.partialSuccessCount) /
+              snapshot.runSummary24h.totalCount) *
+              100
+          );
+
+    return (
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <header className="mb-10 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+            Stock Briefing Ops
+          </p>
+          <h1 className="text-4xl font-semibold tracking-tight">운영 콘솔</h1>
+          <p className="max-w-3xl text-sm leading-7 text-[color:var(--muted)]">
+            최근 공개 브리핑과 개인화 리포트 실행 상태를 확인하는 읽기 전용 운영
+            화면입니다.
+          </p>
+        </header>
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            label="최근 공개 브리핑"
+            value={snapshot.latestReport?.reportDate ?? "없음"}
+            detail={snapshot.latestReport?.summary ?? "생성된 공개 브리핑이 없습니다."}
+          />
+          <MetricCard
+            label="최근 7일 공개 브리핑"
+            value={`${snapshot.reportsLast7Days}건`}
+            detail="reports 읽기 모델 기준"
+          />
+          <MetricCard
+            label="최근 24시간 완료율"
+            value={`${completionRate}%`}
+            detail={`총 ${snapshot.runSummary24h.totalCount}건 / 실패 ${snapshot.runSummary24h.failedCount}건`}
+          />
+          <MetricCard
+            label="최근 24시간 실행 중"
+            value={`${snapshot.runSummary24h.runningCount}건`}
+            detail={`partial ${snapshot.runSummary24h.partialSuccessCount}건`}
+          />
+        </section>
+
+        <section className="mt-10 grid gap-6 xl:grid-cols-[1.05fr_1.45fr]">
+          <Card>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold">최근 공개 브리핑</h2>
+                  <p className="text-sm text-[color:var(--muted)]">
+                    공개 가능한 브리핑만 표시합니다.
+                  </p>
+                </div>
+                <Link
+                  className="text-sm font-semibold text-[color:var(--accent)]"
+                  href="/"
+                >
+                  공개 피드 보기
+                </Link>
+              </div>
+              <Separator />
+              <div className="space-y-3">
+                {snapshot.recentReports.length === 0 ? (
+                  <p className="text-sm text-[color:var(--muted)]">
+                    아직 저장된 공개 브리핑이 없습니다.
+                  </p>
+                ) : (
+                  snapshot.recentReports.map((report) => {
+                    const marketRegime = normalizeMarketRegime(report.marketRegime);
+                    const regimeTone =
+                      marketRegime === "Risk-On"
+                        ? "positive"
+                        : marketRegime === "Risk-Off"
+                          ? "negative"
+                          : "neutral";
+                    const scoreBadgeTone =
+                      scoreTone(report.totalScore) === "positive"
+                        ? "positive"
+                        : scoreTone(report.totalScore) === "negative"
+                          ? "negative"
+                          : "neutral";
+
+                    return (
+                      <div
+                        key={report.id}
+                        className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                              {report.reportDate}
+                            </p>
+                            <p className="mt-1 font-semibold leading-6">{report.summary}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge tone={regimeTone}>{marketRegime}</Badge>
+                            <Badge tone={scoreBadgeTone}>
+                              Total {report.totalScore > 0 ? "+" : ""}
+                              {report.totalScore.toFixed(2)}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <Link
+                            className="text-sm font-semibold text-[color:var(--accent)]"
+                            href={`/reports/${report.id}`}
+                          >
+                            상세 브리핑 보기
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold">최근 리포트 실행 로그</h2>
+                <p className="text-sm text-[color:var(--muted)]">
+                  사용자별 개인화 실행 결과를 최근순으로 보여줍니다.
+                </p>
+              </div>
+              <Separator />
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                    <tr>
+                      <th className="pb-3 pr-4 font-semibold">시작</th>
+                      <th className="pb-3 pr-4 font-semibold">사용자</th>
+                      <th className="pb-3 pr-4 font-semibold">기준일</th>
+                      <th className="pb-3 pr-4 font-semibold">유형</th>
+                      <th className="pb-3 font-semibold">상태</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[color:var(--line)]">
+                    {snapshot.recentRuns.length === 0 ? (
+                      <tr>
+                        <td
+                          className="py-4 text-[color:var(--muted)]"
+                          colSpan={5}
+                        >
+                          아직 실행 로그가 없습니다.
+                        </td>
+                      </tr>
+                    ) : (
+                      snapshot.recentRuns.map((run) => (
+                        <tr key={run.id}>
+                          <td className="py-3 pr-4 align-top text-[color:var(--muted)]">
+                            {formatDateTime(run.startedAt)}
+                          </td>
+                          <td className="py-3 pr-4 align-top">{run.displayName}</td>
+                          <td className="py-3 pr-4 align-top">{run.runDate}</td>
+                          <td className="py-3 pr-4 align-top">
+                            <span className="text-[color:var(--muted)]">
+                              {run.scheduleType}
+                            </span>
+                          </td>
+                          <td className="py-3 align-top">
+                            <div className="space-y-1">
+                              <Badge tone={statusTone(run.status)}>
+                                {formatRunStatus(run.status)}
+                              </Badge>
+                              {run.errorMessage ? (
+                                <p className="max-w-sm text-xs leading-5 text-[color:var(--muted)]">
+                                  {run.errorMessage}
+                                </p>
+                              ) : null}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
+    );
+  } catch {
+    return (
+      <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
+        <header className="mb-8 space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+            Stock Briefing Ops
+          </p>
+          <h1 className="text-4xl font-semibold tracking-tight">운영 콘솔</h1>
+        </header>
+        <FeedErrorState />
+      </main>
+    );
+  }
+}
+
+function MetricCard(input: {
+  detail: string;
+  label: string;
+  value: string;
+}) {
+  return (
+    <Card>
+      <CardContent className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+          {input.label}
+        </p>
+        <p className="text-3xl font-semibold tracking-tight">{input.value}</p>
+        <p className="text-sm leading-6 text-[color:var(--muted)]">{input.detail}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function formatDateTime(value: string): string {
+  return new Intl.DateTimeFormat("ko-KR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  }).format(new Date(value));
+}
+
+function formatRunStatus(
+  status: "completed" | "failed" | "partial_success" | "running"
+): string {
+  switch (status) {
+    case "completed":
+      return "completed";
+    case "partial_success":
+      return "partial";
+    case "failed":
+      return "failed";
+    case "running":
+      return "running";
+  }
+}
+
+function statusTone(
+  status: "completed" | "failed" | "partial_success" | "running"
+): "positive" | "negative" | "neutral" {
+  switch (status) {
+    case "completed":
+      return "positive";
+    case "failed":
+      return "negative";
+    case "partial_success":
+    case "running":
+      return "neutral";
+  }
+}

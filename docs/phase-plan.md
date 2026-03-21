@@ -155,7 +155,7 @@
 - [x] Telegram 공개 상세 링크를 새 웹으로 전환
 - [x] README 및 운영 문서를 Vercel + Neon 기준으로 갱신
 - [x] Vercel 배포 설정 및 운영 runbook 정리
-- [ ] 웹 관리 콘솔
+- [x] 웹 관리 콘솔
 - [ ] 전략 성과 추적 및 백테스트
 - [ ] 사용자 설정 고도화
 
@@ -224,3 +224,4 @@
 - 2026-03-21: 사용자 수 10명 이하 조건을 전제로 Telegram command runtime을 Vercel webhook으로, daily report는 `Vercel Cron primary + GitHub Actions backup/reconcile` 하이브리드 구조로 전환하기로 결정하고 관련 Phase 7 작업을 최우선으로 재정렬
 - 2026-03-21: `apps/web`에 `/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile` route를 추가하고, `apps/telegram-bot/src/build-bot.ts`를 polling/webhook 공용 command runtime entrypoint로 정리
 - 2026-03-21: `pnpm telegram:webhook:register` 기반 `setWebhook` 등록 절차를 추가하고, GitHub Actions `Daily Report`를 `VERCEL_RECONCILE_URL + CRON_SECRET` 기반 backup/reconcile 우선 구조로 재편
+- 2026-03-21: `apps/web`에 Basic Auth 기반 read-only `/admin` 운영 콘솔을 추가해 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그를 조회할 수 있게 하고 관련 env/runbook을 정리
