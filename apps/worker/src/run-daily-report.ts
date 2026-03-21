@@ -38,6 +38,9 @@ export function formatDailyReportJobSummary(input: {
     `runDate=${input.runDate}`,
     `users=${input.summary.userCount}`,
     `completed=${input.summary.completedCount}`,
+    `delivered=${input.summary.deliveredCount}`,
+    `deliverySkipped=${input.summary.deliverySkippedCount}`,
+    `deliveryFailed=${input.summary.deliveryFailedCount}`,
     `partialSuccess=${input.summary.partialSuccessCount}`,
     `failed=${input.summary.failedCount}`,
     `skippedDuplicate=${input.summary.skippedDuplicateCount}`

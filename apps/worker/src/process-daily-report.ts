@@ -10,6 +10,8 @@ import {
   GoogleNewsRssAdapter,
   OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
+  TelegramBotApiClient,
+  TelegramReportDeliveryAdapter,
   YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
 import {
@@ -40,12 +42,29 @@ type OrchestratorPort = {
   }>;
 };
 
+type ReportDeliveryAdapterPort = {
+  deliver(input: {
+    channel: "telegram";
+    recipientId: string;
+    renderedText: string;
+  }): Promise<unknown>;
+};
+
 type UserRepositoryPort = {
-  listUsers(): Promise<Array<{ displayName: string; id: string }>>;
+  listUsers(): Promise<
+    Array<{
+      displayName: string;
+      id: string;
+      preferredDeliveryChatId?: string | null;
+    }>
+  >;
 };
 
 export type DailyReportJobSummary = {
   completedCount: number;
+  deliveredCount: number;
+  deliveryFailedCount: number;
+  deliverySkippedCount: number;
   failedCount: number;
   partialSuccessCount: number;
   skippedDuplicateCount: number;
@@ -92,6 +111,18 @@ export function readGeminiApiKey(
   return apiKey;
 }
 
+export function readTelegramBotToken(
+  env: Environment = process.env
+): string | undefined {
+  const token = env.TELEGRAM_BOT_TOKEN;
+
+  if (!token || token === "replace-me") {
+    return undefined;
+  }
+
+  return token;
+}
+
 export function readLlmProvider(
   env: Environment = process.env
 ): LlmProviderRuntime | undefined {
@@ -134,6 +165,7 @@ export function readScheduleType(
 
 export async function processDailyReportJob(
   dependencies: {
+    deliveryAdapter?: ReportDeliveryAdapterPort;
     orchestrator: OrchestratorPort;
     runDate: string;
     scheduleType: DailyReportScheduleType;
@@ -144,6 +176,9 @@ export async function processDailyReportJob(
   const summary: DailyReportJobSummary = {
     userCount: users.length,
     completedCount: 0,
+    deliveredCount: 0,
+    deliveryFailedCount: 0,
+    deliverySkippedCount: 0,
     failedCount: 0,
     partialSuccessCount: 0,
     skippedDuplicateCount: 0
@@ -172,6 +207,29 @@ export async function processDailyReportJob(
         summary.skippedDuplicateCount += 1;
         break;
     }
+
+    if (
+      result.status !== "completed" &&
+      result.status !== "partial_success"
+    ) {
+      continue;
+    }
+
+    if (!user.preferredDeliveryChatId || !dependencies.deliveryAdapter) {
+      summary.deliverySkippedCount += 1;
+      continue;
+    }
+
+    try {
+      await dependencies.deliveryAdapter.deliver({
+        channel: "telegram",
+        recipientId: user.preferredDeliveryChatId,
+        renderedText: result.reportText
+      });
+      summary.deliveredCount += 1;
+    } catch {
+      summary.deliveryFailedCount += 1;
+    }
   }
 
   return summary;
@@ -182,6 +240,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const fredApiKey = readFredApiKey(env);
   const openAiApiKey = readOpenAiApiKey(env);
   const geminiApiKey = readGeminiApiKey(env);
+  const telegramBotToken = readTelegramBotToken(env);
   const llmProvider = readLlmProvider(env);
   const runDate = readRunDate(env);
   const scheduleType = readScheduleType(env);
@@ -231,10 +290,18 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   }
 
   const orchestrator = new DailyReportOrchestrator(orchestratorDependencies);
+  const deliveryAdapter = telegramBotToken
+    ? new TelegramReportDeliveryAdapter({
+        telegramClient: new TelegramBotApiClient({
+          token: telegramBotToken
+        })
+      })
+    : undefined;
 
   return async () => {
     try {
       return await processDailyReportJob({
+        ...(deliveryAdapter ? { deliveryAdapter } : {}),
         orchestrator,
         runDate,
         scheduleType,

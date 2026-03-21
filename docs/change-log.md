@@ -96,6 +96,7 @@
 | CHG-0069 | 2026-03-21 | DECISION | 멀티채널 역할을 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 관리·조회`로 분리하고, 계정 확장 전략을 `core user + channel identity` 방향으로 문서화 | PRD, Plan, Change Log, Context | yes |
 | CHG-0070 | 2026-03-21 | ADD | 텔레그램 실운영을 `채널=공개`, `그룹=온보딩`, `DM=개인화 delivery` 정책으로 고정하고, 다수 사용자 `/register`·포트폴리오 입력·개인 리포트 검증 체크리스트 문서를 추가 | PRD, Plan, Change Log, Context, Docs | yes |
 | CHG-0071 | 2026-03-21 | ADD | 그룹에 새 사용자가 들어오면 `/register`를 자동 안내하고, 미등록 사용자가 그룹에서 일반 메시지를 보내면 1회 등록 안내를 다시 보내는 온보딩 보조 흐름을 telegram-bot에 추가 | Change Log, README, Code, Tests | yes |
+| CHG-0072 | 2026-03-21 | ADD | daily report worker가 `preferred_delivery_chat_id`가 있는 사용자에게 생성된 리포트를 Telegram DM으로 실제 발송하고, job summary에 `delivered`, `deliverySkipped`, `deliveryFailed` 집계를 남기도록 확장 | README, Change Log, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

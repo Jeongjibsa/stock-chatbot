@@ -118,6 +118,8 @@
 - telegram-bot은 이제 `/register`, `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB와 연결한다.
 - 미등록 사용자가 포트폴리오/시장 지표 명령을 호출하면 `/register`를 먼저 요구한다.
 - 멀티 사용자 실채널 테스트 체크리스트는 `docs/telegram-multi-user-test-scenarios.md`를 기준으로 사용한다.
+- daily report worker는 이제 생성 성공 후 `preferred_delivery_chat_id`가 있는 사용자에게 Telegram DM delivery를 시도한다.
+- worker summary 로그에는 `delivered`, `deliverySkipped`, `deliveryFailed` 집계가 추가됐다.
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.

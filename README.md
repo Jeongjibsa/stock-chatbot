@@ -42,6 +42,7 @@ Actions용 일 배치 진입점:
 
 현재 GitHub Actions 런너는 queue 없이 직접 일 배치 작업을 실행한다. 정확한 정시성보다 저비용 운영을 우선하며, schedule 지연은 저장 계층 중복 방지로 흡수한다.
 공개 브리핑은 같은 `runDate`에 대해 canonical `/briefings/YYYY-MM-DD/`와 archive `/briefings/YYYY/MM/DD/`를 동일하게 재생성하며, root `/`와 `/briefings/` index도 함께 갱신한다.
+daily report runner는 생성 성공 후 `preferred_delivery_chat_id`가 있는 사용자에게만 Telegram DM delivery를 시도하고, 로그에는 `delivered`, `deliverySkipped`, `deliveryFailed` 집계를 함께 남긴다.
 현재 app runtime 스크립트는 workspace ESM 해석 이슈를 피하기 위해 `tsx` source entrypoint를 사용하고, `pnpm build`는 검증용 단계로 유지한다.
 
 Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 workflow는 외부 DB 없이 GitHub-hosted runner 안에서 PostgreSQL service를 띄우고, mock 사용자와 포트폴리오를 seed한 뒤 `pnpm --filter @stock-chatbot/worker run run:daily-report`를 실행한다.

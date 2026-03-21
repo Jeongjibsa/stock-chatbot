@@ -12,6 +12,7 @@ import {
   readLlmProvider,
   readOpenAiApiKey,
   readPublicBriefingBaseUrl,
+  readTelegramBotToken,
   readRunDate,
   readScheduleType
 } from "./process-daily-report.js";
@@ -36,14 +37,17 @@ describe("processDailyReportJob", () => {
     };
 
     const summary = await processDailyReportJob({
+      deliveryAdapter: {
+        deliver: vi.fn(async () => undefined)
+      },
       orchestrator,
       runDate: "2026-03-20",
       scheduleType: "daily-9am",
       userRepository: {
         listUsers: vi.fn(async () => [
-          { id: "user-1", displayName: "A" },
-          { id: "user-2", displayName: "B" },
-          { id: "user-3", displayName: "C" }
+          { id: "user-1", displayName: "A", preferredDeliveryChatId: "chat-1" },
+          { id: "user-2", displayName: "B", preferredDeliveryChatId: "chat-2" },
+          { id: "user-3", displayName: "C", preferredDeliveryChatId: "chat-3" }
         ])
       }
     });
@@ -51,6 +55,9 @@ describe("processDailyReportJob", () => {
     expect(summary).toEqual({
       userCount: 3,
       completedCount: 1,
+      deliveredCount: 2,
+      deliveryFailedCount: 0,
+      deliverySkippedCount: 0,
       partialSuccessCount: 1,
       failedCount: 0,
       skippedDuplicateCount: 1
@@ -62,6 +69,51 @@ describe("processDailyReportJob", () => {
         skillVersion: DEFAULT_DAILY_REPORT_SKILL_VERSION
       })
     );
+  });
+
+  it("skips or records failed deliveries when delivery targets are missing or provider errors", async () => {
+    const orchestrator = {
+      runForUser: vi
+        .fn()
+        .mockResolvedValueOnce({
+          status: "completed",
+          reportText: "report-1"
+        })
+        .mockResolvedValueOnce({
+          status: "partial_success",
+          reportText: "report-2"
+        })
+    };
+    const deliveryAdapter = {
+      deliver: vi
+        .fn()
+        .mockRejectedValueOnce(new Error("telegram failed"))
+    };
+
+    const summary = await processDailyReportJob({
+      deliveryAdapter,
+      orchestrator,
+      runDate: "2026-03-20",
+      scheduleType: "daily-9am",
+      userRepository: {
+        listUsers: vi.fn(async () => [
+          { id: "user-1", displayName: "A", preferredDeliveryChatId: "chat-1" },
+          { id: "user-2", displayName: "B", preferredDeliveryChatId: null }
+        ])
+      }
+    });
+
+    expect(summary).toEqual({
+      userCount: 2,
+      completedCount: 1,
+      deliveredCount: 0,
+      deliveryFailedCount: 1,
+      deliverySkippedCount: 1,
+      partialSuccessCount: 1,
+      failedCount: 0,
+      skippedDuplicateCount: 0
+    });
+    expect(deliveryAdapter.deliver).toHaveBeenCalledTimes(1);
   });
 
   it("reads runtime env defaults and required keys", () => {
@@ -78,6 +130,10 @@ describe("processDailyReportJob", () => {
     expect(readOpenAiApiKey({ OPENAI_API_KEY: "openai-key" })).toBe("openai-key");
     expect(readGeminiApiKey({})).toBeUndefined();
     expect(readGeminiApiKey({ GEMINI_API_KEY: "gemini-key" })).toBe("gemini-key");
+    expect(readTelegramBotToken({})).toBeUndefined();
+    expect(readTelegramBotToken({ TELEGRAM_BOT_TOKEN: "telegram-token" })).toBe(
+      "telegram-token"
+    );
     expect(readLlmProvider({})).toBeUndefined();
     expect(readLlmProvider({ LLM_PROVIDER: "google" })).toBe("google");
     expect(readLlmProvider({ LLM_PROVIDER: "openai" })).toBe("openai");
