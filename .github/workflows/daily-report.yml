@@ -36,19 +36,8 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Checkout existing Pages branch
-        uses: actions/checkout@v4
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: public-site
-
       - name: Ensure Pages working directory
-        run: |
-          if [ -d public-site/.git ]; then
-            rm -rf public-site/.git
-          fi
-          mkdir -p public-site
+        run: mkdir -p public-site
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -119,38 +108,62 @@ jobs:
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
     steps:
+      - name: Check daily report prerequisites
+        id: preflight
+        run: |
+          if [ -n "${DAILY_REPORT_TRIGGER_URL}" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "mode=external-trigger" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+            echo "mode=skip-missing-database" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "should_run=true" >> "$GITHUB_OUTPUT"
+          echo "mode=local-worker" >> "$GITHUB_OUTPUT"
+
       - name: Checkout
+        if: ${{ steps.preflight.outputs.should_run == 'true' }}
         uses: actions/checkout@v4
 
       - name: Setup pnpm
-        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
+        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
         uses: pnpm/action-setup@v4
         with:
           version: 10.15.1
 
       - name: Setup Node.js
-        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
+        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
         uses: actions/setup-node@v4
         with:
           node-version: 24.14.0
           cache: pnpm
 
       - name: Install dependencies
-        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
+        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
         run: pnpm install --frozen-lockfile
 
       - name: Build worker
-        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
+        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
         run: pnpm build
 
       - name: Run daily report job
-        if: ${{ env.DAILY_REPORT_TRIGGER_URL == '' }}
+        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
         run: pnpm --filter @stock-chatbot/worker run run:daily-report
 
       - name: Trigger dedicated worker
-        if: ${{ env.DAILY_REPORT_TRIGGER_URL != '' }}
+        if: ${{ steps.preflight.outputs.mode == 'external-trigger' }}
         run: |
           curl -fsS -X POST "${DAILY_REPORT_TRIGGER_URL}" \
             -H "content-type: application/json" \
             -H "authorization: Bearer ${DAILY_REPORT_TRIGGER_TOKEN}" \
             -d "{\"triggerType\":\"${REPORT_TRIGGER_TYPE}\",\"reportRunDate\":\"${REPORT_RUN_DATE}\",\"source\":\"github-actions\"}"
+
+      - name: Skip daily report job
+        if: ${{ steps.preflight.outputs.mode == 'skip-missing-database' }}
+        run: |
+          echo "DATABASE_URL secret is not configured, so personal daily report delivery is skipped."
