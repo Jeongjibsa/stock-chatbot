@@ -155,3 +155,4 @@
 - 2026-03-20: Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진, worker 뉴스 연동 추가 완료
 - 2026-03-20: harness fixture 포맷, 일 배치/뉴스/퀀트/report 샘플 fixture, grader 기준, snapshot 비교 스크립트, verify 연동, prompt/skill version 기록 연결 완료
 - 2026-03-21: mock telegram delivery adapter, reusable report preview 템플릿, future web/app API 계약 초안, 공통 report query model 추가 완료
+- 2026-03-21: 텔레그램 리포트를 PRD 6.4 순서에 맞게 재정렬하고 보유 종목 `전일 종가 → 현재가` 표기, 주요 지표 변동 요약, 면책 문구, 이란 전쟁 이슈 예시를 포함한 mock preview로 개선 완료

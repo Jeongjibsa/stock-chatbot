@@ -10,8 +10,11 @@ describe("renderTelegramDailyReport", () => {
       holdings: [
         {
           companyName: "Apple Inc.",
+          currentPrice: 247.99,
+          changePercent: -0.39,
           symbol: "AAPL",
-          exchange: "US"
+          exchange: "US",
+          previousClose: 248.96
         }
       ],
       marketResults: [
@@ -33,8 +36,10 @@ describe("renderTelegramDailyReport", () => {
 
     expect(report).toContain("🗞️ 오늘의 브리핑 | 2026-03-20");
     expect(report).toContain("📌 한 줄 요약");
+    expect(report).toContain("🧭 주요 지표 변동 요약");
     expect(report).toContain("나스닥 종합: 17,777.78 → 18,000  🔴▲ 1.25%");
-    expect(report).toContain("• Apple Inc. (AAPL, US)");
+    expect(report).toContain("• Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
+    expect(report).toContain("ℹ️ 면책 문구");
   });
 
   it("renders missing source section when failures exist", () => {
@@ -55,6 +60,9 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("🧩 누락 또는 지연 항목");
     expect(report).toContain("index:KRX:KOSPI: unsupported");
     expect(report).toContain("등록된 보유 종목이 없어.");
+    expect(report).toContain("관련 기사 요약이 아직 없어.");
+    expect(report).toContain("규칙 기반 시그널이 아직 없어.");
+    expect(report).toContain("이 리포트는 정보 제공용이며");
   });
 
   it("renders news, strategy and risk sections when enrichment exists", () => {
@@ -64,9 +72,16 @@ describe("renderTelegramDailyReport", () => {
       holdings: [
         {
           companyName: "Apple Inc.",
+          currentPrice: 247.99,
+          changePercent: -0.39,
           symbol: "AAPL",
-          exchange: "US"
+          exchange: "US",
+          previousClose: 248.96,
+          trendSummary: "대형 기술주 약세 영향으로 하루 조정을 받았어."
         }
+      ],
+      keyIndicatorSummaries: [
+        "중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있어."
       ],
       marketResults: [
         {
@@ -118,14 +133,16 @@ describe("renderTelegramDailyReport", () => {
         }
       ],
       quantScenarios: ["추세 유지 시 분할 매수 관찰"],
-      riskCheckpoints: ["변동성 급등 시 비중 확대를 보류"],
+      riskCheckpoints: ["변동성 급등 시 비중 확대를 보류"]
     });
 
-    expect(report).toContain("📰 보유 종목 뉴스");
-    expect(report).toContain("🧠 전략 시나리오");
+    expect(report).toContain("📰 종목 관련 핵심 기사 요약");
+    expect(report).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
     expect(report).toContain("⚠️ 리스크 체크포인트");
     expect(report).toContain("🔴호재 신제품 공개 신뢰도 높음");
+    expect(report).toContain("Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
+    expect(report).toContain("중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며");
     expect(report).toContain("달러인덱스도 함께 올라 원화만 약한 장은 아니고");
-    expect(report).not.toContain("다음 단계에서 연결 예정");
+    expect(report).toContain("ℹ️ 면책 문구");
   });
 });

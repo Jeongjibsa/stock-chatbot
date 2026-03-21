@@ -22,9 +22,17 @@ export function buildMockTelegramReportPreview(input?: {
       holdings: [
         {
           companyName: "Apple Inc.",
+          currentPrice: 247.99,
+          changePercent: -0.39,
           exchange: "US",
-          symbol: "AAPL"
+          previousClose: 248.96,
+          symbol: "AAPL",
+          trendSummary:
+            "이란 전쟁발 지정학 리스크와 대형 기술주 약세가 겹치며 전일 대비 조정받았어."
         }
+      ],
+      keyIndicatorSummaries: [
+        "중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있어."
       ],
       marketResults: [
         {

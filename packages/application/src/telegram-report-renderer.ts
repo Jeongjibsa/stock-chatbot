@@ -5,9 +5,14 @@ export type TelegramReportRenderInput = {
   displayName: string;
   holdings: Array<{
     companyName: string;
+    currentPrice?: number;
     exchange: string;
+    previousClose?: number;
     symbol: string;
+    trendSummary?: string;
+    changePercent?: number;
   }>;
+  keyIndicatorSummaries?: string[];
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs?: HoldingNewsBrief[];
   quantScenarios?: string[];
@@ -36,45 +41,22 @@ export function renderTelegramDailyReport(
     "🌍 거시 시장 스냅샷",
     ...renderMarketSnapshot(successfulMarketItems),
     "",
-    "🧾 보유 종목",
+    "🧭 주요 지표 변동 요약",
+    ...renderKeyIndicatorSummary(successfulMarketItems, input.keyIndicatorSummaries),
+    "",
+    "📈 보유 종목별 최근 동향",
     ...renderHoldings(input.holdings)
   ];
 
-  if (input.portfolioNewsBriefs && input.portfolioNewsBriefs.length > 0) {
-    lines.push("", "📰 보유 종목 뉴스", ...renderPortfolioNews(input.portfolioNewsBriefs));
-  }
-
-  if (input.quantScenarios && input.quantScenarios.length > 0) {
-    lines.push(
-      "",
-      "🧠 전략 시나리오",
-      ...input.quantScenarios.map((scenario) => `• ${scenario}`)
-    );
-  }
-
-  if (input.riskCheckpoints && input.riskCheckpoints.length > 0) {
-    lines.push(
-      "",
-      "⚠️ 리스크 체크포인트",
-      ...input.riskCheckpoints.map((checkpoint) => `• ${checkpoint}`)
-    );
-  }
+  lines.push("", "📰 종목 관련 핵심 기사 요약", ...renderPortfolioNews(input.portfolioNewsBriefs));
+  lines.push("", "🧠 퀀트 기반 시그널 및 매매 아이디어", ...renderScenarioLines(input.quantScenarios));
+  lines.push("", "⚠️ 리스크 체크포인트", ...renderRiskLines(input.riskCheckpoints));
 
   if (failedMarketItems.length > 0) {
     lines.push("", "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
   }
 
-  if (
-    !input.portfolioNewsBriefs?.length &&
-    !input.quantScenarios?.length &&
-    !input.riskCheckpoints?.length
-  ) {
-    lines.push(
-      "",
-      "ℹ️ 안내",
-      "뉴스 요약과 퀀트 시그널은 다음 단계에서 연결 예정이야."
-    );
-  }
+  lines.push("", "ℹ️ 면책 문구", ...renderDisclaimer());
 
   return lines.join("\n");
 }
@@ -118,15 +100,40 @@ function renderMarketSnapshot(
 }
 
 function renderHoldings(
-  holdings: Array<{ companyName: string; exchange: string; symbol: string }>
+  holdings: Array<{
+    companyName: string;
+    currentPrice?: number;
+    exchange: string;
+    previousClose?: number;
+    symbol: string;
+    trendSummary?: string;
+    changePercent?: number;
+  }>
 ): string[] {
   if (holdings.length === 0) {
     return ["• 등록된 보유 종목이 없어."];
   }
 
-  return holdings.map(
-    (holding) => `• ${holding.companyName} (${holding.symbol}, ${holding.exchange})`
-  );
+  const lines: string[] = [];
+
+  for (const holding of holdings) {
+    const transition =
+      holding.currentPrice === undefined
+        ? undefined
+        : formatValueTransition(holding.previousClose, holding.currentPrice);
+    const changeText = formatChangeBadge(holding.changePercent);
+    const detailText = transition
+      ? `: ${transition}${changeText ? `  ${changeText}` : ""}`
+      : ": 시세 스냅샷 연결 전";
+
+    lines.push(`• ${holding.companyName} (${holding.symbol}, ${holding.exchange})${detailText}`);
+
+    if (holding.trendSummary) {
+      lines.push(`  ${holding.trendSummary}`);
+    }
+  }
+
+  return lines;
 }
 
 function renderFailures(
@@ -135,7 +142,11 @@ function renderFailures(
   return results.map((result) => `• ${result.sourceKey}: ${result.message}`);
 }
 
-function renderPortfolioNews(briefs: HoldingNewsBrief[]): string[] {
+function renderPortfolioNews(briefs?: HoldingNewsBrief[]): string[] {
+  if (!briefs || briefs.length === 0) {
+    return ["• 관련 기사 요약이 아직 없어."];
+  }
+
   const lines: string[] = [];
 
   for (const brief of briefs) {
@@ -158,6 +169,64 @@ function renderPortfolioNews(briefs: HoldingNewsBrief[]): string[] {
   }
 
   return lines;
+}
+
+function renderScenarioLines(quantScenarios?: string[]): string[] {
+  if (!quantScenarios || quantScenarios.length === 0) {
+    return ["• 규칙 기반 시그널이 아직 없어."];
+  }
+
+  return quantScenarios.map((scenario) => `• ${scenario}`);
+}
+
+function renderRiskLines(riskCheckpoints?: string[]): string[] {
+  if (!riskCheckpoints || riskCheckpoints.length === 0) {
+    return ["• 현재 추가 리스크 체크포인트는 없어."];
+  }
+
+  return riskCheckpoints.map((checkpoint) => `• ${checkpoint}`);
+}
+
+function renderKeyIndicatorSummary(
+  results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>,
+  customSummaries?: string[]
+): string[] {
+  const lines: string[] = [];
+  const rankedMovers = [...results]
+    .filter((result) => result.data.changePercent !== undefined)
+    .sort(
+      (left, right) =>
+        Math.abs((right.data.changePercent ?? 0)) - Math.abs((left.data.changePercent ?? 0))
+    )
+    .slice(0, 2);
+
+  for (const mover of rankedMovers) {
+    const changePercent = mover.data.changePercent ?? 0;
+    const direction = changePercent > 0 ? "상승" : changePercent < 0 ? "하락" : "보합";
+    lines.push(
+      `• ${mover.data.itemName}이 ${Math.abs(changePercent).toFixed(2)}% ${direction}하며 상대적으로 움직임이 컸어.`
+    );
+  }
+
+  const fxInsight = buildFxInsight(results);
+
+  if (fxInsight) {
+    lines.push(`• ${fxInsight}`);
+  }
+
+  if (customSummaries && customSummaries.length > 0) {
+    lines.push(...customSummaries.map((summary) => `• ${summary}`));
+  }
+
+  if (lines.length === 0) {
+    return ["• 아직 강조할 만한 지표 변화 요약이 없어."];
+  }
+
+  return [...new Set(lines)];
+}
+
+function renderDisclaimer(): string[] {
+  return ["• 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있어."];
 }
 
 function formatValue(value: number): string {

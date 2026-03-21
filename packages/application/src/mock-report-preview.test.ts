@@ -10,8 +10,11 @@ describe("buildMockTelegramReportPreview", () => {
     });
 
     expect(preview.userId).toBe("user-1");
-    expect(preview.renderedText).toContain("📰 보유 종목 뉴스");
-    expect(preview.renderedText).toContain("🧠 전략 시나리오");
+    expect(preview.renderedText).toContain("🧭 주요 지표 변동 요약");
+    expect(preview.renderedText).toContain("📰 종목 관련 핵심 기사 요약");
+    expect(preview.renderedText).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
     expect(preview.renderedText).toContain("⚠️ 리스크 체크포인트");
+    expect(preview.renderedText).toContain("Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
+    expect(preview.renderedText).toContain("중동 이란 전쟁 이슈");
   });
 });
