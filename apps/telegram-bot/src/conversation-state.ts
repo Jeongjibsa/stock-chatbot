@@ -1,6 +1,7 @@
 import type {
   MarketIndicatorResolution,
   PortfolioTickerResolution,
+  RankedTickerSearchResult,
   StaticInstrumentResolver
 } from "@stock-chatbot/application";
 
@@ -9,6 +10,19 @@ export type ConversationCommand =
   | "portfolio_add"
   | "portfolio_remove";
 
+export type PortfolioTickerSearchPort = {
+  pickHighConfidenceSingleResult(
+    results: RankedTickerSearchResult[]
+  ): RankedTickerSearchResult | null;
+  search(query: string, limit?: number): Promise<RankedTickerSearchResult[]>;
+  toPortfolioTickerResolution(result: RankedTickerSearchResult): PortfolioTickerResolution;
+};
+
+export type ConversationDependencies = {
+  marketResolver: Pick<StaticInstrumentResolver, "resolveMarketIndicator">;
+  portfolioTickerSearch: PortfolioTickerSearchPort;
+};
+
 export type PortfolioAddState = {
   command: "portfolio_add";
   draft: {
@@ -16,6 +30,7 @@ export type PortfolioAddState = {
     note?: string;
     quantity?: string;
     resolution?: PortfolioTickerResolution;
+    searchResults?: RankedTickerSearchResult[];
   };
   step:
     | "awaiting_avg_price"
@@ -24,7 +39,9 @@ export type PortfolioAddState = {
     | "awaiting_note_choice"
     | "awaiting_quantity"
     | "awaiting_quantity_choice"
-    | "awaiting_ticker";
+    | "awaiting_ticker_confirmation"
+    | "awaiting_ticker_query"
+    | "awaiting_ticker_selection";
 };
 
 export type PortfolioRemoveState = {
@@ -105,7 +122,7 @@ export function createInitialConversationState(command: ConversationCommand): Co
     case "portfolio_add":
       return {
         command,
-        step: "awaiting_ticker",
+        step: "awaiting_ticker_query",
         draft: {}
       };
     case "portfolio_remove":
@@ -126,45 +143,138 @@ export function createInitialConversationState(command: ConversationCommand): Co
 export function getConversationStartMessage(command: ConversationCommand): string {
   switch (command) {
     case "portfolio_add":
-      return "추가할 종목명 또는 티커를 입력해줘.";
+      return "종목명을 입력해주세요.";
     case "portfolio_remove":
-      return "삭제할 종목명 또는 티커를 입력해줘.";
+      return "삭제할 종목명 또는 종목 코드를 입력해 주세요.";
     case "market_add":
-      return "추가할 시장 지표 이름이나 코드(KOSPI, VIX 등)를 입력해줘.";
+      return "추가할 시장 지표 이름이나 코드(KOSPI, VIX 등)를 입력해 주세요.";
   }
 }
 
-export function advanceConversation(
+export async function advanceConversation(
   state: ConversationState,
   input: string,
-  resolver: StaticInstrumentResolver
-): ConversationTransitionResult {
+  dependencies: ConversationDependencies
+): Promise<ConversationTransitionResult> {
   switch (state.command) {
     case "portfolio_add":
-      return advancePortfolioAddConversation(state, input, resolver);
+      return advancePortfolioAddConversation(state, input, dependencies);
     case "portfolio_remove":
-      return advancePortfolioRemoveConversation(state, input, resolver);
+      return advancePortfolioRemoveConversation(state, input, dependencies);
     case "market_add":
-      return advanceMarketAddConversation(state, input, resolver);
+      return advanceMarketAddConversation(state, input, dependencies);
   }
 }
 
-function advancePortfolioAddConversation(
+async function advancePortfolioAddConversation(
   state: PortfolioAddState,
   input: string,
-  resolver: StaticInstrumentResolver
-): ConversationTransitionResult {
+  dependencies: ConversationDependencies
+): Promise<ConversationTransitionResult> {
   const normalizedInput = input.trim();
 
   switch (state.step) {
-    case "awaiting_ticker": {
-      const resolution = resolver.resolvePortfolioTicker(normalizedInput);
+    case "awaiting_ticker_query": {
+      const results = await dependencies.portfolioTickerSearch.search(normalizedInput, 5);
 
-      if (!resolution) {
+      if (results.length === 0) {
         return {
           status: "invalid",
           nextState: state,
-          message: "종목을 해석하지 못했어. 지원되는 티커나 종목명으로 다시 입력해줘."
+          message: "검색 결과가 없습니다. 다시 입력해주세요."
+        };
+      }
+
+      const singleHighConfidence =
+        dependencies.portfolioTickerSearch.pickHighConfidenceSingleResult(results);
+
+      if (singleHighConfidence) {
+        return {
+          status: "waiting",
+          nextState: {
+            ...state,
+            step: "awaiting_ticker_confirmation",
+            draft: {
+              ...state.draft,
+              resolution:
+                dependencies.portfolioTickerSearch.toPortfolioTickerResolution(
+                  singleHighConfidence
+                ),
+              searchResults: [singleHighConfidence]
+            }
+          },
+          message: `${singleHighConfidence.name} (${singleHighConfidence.symbol})를 추가할까요? [예/아니오]`
+        };
+      }
+
+      return {
+        status: "waiting",
+        nextState: {
+          ...state,
+          step: "awaiting_ticker_selection",
+          draft: {
+            ...state.draft,
+            searchResults: results
+          }
+        },
+        message: buildTickerSelectionMessage(results)
+      };
+    }
+    case "awaiting_ticker_confirmation": {
+      const choice = parseYesNo(normalizedInput);
+
+      if (choice === null) {
+        return {
+          status: "invalid",
+          nextState: state,
+          message: "예 또는 아니오로 답해주세요."
+        };
+      }
+
+      if (!choice) {
+        return {
+          status: "waiting",
+          nextState: {
+            command: "portfolio_add",
+            step: "awaiting_ticker_query",
+            draft: {}
+          },
+          message: "알겠습니다. 다른 종목명을 입력해주세요."
+        };
+      }
+
+      if (!state.draft.resolution) {
+        throw new Error("Portfolio add confirmation reached without a resolution");
+      }
+
+      return {
+        status: "waiting",
+        nextState: {
+          ...state,
+          step: "awaiting_avg_price_choice"
+        },
+        message: "평균 매수가를 입력할까요? (yes/no)"
+      };
+    }
+    case "awaiting_ticker_selection": {
+      const searchResults = state.draft.searchResults ?? [];
+      const selectionIndex = parseSelectionIndex(normalizedInput, searchResults.length);
+
+      if (selectionIndex === null) {
+        return {
+          status: "invalid",
+          nextState: state,
+          message: `1부터 ${searchResults.length} 사이 번호를 입력해주세요.`
+        };
+      }
+
+      const selected = searchResults[selectionIndex];
+
+      if (!selected) {
+        return {
+          status: "invalid",
+          nextState: state,
+          message: `1부터 ${searchResults.length} 사이 번호를 입력해주세요.`
         };
       }
 
@@ -175,10 +285,13 @@ function advancePortfolioAddConversation(
           step: "awaiting_avg_price_choice",
           draft: {
             ...state.draft,
-            resolution
+            resolution: dependencies.portfolioTickerSearch.toPortfolioTickerResolution(
+              selected
+            ),
+            searchResults: [selected]
           }
         },
-        message: `${resolution.companyName} (${resolution.symbol}, ${resolution.exchange})를 확인했어. 평균 매수가를 입력할까? (yes/no)`
+        message: `${selected.name} (${selected.symbol})를 선택했습니다. 평균 매수가를 입력할까요? (yes/no)`
       };
     }
     case "awaiting_avg_price_choice": {
@@ -322,20 +435,25 @@ function advancePortfolioAddConversation(
   }
 }
 
-function advancePortfolioRemoveConversation(
+async function advancePortfolioRemoveConversation(
   state: PortfolioRemoveState,
   input: string,
-  resolver: StaticInstrumentResolver
-): ConversationTransitionResult {
-  const resolution = resolver.resolvePortfolioTicker(input.trim());
+  dependencies: ConversationDependencies
+): Promise<ConversationTransitionResult> {
+  const results = await dependencies.portfolioTickerSearch.search(input.trim(), 5);
+  const resolutionResult =
+    dependencies.portfolioTickerSearch.pickHighConfidenceSingleResult(results);
 
-  if (!resolution) {
+  if (!resolutionResult) {
     return {
       status: "invalid",
       nextState: state,
-      message: "삭제할 종목을 해석하지 못했어. 티커나 종목명을 다시 입력해줘."
+      message: "삭제할 종목을 찾지 못했습니다. 종목명이나 종목 코드를 다시 입력해 주세요."
     };
   }
+
+  const resolution =
+    dependencies.portfolioTickerSearch.toPortfolioTickerResolution(resolutionResult);
 
   return {
     status: "completed",
@@ -347,12 +465,12 @@ function advancePortfolioRemoveConversation(
   };
 }
 
-function advanceMarketAddConversation(
+async function advanceMarketAddConversation(
   state: MarketAddState,
   input: string,
-  resolver: StaticInstrumentResolver
-): ConversationTransitionResult {
-  const resolution = resolver.resolveMarketIndicator(input.trim());
+  dependencies: ConversationDependencies
+): Promise<ConversationTransitionResult> {
+  const resolution = dependencies.marketResolver.resolveMarketIndicator(input.trim());
 
   if (!resolution) {
     return {
@@ -372,7 +490,9 @@ function advanceMarketAddConversation(
   };
 }
 
-function completePortfolioAddConversation(state: PortfolioAddState): ConversationTransitionResult {
+function completePortfolioAddConversation(
+  state: PortfolioAddState
+): ConversationTransitionResult {
   if (!state.draft.resolution) {
     throw new Error("Portfolio add conversation completed without a resolved ticker");
   }
@@ -401,6 +521,25 @@ function completePortfolioAddConversation(state: PortfolioAddState): Conversatio
     completion: completionDraft,
     message: `${state.draft.resolution.companyName} (${state.draft.resolution.symbol}, ${state.draft.resolution.exchange}) 입력 흐름을 기록했어. 실제 저장 연결은 다음 단계에서 진행할게.`
   };
+}
+
+function buildTickerSelectionMessage(results: RankedTickerSearchResult[]): string {
+  return [
+    "검색 결과입니다. 번호를 입력해주세요.",
+    ...results.map(
+      (result, index) => `${index + 1}. ${result.name} (${result.symbol}) · ${result.market}`
+    )
+  ].join("\n");
+}
+
+function parseSelectionIndex(value: string, length: number): number | null {
+  const numericValue = Number.parseInt(value.trim(), 10);
+
+  if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue > length) {
+    return null;
+  }
+
+  return numericValue - 1;
 }
 
 function parseYesNo(value: string): boolean | null {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import type { RankedTickerSearchResult } from "@stock-chatbot/application";
 import { StaticInstrumentResolver } from "@stock-chatbot/application";
 
 import {
@@ -9,55 +10,131 @@ import {
   InMemoryConversationStateStore
 } from "./conversation-state.js";
 
-describe("conversation-state", () => {
-  const resolver = new StaticInstrumentResolver();
+function createTickerSearchStub() {
+  const catalog: Record<string, RankedTickerSearchResult[]> = {
+    AAPL: [
+      {
+        symbol: "AAPL",
+        name: "Apple Inc.",
+        market: "NASDAQ",
+        score: 1000,
+        matchTier: "exact_symbol"
+      }
+    ],
+    samsung: [
+      {
+        symbol: "005930",
+        name: "삼성전자",
+        market: "KOSPI",
+        score: 840,
+        matchTier: "prefix"
+      },
+      {
+        symbol: "006400",
+        name: "삼성SDI",
+        market: "KOSPI",
+        score: 822,
+        matchTier: "prefix"
+      }
+    ]
+  };
 
-  it("walks through portfolio add flow to completion", () => {
+  return {
+    async search(query: string) {
+      return catalog[query] ?? [];
+    },
+    pickHighConfidenceSingleResult(results: RankedTickerSearchResult[]) {
+      const [first, second] = results;
+
+      if (!first) {
+        return null;
+      }
+
+      if (first.matchTier === "exact_symbol" || first.matchTier === "exact_name") {
+        return first;
+      }
+
+      if (!second) {
+        return first;
+      }
+
+      return null;
+    },
+    toPortfolioTickerResolution(result: RankedTickerSearchResult) {
+      return {
+        symbol: result.symbol,
+        exchange: result.market.startsWith("KO") ? "KR" : "US",
+        companyName: result.name,
+        matchedBy: result.matchTier === "exact_symbol" ? "symbol" : "alias",
+        confidence:
+          result.matchTier === "exact_symbol" || result.matchTier === "exact_name"
+            ? "high"
+            : "medium"
+      } as const;
+    }
+  };
+}
+
+describe("conversation-state", () => {
+  const dependencies = {
+    marketResolver: new StaticInstrumentResolver(),
+    portfolioTickerSearch: createTickerSearchStub()
+  };
+
+  it("walks through portfolio add flow to completion with single high-confidence result", async () => {
     let state = createInitialConversationState("portfolio_add");
 
-    const tickerStep = advanceConversation(state, "AAPL", resolver);
+    const tickerStep = await advanceConversation(state, "AAPL", dependencies);
     expect(tickerStep.status).toBe("waiting");
     if (tickerStep.status === "completed") {
       throw new Error("expected waiting state");
     }
+    expect(tickerStep.message).toContain("추가할까요?");
     state = tickerStep.nextState;
 
-    const avgPriceChoiceStep = advanceConversation(state, "yes", resolver);
+    const confirmationStep = await advanceConversation(state, "yes", dependencies);
+    expect(confirmationStep.status).toBe("waiting");
+    if (confirmationStep.status === "completed") {
+      throw new Error("expected waiting state");
+    }
+    state = confirmationStep.nextState;
+
+    const avgPriceChoiceStep = await advanceConversation(state, "yes", dependencies);
     expect(avgPriceChoiceStep.status).toBe("waiting");
     if (avgPriceChoiceStep.status === "completed") {
       throw new Error("expected waiting state");
     }
     state = avgPriceChoiceStep.nextState;
 
-    const avgPriceStep = advanceConversation(state, "210.5", resolver);
+    const avgPriceStep = await advanceConversation(state, "210.5", dependencies);
     expect(avgPriceStep.status).toBe("waiting");
     if (avgPriceStep.status === "completed") {
       throw new Error("expected waiting state");
     }
     state = avgPriceStep.nextState;
 
-    const quantityChoiceStep = advanceConversation(state, "yes", resolver);
+    const quantityChoiceStep = await advanceConversation(state, "yes", dependencies);
     expect(quantityChoiceStep.status).toBe("waiting");
     if (quantityChoiceStep.status === "completed") {
       throw new Error("expected waiting state");
     }
     state = quantityChoiceStep.nextState;
 
-    const quantityStep = advanceConversation(state, "3", resolver);
+    const quantityStep = await advanceConversation(state, "3", dependencies);
     expect(quantityStep.status).toBe("waiting");
     if (quantityStep.status === "completed") {
       throw new Error("expected waiting state");
     }
     state = quantityStep.nextState;
 
-    const noteChoiceStep = advanceConversation(state, "yes", resolver);
+    const noteChoiceStep = await advanceConversation(state, "yes", dependencies);
     expect(noteChoiceStep.status).toBe("waiting");
     if (noteChoiceStep.status === "completed") {
       throw new Error("expected waiting state");
     }
     state = noteChoiceStep.nextState;
 
-    const noteStep = advanceConversation(state, "Long term", resolver);
+    const noteStep = await advanceConversation(state, "Long term", dependencies);
     expect(noteStep.status).toBe("completed");
     if (noteStep.status !== "completed") {
       throw new Error("expected completed state");
@@ -75,9 +152,29 @@ describe("conversation-state", () => {
     });
   });
 
-  it("keeps the flow active on invalid inputs", () => {
+  it("shows numbered selection when multiple results exist", async () => {
+    let state = createInitialConversationState("portfolio_add");
+
+    const searchStep = await advanceConversation(state, "samsung", dependencies);
+    expect(searchStep.status).toBe("waiting");
+    if (searchStep.status === "completed") {
+      throw new Error("expected waiting state");
+    }
+    expect(searchStep.message).toContain("1. 삼성전자");
+    expect(searchStep.message).toContain("2. 삼성SDI");
+    state = searchStep.nextState;
+
+    const selectionStep = await advanceConversation(state, "1", dependencies);
+    expect(selectionStep.status).toBe("waiting");
+    if (selectionStep.status === "completed") {
+      throw new Error("expected waiting state");
+    }
+    expect(selectionStep.message).toContain("삼성전자 (005930)를 선택했습니다.");
+  });
+
+  it("keeps the flow active on invalid inputs", async () => {
     const state = createInitialConversationState("market_add");
-    const invalidStep = advanceConversation(state, "unknown market", resolver);
+    const invalidStep = await advanceConversation(state, "unknown market", dependencies);
 
     expect(invalidStep.status).toBe("invalid");
     if (invalidStep.status === "completed") {
@@ -92,6 +189,7 @@ describe("conversation-state", () => {
 
     store.set("user-1", state);
 
+    expect(getConversationStartMessage("portfolio_add")).toContain("종목명을 입력");
     expect(getConversationStartMessage("portfolio_remove")).toContain("삭제할 종목");
     expect(store.get("user-1")).toMatchObject({
       command: "portfolio_remove"

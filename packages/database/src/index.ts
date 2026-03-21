@@ -10,6 +10,7 @@ export {
   reports,
   reportRuns,
   strategySnapshots,
+  tickerMasters,
   telegramConversationStates,
   userMarketWatchItems,
   users,
@@ -19,12 +20,14 @@ export {
   type NewMarketWatchCatalogItemRecord,
   type NewPortfolioHoldingRecord,
   type NewStrategySnapshotRecord,
+  type NewTickerMasterRecord,
   type NewUserRecord,
   type NewUserMarketWatchItemRecord,
   type PortfolioHoldingRecord,
   type ReportRecord,
   type ReportRunRecord,
   type StrategySnapshotRecord,
+  type TickerMasterRecord,
   type TelegramConversationStateRecord,
   type UserMarketWatchItemRecord,
   type UserRecord
@@ -34,6 +37,11 @@ export {
   PortfolioHoldingRepository,
   type UpsertPortfolioHoldingInput
 } from "./portfolio-holding-repository.js";
+export {
+  TickerMasterRepository,
+  type SearchTickerCandidate,
+  type UpsertTickerMasterInput
+} from "./ticker-master-repository.js";
 export {
   PublicReportRepository,
   type InsertPublicReportInput

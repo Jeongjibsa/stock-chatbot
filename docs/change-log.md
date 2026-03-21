@@ -130,6 +130,7 @@
 | CHG-0103 | 2026-03-22 | FIX | 정적 종목 resolver에 현대차, 에코프로, 현대글로비스, HMM을 추가해 한국 주식 alias 해석을 보강하고, 공개 웹 기본 팔레트를 완전한 화이트 배경 기준으로 정리해 버튼 대비를 복구 | PRD, Change Log, Context, README, Phase Plan, Code, Tests | yes |
 | CHG-0104 | 2026-03-22 | UPDATE | 공개 웹 frontend를 soft white/gray 기반의 premium fintech UI로 재정비하고, Pretendard + custom shadcn/ui 디자인 시스템으로 feed/detail/admin 전체의 시각 계층과 카드/배지/버튼 톤을 통일 | PRD, Change Log, Context, README, Code | yes |
 | CHG-0105 | 2026-03-22 | FIX | Telegram webhook 보안을 다시 강화해 Vercel production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN`이 없으면 webhook route가 fail-closed로 동작하도록 바꾸고, webhook 등록 스크립트도 secret 없이 실행되지 않게 고정 | PRD, Change Log, Context, README, Deployment, Code, Tests, Ops | yes |
+| CHG-0106 | 2026-03-22 | UPDATE | 포트폴리오 종목 입력을 CSV 기반 PostgreSQL ticker master + ranked search 방식으로 전환하고, Telegram `/portfolio_add`를 검색/선택/확정 UX로, `/portfolio_bulk`를 다건 검색 요약 UX로 확장 | PRD, Plan, Change Log, Context, README, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

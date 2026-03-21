@@ -37,7 +37,7 @@ const PORTFOLIO_TICKER_DEFINITIONS: PortfolioTickerDefinition[] = [
     symbol: "005930",
     exchange: "KR",
     companyName: "Samsung Electronics",
-    aliases: ["005930", "삼성전자", "samsung electronics", "samsung"]
+    aliases: ["005930", "삼성전자", "삼전", "samsung electronics", "samsung"]
   },
   {
     symbol: "000660",
@@ -73,7 +73,7 @@ const PORTFOLIO_TICKER_DEFINITIONS: PortfolioTickerDefinition[] = [
     symbol: "AAPL",
     exchange: "US",
     companyName: "Apple Inc.",
-    aliases: ["aapl", "apple", "애플"]
+    aliases: ["aapl", "apple", "app", "애플"]
   },
   {
     symbol: "MSFT",
@@ -91,7 +91,7 @@ const PORTFOLIO_TICKER_DEFINITIONS: PortfolioTickerDefinition[] = [
     symbol: "TSLA",
     exchange: "US",
     companyName: "Tesla, Inc.",
-    aliases: ["tsla", "tesla", "테슬라"]
+    aliases: ["tsla", "tesla", "tesl", "테슬라"]
   }
 ];
 

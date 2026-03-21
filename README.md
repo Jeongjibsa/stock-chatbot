@@ -40,6 +40,9 @@
 ### 3. Telegram 개인화 delivery
 
 - `/register`, `/unregister`, `/portfolio_add`, `/portfolio_bulk`, `/report` 흐름으로 사용자별 입력을 받습니다.
+- `/portfolio_add`는 CSV 기반 ticker master 검색 결과를 보여주고, 상위 5개 후보 중 번호 선택으로 종목을 추가합니다.
+- `삼전`, `현대차`, `app`, `tesl` 같은 짧은 alias는 curated fallback으로 보강하되, 최종 저장과 표시는 PostgreSQL ticker master를 기준으로 합니다.
+- `/portfolio_bulk`는 comma/newline/semicolon으로 여러 키워드를 받아 각 항목을 독립 검색한 뒤 `추가 성공 / 이미 등록 / 실패` 요약을 돌려줍니다.
 - 개인화 리포트는 Telegram DM으로만 전송합니다.
 - 그룹은 온보딩, DM은 개인화 delivery, 웹은 공개 archive 역할로 분리됩니다.
 
@@ -207,6 +210,7 @@ GitHub Actions
 - `apps/web`: 공개 브리핑 feed/detail 웹 앱
 - `packages/application`: 시장 데이터, 퀀트, LLM, 렌더링, orchestration
 - `packages/database`: schema, repository, persistence logic
+- `apps/worker/src/import-ticker-master.ts`: CSV 종목 마스터를 PostgreSQL `ticker_masters`로 적재
 - `scripts/pages`: deprecated fallback Pages build 경로
 
 ## 실행 방법
@@ -248,13 +252,28 @@ COREPACK_HOME=/tmp/corepack pnpm dev:web
 /portfolio_list   보유 종목 확인
 ```
 
-### 4. 전체 검증
+### 5. 종목 마스터 CSV 적재
+
+로컬 Docker PostgreSQL에서 구현과 검증을 끝낸 뒤 ticker master를 적재합니다.
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm tickers:import -- --file="/Users/jisung/Downloads/주식종목데이터/통합_국영문_UTF-8-SIG.csv"
+```
+
+지원 컬럼:
+
+```text
+symbol | name_en | name_kr | market
+종목코드 | 종목명(영문) | 종목명(한글) | 시장구분
+```
+
+### 6. 전체 검증
 
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm verify
 ```
 
-### 5. 웹 앱 빌드 확인
+### 7. 웹 앱 빌드 확인
 
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm --filter @stock-chatbot/web build

@@ -176,6 +176,10 @@
 - Telegram DM `/register`는 같은 private chat에 이미 등록된 사용자를 감지하면 중복 등록 대신 `/report`, `/portfolio_list`, `/unregister` 다음 단계를 안내한다.
 - Telegram DM에는 `/unregister`와 `/portfolio_bulk`가 추가됐다. `/portfolio_bulk`는 여러 종목을 comma, semicolon, newline 기준으로 받아 평균단가/수량/메모 없이 기본 보유 종목을 벌크 추가한다.
 - 정적 종목 resolver는 이제 현대차(005380), 에코프로(086520), 현대글로비스(086280), HMM(011200)까지 지원한다.
+- `ticker_masters` 저장 모델이 추가됐고, CSV 기반 종목 마스터를 PostgreSQL에 적재한 뒤 `exact symbol -> exact name -> prefix -> partial -> fuzzy` ranked search로 종목을 찾는다.
+- `삼전`, `현대차`, `app`, `tesl` 같은 colloquial 입력은 curated alias fallback으로 canonical symbol을 먼저 찾고, 최종 표시/저장은 PostgreSQL ticker master 기준으로 처리한다.
+- Telegram `/portfolio_add`는 이제 `종목명을 입력해주세요 -> 단건 확인 또는 상위 5개 번호 선택 -> 평균단가/수량/메모` 흐름으로 동작한다.
+- Telegram `/portfolio_bulk`는 각 입력을 독립적으로 검색하고 `추가 성공 / 이미 등록 / 실패(후보 없음 또는 후보 다수)` 요약을 반환한다.
 - 공개 웹은 Pretendard + shadcn/ui 스타일 컴포넌트를 유지하되, 현재 기본 배경은 완전한 화이트와 블랙 텍스트 기준으로 고정됐다.
 - 공개 웹 디자인 시스템은 이후 soft white/gray 기반의 premium fintech 톤으로 다시 정리됐다. 배경은 `#F8FAFC`, surface는 white, border는 slate gray, accent는 단일 blue를 기준으로 feed/detail/admin 전반의 시각 계층을 맞춘다.
 - `Phase 6`은 멀티채널 준비 단계이며 mock delivery와 공통 report query model, API 계약 초안까지 들어간 상태다.

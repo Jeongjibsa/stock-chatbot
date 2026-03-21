@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 
 CREATE TABLE IF NOT EXISTS "users" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -38,6 +39,20 @@ CREATE TABLE IF NOT EXISTS "portfolio_holdings" (
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "portfolio_holdings_user_symbol_exchange_unique" UNIQUE("user_id", "symbol", "exchange")
+);
+
+CREATE TABLE IF NOT EXISTS "ticker_masters" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "symbol" text NOT NULL,
+  "name_en" text DEFAULT '' NOT NULL,
+  "name_kr" text DEFAULT '' NOT NULL,
+  "market" text NOT NULL,
+  "normalized_symbol" text NOT NULL,
+  "normalized_name_en" text NOT NULL,
+  "normalized_name_kr" text NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "ticker_masters_symbol_market_unique" UNIQUE("symbol", "market")
 );
 
 CREATE TABLE IF NOT EXISTS "market_watch_catalog_items" (
@@ -123,3 +138,16 @@ CREATE TABLE IF NOT EXISTS "telegram_processed_updates" (
   "update_id" text PRIMARY KEY NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_symbol_idx"
+  ON "ticker_masters" ("normalized_symbol");
+CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_name_en_idx"
+  ON "ticker_masters" ("normalized_name_en");
+CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_name_kr_idx"
+  ON "ticker_masters" ("normalized_name_kr");
+CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_name_en_trgm_idx"
+  ON "ticker_masters" USING gin ("normalized_name_en" gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_name_kr_trgm_idx"
+  ON "ticker_masters" USING gin ("normalized_name_kr" gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_symbol_trgm_idx"
+  ON "ticker_masters" USING gin ("normalized_symbol" gin_trgm_ops);

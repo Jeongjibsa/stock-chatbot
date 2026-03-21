@@ -1,12 +1,14 @@
 import { Bot } from "grammy";
 import {
   buildMockTelegramReportPreview,
+  RankedTickerSearchService,
   StaticInstrumentResolver
 } from "@stock-chatbot/application";
 import {
   createDatabase,
   createPool,
   PortfolioHoldingRepository,
+  TickerMasterRepository,
   TelegramConversationStateRepository,
   UserMarketWatchItemRepository,
   UserRepository
@@ -83,6 +85,12 @@ export function buildTelegramBotApp(
   const groupJoinWelcomeStore = new GroupJoinWelcomeStore();
   const groupRegistrationReminderStore = new GroupRegistrationReminderStore();
   const instrumentResolver = new StaticInstrumentResolver();
+  const tickerSearchService = new RankedTickerSearchService(
+    new TickerMasterRepository(db),
+    {
+      aliasResolver: instrumentResolver
+    }
+  );
   const userPortfolioService = new TelegramUserPortfolioService({
     userRepository: new UserRepository(db),
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
@@ -489,23 +497,56 @@ export function buildTelegramBotApp(
 
     const resolved = [];
     const unresolved: string[] = [];
+    const ambiguous: Array<{
+      query: string;
+      results: Awaited<ReturnType<typeof tickerSearchService.search>>;
+    }> = [];
 
     for (const token of tokens) {
-      const resolution = instrumentResolver.resolvePortfolioTicker(token);
+      const results = await tickerSearchService.search(token, 5);
 
-      if (!resolution) {
+      if (results.length === 0) {
         unresolved.push(token);
         continue;
       }
 
-      resolved.push(resolution);
+      const resolutionResult = tickerSearchService.pickBulkAutoSelection(results);
+
+      if (!resolutionResult) {
+        ambiguous.push({
+          query: token,
+          results
+        });
+        continue;
+      }
+
+      resolved.push(tickerSearchService.toPortfolioTickerResolution(resolutionResult));
     }
 
     if (resolved.length === 0) {
+      const failureLines = [];
+
+      if (unresolved.length > 0) {
+        failureLines.push(...unresolved.map((item) => `- ${item} → 후보 없음`));
+      }
+
+      if (ambiguous.length > 0) {
+        failureLines.push(
+          ...ambiguous.map(
+            (item) =>
+              `- ${item.query} → 후보 다수 (${item.results
+                .slice(0, 3)
+                .map((result) => `${result.name} ${result.symbol}`)
+                .join(", ")})`
+          )
+        );
+      }
+
       await context.reply(
         [
           "등록 가능한 종목을 찾지 못했습니다.",
-          "지원하는 이름 또는 종목 코드로 다시 입력해 주세요.",
+          ...failureLines,
+          "",
           "예시: /portfolio_bulk 삼성전자, SK하이닉스, 현대차"
         ].join("\n")
       );
@@ -532,7 +573,7 @@ export function buildTelegramBotApp(
       if (result.skippedExisting.length > 0) {
         lines.push(
           "",
-          "이미 등록되어 건너뜀:",
+          "이미 등록:",
           ...result.skippedExisting.map(
             (holding) => `- ${holding.companyName} (${holding.symbol}, ${holding.exchange})`
           )
@@ -542,8 +583,21 @@ export function buildTelegramBotApp(
       if (unresolved.length > 0) {
         lines.push(
           "",
-          "찾지 못한 입력:",
-          ...unresolved.map((item) => `- ${item}`)
+          "실패:",
+          ...unresolved.map((item) => `- ${item} → 후보 없음`)
+        );
+      }
+
+      if (ambiguous.length > 0) {
+        lines.push(
+          ...(unresolved.length > 0 ? [] : ["", "실패:"]),
+          ...ambiguous.map(
+            (item) =>
+              `- ${item.query} → 후보 다수 (${item.results
+                .slice(0, 3)
+                .map((result) => `${result.name} ${result.symbol}`)
+                .join(", ")})`
+          )
         );
       }
 
@@ -723,7 +777,10 @@ export function buildTelegramBotApp(
       return;
     }
 
-    const transition = advanceConversation(state, text, instrumentResolver);
+    const transition = await advanceConversation(state, text, {
+      marketResolver: instrumentResolver,
+      portfolioTickerSearch: tickerSearchService
+    });
 
     if (transition.status === "completed") {
       await conversationStateStore.clear(userKey);
@@ -736,7 +793,7 @@ export function buildTelegramBotApp(
               transition.completion.draft
             );
             await context.reply(
-              `${transition.completion.draft.companyName} 보유 종목을 저장했습니다.`
+              `${transition.completion.draft.companyName}(${transition.completion.draft.symbol})가 추가되었습니다.`
             );
             break;
           case "portfolio_remove": {

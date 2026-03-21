@@ -148,6 +148,15 @@ export {
   type TelegramReportRenderInput
 } from "./telegram-report-renderer.js";
 export {
+  RankedTickerSearchService,
+  formatTickerDisplayName,
+  normalizeTickerNameEn,
+  normalizeTickerNameKr,
+  normalizeTickerSearchInput,
+  type RankedTickerSearchMatchTier,
+  type RankedTickerSearchResult
+} from "./ticker-search.js";
+export {
   StaticInstrumentResolver,
   type MarketIndicatorResolution,
   type PortfolioTickerResolution,

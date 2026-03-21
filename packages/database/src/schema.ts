@@ -1,6 +1,7 @@
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -51,6 +52,37 @@ export const portfolioHoldings = pgTable(
       table.userId,
       table.symbol,
       table.exchange
+    )
+  })
+);
+
+export const tickerMasters = pgTable(
+  "ticker_masters",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    symbol: text("symbol").notNull(),
+    nameEn: text("name_en").notNull().default(""),
+    nameKr: text("name_kr").notNull().default(""),
+    market: text("market").notNull(),
+    normalizedSymbol: text("normalized_symbol").notNull(),
+    normalizedNameEn: text("normalized_name_en").notNull(),
+    normalizedNameKr: text("normalized_name_kr").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    symbolMarketUnique: unique("ticker_masters_symbol_market_unique").on(
+      table.symbol,
+      table.market
+    ),
+    normalizedSymbolIndex: index("ticker_masters_normalized_symbol_idx").on(
+      table.normalizedSymbol
+    ),
+    normalizedNameEnIndex: index("ticker_masters_normalized_name_en_idx").on(
+      table.normalizedNameEn
+    ),
+    normalizedNameKrIndex: index("ticker_masters_normalized_name_kr_idx").on(
+      table.normalizedNameKr
     )
   })
 );
@@ -173,6 +205,8 @@ export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
 export type NewPortfolioHoldingRecord = typeof portfolioHoldings.$inferInsert;
+export type TickerMasterRecord = typeof tickerMasters.$inferSelect;
+export type NewTickerMasterRecord = typeof tickerMasters.$inferInsert;
 export type MarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$inferSelect;
 export type NewMarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$inferInsert;
 export type UserMarketWatchItemRecord = typeof userMarketWatchItems.$inferSelect;

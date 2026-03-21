@@ -16,6 +16,7 @@
     "harness:snapshots": "node scripts/harness/compare-snapshots.mjs",
     "lint": "eslint .",
     "pages:build": "node scripts/pages/build-public-briefing.mjs",
+    "tickers:import": "pnpm --filter @stock-chatbot/worker run run:import-tickers",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "telegram:webhook:register": "node scripts/telegram/register-webhook.mjs",
