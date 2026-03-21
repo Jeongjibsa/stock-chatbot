@@ -41,6 +41,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@stock-chatbot/application':
+        specifier: workspace:*
+        version: link:../../packages/application
       '@stock-chatbot/core-types':
         specifier: workspace:*
         version: link:../../packages/core-types
@@ -79,6 +82,12 @@ importers:
 
   apps/worker:
     dependencies:
+      '@stock-chatbot/application':
+        specifier: workspace:*
+        version: link:../../packages/application
+      '@stock-chatbot/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       bullmq:
         specifier: 5.58.5
         version: 5.58.5
