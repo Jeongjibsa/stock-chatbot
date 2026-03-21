@@ -76,6 +76,7 @@
 | CHG-0049 | 2026-03-21 | ADD | Gemini provider profile과 `generateContent` 기반 Google adapter, worker의 `LLM_PROVIDER`/`GEMINI_API_KEY` 선택 로직, env 템플릿, 관련 테스트와 문서를 추가해 OpenAI 외 Gemini 모델도 바로 사용할 수 있도록 준비 | Change Log, Context, LLM Plan, Code | yes |
 | CHG-0050 | 2026-03-21 | UPDATE | Google provider의 기본 모델을 공식 Gemini 3 Flash 모델 ID인 `gemini-3-flash-preview`로 통일하고 관련 문서를 갱신 | Change Log, Context, LLM Plan, Code | yes |
 | CHG-0051 | 2026-03-21 | ADD | GitHub Actions에 Gemini 기반 `Daily Report Smoke` workflow를 추가하고, `Daily Report` workflow에도 `GEMINI_API_KEY`와 `LLM_PROVIDER` env 주입을 반영해 GitHub-hosted runner에서 seeded mock portfolio 기준 일 리포트 생성 경로를 수동 검증할 수 있게 함 | Plan, Change Log, Context, README, Code | yes |
+| CHG-0052 | 2026-03-21 | FIX | GitHub Actions smoke 실행 중 드러난 app build artifact 경로 문제를 수정해 `api`, `telegram-bot`, `worker`의 `start` 및 `run:daily-report` 스크립트가 실제 `tsc` 산출물 경로를 가리키도록 조정 | Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 
