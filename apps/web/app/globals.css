@@ -2,18 +2,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f8fafc;
   --surface: #ffffff;
   --surface-strong: #ffffff;
-  --surface-muted: #f4f4f5;
-  --foreground: #111111;
-  --muted: #52525b;
-  --line: rgba(24, 24, 27, 0.12);
-  --line-strong: rgba(24, 24, 27, 0.24);
-  --accent: #111111;
-  --accent-strong: #000000;
-  --accent-soft: rgba(17, 17, 17, 0.06);
-  --ring: rgba(17, 17, 17, 0.24);
+  --surface-muted: #f1f5f9;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --accent: #3b82f6;
+  --accent-strong: #2563eb;
+  --accent-soft: rgba(59, 130, 246, 0.08);
+  --ring: rgba(59, 130, 246, 0.28);
+  --shadow-sm: 0 10px 30px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 16px 42px rgba(15, 23, 42, 0.07);
+  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.08);
 }
 
 html {
@@ -23,7 +26,9 @@ html {
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.06), transparent 26%),
+    linear-gradient(180deg, #fbfdff 0%, var(--background) 20%, var(--background) 100%);
   font-family:
     "Pretendard Variable",
     Pretendard,
@@ -51,6 +56,11 @@ select {
   font: inherit;
 }
 
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
 * {
   border-color: var(--line);
 }
@@ -66,39 +76,39 @@ select {
 .surface-panel {
   background: var(--surface);
   border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
 }
 
 .signal-chip {
   border: 1px solid var(--line);
   background: var(--surface-muted);
-  color: var(--foreground);
+  color: color-mix(in srgb, var(--foreground) 84%, var(--muted));
   border-radius: 999px;
-  padding: 0.45rem 0.8rem;
-  font-size: 0.78rem;
+  padding: 0.42rem 0.82rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .kicker {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.69rem;
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .gradient-title {
-  background: linear-gradient(
-    180deg,
-    var(--foreground) 0%,
-    color-mix(in srgb, var(--foreground) 78%, var(--muted)) 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--foreground);
+  letter-spacing: -0.045em;
 }
 
 .report-prose {
   color: var(--foreground);
+  display: grid;
+  gap: 1rem;
+  font-size: 0.95rem;
+  line-height: 1.8;
 }
 
 .report-prose h1,
@@ -106,7 +116,21 @@ select {
 .report-prose h3 {
   color: var(--foreground);
   font-weight: 700;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  margin-top: 0.4rem;
+}
+
+.report-prose h1 {
+  font-size: 1.65rem;
+}
+
+.report-prose h2 {
+  font-size: 1.18rem;
+}
+
+.report-prose h3 {
+  font-size: 1.02rem;
 }
 
 .report-prose p,
@@ -115,8 +139,13 @@ select {
   color: var(--muted);
 }
 
+.report-prose p {
+  margin: 0;
+}
+
 .report-prose hr {
   border-color: var(--line);
+  margin: 0.45rem 0 0.25rem;
 }
 
 .report-prose strong {
@@ -132,10 +161,10 @@ select {
 }
 
 .report-prose blockquote {
-  border-color: var(--line-strong);
-  background: color-mix(in srgb, var(--surface-strong) 80%, transparent);
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--surface-muted) 92%, white);
   border-radius: 1rem;
-  padding: 1rem 1.1rem;
+  padding: 1rem 1.15rem;
 }
 
 .report-prose code {
@@ -157,4 +186,40 @@ select {
 .report-prose pre code {
   background: transparent;
   padding: 0;
+}
+
+.report-shell {
+  border: 1px solid var(--line);
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 1));
+  box-shadow: var(--shadow-md);
+}
+
+.soft-grid {
+  background-image:
+    linear-gradient(to right, rgba(226, 232, 240, 0.55) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.55) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.feed-stripe {
+  background:
+    linear-gradient(90deg, rgba(59, 130, 246, 0.14), rgba(59, 130, 246, 0.03)),
+    var(--surface);
+}
+
+.section-label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.data-value {
+  color: var(--foreground);
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  line-height: 1;
 }

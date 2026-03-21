@@ -128,6 +128,7 @@
 | CHG-0101 | 2026-03-22 | FIX | `/admin`이 Postgres `date` 컬럼을 raw `Date` 객체로 렌더링해 client-side exception을 일으키던 문제를 날짜 문자열 정규화로 수정하고, 공개 웹 전체 팔레트를 shadcn/ui 기본 감성에 가까운 흑백 톤으로 재정비 | Change Log, Context, README, Code, Tests, Ops | yes |
 | CHG-0102 | 2026-03-22 | ADD | Telegram DM에서 `/register` 중복 등록을 감지해 `/unregister` 초기화 경로를 안내하고, `/portfolio_bulk`로 여러 종목을 한 번에 추가할 수 있도록 사용자 등록/포트폴리오 명령 semantics를 확장 | PRD, Change Log, Context, README, Code, Tests | yes |
 | CHG-0103 | 2026-03-22 | FIX | 정적 종목 resolver에 현대차, 에코프로, 현대글로비스, HMM을 추가해 한국 주식 alias 해석을 보강하고, 공개 웹 기본 팔레트를 완전한 화이트 배경 기준으로 정리해 버튼 대비를 복구 | PRD, Change Log, Context, README, Phase Plan, Code, Tests | yes |
+| CHG-0104 | 2026-03-22 | UPDATE | 공개 웹 frontend를 soft white/gray 기반의 premium fintech UI로 재정비하고, Pretendard + custom shadcn/ui 디자인 시스템으로 feed/detail/admin 전체의 시각 계층과 카드/배지/버튼 톤을 통일 | PRD, Change Log, Context, README, Code | yes |
 
 ## 4. Open Change Notes
 

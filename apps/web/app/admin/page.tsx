@@ -24,12 +24,12 @@ export default async function AdminPage() {
 
     return (
       <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <header className="mb-10 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
-            Stock Briefing Ops
-          </p>
-          <h1 className="text-4xl font-semibold tracking-tight">운영 콘솔</h1>
-          <p className="max-w-3xl text-sm leading-7 text-[color:var(--muted)]">
+        <header className="report-shell soft-grid mb-10 overflow-hidden p-8 sm:p-10">
+          <p className="section-label">Stock Briefing Ops</p>
+          <h1 className="mt-4 text-[2.5rem] font-semibold tracking-[-0.045em] text-[color:var(--foreground)]">
+            운영 콘솔
+          </h1>
+          <p className="mt-4 max-w-3xl text-[0.98rem] leading-8 text-[color:var(--muted)]">
             최근 공개 브리핑과 개인화 리포트 실행 상태를 확인하는 읽기 전용 운영
             화면입니다.
           </p>
@@ -126,7 +126,7 @@ export default async function AdminPage() {
                     return (
                       <div
                         key={report.id}
-                        className="rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4"
+                        className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface)] p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
@@ -304,10 +304,10 @@ export default async function AdminPage() {
     return (
       <main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <header className="mb-8 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[color:var(--muted)]">
+          <p className="section-label">
             Stock Briefing Ops
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight">운영 콘솔</h1>
+          <h1 className="text-[2.4rem] font-semibold tracking-[-0.04em]">운영 콘솔</h1>
         </header>
         <FeedErrorState />
       </main>
@@ -322,12 +322,12 @@ function MetricCard(input: {
 }) {
   return (
     <Card>
-      <CardContent className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--muted)]">
+      <CardContent className="space-y-3">
+        <p className="section-label">
           {input.label}
         </p>
-        <p className="text-3xl font-semibold tracking-tight">{input.value}</p>
-        <p className="text-sm leading-6 text-[color:var(--muted)]">{input.detail}</p>
+        <p className="data-value">{input.value}</p>
+        <p className="text-sm leading-7 text-[color:var(--muted)]">{input.detail}</p>
       </CardContent>
     </Card>
   );

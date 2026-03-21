@@ -24,14 +24,16 @@ export function ReportCard({ report }: { report: PublicReport }) {
         : "neutral";
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="space-y-5">
+    <Card className="group overflow-hidden hover:-translate-y-0.5 hover:shadow-[0_18px_44px_rgba(15,23,42,0.08)]">
+      <CardContent className="space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="max-w-3xl space-y-2">
-            <p className="kicker">
-              {report.reportDate}
-            </p>
-            <h3 className="text-balance text-2xl font-semibold leading-8 tracking-tight">
+          <div className="max-w-3xl space-y-3">
+            <div className="flex flex-wrap items-center gap-2 text-[0.78rem] font-medium text-[color:var(--muted)]">
+              <span>{report.reportDate}</span>
+              <span className="inline-flex h-1 w-1 rounded-full bg-[color:var(--line-strong)]" />
+              <span>{formatCreatedAt(report.createdAt)}</span>
+            </div>
+            <h3 className="text-balance text-[1.6rem] font-semibold leading-8 tracking-[-0.04em] text-[color:var(--foreground)]">
               {report.summary}
             </h3>
             <p className="flex items-center gap-2 text-sm text-[color:var(--muted)]">
@@ -62,7 +64,7 @@ export function ReportCard({ report }: { report: PublicReport }) {
         </div>
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-[color:var(--muted)]">
-            날짜별 feed에서 최신순으로 정렬됩니다.
+            시그널 {Math.min(report.signals.length, 3)}개 · 공개 아카이브 기준
           </p>
           <Button asChild size="sm">
             <Link href={`/reports/${report.id}`}>
@@ -74,4 +76,19 @@ export function ReportCard({ report }: { report: PublicReport }) {
       </CardContent>
     </Card>
   );
+}
+
+function formatCreatedAt(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "기록 시각 미상";
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
 }

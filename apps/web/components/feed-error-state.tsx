@@ -2,15 +2,15 @@ import { Card, CardContent } from "./ui/card";
 
 export function FeedErrorState() {
   return (
-    <Card className="border-red-200/80 bg-red-50/70 dark:border-red-500/20 dark:bg-red-950/20">
-      <CardContent className="space-y-3">
-        <p className="kicker text-red-700 dark:text-red-300">
+    <Card className="border-[color:var(--line-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.9))]">
+      <CardContent className="space-y-4">
+        <p className="section-label text-[color:var(--accent-strong)]">
           Error
         </p>
-        <h2 className="text-xl font-semibold tracking-tight">
+        <h2 className="text-[1.6rem] font-semibold tracking-[-0.035em] text-[color:var(--foreground)]">
           공개 브리핑을 불러오지 못했습니다.
         </h2>
-        <p className="text-sm leading-7 text-[color:var(--muted)]">
+        <p className="text-[0.95rem] leading-8 text-[color:var(--muted)]">
           데이터베이스 연결이나 공개 브리핑 생성 경로를 확인해 주세요.
         </p>
       </CardContent>

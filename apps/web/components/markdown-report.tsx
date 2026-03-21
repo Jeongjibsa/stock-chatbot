@@ -8,13 +8,33 @@ type MarkdownReportProps = {
 
 export function MarkdownReport({ content }: MarkdownReportProps) {
   return (
-    <div className="report-prose prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-m-20 prose-p:leading-7 prose-li:leading-7 prose-strong:font-semibold prose-code:font-medium">
+    <div className="report-prose max-w-none">
       <ReactMarkdown
         components={{
+          h1: ({ children }) => <h1>{children}</h1>,
+          h2: ({ children }) => <h2>{children}</h2>,
+          h3: ({ children }) => <h3>{children}</h3>,
+          p: ({ children }) => <p>{children}</p>,
+          ul: ({ children }) => <ul>{children}</ul>,
+          li: ({ children }) => <li>{children}</li>,
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 pl-4 text-[color:var(--muted)]">
+            <blockquote>
               {children}
             </blockquote>
+          ),
+          hr: () => <hr />,
+          code: ({ children }) => <code>{children}</code>,
+          pre: ({ children }) => <pre>{children}</pre>,
+          strong: ({ children }) => <strong>{children}</strong>,
+          a: ({ children, href }) => (
+            <a
+              className="font-semibold text-[color:var(--accent-strong)] underline decoration-[color:var(--line-strong)] underline-offset-4"
+              href={href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {children}
+            </a>
           )
         }}
         remarkPlugins={[remarkGfm]}
