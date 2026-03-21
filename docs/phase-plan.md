@@ -112,12 +112,20 @@
 - [x] 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 actual daily report 경로에 연결
 - [x] 실 Telegram provider smoke test 자동화와 로컬/Actions 실행 경로 정의
 - [x] change-log 기반 컨텍스트 요약 및 롤업 흐름 구축
+- [ ] GitHub Pages용 공개 상세 브리핑 정보 구조 정의
+- [ ] 텔레그램 요약본과 GitHub Pages 상세 브리핑의 채널별 포함/제외 규칙 구현 설계
+- [ ] GitHub Actions에서 날짜별 공개 상세 브리핑 정적 파일을 생성하는 build 경로 정의
+- [ ] GitHub Pages 배포 workflow 또는 Pages deploy job 정의
+- [ ] 날짜별 상세 브리핑 permalink 규칙과 재실행 idempotency 규칙 정의
+- [ ] 상세 브리핑 index/archive 페이지 구조 정의
+- [ ] 텔레그램 메시지 하단에 GitHub Pages 상세 브리핑 링크를 삽입하는 전달 규칙 정의
+- [ ] 공개 페이지에서 개인화 정보(보유 종목/개인 기사 요약)를 제외하는 privacy guardrail 정의
 
 ### Phase 6. Multi-Channel Readiness
 
 - [x] 텔레그램 adapter와 core application service 경계 고정
 - [x] future web/app API 계약 초안 정의
-- [ ] GitHub Actions와 앱/웹 확장 시 런타임 분리 기준 정의
+- [ ] GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의
 - [ ] 사용자 계정 확장 전략 초안 정의
 - [x] 공통 리포트 조회 모델과 히스토리 모델 정의
 
@@ -134,14 +142,15 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 5`의 GitHub Actions 운영 전환 항목이다.
+현재 권장 시작점은 `Phase 5`의 GitHub Pages 공개 상세 브리핑 도입 항목이다.
 
 우선순위:
 
-1. schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
-2. 주기 보고서 자동화 설계 고도화
-3. 사용자 계정 확장 전략 초안 정의
-4. mock delivery를 실제 Telegram/provider adapter로 교체 가능한 런타임 설계 정리
+1. GitHub Pages용 공개 상세 브리핑 정보 구조 정의
+2. 텔레그램 요약본과 GitHub Pages 상세 브리핑의 채널별 포함/제외 규칙 구현 설계
+3. GitHub Actions에서 날짜별 공개 상세 브리핑 정적 파일을 생성하고 배포하는 경로 정의
+4. 텔레그램 메시지 하단에 상세 브리핑 링크를 삽입하는 전달 규칙 정의
+5. schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
 
 ## 6. Completion Log
 

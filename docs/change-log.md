@@ -68,6 +68,7 @@
 | CHG-0041 | 2026-03-21 | UPDATE | 매일 1회 브리핑 성격에 맞게 텔레그램 리포트 제목과 거시 시장 스냅샷에서 일자 노출을 제거하고, `시장/매크로/자금/이벤트`를 PRD 브리핑 흐름에 맞는 직관적 섹션 제목으로 정리 | PRD, Change Log, Context, Code | yes |
 | CHG-0042 | 2026-03-21 | UPDATE | 거시 시장 스냅샷에서 환율과 달러인덱스를 하단으로 재정렬하고, FX 해설 문구를 `전반적 달러 강세` 중심으로 더 자연스럽게 수정 | PRD, Change Log, Context, Code | yes |
 | CHG-0043 | 2026-03-21 | UPDATE | 텔레그램 리포트 구조를 `오늘의 브리핑 (YYYY-MM-DD 기준) -> 한 줄 요약 -> 거시 시장 스냅샷 -> 주요 지표 변동 요약 -> 보유 종목 -> 종목 기사 및 이벤트 -> 퀀트 -> 리스크 체크리스트 -> 시장/매크로/자금 브리핑 -> 주요 일정 및 이벤트 브리핑 -> 면책 문구` 순서로 재편하고, 거시 시장 스냅샷 정렬 규칙을 명시 | PRD, Change Log, Context, Code, Prompt | yes |
+| CHG-0044 | 2026-03-21 | UPDATE | MVP 전달 전략을 `텔레그램 요약본 + GitHub Pages 상세 브리핑`으로 확장하고, 공개 페이지에는 개인화된 보유 종목 동향/기사 요약을 제외하며 텔레그램 하단에 상세 페이지 링크를 포함하도록 PRD와 phase plan을 재편 | PRD, Plan, Change Log, Context | yes |
 
 ## 4. Open Change Notes
 
