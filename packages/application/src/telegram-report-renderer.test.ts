@@ -56,6 +56,19 @@ describe("renderTelegramDailyReport", () => {
         {
           status: "ok",
           data: {
+            itemCode: "HENRY_HUB_NATURAL_GAS",
+            itemName: "천연가스 (Henry Hub)",
+            source: "fred",
+            sourceKey: "commodity:HENRY_HUB_NATURAL_GAS",
+            asOfDate: "2026-03-20",
+            previousValue: 3.2,
+            value: 3.03,
+            changePercent: -5.31
+          }
+        },
+        {
+          status: "ok",
+          data: {
             itemCode: "WTI",
             itemName: "국제 유가(WTI)",
             source: "fred",
@@ -124,6 +137,7 @@ describe("renderTelegramDailyReport", () => {
     const nasdaqIndex = report.indexOf("• NASDAQ:");
     const sp500Index = report.indexOf("• S&P 500:");
     const wtiIndex = report.indexOf("• 국제 유가(WTI):");
+    const naturalGasIndex = report.indexOf("• 천연가스 (Henry Hub):");
     const usdKrwIndex = report.indexOf("• USD/KRW 환율:");
     const dxyIndex = report.indexOf("• 달러인덱스:");
     const insightIndex = report.indexOf(
@@ -133,8 +147,9 @@ describe("renderTelegramDailyReport", () => {
     expect(nasdaqIndex).toBeGreaterThan(-1);
     expect(sp500Index).toBeGreaterThan(nasdaqIndex);
     expect(wtiIndex).toBeGreaterThan(sp500Index);
+    expect(naturalGasIndex).toBeGreaterThan(wtiIndex);
     expect(usdKrwIndex).toBeGreaterThan(nasdaqIndex);
-    expect(usdKrwIndex).toBeGreaterThan(wtiIndex);
+    expect(usdKrwIndex).toBeGreaterThan(naturalGasIndex);
     expect(dxyIndex).toBeGreaterThan(usdKrwIndex);
     expect(insightIndex).toBeGreaterThan(dxyIndex);
   });

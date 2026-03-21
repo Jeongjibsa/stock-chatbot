@@ -45,7 +45,6 @@ export function renderTelegramDailyReport(
 
   const lines = [
     `🗞️ 오늘의 브리핑 (${input.runDate} 기준)`,
-    "",
     `📌 한 줄 요약`,
     buildSummaryLine(
       successfulMarketItems,
@@ -54,38 +53,32 @@ export function renderTelegramDailyReport(
       input.holdings.length,
       input.summaryLine
     ),
-    "",
     SECTION_DIVIDER,
     "🌍 거시 시장 스냅샷",
     ...renderMarketSnapshot(successfulMarketItems),
-    "",
     SECTION_DIVIDER,
     "📍 주요 지표 변동 요약",
     ...renderIndicatorSummarySection(
       successfulMarketItems,
       input.keyIndicatorSummaries
     ),
-    "",
     SECTION_DIVIDER,
     "📈 보유 종목별 최근 동향",
     ...renderHoldings(input.holdings, input.holdingTrendBullets)
   ];
 
   lines.push(
-    "",
     SECTION_DIVIDER,
     "📰 종목 관련 핵심 기사 및 이벤트 요약",
     ...renderPortfolioNews(input.holdings.length, input.portfolioNewsBriefs, input.articleSummaryBullets)
   );
   lines.push(
-    "",
     SECTION_DIVIDER,
     "🧠 퀀트 기반 시그널 및 매매 아이디어",
     ...renderScenarioLines(input.quantScorecards, input.quantScenarios)
   );
-  lines.push("", SECTION_DIVIDER, "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
+  lines.push(SECTION_DIVIDER, "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
   lines.push(
-    "",
     SECTION_DIVIDER,
     "🧭 시장, 매크로, 자금 브리핑",
     ...renderCombinedBriefingSection(
@@ -95,7 +88,6 @@ export function renderTelegramDailyReport(
     )
   );
   lines.push(
-    "",
     SECTION_DIVIDER,
     "🗓️ 주요 일정 및 이벤트 브리핑",
     ...renderCustomBulletSection(input.eventBullets, [
@@ -104,12 +96,12 @@ export function renderTelegramDailyReport(
   );
 
   if (failedMarketItems.length > 0) {
-    lines.push("", SECTION_DIVIDER, "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
+    lines.push(SECTION_DIVIDER, "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
   }
 
-  lines.push("", SECTION_DIVIDER, ...renderDisclaimer());
+  lines.push(SECTION_DIVIDER, ...renderDisclaimer());
 
-  return lines.join("\n");
+  return compactTelegramLines(lines).join("\n");
 }
 
 function buildSummaryLine(
@@ -160,7 +152,7 @@ function renderMarketSnapshot(
   const groups = [
     ["NASDAQ", "SP500", "DOW", "VIX"],
     ["KOSPI", "KOSDAQ"],
-    ["US10Y", "WTI", "NATGAS", "COPPER"],
+    ["US10Y", "WTI", "HENRY_HUB_NATURAL_GAS", "COPPER"],
     ["USD_KRW", "DXY"]
   ] as const;
 
@@ -206,14 +198,35 @@ function renderMarketSnapshot(
   const fxInsight = buildFxInsight(results);
 
   if (fxInsight) {
-    if (lines.length > 0 && lines[lines.length - 1] !== "") {
-      lines.push("");
-    }
-
     lines.push(`  ↳ ${fxInsight}`);
   }
 
   return lines;
+}
+
+function compactTelegramLines(lines: string[]): string[] {
+  return lines.filter((line, index) => {
+    if (line !== "") {
+      return true;
+    }
+
+    const previous = lines[index - 1];
+    const next = lines[index + 1];
+
+    if (!previous || !next) {
+      return false;
+    }
+
+    if (previous === "" || next === "") {
+      return false;
+    }
+
+    if (previous === SECTION_DIVIDER || next === SECTION_DIVIDER) {
+      return false;
+    }
+
+    return true;
+  });
 }
 
 function renderHoldings(
@@ -373,7 +386,7 @@ function renderIndicatorSummarySection(
     const changePercent = mover.data.changePercent ?? 0;
     const direction = changePercent > 0 ? "상승" : changePercent < 0 ? "하락" : "보합";
     lines.push(
-      `• ${mover.data.itemName}이 ${Math.abs(changePercent).toFixed(2)}% ${direction}하며 상대적으로 움직임이 컸습니다.`
+      `• ${mover.data.itemName}${selectSubjectParticle(mover.data.itemName)} ${Math.abs(changePercent).toFixed(2)}% ${direction}하며 상대적으로 움직임이 컸습니다.`
     );
   }
 
@@ -404,6 +417,22 @@ function renderCombinedBriefingSection(
   }
 
   return lines;
+}
+
+function selectSubjectParticle(text: string): "가" | "이" {
+  const lastCharacter = text.trim().at(-1);
+
+  if (!lastCharacter) {
+    return "이";
+  }
+
+  const codePoint = lastCharacter.codePointAt(0);
+
+  if (!codePoint || codePoint < 0xac00 || codePoint > 0xd7a3) {
+    return "이";
+  }
+
+  return (codePoint - 0xac00) % 28 === 0 ? "가" : "이";
 }
 
 function prefixBullets(label: string, bullets?: string[]): string[] {

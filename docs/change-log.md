@@ -81,6 +81,8 @@
 | CHG-0054 | 2026-03-21 | FIX | GitHub Actions와 현재 운영 경로에서 workspace ESM 해석 이슈를 피하기 위해 `api`, `telegram-bot`, `worker`의 실제 실행 스크립트를 compiled `dist` 대신 `tsx` source entrypoint로 전환하고, `build`는 검증용 단계로 유지 | Change Log, Context, README, Code | yes |
 | CHG-0055 | 2026-03-21 | FIX | `workflow_dispatch`에서 비워 둔 `REPORT_RUN_DATE`가 빈 문자열로 전달돼 Postgres date 파싱 오류를 내던 문제를 수정하고, worker가 빈 값일 때 오늘 날짜로 자동 폴백하도록 보강 | Change Log, Context, Code, Tests | yes |
 | CHG-0056 | 2026-03-21 | FIX | GitHub Actions 경고 제거를 위해 모든 workflow에 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`를 추가해 `actions/checkout@v4`와 `actions/setup-node@v4`가 Node 24 action runtime으로 실행되도록 고정 | Change Log, Context, Code | yes |
+| CHG-0057 | 2026-03-21 | FIX | 텔레그램 리포트에서 섹션 사이 과한 빈 줄을 줄이고, 거시 시장 스냅샷의 `천연가스` 정렬 키를 바로잡아 `미국 10년물 -> WTI -> 천연가스 -> 구리 -> FX` 순서가 유지되도록 수정 | Change Log, Context, Code, Tests | yes |
+| CHG-0058 | 2026-03-21 | DECISION | 로컬 Docker + live FRED/Yahoo/Gemini 호출로 daily report를 생성해 텔레그램 실채널에 검증 메시지를 발송했고, 이번 실행에서는 Gemini 뉴스 이벤트 추출이 `429`로 제한돼 종목 기사 섹션이 fallback 상태임을 확인 | Change Log, Context, Code, Ops | yes |
 
 ## 4. Open Change Notes
 
