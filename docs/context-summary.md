@@ -120,7 +120,7 @@
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.
 - 공개 상세 브리핑 permalink는 canonical `/briefings/YYYY-MM-DD/`, archive `/briefings/YYYY/MM/DD/`를 함께 유지하고, 같은 `runDate` 재실행 시 동일 경로를 덮어쓰는 방식으로 idempotent하게 운영한다.
 - 공개 브리핑 build 스크립트는 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
-- GitHub Actions `Daily Report` workflow는 이제 `public briefing build -> Pages deploy -> daily report send` 순서로 동작하며, 텔레그램 본문은 `PUBLIC_BRIEFING_BASE_URL + /briefings/YYYY-MM-DD/` 링크를 하단에 붙인다.
+- GitHub Actions `Daily Report` workflow는 이제 `public briefing build -> Pages deploy -> daily report generate` 순서로 동작하며, 생성된 텔레그램 본문은 `PUBLIC_BRIEFING_BASE_URL + /briefings/YYYY-MM-DD/` 링크를 하단에 붙인다.
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
 - 계정 확장 전략은 현재 `telegram_user_id` 중심 MVP를 유지하되, 이후 `core user + channel identity` 구조로 확장할 수 있게 `preferred_delivery_chat_id` 같은 채널 delivery 속성을 별도 identity 성격 데이터로 취급하는 방향이다.
 - `거시 시장 스냅샷`은 `NASDAQ -> S&P500 -> DOW -> VIX -> KOSPI -> KOSDAQ -> 미국 10년물 금리 -> 국제 유가(WTI) -> 천연가스 -> 구리 -> USD/KRW -> 달러인덱스` 순서를 기본으로 하고, 그룹 사이를 빈 줄로 구분한다.
