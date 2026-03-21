@@ -12,6 +12,30 @@
 6. Worker 실행: `make dev-worker`
 7. 변경 후 검증: `make verify`
 
+## GitHub Actions
+
+public repository 기준으로 아래 workflow를 사용한다.
+
+- `CI`
+  - push / pull_request 시 `pnpm verify` 실행
+- `Daily Report`
+  - 매일 `00:07 UTC`에 실행되어 `09:07 KST` 근처 일 배치 리포트 런너를 호출
+  - `workflow_dispatch`로 수동 실행 가능
+
+필요한 GitHub Secrets:
+
+- `DATABASE_URL`
+- `FRED_API_KEY`
+- `OPENAI_API_KEY`
+- `REDIS_URL`
+- `TELEGRAM_BOT_TOKEN`
+
+Actions용 일 배치 진입점:
+
+- `pnpm --filter @stock-chatbot/worker run run:daily-report`
+
+현재 GitHub Actions 런너는 queue 없이 직접 일 배치 작업을 실행한다. 정확한 정시성보다 저비용 운영을 우선하며, schedule 지연은 저장 계층 중복 방지로 흡수한다.
+
 ## Make Commands
 
 - `make up`
@@ -96,6 +120,8 @@
   - 스케줄 계산 타임존
 - `REPORT_RUN_DATE`
   - 특정 날짜로 job을 재현할 때만 선택적으로 사용
+- `REPORT_TRIGGER_TYPE`
+  - `schedule`, `workflow_dispatch`, `manual` 같은 실행 트리거 구분값
 
 ## Validation Policy
 

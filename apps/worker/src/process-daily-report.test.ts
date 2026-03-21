@@ -9,7 +9,8 @@ import {
   readDatabaseUrl,
   readFredApiKey,
   readOpenAiApiKey,
-  readRunDate
+  readRunDate,
+  readScheduleType
 } from "./process-daily-report.js";
 
 describe("processDailyReportJob", () => {
@@ -34,6 +35,7 @@ describe("processDailyReportJob", () => {
     const summary = await processDailyReportJob({
       orchestrator,
       runDate: "2026-03-20",
+      scheduleType: "daily-9am",
       userRepository: {
         listUsers: vi.fn(async () => [
           { id: "user-1", displayName: "A" },
@@ -62,6 +64,10 @@ describe("processDailyReportJob", () => {
   it("reads runtime env defaults and required keys", () => {
     expect(readDatabaseUrl({})).toContain("postgresql://");
     expect(readRunDate({ REPORT_RUN_DATE: "2026-03-20" })).toBe("2026-03-20");
+    expect(readScheduleType({})).toBe("daily-9am");
+    expect(readScheduleType({ REPORT_TRIGGER_TYPE: "workflow_dispatch" })).toBe(
+      "manual-dispatch"
+    );
     expect(() => readFredApiKey({})).toThrow("FRED_API_KEY is missing");
     expect(readFredApiKey({ FRED_API_KEY: "fred-key" })).toBe("fred-key");
     expect(readOpenAiApiKey({})).toBeUndefined();

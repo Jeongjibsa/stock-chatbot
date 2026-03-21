@@ -46,6 +46,8 @@ export type DailyReportJobSummary = {
   userCount: number;
 };
 
+export type DailyReportScheduleType = "daily-9am" | "manual-dispatch";
+
 export function readDatabaseUrl(env: Environment = process.env): string {
   return env.DATABASE_URL ?? "postgresql://stockbot:stockbot@localhost:5432/stockbot";
 }
@@ -76,10 +78,19 @@ export function readRunDate(env: Environment = process.env): string {
   return env.REPORT_RUN_DATE ?? new Date().toISOString().slice(0, 10);
 }
 
+export function readScheduleType(
+  env: Environment = process.env
+): DailyReportScheduleType {
+  return env.REPORT_TRIGGER_TYPE === "workflow_dispatch"
+    ? "manual-dispatch"
+    : "daily-9am";
+}
+
 export async function processDailyReportJob(
   dependencies: {
     orchestrator: OrchestratorPort;
     runDate: string;
+    scheduleType: DailyReportScheduleType;
     userRepository: UserRepositoryPort;
   }
 ): Promise<DailyReportJobSummary> {
@@ -98,7 +109,7 @@ export async function processDailyReportJob(
       skillVersion: DEFAULT_DAILY_REPORT_SKILL_VERSION,
       user,
       runDate: dependencies.runDate,
-      scheduleType: "daily-9am"
+      scheduleType: dependencies.scheduleType
     });
 
     switch (result.status) {
@@ -125,6 +136,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const fredApiKey = readFredApiKey(env);
   const openAiApiKey = readOpenAiApiKey(env);
   const runDate = readRunDate(env);
+  const scheduleType = readScheduleType(env);
   const pool = createPool(databaseUrl);
   const db = createDatabase(pool);
   const userRepository = new UserRepository(db);
@@ -156,6 +168,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
       return await processDailyReportJob({
         orchestrator,
         runDate,
+        scheduleType,
         userRepository
       });
     } finally {
