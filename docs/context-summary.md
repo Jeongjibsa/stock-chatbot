@@ -22,8 +22,8 @@
 
 ## 3. Rollup Status
 
-- last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035
+- last_rollup_date: 2026-03-21
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -77,6 +77,9 @@
 - GitHub Actions schedule은 UTC cron과 기본 브랜치 기준으로 설계해야 하며, 정시 지연 가능성을 전제로 idempotency와 지연 허용 규칙을 함께 둔다.
 - worker에는 BullMQ job scheduler 기반 오전 9시 트리거와 env 기반 패턴/타임존 설정이 추가됐다.
 - worker에는 뉴스 brief 연동과 prompt/skill version 기록 연결이 추가됐다.
+- FRED market data는 series 매핑 점검 기준을 문서화했고, `USD/KRW`는 `DEXKOUS`, 달러 강도 proxy는 `DTWEXBGS`를 기준으로 해석한다.
+- application 계층에는 텔레그램 템플릿 구조와 직접 매핑되는 일 리포트 prompt v2와 `DailyReportCompositionService`가 추가됐다.
+- worker의 실제 daily report 경로는 `OPENAI_API_KEY`가 있을 때 뉴스 요약뿐 아니라 리포트 본문 조합도 LLM으로 수행하고, 실패 시 기존 렌더러 fallback으로 계속 진행한다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.
 - telegram-bot에는 command별 in-memory 대화 상태 저장소와 상태 전이 로직이 추가됐다.
 - telegram-bot에는 `/mock_report` 예시 명령이 추가됐다.

@@ -6,6 +6,10 @@ export type DailyReportPayload = {
 };
 
 export {
+  DailyReportCompositionService,
+  type DailyReportComposition
+} from "./daily-report-composition-service.js";
+export {
   DailyReportOrchestrator,
   type DailyReportOrchestratorResult
 } from "./daily-report-orchestrator.js";

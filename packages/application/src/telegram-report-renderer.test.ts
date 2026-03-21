@@ -7,6 +7,7 @@ describe("renderTelegramDailyReport", () => {
     const report = renderTelegramDailyReport({
       displayName: "Jisung",
       runDate: "2026-03-20",
+      summaryLine: "오늘은 시장 지표와 보유 종목 기준으로 핵심 흐름만 간단히 정리했습니다.",
       holdings: [
         {
           companyName: "Apple Inc.",
@@ -37,9 +38,9 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("🗞️ 오늘의 브리핑 | 2026-03-20");
     expect(report).toContain("📌 한 줄 요약");
     expect(report).toContain("🧭 주요 지표 변동 요약");
+    expect(report).toContain("오늘은 시장 지표와 보유 종목 기준으로 핵심 흐름만 간단히 정리했습니다.");
     expect(report).toContain("나스닥 종합: 17,777.78 → 18,000  🔴▲ 1.25%");
     expect(report).toContain("• Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
-    expect(report).toContain("시장 지표 1개와 보유 종목 1개 기준으로 정리했습니다.");
     expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 
@@ -70,6 +71,7 @@ describe("renderTelegramDailyReport", () => {
     const report = renderTelegramDailyReport({
       displayName: "Jisung",
       runDate: "2026-03-20",
+      summaryLine: "오늘은 변동성이 큰 항목과 보유 종목 핵심 흐름만 추려서 정리했습니다.",
       holdings: [
         {
           companyName: "Apple Inc.",
@@ -80,6 +82,9 @@ describe("renderTelegramDailyReport", () => {
           previousClose: 248.96,
           trendSummary: "대형 기술주 약세 영향으로 하루 조정을 받았습니다."
         }
+      ],
+      holdingTrendBullets: [
+        "Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."
       ],
       keyIndicatorSummaries: [
         "중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있습니다."
@@ -133,6 +138,9 @@ describe("renderTelegramDailyReport", () => {
           status: "ok"
         }
       ],
+      articleSummaryBullets: [
+        "Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다."
+      ],
       quantScenarios: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
       riskCheckpoints: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."]
     });
@@ -140,8 +148,9 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("📰 종목 관련 핵심 기사 요약");
     expect(report).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
     expect(report).toContain("⚠️ 리스크 체크포인트");
-    expect(report).toContain("🔴호재 신제품 공개 신뢰도 높음");
-    expect(report).toContain("Apple Inc. (AAPL, US): 248.96 → 247.99  🔵▼ 0.39%");
+    expect(report).toContain("오늘은 변동성이 큰 항목과 보유 종목 핵심 흐름만 추려서 정리했습니다.");
+    expect(report).toContain("• Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다.");
+    expect(report).toContain("• Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다.");
     expect(report).toContain("중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며");
     expect(report).toContain("달러인덱스도 함께 올라 원화만 약한 장은 아니고");
     expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");

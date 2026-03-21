@@ -38,6 +38,7 @@
 - 같은 종목의 기사 묶음 요약
 - 시장/포트폴리오/퀀트 결과를 자연어 리포트로 조합
 - 리스크 체크포인트 문장화
+- 텔레그램 템플릿 구조와 직접 매핑되는 섹션별 bullet 생성
 
 ## 4. Provider Abstraction
 
@@ -88,6 +89,9 @@
 - 요약 단계는 기사/지표 출처 ID를 함께 반환
 - 리포트 조합 단계는 최종 텔레그램 섹션 구조를 고정
 - 모델에게 매수/매도 확정 지시를 요구하지 않고 시나리오 제안 형식으로 제한
+- 현재 일 리포트 prompt v2의 출력 키는 `oneLineSummary`, `keyIndicatorBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `strategyBullets`, `riskBullets`로 고정한다.
+- 리포트 조합 결과는 renderer가 그대로 섹션에 주입할 수 있어야 하며, 숫자 재계산 대신 해석 문장만 생성해야 한다.
+- 정보가 부족한 섹션은 빈 배열로 반환하도록 강제한다.
 
 ## 8. Implementation Sequence
 
@@ -97,6 +101,12 @@
 4. `news-summary` structured output 계약 추가
 5. `market-report-composition` prompt 계약 추가
 6. 결과 캐시, 실행 로그, prompt version 기록 연결
+
+현재 상태:
+
+- `market-report-composition` prompt v2가 텔레그램 템플릿 구조와 직접 매핑되는 structured output 계약으로 구현됐다.
+- `DailyReportCompositionService`가 실제 daily report worker 경로에 연결됐다.
+- `OPENAI_API_KEY`가 없거나 composition 단계가 실패하면 기존 규칙 기반 renderer fallback으로 계속 생성한다.
 
 ## 9. Open Questions
 

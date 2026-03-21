@@ -3,6 +3,7 @@ import type { HoldingNewsBrief } from "./news.js";
 
 export type TelegramReportRenderInput = {
   displayName: string;
+  articleSummaryBullets?: string[];
   holdings: Array<{
     companyName: string;
     currentPrice?: number;
@@ -12,12 +13,14 @@ export type TelegramReportRenderInput = {
     trendSummary?: string;
     changePercent?: number;
   }>;
+  holdingTrendBullets?: string[];
   keyIndicatorSummaries?: string[];
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs?: HoldingNewsBrief[];
   quantScenarios?: string[];
   riskCheckpoints?: string[];
   runDate: string;
+  summaryLine?: string;
 };
 
 export function renderTelegramDailyReport(
@@ -36,7 +39,12 @@ export function renderTelegramDailyReport(
     `🗞️ 오늘의 브리핑 | ${input.runDate}`,
     "",
     `📌 한 줄 요약`,
-    buildSummaryLine(successfulMarketItems.length, failedMarketItems.length, input.holdings.length),
+    buildSummaryLine(
+      successfulMarketItems.length,
+      failedMarketItems.length,
+      input.holdings.length,
+      input.summaryLine
+    ),
     "",
     "🌍 거시 시장 스냅샷",
     ...renderMarketSnapshot(successfulMarketItems),
@@ -45,10 +53,14 @@ export function renderTelegramDailyReport(
     ...renderKeyIndicatorSummary(successfulMarketItems, input.keyIndicatorSummaries),
     "",
     "📈 보유 종목별 최근 동향",
-    ...renderHoldings(input.holdings)
+    ...renderHoldings(input.holdings, input.holdingTrendBullets)
   ];
 
-  lines.push("", "📰 종목 관련 핵심 기사 요약", ...renderPortfolioNews(input.portfolioNewsBriefs));
+  lines.push(
+    "",
+    "📰 종목 관련 핵심 기사 요약",
+    ...renderPortfolioNews(input.portfolioNewsBriefs, input.articleSummaryBullets)
+  );
   lines.push("", "🧠 퀀트 기반 시그널 및 매매 아이디어", ...renderScenarioLines(input.quantScenarios));
   lines.push("", "⚠️ 리스크 체크포인트", ...renderRiskLines(input.riskCheckpoints));
 
@@ -64,8 +76,13 @@ export function renderTelegramDailyReport(
 function buildSummaryLine(
   marketOkCount: number,
   marketErrorCount: number,
-  holdingCount: number
+  holdingCount: number,
+  customSummary?: string
 ): string {
+  if (customSummary) {
+    return customSummary;
+  }
+
   if (marketErrorCount === 0) {
     return `시장 지표 ${marketOkCount}개와 보유 종목 ${holdingCount}개 기준으로 정리했습니다.`;
   }
@@ -108,8 +125,13 @@ function renderHoldings(
     symbol: string;
     trendSummary?: string;
     changePercent?: number;
-  }>
+  }>,
+  customBullets?: string[]
 ): string[] {
+  if (customBullets && customBullets.length > 0) {
+    return customBullets.map((bullet) => `• ${bullet}`);
+  }
+
   if (holdings.length === 0) {
     return ["• 등록된 보유 종목이 없습니다."];
   }
@@ -142,7 +164,14 @@ function renderFailures(
   return results.map((result) => `• ${result.sourceKey}: ${result.message}`);
 }
 
-function renderPortfolioNews(briefs?: HoldingNewsBrief[]): string[] {
+function renderPortfolioNews(
+  briefs?: HoldingNewsBrief[],
+  customBullets?: string[]
+): string[] {
+  if (customBullets && customBullets.length > 0) {
+    return customBullets.map((bullet) => `• ${bullet}`);
+  }
+
   if (!briefs || briefs.length === 0) {
     return ["• 관련 기사 요약이 아직 없습니다."];
   }

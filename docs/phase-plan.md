@@ -109,6 +109,7 @@
 - [ ] schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
 - [x] GitHub Actions에서 daily report runner를 호출하는 실행 진입점 구현
 - [ ] 주기 보고서 자동화 설계 고도화
+- [x] 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 actual daily report 경로에 연결
 - [x] change-log 기반 컨텍스트 요약 및 롤업 흐름 구축
 
 ### Phase 6. Multi-Channel Readiness
@@ -168,3 +169,4 @@
 - 2026-03-21: 텔레그램 리포트 전체 문체를 존댓말로 통일하고 면책 문구를 `❗` 한 줄 형식으로 조정, 관련 테스트와 하네스 스냅샷 갱신 완료
 - 2026-03-21: public GitHub repository를 기준으로 남은 운영 자동화 계획을 GitHub Actions 우선 전략으로 재편하고, CI/일 배치 스케줄/수동 실행/secret 관리/지연 허용 규칙을 다음 우선 작업으로 상향 조정
 - 2026-03-21: GitHub Actions `CI`와 `Daily Report` workflow, `workflow_dispatch`, secret/env 주입 규칙, direct daily report runner 엔트리포인트를 추가 완료
+- 2026-03-21: FRED series 매핑 점검 문서를 추가하고, 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 실제 daily report worker 경로에 연결 완료

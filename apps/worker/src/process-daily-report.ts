@@ -1,5 +1,6 @@
 import {
   createLlmClient,
+  DailyReportCompositionService,
   DailyReportOrchestrator,
   DEFAULT_DAILY_REPORT_PROMPT_VERSION,
   DEFAULT_DAILY_REPORT_SKILL_VERSION,
@@ -152,12 +153,18 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   };
 
   if (openAiApiKey) {
+    const llmClient = createLlmClient({
+      apiKey: openAiApiKey
+    });
+
     orchestratorDependencies.portfolioNewsBriefService =
       new PortfolioNewsBriefService({
-        llmClient: createLlmClient({
-          apiKey: openAiApiKey
-        }),
+        llmClient,
         newsCollectionAdapter: new GoogleNewsRssAdapter()
+      });
+    orchestratorDependencies.reportCompositionService =
+      new DailyReportCompositionService({
+        llmClient
       });
   }
 

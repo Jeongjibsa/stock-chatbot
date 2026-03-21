@@ -1,4 +1,5 @@
 import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js";
+import type { DailyReportComposition } from "./daily-report-composition-service.js";
 import type { HoldingNewsBrief } from "./news.js";
 import { renderTelegramDailyReport } from "./telegram-report-renderer.js";
 
@@ -60,6 +61,21 @@ type PortfolioNewsBriefServicePort = {
   ): Promise<HoldingNewsBrief[]>;
 };
 
+type ReportCompositionServicePort = {
+  compose(input: {
+    holdings: Array<{
+      companyName: string;
+      exchange: string;
+      symbol: string;
+    }>;
+    marketResults: MarketDataFetchResult[];
+    newsBriefs: HoldingNewsBrief[];
+    quantScenarios: string[];
+    riskCheckpoints: string[];
+    runDate: string;
+  }): Promise<DailyReportComposition>;
+};
+
 export type DailyReportOrchestratorResult = {
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs: HoldingNewsBrief[];
@@ -79,6 +95,7 @@ export class DailyReportOrchestrator {
       marketDataAdapter: MarketDataAdapter;
       portfolioHoldingRepository: PortfolioHoldingRepositoryPort;
       portfolioNewsBriefService?: PortfolioNewsBriefServicePort;
+      reportCompositionService?: ReportCompositionServicePort;
       reportRunRepository: ReportRunRepositoryPort;
       userMarketWatchRepository: UserMarketWatchRepositoryPort;
     }
@@ -146,8 +163,33 @@ export class DailyReportOrchestrator {
           }))
         )
       : [];
-    const status = resolveRunStatus(marketResults, portfolioNewsBriefs);
-    const reportText = renderTelegramDailyReport({
+    let composition: DailyReportComposition | undefined;
+    let compositionError: string | undefined;
+
+    if (this.dependencies.reportCompositionService) {
+      try {
+        composition = await this.dependencies.reportCompositionService.compose({
+          holdings: holdings.map((holding) => ({
+            companyName: holding.companyName,
+            symbol: holding.symbol,
+            exchange: holding.exchange
+          })),
+          marketResults,
+          newsBriefs: portfolioNewsBriefs,
+          quantScenarios: [],
+          riskCheckpoints: [],
+          runDate: input.runDate
+        });
+      } catch (error) {
+        compositionError =
+          error instanceof Error
+            ? error.message
+            : "daily report composition failed";
+      }
+    }
+
+    const status = resolveRunStatus(marketResults, portfolioNewsBriefs, compositionError);
+    const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
       displayName: input.user.displayName,
       runDate: input.runDate,
       holdings: holdings.map((holding) => ({
@@ -157,8 +199,38 @@ export class DailyReportOrchestrator {
       })),
       marketResults,
       portfolioNewsBriefs
-    });
-    const errorMessage = buildErrorMessage(marketResults, portfolioNewsBriefs);
+    };
+
+    if (composition?.oneLineSummary) {
+      renderInput.summaryLine = composition.oneLineSummary;
+    }
+
+    if (composition?.holdingTrendBullets) {
+      renderInput.holdingTrendBullets = composition.holdingTrendBullets;
+    }
+
+    if (composition?.keyIndicatorBullets) {
+      renderInput.keyIndicatorSummaries = composition.keyIndicatorBullets;
+    }
+
+    if (composition?.articleSummaryBullets) {
+      renderInput.articleSummaryBullets = composition.articleSummaryBullets;
+    }
+
+    if (composition?.strategyBullets) {
+      renderInput.quantScenarios = composition.strategyBullets;
+    }
+
+    if (composition?.riskBullets) {
+      renderInput.riskCheckpoints = composition.riskBullets;
+    }
+
+    const reportText = renderTelegramDailyReport(renderInput);
+    const errorMessage = buildErrorMessage(
+      marketResults,
+      portfolioNewsBriefs,
+      compositionError
+    );
     const completeRunInput: {
       errorMessage?: string;
       id: string;
@@ -190,7 +262,8 @@ export class DailyReportOrchestrator {
 
 function resolveRunStatus(
   marketResults: MarketDataFetchResult[],
-  portfolioNewsBriefs: HoldingNewsBrief[]
+  portfolioNewsBriefs: HoldingNewsBrief[],
+  compositionError?: string
 ): "completed" | "failed" | "partial_success" {
   const successCount = marketResults.filter((result) => result.status === "ok").length;
   const errorCount = marketResults.length - successCount;
@@ -202,7 +275,7 @@ function resolveRunStatus(
     return "failed";
   }
 
-  if (errorCount > 0 || newsErrorCount > 0) {
+  if (errorCount > 0 || newsErrorCount > 0 || compositionError) {
     return "partial_success";
   }
 
@@ -211,7 +284,8 @@ function resolveRunStatus(
 
 function buildErrorMessage(
   marketResults: MarketDataFetchResult[],
-  portfolioNewsBriefs: HoldingNewsBrief[]
+  portfolioNewsBriefs: HoldingNewsBrief[],
+  compositionError?: string
 ): string | undefined {
   const errors = marketResults.filter(
     (result): result is Extract<MarketDataFetchResult, { status: "error" }> =>
@@ -221,12 +295,13 @@ function buildErrorMessage(
     .filter((brief) => brief.status !== "ok")
     .map((brief) => `${brief.holding.symbol}: ${brief.errorMessage ?? "news_unavailable"}`);
 
-  if (errors.length === 0 && newsErrors.length === 0) {
+  if (errors.length === 0 && newsErrors.length === 0 && !compositionError) {
     return undefined;
   }
 
   return [
     ...errors.map((error) => `${error.sourceKey}: ${error.message}`),
-    ...newsErrors
+    ...newsErrors,
+    ...(compositionError ? [`report_composition: ${compositionError}`] : [])
   ].join("; ");
 }
