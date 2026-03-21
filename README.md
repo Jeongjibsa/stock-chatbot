@@ -21,6 +21,9 @@ public repository 기준으로 아래 workflow를 사용한다.
 - `Daily Report`
   - 매일 `00:07 UTC`에 실행되어 `09:07 KST` 근처 일 배치 리포트 런너를 호출
   - `workflow_dispatch`로 수동 실행 가능
+- `Daily Report Smoke`
+  - `workflow_dispatch` 전용
+  - GitHub-hosted runner 안에서 임시 PostgreSQL을 띄우고 mock 포트폴리오를 seed한 뒤 Gemini 기반 일 리포트 생성 경로를 검증
 
 필요한 GitHub Secrets:
 
@@ -37,6 +40,8 @@ Actions용 일 배치 진입점:
 - `pnpm --filter @stock-chatbot/worker run run:daily-report`
 
 현재 GitHub Actions 런너는 queue 없이 직접 일 배치 작업을 실행한다. 정확한 정시성보다 저비용 운영을 우선하며, schedule 지연은 저장 계층 중복 방지로 흡수한다.
+
+Gemini 기반 smoke test는 `Daily Report Smoke` workflow가 담당한다. 이 workflow는 외부 DB 없이 GitHub-hosted runner 안에서 PostgreSQL service를 띄우고, mock 사용자와 포트폴리오를 seed한 뒤 `pnpm --filter @stock-chatbot/worker run run:daily-report`를 실행한다.
 
 ## Make Commands
 

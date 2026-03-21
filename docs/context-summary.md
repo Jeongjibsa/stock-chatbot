@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-21
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -50,6 +50,7 @@
 - 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
 - 초기 운영은 GitHub Actions CI + scheduled workflow + workflow_dispatch를 우선 사용하고, 정확한 정시성이나 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
 - 저장소에는 GitHub Actions `CI`와 `Daily Report` workflow가 추가됐고, worker에는 queue 없이 직접 일 배치를 수행하는 daily report runner 엔트리포인트가 추가됐다.
+- GitHub Actions에는 `Daily Report Smoke` workflow가 추가됐고, GitHub-hosted runner 안에서 임시 PostgreSQL을 띄워 mock 사용자/포트폴리오를 seed한 뒤 Gemini 기반 daily report 생성 경로를 수동 검증할 수 있다.
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 항상 수행하는 기본 마감 단계다.
 - 분석 엔진이 커지면 Python 분석 서비스 분리를 고려한다.
@@ -95,6 +96,7 @@
 - 텔레그램의 보유 종목 섹션과 퀀트 점수카드 헤더는 회사명만 노출하고, 종목 코드는 사용자 노출에서 제외한다.
 - LLM 계층은 이제 `LLM_PROVIDER=openai|google`와 `OPENAI_API_KEY` / `GEMINI_API_KEY`를 통해 OpenAI와 Gemini를 선택할 수 있다.
 - Google provider의 현재 기준 모델은 공식 문서 기준 `gemini-3-flash-preview`다.
+- GitHub Actions `Daily Report` workflow는 `OPENAI_API_KEY`와 함께 `GEMINI_API_KEY`, `LLM_PROVIDER` env도 주입하도록 갱신돼, secrets 설정만으로 OpenAI와 Gemini를 선택해 운영 경로를 바꿀 수 있다.
 - GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
 - GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.
