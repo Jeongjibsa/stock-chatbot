@@ -259,6 +259,8 @@ function createGoogleGenerateContentApi(input: {
     throw new Error("GoogleGeminiLlmClient requires an API key");
   }
 
+  const apiKey = input.apiKey;
+
   const fetchFn = input.fetchFn ?? globalThis.fetch;
 
   if (!fetchFn) {
@@ -272,15 +274,15 @@ function createGoogleGenerateContentApi(input: {
       delete payload.model;
 
       const response = await fetchFn(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-goog-api-key": input.apiKey
-          },
-          body: JSON.stringify(payload)
-        }
+          `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+          {
+            method: "POST",
+            headers: new Headers({
+              "content-type": "application/json",
+              "x-goog-api-key": apiKey
+            }),
+            body: JSON.stringify(payload)
+          }
       );
 
       if (!response.ok) {

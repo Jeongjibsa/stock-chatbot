@@ -19,7 +19,9 @@
     "paths": {
       "@stock-chatbot/application": ["packages/application/src/index.ts"],
       "@stock-chatbot/core-types": ["packages/core-types/src/index.ts"],
-      "@stock-chatbot/database": ["packages/database/src/index.ts"]
+      "@stock-chatbot/database": ["packages/database/src/index.ts"],
+      "@stock-chatbot/telegram-bot/build-bot": ["apps/telegram-bot/src/build-bot.ts"],
+      "@stock-chatbot/worker/run-daily-report": ["apps/worker/src/run-daily-report.ts"]
     }
   }
 }

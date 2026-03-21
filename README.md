@@ -242,10 +242,13 @@ LLM_PROVIDER=google
 
 TELEGRAM_BOT_TOKEN=123456:telegram-bot-token
 TELEGRAM_TEST_CHAT_ID=123456789
+TELEGRAM_WEBHOOK_URL=https://your-vercel-domain.vercel.app/api/telegram/webhook
+TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token
 
 FRED_API_KEY=fred_api_key
 
 PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
+CRON_SECRET=vercel-cron-shared-secret
 REPORT_TIMEZONE=Asia/Seoul
 DAILY_REPORT_PATTERN="0 0 9 * * *"
 DAILY_REPORT_WINDOW_MINUTES=15
@@ -259,15 +262,22 @@ DAILY_REPORT_WINDOW_MINUTES=15
 
 ## 스케줄링 / 자동화 방식
 
-현재 기본 자동화는 GitHub Actions입니다.
+현재 운영 기준은 `Vercel primary + GitHub Actions backup`입니다.
 
-- `CI`
-  - `push`, `pull_request` 시 `pnpm verify`
-- `Daily Report`
-  - `schedule` 또는 `workflow_dispatch`
+- `Vercel webhook`
+  - `/api/telegram/webhook`
+  - `/start`, `/register`, `/report`, `/portfolio_*`, `/market_*`, `/report_*` 처리
+- `Vercel Cron`
+  - `/api/cron/daily-report`
   - 공개 브리핑 생성
   - `reports` read model 저장
   - 사용자별 daily report 생성 및 Telegram DM 발송
+- `GitHub Actions Daily Report`
+  - backup/reconcile/manual rerun
+  - `VERCEL_RECONCILE_URL + CRON_SECRET`가 있으면 Vercel reconcile route 호출
+  - 불가능할 때만 local worker 또는 external trigger fallback
+- `CI`
+  - `push`, `pull_request` 시 `pnpm verify`
 - `Daily Report Smoke`
   - seeded mock portfolio 기준 worker 경로 검증
 - `Telegram Smoke Test`
@@ -276,8 +286,11 @@ DAILY_REPORT_WINDOW_MINUTES=15
 중요한 운영 규칙:
 
 - `PUBLIC_BRIEFING_BASE_URL`은 Vercel 공개 웹 URL을 기준으로 설정
-- `DATABASE_URL`이 없으면 개인화 delivery 단계는 skip
+- Vercel cron 보안을 위해 production에서는 `CRON_SECRET`을 설정
+- webhook 보안을 위해 `TELEGRAM_WEBHOOK_SECRET_TOKEN`을 설정
+- `DATABASE_URL`이 없으면 local worker fallback 단계는 skip
 - 공개 웹은 개인화 데이터를 저장하거나 노출하지 않음
+- Telegram polling runtime은 local development나 비상 fallback용으로만 사용하고, production primary runtime은 webhook 기준
 
 ## Telegram 브리핑 예시
 
@@ -388,11 +401,29 @@ DATABASE_URL=postgresql://neondb_owner:***@ep-***.neon.tech/neondb?sslmode=requi
 PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
 ```
 
+8. Telegram webhook 등록
+
+```bash
+TELEGRAM_BOT_TOKEN=123456:telegram-bot-token \
+TELEGRAM_WEBHOOK_URL=https://your-vercel-domain.vercel.app/api/telegram/webhook \
+TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token \
+COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
+```
+
+9. GitHub Actions backup/reconcile용 variable과 secret 설정
+
+```bash
+PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
+VERCEL_RECONCILE_URL=https://your-vercel-domain.vercel.app/api/cron/reconcile
+CRON_SECRET=vercel-cron-shared-secret
+```
+
 추가 메모:
 
 - `apps/web/vercel.json`에 install/build 명령이 고정돼 있습니다.
 - `apps/web/.env.local.example`는 로컬 웹 실행용 최소 env 예시입니다.
 - production에서는 Neon connection string을 Vercel의 `DATABASE_URL`에 넣고, 개발과 테스트는 계속 로컬 Docker PostgreSQL을 사용합니다.
+- `pnpm telegram:webhook:register`는 `setWebhook`과 `getWebhookInfo`를 연속 호출해 현재 webhook 설정을 바로 확인합니다.
 
 ## 라이선스
 

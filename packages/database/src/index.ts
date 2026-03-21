@@ -9,6 +9,7 @@ export {
   portfolioHoldings,
   reports,
   reportRuns,
+  telegramConversationStates,
   userMarketWatchItems,
   users,
   type MarketWatchCatalogItemRecord,
@@ -21,6 +22,7 @@ export {
   type PortfolioHoldingRecord,
   type ReportRecord,
   type ReportRunRecord,
+  type TelegramConversationStateRecord,
   type UserMarketWatchItemRecord,
   type UserRecord
 } from "./schema.js";
@@ -33,6 +35,7 @@ export {
   PublicReportRepository,
   type InsertPublicReportInput
 } from "./public-report-repository.js";
+export { TelegramConversationStateRepository } from "./telegram-conversation-state-repository.js";
 export {
   ReportRunRepository,
   type CompleteReportRunInput,

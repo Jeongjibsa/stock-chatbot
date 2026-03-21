@@ -70,6 +70,21 @@
 5. GitHub Actions `Daily Report` workflow를 reconcile/manual rerun 중심으로 축소
 6. polling runtime 제거 또는 deprecated 처리
 
+## Current Implementation Status
+
+- `apps/web/app/api/telegram/webhook/route.ts` 구현 완료
+- `apps/web/app/api/cron/daily-report/route.ts` 구현 완료
+- `apps/web/app/api/cron/reconcile/route.ts` 구현 완료
+- `apps/telegram-bot/src/build-bot.ts`를 polling/webhook 공용 command runtime entrypoint로 분리 완료
+- `scripts/telegram/register-webhook.mjs`와 `pnpm telegram:webhook:register` 추가 완료
+- GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET` 기반 backup/reconcile 경로를 우선 사용하도록 갱신 완료
+
+현재 남은 후속 작업:
+
+- 운영 환경에서 실제 `setWebhook` 실행
+- Vercel production cron과 reconcile 경로 smoke 검증
+- local polling runtime을 optional fallback으로만 유지하도록 운영 문서 정리
+
 ## Non-Goals
 
 - Telegram bot 전체를 독립 app server로 계속 운영하지 않음

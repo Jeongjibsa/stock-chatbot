@@ -23,14 +23,14 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-21
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083, CHG-0084, CHG-0085, CHG-0086, CHG-0087
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
 
 - 제품은 개인화된 주식 리포트를 제공하는 서비스다.
 - 현재 MVP는 텔레그램 기반이며, 매일 오전 9시에 한 번 자동 리포트를 발송한다.
-- 초기 MVP에는 온디맨드 `/report`가 포함되지 않는다.
+- 현재 구현 기준으로는 DM에서 온디맨드 `/report`도 지원한다.
 - MVP 전달 채널은 `텔레그램 요약본 + 공개 웹 frontend`의 이중 구조다.
 - 사용자 포트폴리오와 사용자별 시장 지표를 저장하고, 이를 바탕으로 시장 요약, 뉴스 요약, 퀀트 기반 시나리오를 생성한다.
 - 장기적으로는 동일한 코어 서비스 위에 공개 웹과 인증된 웹 관리 화면까지 확장할 계획이 있으나, 모바일 앱은 현재 활성 로드맵에서 제외됐다.
@@ -61,7 +61,7 @@
 - `Phase 2`는 완료됐다.
 - `Phase 3`는 완료됐다.
 - `Phase 4`는 완료됐다.
-- `Phase 5`는 진행 중이다.
+- `Phase 5`는 완료됐다.
 - `Phase 6`은 완료됐다.
 - `Phase 7`은 공개 웹 전환 작업을 다음 우선순위로 두고 부분 완료 상태다.
 - `Phase 2`에서 사용자 모델, 포트폴리오 보유 종목, 기본 시장 지표 카탈로그, 사용자별 시장 지표 override에 대한 Drizzle 저장 계층과 unit/integration 테스트가 추가됐다.
@@ -131,8 +131,11 @@
 - GitHub Actions `Daily Report` workflow는 `public briefing build -> Pages deploy(fallback) -> daily report generate` 순서로 동작할 수 있으며, 생성된 텔레그램 본문은 `reports` 조회 성공 시 `PUBLIC_BRIEFING_BASE_URL + /reports/[id]` 링크를, 실패 시 legacy `/briefings/YYYY-MM-DD/` fallback 링크를 하단에 붙인다.
 - `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입하는 것을 기준으로 한다.
 - GitHub Actions와 Telegram 링크가 새 공개 웹을 가리키도록 하려면 repository variable `PUBLIC_BRIEFING_BASE_URL`을 실제 Vercel 배포 URL로 맞춰야 한다.
-- 사용자 수 10명 이하 가정을 전제로 다음 런타임 기준선은 `Vercel webhook + Vercel Cron primary + GitHub Actions backup/reconcile`이다.
-- Telegram command runtime은 polling이 아니라 webhook으로 전환할 예정이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 다음 구현 진입점이다.
+- 사용자 수 10명 이하 가정을 전제로 현재 런타임 기준선은 `Vercel webhook + Vercel Cron primary + GitHub Actions backup/reconcile`이다.
+- Telegram command runtime은 webhook으로 전환 가능한 상태이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 구현됐다.
+- `apps/telegram-bot/src/build-bot.ts`는 polling과 webhook 양쪽에서 공통으로 쓰는 command runtime entrypoint로 정리됐다.
+- Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화할 수 있다.
+- GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
 - GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `public web frontend=공개 상세 archive/feed`, `future authenticated web=포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
 - 현재 `apps/web`는 `Next.js App Router` 기반 공개 웹으로 전환됐고, Vercel 배포를 primary public frontend로 사용한다.

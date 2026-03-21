@@ -88,3 +88,10 @@ CREATE TABLE IF NOT EXISTS "reports" (
   "content_markdown" text NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS "telegram_conversation_states" (
+  "telegram_user_id" text PRIMARY KEY NOT NULL,
+  "state" jsonb NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+);

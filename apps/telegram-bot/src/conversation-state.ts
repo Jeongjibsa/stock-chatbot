@@ -78,6 +78,12 @@ export type ConversationTransitionResult =
       status: "completed";
     };
 
+export type ConversationStateStore = {
+  clear(userKey: string): Promise<void> | void;
+  get(userKey: string): Promise<ConversationState | null> | ConversationState | null;
+  set(userKey: string, state: ConversationState): Promise<void> | void;
+};
+
 export class InMemoryConversationStateStore {
   private readonly stateByUserKey = new Map<string, ConversationState>();
 

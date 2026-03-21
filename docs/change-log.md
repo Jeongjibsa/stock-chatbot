@@ -110,6 +110,8 @@
 | CHG-0083 | 2026-03-21 | ADD | `reports` 읽기 모델과 공개 브리핑 저장 경로를 추가하고, `apps/web`를 Next.js App Router 기반 공개 feed/detail 웹으로 전환했으며, Telegram 공개 상세 링크와 README/운영 문서를 새 공개 웹 기준으로 갱신 | PRD, Plan, README, Change Log, Context, Workflow, Code, Tests | yes |
 | CHG-0084 | 2026-03-21 | ADD | `apps/web` Vercel 배포를 위해 Node 24 engine 선언, `vercel.json`, 웹 전용 `.env.local.example`, Neon 친화 SSL 연결 설정, Vercel runbook을 추가하고 GitHub Actions의 `PUBLIC_BRIEFING_BASE_URL` 연동 기준을 문서화 | PRD, Plan, README, Change Log, Context, Code, Docs | yes |
 | CHG-0085 | 2026-03-21 | DECISION | 사용자 수 10명 이하 가정을 전제로 Telegram 명령 처리는 `Vercel webhook`, 일일 배치는 `Vercel Cron primary + GitHub Actions backup/reconcile` 하이브리드 구조로 전환하고, 기존 polling bot runtime은 단계적으로 제거하기로 결정 | PRD, Plan, Change Log, Context, Docs | yes |
+| CHG-0086 | 2026-03-21 | ADD | `apps/web`에 Telegram webhook route와 Vercel cron route를 추가하고, Telegram command 로직을 공유 `build-bot` runtime으로 정리했으며, GitHub Actions `Daily Report`를 Vercel reconcile backup 경로를 우선 사용하는 구조로 갱신 | PRD, Plan, README, Change Log, Context, Workflow, Code, Tests | yes |
+| CHG-0087 | 2026-03-21 | ADD | Telegram `setWebhook` 등록용 스크립트와 운영 절차를 추가해 polling 없이도 Vercel webhook 기반 Telegram command runtime을 배포 후 즉시 활성화할 수 있도록 정리 | PRD, Plan, README, Change Log, Context, Docs, Code | yes |
 
 ## 4. Open Change Notes
 

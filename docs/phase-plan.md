@@ -137,13 +137,13 @@
 
 ### Phase 7. Public Web Transition and Expansion
 
-- [-] Telegram polling runtime을 Vercel webhook 기반 command runtime으로 전환하는 설계 확정
-- [ ] `apps/web` 내부 Telegram webhook route contract 정의 및 구현
-- [ ] `apps/web` 내부 daily report cron route contract 정의 및 구현
-- [ ] `apps/telegram-bot` command 처리 로직을 webhook-compatible service로 이동
-- [ ] Telegram `setWebhook` 등록/갱신 및 smoke 검증 경로 정의
-- [ ] Vercel Cron을 primary daily scheduler로 전환
-- [ ] GitHub Actions `Daily Report`를 backup/reconcile/manual rerun 역할로 재편
+- [x] Telegram polling runtime을 Vercel webhook 기반 command runtime으로 전환하는 설계 확정
+- [x] `apps/web` 내부 Telegram webhook route contract 정의 및 구현
+- [x] `apps/web` 내부 daily report cron route contract 정의 및 구현
+- [x] `apps/telegram-bot` command 처리 로직을 webhook-compatible service로 이동
+- [x] Telegram `setWebhook` 등록/갱신 및 smoke 검증 경로 정의
+- [x] Vercel Cron을 primary daily scheduler로 전환
+- [x] GitHub Actions `Daily Report`를 backup/reconcile/manual rerun 역할로 재편
 - [x] 온디맨드 `/report` 요청 처리 추가
 - [x] 사용자별 예약 리포트 전송
 - [x] GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
@@ -161,13 +161,13 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 7`의 Telegram webhook 전환과 Vercel Cron/GitHub Actions 하이브리드 운영 전환 항목이다.
+현재 권장 시작점은 `Phase 7`의 웹 관리 콘솔과 운영 분석 기능이다.
 
 우선순위:
 
-1. Telegram webhook 전환
-2. Vercel Cron primary + GitHub Actions reconcile 전환
-3. 웹 관리 콘솔
+1. 웹 관리 콘솔
+2. 전략 성과 추적 및 백테스트
+3. 사용자 설정 고도화
 
 ## 6. Completion Log
 
@@ -222,3 +222,5 @@
 - 2026-03-21: `reports` 읽기 모델과 공개 브리핑 저장 경로를 추가하고, `apps/web`를 Next.js App Router 기반 공개 feed/detail 웹으로 전환했으며, Telegram 공개 상세 링크와 README를 새 공개 웹 기준으로 갱신
 - 2026-03-21: `apps/web`용 Vercel 배포 설정, Neon 친화적 웹 DB 연결 옵션, 웹 전용 env 예시, 배포 runbook을 추가하고 `PUBLIC_BRIEFING_BASE_URL` 운영 기준을 문서화
 - 2026-03-21: 사용자 수 10명 이하 조건을 전제로 Telegram command runtime을 Vercel webhook으로, daily report는 `Vercel Cron primary + GitHub Actions backup/reconcile` 하이브리드 구조로 전환하기로 결정하고 관련 Phase 7 작업을 최우선으로 재정렬
+- 2026-03-21: `apps/web`에 `/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile` route를 추가하고, `apps/telegram-bot/src/build-bot.ts`를 polling/webhook 공용 command runtime entrypoint로 정리
+- 2026-03-21: `pnpm telegram:webhook:register` 기반 `setWebhook` 등록 절차를 추가하고, GitHub Actions `Daily Report`를 `VERCEL_RECONCILE_URL + CRON_SECRET` 기반 backup/reconcile 우선 구조로 재편

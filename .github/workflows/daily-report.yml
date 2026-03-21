@@ -2,7 +2,7 @@ name: Daily Report
 
 on:
   schedule:
-    - cron: "7 * * * *"
+    - cron: "20 0 * * *"
   workflow_dispatch:
     inputs:
       report_run_date:
@@ -94,6 +94,7 @@ jobs:
     timeout-minutes: 20
 
     env:
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DAILY_REPORT_TRIGGER_TOKEN: ${{ secrets.DAILY_REPORT_TRIGGER_TOKEN }}
       DAILY_REPORT_TRIGGER_URL: ${{ secrets.DAILY_REPORT_TRIGGER_URL }}
@@ -106,11 +107,18 @@ jobs:
       REPORT_RUN_DATE: ""
       REPORT_TRIGGER_TYPE: ${{ github.event_name }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      VERCEL_RECONCILE_URL: ${{ vars.VERCEL_RECONCILE_URL }}
 
     steps:
       - name: Check daily report prerequisites
         id: preflight
         run: |
+          if [ -n "${VERCEL_RECONCILE_URL}" ] && [ -n "${CRON_SECRET}" ]; then
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            echo "mode=vercel-reconcile" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           if [ -n "${DAILY_REPORT_TRIGGER_URL}" ]; then
             echo "should_run=true" >> "$GITHUB_OUTPUT"
             echo "mode=external-trigger" >> "$GITHUB_OUTPUT"
@@ -163,7 +171,17 @@ jobs:
             -H "authorization: Bearer ${DAILY_REPORT_TRIGGER_TOKEN}" \
             -d "{\"triggerType\":\"${REPORT_TRIGGER_TYPE}\",\"reportRunDate\":\"${REPORT_RUN_DATE}\",\"source\":\"github-actions\"}"
 
+      - name: Trigger Vercel reconcile route
+        if: ${{ steps.preflight.outputs.mode == 'vercel-reconcile' }}
+        run: |
+          URL="${VERCEL_RECONCILE_URL}"
+          if [ -n "${REPORT_RUN_DATE}" ]; then
+            URL="${URL}?reportRunDate=${REPORT_RUN_DATE}"
+          fi
+          curl -fsS "${URL}" \
+            -H "authorization: Bearer ${CRON_SECRET}"
+
       - name: Skip daily report job
         if: ${{ steps.preflight.outputs.mode == 'skip-missing-database' }}
         run: |
-          echo "DATABASE_URL secret is not configured, so personal daily report delivery is skipped."
+          echo "Neither Vercel reconcile nor worker execution prerequisites are configured, so personal daily report delivery is skipped."

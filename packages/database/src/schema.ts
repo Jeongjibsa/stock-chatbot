@@ -130,6 +130,13 @@ export const reports = pgTable("reports", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 });
 
+export const telegramConversationStates = pgTable("telegram_conversation_states", {
+  telegramUserId: text("telegram_user_id").primaryKey(),
+  state: jsonb("state").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+});
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
@@ -142,3 +149,7 @@ export type ReportRunRecord = typeof reportRuns.$inferSelect;
 export type NewReportRunRecord = typeof reportRuns.$inferInsert;
 export type ReportRecord = typeof reports.$inferSelect;
 export type NewReportRecord = typeof reports.$inferInsert;
+export type TelegramConversationStateRecord =
+  typeof telegramConversationStates.$inferSelect;
+export type NewTelegramConversationStateRecord =
+  typeof telegramConversationStates.$inferInsert;
