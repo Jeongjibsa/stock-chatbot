@@ -70,6 +70,7 @@
 | CHG-0043 | 2026-03-21 | UPDATE | 텔레그램 리포트 구조를 `오늘의 브리핑 (YYYY-MM-DD 기준) -> 한 줄 요약 -> 거시 시장 스냅샷 -> 주요 지표 변동 요약 -> 보유 종목 -> 종목 기사 및 이벤트 -> 퀀트 -> 리스크 체크리스트 -> 시장/매크로/자금 브리핑 -> 주요 일정 및 이벤트 브리핑 -> 면책 문구` 순서로 재편하고, 거시 시장 스냅샷 정렬 규칙을 명시 | PRD, Change Log, Context, Code, Prompt | yes |
 | CHG-0044 | 2026-03-21 | UPDATE | MVP 전달 전략을 `텔레그램 요약본 + GitHub Pages 상세 브리핑`으로 확장하고, 공개 페이지에는 개인화된 보유 종목 동향/기사 요약을 제외하며 텔레그램 하단에 상세 페이지 링크를 포함하도록 PRD와 phase plan을 재편 | PRD, Plan, Change Log, Context | yes |
 | CHG-0045 | 2026-03-21 | UPDATE | 텔레그램 요약본 템플릿을 구분선, 행동 중심 한 줄 요약, 직관적 빈 상태 문구, 리스크/전략 우선 구조로 다듬고 LLM prompt에도 `시장 상태 판단 -> 행동 제안` 원칙을 반영 | PRD, Change Log, Context, Code, Prompt | yes |
+| CHG-0046 | 2026-03-21 | ADD | 규칙 기반 퀀트 스코어카드(`Macro / Trend / Event / Flow -> Total -> Action`)를 도입하고 daily report 경로에 연결해 텔레그램 리포트가 행동 중심 점수와 전략 bullet을 함께 렌더링하도록 확장 | PRD, Change Log, Context, Code, Prompt | yes |
 
 ## 4. Open Change Notes
 

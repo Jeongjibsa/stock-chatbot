@@ -1,6 +1,7 @@
 import type { LlmClient } from "./llm-client.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
+import type { QuantScorecard } from "./quant-scorecard.js";
 import {
   buildDailyReportPromptContract,
   parseDailyReportStructuredOutput
@@ -34,6 +35,7 @@ export class DailyReportCompositionService {
     }>;
     marketResults: MarketDataFetchResult[];
     newsBriefs: HoldingNewsBrief[];
+    quantScorecards: QuantScorecard[];
     quantScenarios: string[];
     riskCheckpoints: string[];
     runDate: string;
@@ -42,6 +44,7 @@ export class DailyReportCompositionService {
       holdings: input.holdings,
       marketResults: input.marketResults,
       newsBriefs: input.newsBriefs,
+      quantScorecards: input.quantScorecards,
       quantScenarios: input.quantScenarios,
       riskCheckpoints: input.riskCheckpoints,
       runDate: input.runDate

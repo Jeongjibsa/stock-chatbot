@@ -75,6 +75,12 @@ export {
   type QuantSignalType
 } from "./quant-signal-engine.js";
 export {
+  buildQuantScorecards,
+  toQuantStrategyBullets,
+  type QuantAction,
+  type QuantScorecard
+} from "./quant-scorecard.js";
+export {
   buildDailyReportPromptContract,
   parseDailyReportStructuredOutput,
   type DailyReportPromptInput,

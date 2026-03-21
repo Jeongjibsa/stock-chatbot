@@ -17,6 +17,20 @@ describe("report prompt contract", () => {
       ],
       marketResults: [],
       newsBriefs: [],
+      quantScorecards: [
+        {
+          companyName: "Apple Inc.",
+          symbol: "AAPL",
+          macroScore: -0.4,
+          trendScore: -0.4,
+          eventScore: 0.2,
+          flowScore: -0.1,
+          totalScore: -0.23,
+          action: "REDUCE",
+          actionSummary:
+            "Apple Inc.는 반등 시 비중 축소 또는 손절 기준 재점검이 우선입니다."
+        }
+      ],
       quantScenarios: ["분할 매수 관찰"],
       riskCheckpoints: ["손절 기준 재점검"],
       runDate: "2026-03-20"
@@ -32,6 +46,12 @@ describe("report prompt contract", () => {
       expect.objectContaining({
         holdings: [
           expect.objectContaining({
+            symbol: "AAPL"
+          })
+        ],
+        quantScorecards: [
+          expect.objectContaining({
+            action: "REDUCE",
             symbol: "AAPL"
           })
         ],

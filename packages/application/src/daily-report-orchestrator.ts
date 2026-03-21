@@ -1,6 +1,11 @@
 import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js";
 import type { DailyReportComposition } from "./daily-report-composition-service.js";
 import type { HoldingNewsBrief } from "./news.js";
+import type { QuantScorecard } from "./quant-scorecard.js";
+import {
+  buildQuantScorecards,
+  toQuantStrategyBullets
+} from "./quant-scorecard.js";
 import { renderTelegramDailyReport } from "./telegram-report-renderer.js";
 
 type PortfolioHoldingRepositoryPort = {
@@ -70,6 +75,7 @@ type ReportCompositionServicePort = {
     }>;
     marketResults: MarketDataFetchResult[];
     newsBriefs: HoldingNewsBrief[];
+    quantScorecards: QuantScorecard[];
     quantScenarios: string[];
     riskCheckpoints: string[];
     runDate: string;
@@ -163,6 +169,16 @@ export class DailyReportOrchestrator {
           }))
         )
       : [];
+    const quantScorecards = buildQuantScorecards({
+      holdings: holdings.map((holding) => ({
+        companyName: holding.companyName,
+        symbol: holding.symbol,
+        exchange: holding.exchange
+      })),
+      marketResults,
+      portfolioNewsBriefs
+    });
+    const quantScenarios = toQuantStrategyBullets(quantScorecards);
     let composition: DailyReportComposition | undefined;
     let compositionError: string | undefined;
 
@@ -176,7 +192,8 @@ export class DailyReportOrchestrator {
           })),
           marketResults,
           newsBriefs: portfolioNewsBriefs,
-          quantScenarios: [],
+          quantScorecards,
+          quantScenarios,
           riskCheckpoints: [],
           runDate: input.runDate
         });
@@ -198,7 +215,8 @@ export class DailyReportOrchestrator {
         exchange: holding.exchange
       })),
       marketResults,
-      portfolioNewsBriefs
+      portfolioNewsBriefs,
+      quantScorecards
     };
 
     if (composition?.oneLineSummary) {
@@ -235,6 +253,8 @@ export class DailyReportOrchestrator {
 
     if (composition?.strategyBullets) {
       renderInput.quantScenarios = composition.strategyBullets;
+    } else {
+      renderInput.quantScenarios = quantScenarios;
     }
 
     if (composition?.riskBullets) {

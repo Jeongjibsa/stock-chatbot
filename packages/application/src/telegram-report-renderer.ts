@@ -1,5 +1,6 @@
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
+import type { QuantScorecard } from "./quant-scorecard.js";
 
 const SECTION_DIVIDER = "━━━━━━━━━━━━━━━";
 
@@ -23,6 +24,7 @@ export type TelegramReportRenderInput = {
   keyIndicatorSummaries?: string[];
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs?: HoldingNewsBrief[];
+  quantScorecards?: QuantScorecard[];
   quantScenarios?: string[];
   riskCheckpoints?: string[];
   runDate: string;
@@ -79,7 +81,7 @@ export function renderTelegramDailyReport(
     "",
     SECTION_DIVIDER,
     "🧠 퀀트 기반 시그널 및 매매 아이디어",
-    ...renderScenarioLines(input.quantScenarios)
+    ...renderScenarioLines(input.quantScorecards, input.quantScenarios)
   );
   lines.push("", SECTION_DIVIDER, "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
   lines.push(
@@ -301,12 +303,46 @@ function renderPortfolioNews(
   return lines;
 }
 
-function renderScenarioLines(quantScenarios?: string[]): string[] {
-  if (!quantScenarios || quantScenarios.length === 0) {
+function renderScenarioLines(
+  quantScorecards?: QuantScorecard[],
+  quantScenarios?: string[]
+): string[] {
+  if (
+    (!quantScorecards || quantScorecards.length === 0) &&
+    (!quantScenarios || quantScenarios.length === 0)
+  ) {
     return ["• 규칙 기반 점수 산출 전입니다."];
   }
 
-  return quantScenarios.map((scenario) => `• ${scenario}`);
+  const lines: string[] = [];
+
+  if (quantScorecards && quantScorecards.length > 0) {
+    for (const scorecard of quantScorecards) {
+      lines.push(
+        `• ${scorecard.companyName}${scorecard.symbol ? ` (${scorecard.symbol})` : ""}`
+      );
+      lines.push(
+        `  Macro: ${formatSignedScore(scorecard.macroScore)} / Trend: ${formatSignedScore(scorecard.trendScore)} / Event: ${formatSignedScore(scorecard.eventScore)} / Flow: ${formatSignedScore(scorecard.flowScore)}`
+      );
+      lines.push(
+        `  → Total: ${formatSignedScore(scorecard.totalScore)} → ${scorecard.action}`
+      );
+      lines.push(`  → ${scorecard.actionSummary}`);
+    }
+  }
+
+  if (quantScenarios && quantScenarios.length > 0) {
+    if (lines.length > 0) {
+      lines.push("");
+      lines.push("• 전략");
+    }
+
+    for (const scenario of quantScenarios) {
+      lines.push(`  • ${scenario}`);
+    }
+  }
+
+  return lines;
 }
 
 function renderRiskLines(riskCheckpoints?: string[]): string[] {
@@ -423,6 +459,10 @@ function formatChangeBadge(value?: number): string {
   }
 
   return `⚪■ 0.00%`;
+}
+
+function formatSignedScore(score: number): string {
+  return score > 0 ? `+${score.toFixed(2)}` : score.toFixed(2);
 }
 
 function formatSentimentBadge(sentiment: HoldingNewsBrief["events"][number]["sentiment"]): string {

@@ -38,6 +38,20 @@ describe("DailyReportCompositionService", () => {
       ],
       marketResults: [],
       newsBriefs: [],
+      quantScorecards: [
+        {
+          companyName: "Apple Inc.",
+          symbol: "AAPL",
+          macroScore: -0.4,
+          trendScore: -0.4,
+          eventScore: 0.2,
+          flowScore: -0.1,
+          totalScore: -0.23,
+          action: "REDUCE",
+          actionSummary:
+            "Apple Inc.는 반등 시 비중 축소 또는 손절 기준 재점검이 우선입니다."
+        }
+      ],
       quantScenarios: [],
       riskCheckpoints: [],
       runDate: "2026-03-21"

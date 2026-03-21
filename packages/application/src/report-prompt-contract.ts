@@ -1,5 +1,6 @@
 import type { HoldingNewsBrief } from "./news.js";
 import type { MarketDataFetchResult } from "./market-data.js";
+import type { QuantScorecard } from "./quant-scorecard.js";
 
 export type DailyReportPromptInput = {
   holdings: Array<{
@@ -9,6 +10,7 @@ export type DailyReportPromptInput = {
   }>;
   marketResults: MarketDataFetchResult[];
   newsBriefs: HoldingNewsBrief[];
+  quantScorecards: QuantScorecard[];
   quantScenarios: string[];
   riskCheckpoints: string[];
   runDate: string;
@@ -52,6 +54,7 @@ export function buildDailyReportPromptContract(
       "배열 각 항목은 텔레그램에서 바로 bullet로 붙일 수 있게 독립 문장으로 작성한다.",
       "oneLineSummary는 가능하면 `현재 시장 상태 -> 권장 대응` 형태의 행동 문장으로 작성한다.",
       "strategyBullets는 요약보다 더 구체적인 행동 제안이 되도록 작성하고, 필요하면 점수나 상태 판단을 먼저 제시한 뒤 대응을 제안한다.",
+      "입력의 quantScorecards가 있으면 그 점수와 action을 존중해 strategyBullets의 톤과 대응 강도를 맞춘다.",
       "riskBullets는 사용자가 당장 체크해야 할 위험요인을 짧고 직관적으로 정리한다.",
       "marketBullets는 최대 4개, macroBullets는 최대 4개, fundFlowBullets는 최대 3개, eventBullets는 최대 5개, holdingTrendBullets는 최대 3개, articleSummaryBullets는 최대 4개, strategyBullets는 최대 3개, riskBullets는 최대 3개로 제한한다.",
       "시장 섹션에는 S&P500, NASDAQ, KOSPI, KOSDAQ, DOW, VIX 관련 방향 해석을 우선 반영한다.",
@@ -131,6 +134,17 @@ function buildPromptPayload(input: DailyReportPromptInput) {
         sentiment: event.sentiment,
         confidence: event.confidence
       }))
+    })),
+    quantScorecards: input.quantScorecards.map((scorecard) => ({
+      companyName: scorecard.companyName,
+      symbol: scorecard.symbol ?? null,
+      macroScore: scorecard.macroScore,
+      trendScore: scorecard.trendScore,
+      eventScore: scorecard.eventScore,
+      flowScore: scorecard.flowScore,
+      totalScore: scorecard.totalScore,
+      action: scorecard.action,
+      actionSummary: scorecard.actionSummary
     })),
     quantScenarios: input.quantScenarios,
     riskCheckpoints: input.riskCheckpoints
