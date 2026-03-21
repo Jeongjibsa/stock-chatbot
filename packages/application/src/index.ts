@@ -71,6 +71,23 @@ export {
   type DailyReportStructuredOutput
 } from "./report-prompt-contract.js";
 export {
+  buildMockTelegramReportPreview,
+  type MockReportPreview
+} from "./mock-report-preview.js";
+export {
+  MockTelegramDeliveryAdapter,
+  type DeliveryChannel,
+  type ReportDeliveryAdapter,
+  type ReportDeliveryRequest,
+  type ReportDeliveryResult
+} from "./report-delivery.js";
+export {
+  toLatestReportView,
+  toReportHistoryItem,
+  type LatestReportView,
+  type ReportHistoryItem
+} from "./report-query-model.js";
+export {
   DEFAULT_DAILY_REPORT_PROMPT_VERSION,
   DEFAULT_DAILY_REPORT_SKILL_VERSION
 } from "./report-versioning.js";

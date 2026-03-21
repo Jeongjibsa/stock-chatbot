@@ -38,7 +38,7 @@
 | Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | done |
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | done |
 | Phase 5 | 하네스, 평가, 운영 자동화 구축 | in progress |
-| Phase 6 | 멀티채널 확장 준비 | backlog |
+| Phase 6 | 멀티채널 확장 준비 | in progress |
 | Phase 7 | 선택형 확장 기능 구축 | backlog |
 
 ## 4. Detailed Plan
@@ -107,10 +107,10 @@
 
 ### Phase 6. Multi-Channel Readiness
 
-- [ ] 텔레그램 adapter와 core application service 경계 고정
-- [ ] future web/app API 계약 초안 정의
+- [x] 텔레그램 adapter와 core application service 경계 고정
+- [x] future web/app API 계약 초안 정의
 - [ ] 사용자 계정 확장 전략 초안 정의
-- [ ] 공통 리포트 조회 모델과 히스토리 모델 정의
+- [x] 공통 리포트 조회 모델과 히스토리 모델 정의
 
 ### Phase 7. Optional Expansion
 
@@ -124,13 +124,13 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 5`의 남은 항목이다.
+현재 권장 시작점은 `Phase 5`와 `Phase 6`의 남은 항목이다.
 
 우선순위:
 
 1. 주기 보고서 자동화 설계 고도화
-2. 텔레그램 adapter와 core application service 경계 문서 재확인
-3. future web/app API 계약 초안 정의
+2. 사용자 계정 확장 전략 초안 정의
+3. mock delivery를 실제 Telegram/provider adapter로 교체 가능한 런타임 설계 정리
 
 ## 6. Completion Log
 
@@ -154,3 +154,4 @@
 - 2026-03-20: daily report orchestrator, report run log 저장 구조, 텔레그램 렌더러, 중복 실행 방지, partial failure 규칙, worker 수직 slice 연결, unit/integration 테스트 추가 완료
 - 2026-03-20: Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진, worker 뉴스 연동 추가 완료
 - 2026-03-20: harness fixture 포맷, 일 배치/뉴스/퀀트/report 샘플 fixture, grader 기준, snapshot 비교 스크립트, verify 연동, prompt/skill version 기록 연결 완료
+- 2026-03-21: mock telegram delivery adapter, reusable report preview 템플릿, future web/app API 계약 초안, 공통 report query model 추가 완료

@@ -2,7 +2,10 @@ import "dotenv/config";
 
 import { fileURLToPath } from "node:url";
 import { Bot } from "grammy";
-import { StaticInstrumentResolver } from "@stock-chatbot/application";
+import {
+  buildMockTelegramReportPreview,
+  StaticInstrumentResolver
+} from "@stock-chatbot/application";
 
 import {
   advanceConversation,
@@ -58,7 +61,8 @@ async function main(): Promise<void> {
         "/portfolio_add",
         "/portfolio_remove",
         "/market_add",
-        "/market_items"
+        "/market_items",
+        "/mock_report"
       ].join("\n")
     );
   });
@@ -70,7 +74,8 @@ async function main(): Promise<void> {
         "/portfolio_add",
         "/portfolio_remove",
         "/market_add",
-        "/market_items"
+        "/market_items",
+        "/mock_report"
       ].join("\n")
     );
   });
@@ -93,6 +98,10 @@ async function main(): Promise<void> {
     await context.reply(
       "시장 지표 조회는 저장 계층이 준비됐고, 다음 단계에서 텔레그램 응답과 연결할 예정이야."
     );
+  });
+
+  bot.command("mock_report", async (context) => {
+    await context.reply(buildMockTelegramReportPreview().renderedText);
   });
 
   bot.on("message:text", async (context) => {

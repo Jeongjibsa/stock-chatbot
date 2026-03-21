@@ -68,8 +68,19 @@
 - `/portfolio_remove`
 - `/market_add`
 - `/market_items`
+- `/mock_report`
 
 `/portfolio_add`, `/portfolio_remove`, `/market_add`는 in-memory 대화 상태 저장소 기반으로 단계별 입력 플로우를 유지한다.
+`/mock_report`는 실제 Telegram provider 연동 없이 현재 리포트 템플릿을 미리보기로 보여준다.
+
+## Mock Contracts
+
+- `GET /v1/reports/:userId/latest`
+  - future web/app용 latest report 조회 계약 초안
+- `GET /v1/reports/:userId/history`
+  - future web/app용 report history 조회 계약 초안
+- `GET /v1/mock/telegram/daily-report`
+  - mock telegram delivery preview
 
 ## External Keys
 
