@@ -13,6 +13,7 @@
 ## 2. Current Decision
 
 - 2026-03-20 기준 기본 LLM 공급자는 `OpenAI`이고 기본 호출 API 기준선은 `Responses API`다.
+- 2026-03-21 기준 `Gemini`용 첫 adapter가 추가됐고, worker는 `LLM_PROVIDER=openai|google`와 API key 존재 여부를 기준으로 공급자를 선택할 수 있다.
 - 구현은 `provider profile + task routing policy` 구조로 유지해 Gemini 등 다른 공급자로 쉽게 교체할 수 있어야 한다.
 - 텔레그램 command 입력 플로우 자체는 LLM 없이 규칙 기반으로 유지한다.
 - 수치 계산과 데이터 정합성 검증은 코드가 담당하고, LLM은 요약/설명/리포트 문장 조합에만 사용한다.
@@ -72,6 +73,7 @@
 - Gemini나 다른 공급자를 붙일 때도 호출 인터페이스는 공통 request/response contract를 유지한다.
 - 공급자별 SDK 호출 차이는 adapter layer에서만 흡수한다.
 - structured output이 native가 아니면 adapter에서 schema validation을 수행한다.
+- 현재 Gemini adapter는 공식 `generateContent` REST 경로를 사용하고, `system_instruction`과 `generationConfig.responseMimeType=application/json`을 통해 현재 structured output contract를 맞춘다.
 
 ### 6.3 Background Mode
 
@@ -107,13 +109,14 @@
 - `market-report-composition` prompt v3가 텔레그램 템플릿 구조와 직접 매핑되는 structured output 계약으로 구현됐다.
 - `DailyReportCompositionService`가 실제 daily report worker 경로에 연결됐다.
 - `OPENAI_API_KEY`가 없거나 composition 단계가 실패하면 기존 규칙 기반 renderer fallback으로 계속 생성한다.
+- `GEMINI_API_KEY`와 `LLM_PROVIDER=google`를 설정하면 같은 worker 경로에서 Gemini 모델을 바로 사용할 수 있다.
 
 ## 9. Open Questions
 
 - 배치 API를 후속 비용 최적화 수단으로 도입할지
 - 리포트 조합 fallback을 항상 둘지, 장애 시에만 둘지
 - structured output 스키마를 어떤 패키지에 둘지
-- Gemini나 다른 공급자용 첫 adapter를 언제 추가할지
+- Gemini adapter에 generationConfig나 safety 설정을 얼마나 노출할지
 
 ## 10. Official References
 
@@ -122,3 +125,6 @@
 - [GPT-5 nano model](https://platform.openai.com/docs/models/gpt-5-nano)
 - [GPT-5 mini model](https://platform.openai.com/docs/models/gpt-5-mini)
 - [GPT-5.1 model](https://platform.openai.com/docs/models/gpt-5.1)
+- [Gemini API text generation](https://ai.google.dev/gemini-api/docs/text-generation)
+- [Gemini API libraries](https://ai.google.dev/gemini-api/docs/sdks)
+- [Gemini API release notes](https://ai.google.dev/gemini-api/docs/changelog)

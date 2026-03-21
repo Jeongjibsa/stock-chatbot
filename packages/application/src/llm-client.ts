@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 
 import {
+  GOOGLE_PROVIDER_PROFILE,
   getLlmPolicy,
   OPENAI_PROVIDER_PROFILE,
   type LlmExecutionMode,
@@ -46,6 +47,21 @@ type OpenAiResponsesApi = {
     id?: string;
     output_text?: string;
     status?: string;
+  }>;
+};
+
+type GoogleGenerateContentApi = {
+  generateContent(
+    params: Record<string, unknown>
+  ): Promise<{
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{
+          text?: string;
+        }>;
+      };
+      finishReason?: string;
+    }>;
   }>;
 };
 
@@ -113,8 +129,64 @@ export class OpenAiLlmClient implements LlmClient {
   }
 }
 
+export class GoogleGeminiLlmClient implements LlmClient {
+  private readonly generateContentApi: GoogleGenerateContentApi;
+  private readonly providerProfile: LlmProviderProfile;
+
+  constructor(options?: {
+    apiKey?: string;
+    fetchFn?: typeof fetch;
+    generateContentApi?: GoogleGenerateContentApi;
+    providerProfile?: LlmProviderProfile;
+  }) {
+    this.providerProfile = options?.providerProfile ?? GOOGLE_PROVIDER_PROFILE;
+
+    if (this.providerProfile.provider !== "google") {
+      throw new Error("GoogleGeminiLlmClient requires a Google provider profile");
+    }
+
+    if (options?.generateContentApi) {
+      this.generateContentApi = options.generateContentApi;
+      return;
+    }
+
+    const googleOptions: {
+      apiKey?: string;
+      fetchFn?: typeof fetch;
+    } = {};
+
+    if (options?.apiKey !== undefined) {
+      googleOptions.apiKey = options.apiKey;
+    }
+
+    if (options?.fetchFn !== undefined) {
+      googleOptions.fetchFn = options.fetchFn;
+    }
+
+    this.generateContentApi = createGoogleGenerateContentApi(googleOptions);
+  }
+
+  async generate(request: LlmGenerateRequest): Promise<LlmGenerateResponse> {
+    const policy = this.resolvePolicy(request);
+    const response = await this.generateContentApi.generateContent(
+      buildGoogleGenerateContentParams(request, policy)
+    );
+
+    return mapGoogleResponse(response, policy);
+  }
+
+  private resolvePolicy(request: LlmGenerateRequest): LlmPolicy {
+    return getLlmPolicy(request.task, {
+      allowBackground: false,
+      providerProfile: this.providerProfile
+    });
+  }
+}
+
 export function createLlmClient(options?: {
   apiKey?: string;
+  fetchFn?: typeof fetch;
+  generateContentApi?: GoogleGenerateContentApi;
   providerProfile?: LlmProviderProfile;
   responsesApi?: OpenAiResponsesApi;
 }): LlmClient {
@@ -123,6 +195,8 @@ export function createLlmClient(options?: {
   switch (providerProfile.provider) {
     case "openai":
       return new OpenAiLlmClient(options);
+    case "google":
+      return new GoogleGeminiLlmClient(options);
     default:
       throw new Error(
         `No LLM adapter is implemented yet for provider: ${providerProfile.provider}`
@@ -175,4 +249,118 @@ function mapOpenAiResponse(
   }
 
   return result;
+}
+
+function createGoogleGenerateContentApi(input: {
+  apiKey?: string;
+  fetchFn?: typeof fetch;
+}): GoogleGenerateContentApi {
+  if (!input.apiKey) {
+    throw new Error("GoogleGeminiLlmClient requires an API key");
+  }
+
+  const fetchFn = input.fetchFn ?? globalThis.fetch;
+
+  if (!fetchFn) {
+    throw new Error("fetch is not available");
+  }
+
+  return {
+    async generateContent(params: Record<string, unknown>) {
+      const model = String(params.model);
+      const payload = { ...params };
+      delete payload.model;
+
+      const response = await fetchFn(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-goog-api-key": input.apiKey
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gemini API request failed with status ${response.status}`);
+      }
+
+      return (await response.json()) as {
+        candidates?: Array<{
+          content?: {
+            parts?: Array<{
+              text?: string;
+            }>;
+          };
+          finishReason?: string;
+        }>;
+      };
+    }
+  };
+}
+
+
+function buildGoogleGenerateContentParams(
+  request: LlmGenerateRequest,
+  policy: LlmPolicy
+): Record<string, unknown> {
+  const params: Record<string, unknown> = {
+    model: policy.model,
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: request.input
+          }
+        ]
+      }
+    ],
+    generationConfig: {
+      responseMimeType: policy.requiresStructuredOutput
+        ? "application/json"
+        : "text/plain"
+    }
+  };
+
+  if (request.instructions) {
+    params.system_instruction = {
+      parts: [
+        {
+          text: request.instructions
+        }
+      ]
+    };
+  }
+
+  return params;
+}
+
+function mapGoogleResponse(
+  response: {
+    candidates?: Array<{
+      content?: {
+        parts?: Array<{
+          text?: string;
+        }>;
+      };
+      finishReason?: string;
+    }>;
+  },
+  policy: LlmPolicy
+): LlmGenerateResponse {
+  const outputText =
+    response.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text ?? "")
+      .join("") ?? "";
+
+  return {
+    provider: policy.provider,
+    model: policy.model,
+    executionMode: "synchronous",
+    outputText,
+    status: "completed"
+  };
 }

@@ -25,6 +25,7 @@ export {
 } from "./google-news-rss-adapter.js";
 export {
   createLlmClient,
+  GoogleGeminiLlmClient,
   OpenAiLlmClient,
   type LlmClient,
   type LlmGenerateRequest,
@@ -32,6 +33,7 @@ export {
 } from "./llm-client.js";
 export {
   createLlmProviderProfile,
+  GOOGLE_PROVIDER_PROFILE,
   getLlmPolicy,
   OPENAI_PROVIDER_PROFILE,
   type LlmApiStyle,

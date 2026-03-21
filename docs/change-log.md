@@ -73,6 +73,7 @@
 | CHG-0046 | 2026-03-21 | ADD | 규칙 기반 퀀트 스코어카드(`Macro / Trend / Event / Flow -> Total -> Action`)를 도입하고 daily report 경로에 연결해 텔레그램 리포트가 행동 중심 점수와 전략 bullet을 함께 렌더링하도록 확장 | PRD, Change Log, Context, Code, Prompt | yes |
 | CHG-0047 | 2026-03-21 | UPDATE | mock telegram report 기본 포트폴리오를 사용자 제공 한국 종목 예시(삼성전자, SK하이닉스, 현대차, 에코프로, 현대글로비스, HMM)로 교체하고 관련 테스트 기대값을 갱신 | Change Log, Context, Code | yes |
 | CHG-0048 | 2026-03-21 | UPDATE | 텔레그램 보유 종목 섹션과 퀀트 점수카드 종목 헤더에서 종목 코드를 제거해 회사명 중심으로 표시하도록 조정 | Change Log, Context, Code, Harness | yes |
+| CHG-0049 | 2026-03-21 | ADD | Gemini provider profile과 `generateContent` 기반 Google adapter, worker의 `LLM_PROVIDER`/`GEMINI_API_KEY` 선택 로직, env 템플릿, 관련 테스트와 문서를 추가해 OpenAI 외 Gemini 모델도 바로 사용할 수 있도록 준비 | Change Log, Context, LLM Plan, Code | yes |
 
 ## 4. Open Change Notes
 

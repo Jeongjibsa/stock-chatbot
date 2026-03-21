@@ -6,7 +6,9 @@ import {
   DEFAULT_DAILY_REPORT_PROMPT_VERSION,
   DEFAULT_DAILY_REPORT_SKILL_VERSION,
   FredMarketDataAdapter,
+  GOOGLE_PROVIDER_PROFILE,
   GoogleNewsRssAdapter,
+  OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
   YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
@@ -20,6 +22,7 @@ import {
 } from "@stock-chatbot/database";
 
 type Environment = Record<string, string | undefined>;
+type LlmProviderRuntime = "google" | "openai";
 
 type OrchestratorPort = {
   runForUser(input: {
@@ -75,6 +78,28 @@ export function readOpenAiApiKey(
   }
 
   return apiKey;
+}
+
+export function readGeminiApiKey(
+  env: Environment = process.env
+): string | undefined {
+  const apiKey = env.GEMINI_API_KEY;
+
+  if (!apiKey || apiKey === "replace-me") {
+    return undefined;
+  }
+
+  return apiKey;
+}
+
+export function readLlmProvider(
+  env: Environment = process.env
+): LlmProviderRuntime | undefined {
+  if (env.LLM_PROVIDER === "openai" || env.LLM_PROVIDER === "google") {
+    return env.LLM_PROVIDER;
+  }
+
+  return undefined;
 }
 
 export function readRunDate(env: Environment = process.env): string {
@@ -138,6 +163,8 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const databaseUrl = readDatabaseUrl(env);
   const fredApiKey = readFredApiKey(env);
   const openAiApiKey = readOpenAiApiKey(env);
+  const geminiApiKey = readGeminiApiKey(env);
+  const llmProvider = readLlmProvider(env);
   const runDate = readRunDate(env);
   const scheduleType = readScheduleType(env);
   const pool = createPool(databaseUrl);
@@ -157,9 +184,19 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
     userMarketWatchRepository: new UserMarketWatchItemRepository(db)
   };
 
-  if (openAiApiKey) {
+  const selectedProvider =
+    llmProvider ??
+    (openAiApiKey ? "openai" : geminiApiKey ? "google" : undefined);
+  const llmApiKey =
+    selectedProvider === "openai" ? openAiApiKey : selectedProvider === "google" ? geminiApiKey : undefined;
+
+  if (selectedProvider && llmApiKey) {
     const llmClient = createLlmClient({
-      apiKey: openAiApiKey
+      apiKey: llmApiKey,
+      providerProfile:
+        selectedProvider === "google"
+          ? GOOGLE_PROVIDER_PROFILE
+          : OPENAI_PROVIDER_PROFILE
     });
 
     orchestratorDependencies.portfolioNewsBriefService =

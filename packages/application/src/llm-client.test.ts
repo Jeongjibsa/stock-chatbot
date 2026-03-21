@@ -2,10 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   createLlmClient,
+  GoogleGeminiLlmClient,
   OpenAiLlmClient,
   type LlmGenerateRequest
 } from "./llm-client.js";
-import { createLlmProviderProfile, OPENAI_PROVIDER_PROFILE } from "./llm-policy.js";
+import {
+  createLlmProviderProfile,
+  GOOGLE_PROVIDER_PROFILE,
+  OPENAI_PROVIDER_PROFILE
+} from "./llm-policy.js";
 
 describe("OpenAiLlmClient", () => {
   it("maps a synchronous response through the generic client interface", async () => {
@@ -100,7 +105,7 @@ describe("OpenAiLlmClient", () => {
     });
   });
 
-  it("fails fast for unsupported providers in the generic factory", () => {
+  it("maps a Gemini generateContent response through the generic client interface", async () => {
     const googleProfile = createLlmProviderProfile({
       provider: "google",
       apiStyle: "response-oriented",
@@ -115,12 +120,55 @@ describe("OpenAiLlmClient", () => {
         "market-report-fallback": "gemini-strong-fallback"
       }
     });
+    const client = new GoogleGeminiLlmClient({
+      providerProfile: googleProfile,
+      generateContentApi: {
+        generateContent: vi.fn(async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: "{\"ok\":true}" }]
+              },
+              finishReason: "STOP"
+            }
+          ]
+        }))
+      }
+    });
 
-    expect(() =>
-      createLlmClient({
-        providerProfile: googleProfile
-      })
-    ).toThrow("No LLM adapter is implemented yet");
+    const response = await client.generate({
+      task: "news-summary",
+      input: "input text",
+      instructions: "return JSON"
+    });
+
+    expect(response).toMatchObject({
+      provider: "google",
+      model: "gemini-balanced-summary",
+      executionMode: "synchronous",
+      outputText: "{\"ok\":true}",
+      status: "completed"
+    });
+  });
+
+  it("creates a Gemini client from the generic factory", () => {
+    const client = createLlmClient({
+      apiKey: "gemini-key",
+      providerProfile: GOOGLE_PROVIDER_PROFILE,
+      generateContentApi: {
+        generateContent: vi.fn(async () => ({
+          candidates: [
+            {
+              content: {
+                parts: [{ text: "ok" }]
+              }
+            }
+          ]
+        }))
+      }
+    });
+
+    expect(client).toBeInstanceOf(GoogleGeminiLlmClient);
   });
 
   it("creates an OpenAI client from the generic factory", () => {

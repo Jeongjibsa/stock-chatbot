@@ -26,6 +26,8 @@ public repository 기준으로 아래 workflow를 사용한다.
 
 - `DATABASE_URL`
 - `FRED_API_KEY`
+- `GEMINI_API_KEY`
+- `LLM_PROVIDER`
 - `OPENAI_API_KEY`
 - `REDIS_URL`
 - `TELEGRAM_BOT_TOKEN`
@@ -120,8 +122,12 @@ smoke test는 먼저 `getMe`로 봇 신원을 검증하고, 이어서 현재 템
 
 ## External Keys
 
+- `LLM_PROVIDER`
+  - `openai` 또는 `google`
 - `OPENAI_API_KEY`
   - OpenAI adapter 사용 시 필요
+- `GEMINI_API_KEY`
+  - Gemini adapter 사용 시 필요
 - `FRED_API_KEY`
   - FRED 기반 시장 데이터 어댑터 사용 시 필요
 - Yahoo Finance 지수 시세는 별도 API 키 없이 scraping 기반 chart endpoint를 사용

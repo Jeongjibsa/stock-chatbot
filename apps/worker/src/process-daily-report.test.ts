@@ -8,6 +8,8 @@ import {
   processDailyReportJob,
   readDatabaseUrl,
   readFredApiKey,
+  readGeminiApiKey,
+  readLlmProvider,
   readOpenAiApiKey,
   readRunDate,
   readScheduleType
@@ -72,5 +74,10 @@ describe("processDailyReportJob", () => {
     expect(readFredApiKey({ FRED_API_KEY: "fred-key" })).toBe("fred-key");
     expect(readOpenAiApiKey({})).toBeUndefined();
     expect(readOpenAiApiKey({ OPENAI_API_KEY: "openai-key" })).toBe("openai-key");
+    expect(readGeminiApiKey({})).toBeUndefined();
+    expect(readGeminiApiKey({ GEMINI_API_KEY: "gemini-key" })).toBe("gemini-key");
+    expect(readLlmProvider({})).toBeUndefined();
+    expect(readLlmProvider({ LLM_PROVIDER: "google" })).toBe("google");
+    expect(readLlmProvider({ LLM_PROVIDER: "openai" })).toBe("openai");
   });
 });
