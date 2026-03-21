@@ -1,0 +1,17 @@
+{
+  "id": "portfolio-news-deduped-articles",
+  "suite": "portfolio_news_cases",
+  "description": "같은 원문 URL의 중복 기사는 canonical URL 기준으로 하나만 남긴다.",
+  "input": {
+    "holding": {
+      "companyName": "Apple",
+      "symbol": "AAPL",
+      "exchange": "NASDAQ"
+    },
+    "articles": 2
+  },
+  "expected": {
+    "dedupedArticles": 1,
+    "eventCount": 1
+  }
+}

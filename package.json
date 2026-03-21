@@ -10,11 +10,14 @@
     "dev:worker": "pnpm --filter @stock-chatbot/worker dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "harness:check": "pnpm harness:fixtures && pnpm harness:snapshots",
+    "harness:fixtures": "node scripts/harness/validate-fixtures.mjs",
+    "harness:snapshots": "node scripts/harness/compare-snapshots.mjs",
     "lint": "eslint .",
     "test": "vitest run",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:watch": "vitest",
-    "verify": "pnpm lint && pnpm typecheck && pnpm test && docker compose config && docker compose --profile app config",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm harness:check && docker compose config && docker compose --profile app config",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {

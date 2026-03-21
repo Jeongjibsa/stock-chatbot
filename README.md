@@ -36,6 +36,8 @@
   - Docker PostgreSQL 기반 integration test 실행
 - `make verify`
   - lint, typecheck, test, compose 검증을 한 번에 실행
+- `make harness-check`
+  - 하네스 fixture 형식과 스냅샷 기준선 검증
 - `make compose-validate`
   - Compose 설정 검증
 - `make dev-api`
@@ -81,7 +83,16 @@
   - BullMQ scheduler cron pattern
 - `REPORT_TIMEZONE`
   - 스케줄 계산 타임존
+- `REPORT_RUN_DATE`
+  - 특정 날짜로 job을 재현할 때만 선택적으로 사용
 
 ## Validation Policy
 
 구현 변경 후 기본 검증 명령은 `make verify`다. DB나 저장 계층을 바꾸면 `make test-integration`까지 함께 실행한다.
+
+## Harness
+
+- fixture 위치: `harness/fixtures`
+- grader 기준: `harness/graders/report-structure-grader.md`
+- snapshot 위치: `harness/snapshots`
+- 검증 명령: `make harness-check`

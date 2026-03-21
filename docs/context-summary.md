@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -54,15 +54,23 @@
 
 - `Phase 1`은 완료됐다.
 - `Phase 2`는 완료됐다.
-- `Phase 3`가 현재 다음 구현 시작점이다.
+- `Phase 3`는 완료됐다.
+- `Phase 4`는 완료됐다.
+- `Phase 5`는 진행 중이다.
 - `Phase 2`에서 사용자 모델, 포트폴리오 보유 종목, 기본 시장 지표 카탈로그, 사용자별 시장 지표 override에 대한 Drizzle 저장 계층과 unit/integration 테스트가 추가됐다.
 - application 계층에는 정적 alias registry와 코드 정규화 기반의 포트폴리오/시장 지표 resolver가 추가됐다.
 - application 계층에는 task별 provider-agnostic LLM 라우팅 정책 함수가 추가됐다.
 - application 계층에는 provider-agnostic LLM client interface와 OpenAI adapter 초안이 추가됐다.
 - application 계층에는 FRED 기반 market data adapter와 source key 매핑이 추가됐다.
+- application 계층에는 daily report orchestrator와 텔레그램 렌더러가 추가됐다.
+- application 계층에는 Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진이 추가됐다.
 - worker에는 BullMQ job scheduler 기반 오전 9시 트리거와 env 기반 패턴/타임존 설정이 추가됐다.
+- worker에는 뉴스 brief 연동과 prompt/skill version 기록 연결이 추가됐다.
+- database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.
 - telegram-bot에는 command별 in-memory 대화 상태 저장소와 상태 전이 로직이 추가됐다.
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
+- `Phase 4`는 뉴스 요약 및 퀀트 전략 엔진 구현 단계였고 현재 완료됐다.
+- `Phase 5`는 하네스, 평가, 운영 자동화 구축 단계이며 fixture, grader, snapshot 비교 흐름이 이미 들어갔다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
 - `Phase 7`은 온디맨드 `/report`, 웹 클라이언트, 모바일 앱 같은 후순위 확장 단계다.
 
@@ -80,7 +88,6 @@
 - 리포트 예약 전송을 사용자별로 확장할지
 - 포트폴리오 수량과 평균단가를 어느 수준까지 정확히 관리할지
 - 티커 및 지표 해석 계층에서 지원하지 않는 시장 지표 요청을 어떻게 폴백할지
-- OpenAI client wrapper를 어느 패키지에 둘지
 - Gemini용 첫 provider adapter를 바로 추가할지
 - 미래 앱/web 확장 시 인증과 계정 연결을 어떻게 설계할지
 

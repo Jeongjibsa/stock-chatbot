@@ -1,5 +1,6 @@
 import {
   boolean,
+  date,
   integer,
   numeric,
   pgTable,
@@ -86,6 +87,32 @@ export const userMarketWatchItems = pgTable(
   })
 );
 
+export const reportRuns = pgTable(
+  "report_runs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    runDate: date("run_date").notNull(),
+    scheduleType: text("schedule_type").notNull(),
+    status: text("status").notNull(),
+    reportText: text("report_text"),
+    errorMessage: text("error_message"),
+    promptVersion: text("prompt_version"),
+    skillVersion: text("skill_version"),
+    startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+    completedAt: timestamp("completed_at", { withTimezone: true })
+  },
+  (table) => ({
+    userRunDateScheduleUnique: unique("report_runs_user_run_date_schedule_type_unique").on(
+      table.userId,
+      table.runDate,
+      table.scheduleType
+    )
+  })
+);
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
@@ -94,3 +121,5 @@ export type MarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$infer
 export type NewMarketWatchCatalogItemRecord = typeof marketWatchCatalogItems.$inferInsert;
 export type UserMarketWatchItemRecord = typeof userMarketWatchItems.$inferSelect;
 export type NewUserMarketWatchItemRecord = typeof userMarketWatchItems.$inferInsert;
+export type ReportRunRecord = typeof reportRuns.$inferSelect;
+export type NewReportRunRecord = typeof reportRuns.$inferInsert;

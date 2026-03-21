@@ -1,0 +1,22 @@
+{
+  "id": "daily-schedule-success",
+  "suite": "daily_schedule_cases",
+  "description": "오전 9시 스케줄이 정상 실행되어 시장 데이터와 뉴스 brief를 포함한 보고서를 만든다.",
+  "input": {
+    "runDate": "2026-03-20",
+    "scheduleType": "daily-9am",
+    "users": 1,
+    "marketResults": {
+      "ok": 3,
+      "error": 0
+    },
+    "newsBriefs": {
+      "ok": 1,
+      "error": 0
+    }
+  },
+  "expected": {
+    "jobStatus": "completed",
+    "userStatus": "completed"
+  }
+}

@@ -51,3 +51,18 @@ CREATE TABLE IF NOT EXISTS "user_market_watch_items" (
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "user_market_watch_items_user_item_code_unique" UNIQUE("user_id", "item_code")
 );
+
+CREATE TABLE IF NOT EXISTS "report_runs" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "run_date" date NOT NULL,
+  "schedule_type" text NOT NULL,
+  "status" text NOT NULL,
+  "report_text" text,
+  "error_message" text,
+  "prompt_version" text,
+  "skill_version" text,
+  "started_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "completed_at" timestamp with time zone,
+  CONSTRAINT "report_runs_user_run_date_schedule_type_unique" UNIQUE("user_id", "run_date", "schedule_type")
+);

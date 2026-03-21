@@ -35,9 +35,9 @@
 | Phase 0 | 문서 기준선과 운영 방식 확정 | done |
 | Phase 1 | 저장소/런타임 기본 구조 구축 | done |
 | Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | done |
-| Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | not started |
-| Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | not started |
-| Phase 5 | 하네스, 평가, 운영 자동화 구축 | not started |
+| Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | done |
+| Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | done |
+| Phase 5 | 하네스, 평가, 운영 자동화 구축 | in progress |
 | Phase 6 | 멀티채널 확장 준비 | backlog |
 | Phase 7 | 선택형 확장 기능 구축 | backlog |
 
@@ -76,34 +76,34 @@
 
 - [x] 시장 데이터 수집 어댑터 구현
 - [x] 오전 9시 스케줄 트리거 구현
-- [ ] 일 배치 보고서 실행 orchestration 구현
+- [x] 일 배치 보고서 실행 orchestration 구현
 - [x] provider-agnostic LLM client interface 및 OpenAI adapter 초안 구현
-- [ ] 중복 실행 방지 및 재시도 규칙 구현
-- [ ] 텔레그램 메시지 렌더링 포맷 구현
-- [ ] 실패/부분 성공 응답 규칙 구현
-- [ ] 실행 로그 저장 구조 구현
+- [x] 중복 실행 방지 및 재시도 규칙 구현
+- [x] 텔레그램 메시지 렌더링 포맷 구현
+- [x] 실패/부분 성공 응답 규칙 구현
+- [x] 실행 로그 저장 구조 구현
 
 ### Phase 4. News and Quant Intelligence
 
-- [ ] 종목별 뉴스 수집 어댑터 구현
-- [ ] 뉴스 정규화 및 중복 제거 구현
-- [ ] 이벤트 추출 및 요약 흐름 구현
-- [ ] structured output 기반 뉴스/리포트 prompt 계약 구현
-- [ ] 규칙 기반 퀀트 시그널 엔진 구현
-- [ ] 전략 시나리오 생성 규칙 구현
-- [ ] 리스크 체크포인트 생성 규칙 구현
+- [x] 종목별 뉴스 수집 어댑터 구현
+- [x] 뉴스 정규화 및 중복 제거 구현
+- [x] 이벤트 추출 및 요약 흐름 구현
+- [x] structured output 기반 뉴스/리포트 prompt 계약 구현
+- [x] 규칙 기반 퀀트 시그널 엔진 구현
+- [x] 전략 시나리오 생성 규칙 구현
+- [x] 리스크 체크포인트 생성 규칙 구현
 
 ### Phase 5. Harness and Automation
 
-- [ ] 일 배치 스케줄 fixture 포맷 정의
-- [ ] 정상 실행/중복 실행 방지/부분 실패 케이스 작성
-- [ ] 하네스 fixture 포맷 정의
-- [ ] 시장/뉴스/퀀트/report 케이스 fixture 작성
-- [ ] grader 기준 정의
-- [ ] 스냅샷 비교 흐름 구축
-- [ ] prompt/skill 버전 기록 체계 구축
+- [x] 일 배치 스케줄 fixture 포맷 정의
+- [x] 정상 실행/중복 실행 방지/부분 실패 케이스 작성
+- [x] 하네스 fixture 포맷 정의
+- [x] 시장/뉴스/퀀트/report 케이스 fixture 작성
+- [x] grader 기준 정의
+- [x] 스냅샷 비교 흐름 구축
+- [x] prompt/skill 버전 기록 체계 구축
 - [ ] 주기 보고서 자동화 설계 고도화
-- [ ] change-log 기반 컨텍스트 요약 및 롤업 흐름 구축
+- [x] change-log 기반 컨텍스트 요약 및 롤업 흐름 구축
 
 ### Phase 6. Multi-Channel Readiness
 
@@ -124,13 +124,13 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 3`다.
+현재 권장 시작점은 `Phase 5`의 남은 항목이다.
 
 우선순위:
 
-1. 일 배치 보고서 실행 orchestration 구현
-2. 중복 실행 방지 및 재시도 규칙 구현
-3. 텔레그램 메시지 렌더링 포맷 구현
+1. 주기 보고서 자동화 설계 고도화
+2. 텔레그램 adapter와 core application service 경계 문서 재확인
+3. future web/app API 계약 초안 정의
 
 ## 6. Completion Log
 
@@ -151,3 +151,6 @@
 - 2026-03-20: provider-agnostic LLM client interface와 OpenAI adapter 초안, unit 테스트, OpenAI SDK 의존성 및 env 템플릿 추가 완료
 - 2026-03-20: FRED 기반 시장 데이터 어댑터와 source key 매핑, partial failure 처리, unit 테스트, FRED env 템플릿 추가 완료
 - 2026-03-20: BullMQ job scheduler 기반 오전 9시 daily report 트리거와 env 기반 패턴/타임존 설정, unit 테스트 추가 완료
+- 2026-03-20: daily report orchestrator, report run log 저장 구조, 텔레그램 렌더러, 중복 실행 방지, partial failure 규칙, worker 수직 slice 연결, unit/integration 테스트 추가 완료
+- 2026-03-20: Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진, worker 뉴스 연동 추가 완료
+- 2026-03-20: harness fixture 포맷, 일 배치/뉴스/퀀트/report 샘플 fixture, grader 기준, snapshot 비교 스크립트, verify 연동, prompt/skill version 기록 연결 완료

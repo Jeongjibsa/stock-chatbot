@@ -67,6 +67,12 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-stockbot}:${POSTGRES_PASSWORD:-stockbot}@postgres:5432/${POSTGRES_DB:-stockbot}
       REDIS_URL: redis://redis:6379
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-replace-me}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-replace-me}
+      FRED_API_KEY: ${FRED_API_KEY:-replace-me}
+      ENABLE_DAILY_REPORT_SCHEDULER: ${ENABLE_DAILY_REPORT_SCHEDULER:-true}
+      DAILY_REPORT_PATTERN: ${DAILY_REPORT_PATTERN:-0 0 9 * * *}
+      REPORT_TIMEZONE: ${REPORT_TIMEZONE:-Asia/Seoul}
+      REPORT_RUN_DATE: ${REPORT_RUN_DATE:-}
 
 volumes:
   postgres-data:

@@ -50,6 +50,9 @@
 | CHG-0023 | 2026-03-20 | ADD | provider-agnostic LLM client interface와 OpenAI adapter 초안, unit 테스트, OpenAI SDK 의존성, env 템플릿, Vitest node_modules 제외 규칙을 추가 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0024 | 2026-03-20 | ADD | FRED 기반 시장 데이터 어댑터와 source key 매핑, partial failure 처리, unit 테스트, FRED env 템플릿을 추가 | PRD, Plan, Change Log, Context, Code | yes |
 | CHG-0025 | 2026-03-20 | ADD | BullMQ job scheduler 기반 오전 9시 트리거 모듈과 worker 연동, env 기반 패턴/타임존 설정, unit 테스트를 추가 | PRD, Plan, Change Log, Context, Code | yes |
+| CHG-0026 | 2026-03-20 | ADD | report_runs 저장 구조, 일 배치 report orchestration, 중복 실행 방지, 텔레그램 렌더러, partial failure 규칙, worker 수직 slice, compose/env 반영을 추가 | PRD, Plan, Change Log, Context, Code | yes |
+| CHG-0027 | 2026-03-20 | ADD | Google News RSS 기반 뉴스 수집, 기사 정규화/중복 제거, structured output 기반 뉴스/리포트 prompt 계약, 규칙 기반 quant/risk/scenario 엔진, worker 뉴스 brief 연동을 추가 | PRD, Plan, Change Log, Context, Code | yes |
+| CHG-0028 | 2026-03-20 | ADD | harness fixture 포맷과 샘플 케이스, grader 기준, snapshot 비교 스크립트, verify 연동, prompt/skill version 기록 연결을 추가 | PRD, Plan, Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

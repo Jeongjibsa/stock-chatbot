@@ -11,6 +11,7 @@ import {
 
 type Environment = Record<string, string | undefined>;
 
+import { buildDailyReportJobProcessor } from "./process-daily-report.js";
 import { getWorkerReadyMessage, scheduleDailyReportJob } from "./scheduler.js";
 
 export function readRedisUrl(env: Environment = process.env): string {
@@ -25,6 +26,7 @@ async function main(): Promise<void> {
   const queue = new Queue(REPORT_QUEUE_NAME, {
     connection
   });
+  const processDailyReport = buildDailyReportJobProcessor();
   const worker = new Worker(
     REPORT_QUEUE_NAME,
     async (job) => {
@@ -32,6 +34,12 @@ async function main(): Promise<void> {
         id: job.id,
         data: job.data
       });
+
+      if (job.name !== DAILY_REPORT_JOB_NAME) {
+        throw new Error(`Unsupported job name: ${job.name}`);
+      }
+
+      return processDailyReport();
     },
     {
       connection

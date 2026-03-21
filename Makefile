@@ -1,7 +1,7 @@
 SHELL := /bin/zsh
 COMPOSE := docker compose
 
-.PHONY: up down ps logs stack-up stack-down build typecheck lint format format-check test test-integration verify compose-validate dev-api dev-bot dev-worker test-up test-down
+.PHONY: up down ps logs stack-up stack-down build typecheck lint format format-check test test-integration verify compose-validate dev-api dev-bot dev-worker test-up test-down harness-check
 
 up:
 	$(COMPOSE) up -d postgres redis
@@ -45,6 +45,9 @@ typecheck:
 
 verify: compose-validate
 	pnpm verify
+
+harness-check:
+	pnpm harness:check
 
 compose-validate:
 	docker compose config
