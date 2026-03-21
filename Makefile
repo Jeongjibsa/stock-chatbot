@@ -50,8 +50,8 @@ harness-check:
 	pnpm harness:check
 
 compose-validate:
-	docker compose config
-	docker compose --profile app config
+	docker compose config -q
+	docker compose --profile app config -q
 
 dev-api:
 	pnpm dev:api

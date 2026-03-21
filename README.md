@@ -123,6 +123,8 @@ Actions용 일 배치 진입점:
 - `REPORT_TRIGGER_TYPE`
   - `schedule`, `workflow_dispatch`, `manual` 같은 실행 트리거 구분값
 
+`.env`를 셸에서 직접 불러야 할 때는 공백이 포함된 값이 있으므로 파일 안의 quoted 값을 유지해야 한다. Node 실행은 가능하면 `node --env-file=.env ...` 또는 앱 내부 `dotenv/config` 로딩을 사용한다.
+
 ## Validation Policy
 
 구현 변경 후 기본 검증 명령은 `make verify`다. DB나 저장 계층을 바꾸면 `make test-integration`까지 함께 실행한다.
