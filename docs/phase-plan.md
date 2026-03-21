@@ -37,7 +37,7 @@
 | Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | done |
 | Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | done |
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | done |
-| Phase 5 | 하네스, 평가, 운영 자동화 구축 | in progress |
+| Phase 5 | GitHub Actions 기반 CI/스케줄 운영 자동화 구축 | in progress |
 | Phase 6 | 멀티채널 확장 준비 | in progress |
 | Phase 7 | 선택형 확장 기능 구축 | backlog |
 
@@ -102,6 +102,12 @@
 - [x] grader 기준 정의
 - [x] 스냅샷 비교 흐름 구축
 - [x] prompt/skill 버전 기록 체계 구축
+- [ ] GitHub Actions CI workflow 정의
+- [ ] GitHub Actions scheduled workflow 정의
+- [ ] GitHub Actions `workflow_dispatch` 수동 실행 경로 정의
+- [ ] GitHub Actions secret/env 주입 규칙 정의
+- [ ] schedule 지연 대비 idempotency 및 지연 허용 규칙 정의
+- [ ] GitHub Actions에서 daily report runner를 호출하는 실행 진입점 구현
 - [ ] 주기 보고서 자동화 설계 고도화
 - [x] change-log 기반 컨텍스트 요약 및 롤업 흐름 구축
 
@@ -109,6 +115,7 @@
 
 - [x] 텔레그램 adapter와 core application service 경계 고정
 - [x] future web/app API 계약 초안 정의
+- [ ] GitHub Actions와 앱/웹 확장 시 런타임 분리 기준 정의
 - [ ] 사용자 계정 확장 전략 초안 정의
 - [x] 공통 리포트 조회 모델과 히스토리 모델 정의
 
@@ -116,6 +123,7 @@
 
 - [ ] 온디맨드 `/report` 요청 처리 추가
 - [ ] 사용자별 예약 리포트 전송
+- [ ] GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
 - [ ] 웹 클라이언트 구현
 - [ ] 모바일 앱 구현
 - [ ] 웹 관리 콘솔
@@ -124,13 +132,15 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 5`와 `Phase 6`의 남은 항목이다.
+현재 권장 시작점은 `Phase 5`의 GitHub Actions 운영 전환 항목이다.
 
 우선순위:
 
-1. 주기 보고서 자동화 설계 고도화
-2. 사용자 계정 확장 전략 초안 정의
-3. mock delivery를 실제 Telegram/provider adapter로 교체 가능한 런타임 설계 정리
+1. GitHub Actions CI workflow 정의
+2. GitHub Actions scheduled workflow 및 수동 실행 경로 정의
+3. GitHub Actions secret/env 주입 규칙과 delay/idempotency 규칙 정의
+4. 사용자 계정 확장 전략 초안 정의
+5. mock delivery를 실제 Telegram/provider adapter로 교체 가능한 런타임 설계 정리
 
 ## 6. Completion Log
 
@@ -157,3 +167,4 @@
 - 2026-03-21: mock telegram delivery adapter, reusable report preview 템플릿, future web/app API 계약 초안, 공통 report query model 추가 완료
 - 2026-03-21: 텔레그램 리포트를 PRD 6.4 순서에 맞게 재정렬하고 보유 종목 `전일 종가 → 현재가` 표기, 주요 지표 변동 요약, 면책 문구, 이란 전쟁 이슈 예시를 포함한 mock preview로 개선 완료
 - 2026-03-21: 텔레그램 리포트 전체 문체를 존댓말로 통일하고 면책 문구를 `❗` 한 줄 형식으로 조정, 관련 테스트와 하네스 스냅샷 갱신 완료
+- 2026-03-21: public GitHub repository를 기준으로 남은 운영 자동화 계획을 GitHub Actions 우선 전략으로 재편하고, CI/일 배치 스케줄/수동 실행/secret 관리/지연 허용 규칙을 다음 우선 작업으로 상향 조정

@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-20
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -46,6 +46,8 @@
 - 현재 기본 검증 루프는 실제로 `pnpm verify` 통과 상태다.
 - DB/저장 계층 변경 시 `make test-integration`까지 수행한다.
 - GitHub public repository와 `origin/main` push 기준선이 준비됐다.
+- 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
+- 초기 운영은 GitHub Actions CI + scheduled workflow + workflow_dispatch를 우선 사용하고, 정확한 정시성이나 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 항상 수행하는 기본 마감 단계다.
 - 분석 엔진이 커지면 Python 분석 서비스 분리를 고려한다.
@@ -71,6 +73,7 @@
 - 텔레그램 리포트는 PRD 6.4 순서를 따르도록 재정렬됐고, 보유 종목도 `전일 종가 → 현재가`와 등락률을 표시할 수 있게 확장됐다.
 - `주요 지표 변동 요약`과 `면책 문구`는 항상 출력되며, 현재 mock preview에는 중동 이란 전쟁 이슈를 당일 거시 이슈 예시로 포함한다.
 - 텔레그램 리포트 전체 문체는 존댓말로 통일됐고, 면책 문구는 별도 헤더 없이 `❗` 한 줄 형식으로 출력된다.
+- GitHub Actions schedule은 UTC cron과 기본 브랜치 기준으로 설계해야 하며, 정시 지연 가능성을 전제로 idempotency와 지연 허용 규칙을 함께 둔다.
 - worker에는 BullMQ job scheduler 기반 오전 9시 트리거와 env 기반 패턴/타임존 설정이 추가됐다.
 - worker에는 뉴스 brief 연동과 prompt/skill version 기록 연결이 추가됐다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.
