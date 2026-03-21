@@ -71,6 +71,7 @@
 | CHG-0044 | 2026-03-21 | UPDATE | MVP 전달 전략을 `텔레그램 요약본 + GitHub Pages 상세 브리핑`으로 확장하고, 공개 페이지에는 개인화된 보유 종목 동향/기사 요약을 제외하며 텔레그램 하단에 상세 페이지 링크를 포함하도록 PRD와 phase plan을 재편 | PRD, Plan, Change Log, Context | yes |
 | CHG-0045 | 2026-03-21 | UPDATE | 텔레그램 요약본 템플릿을 구분선, 행동 중심 한 줄 요약, 직관적 빈 상태 문구, 리스크/전략 우선 구조로 다듬고 LLM prompt에도 `시장 상태 판단 -> 행동 제안` 원칙을 반영 | PRD, Change Log, Context, Code, Prompt | yes |
 | CHG-0046 | 2026-03-21 | ADD | 규칙 기반 퀀트 스코어카드(`Macro / Trend / Event / Flow -> Total -> Action`)를 도입하고 daily report 경로에 연결해 텔레그램 리포트가 행동 중심 점수와 전략 bullet을 함께 렌더링하도록 확장 | PRD, Change Log, Context, Code, Prompt | yes |
+| CHG-0047 | 2026-03-21 | UPDATE | mock telegram report 기본 포트폴리오를 사용자 제공 한국 종목 예시(삼성전자, SK하이닉스, 현대차, 에코프로, 현대글로비스, HMM)로 교체하고 관련 테스트 기대값을 갱신 | Change Log, Context, Code | yes |
 
 ## 4. Open Change Notes
 

@@ -21,14 +21,64 @@ export function buildMockTelegramReportPreview(input?: {
       runDate,
       holdings: [
         {
-          companyName: "Apple Inc.",
-          currentPrice: 247.99,
-          changePercent: -0.39,
-          exchange: "US",
-          previousClose: 248.96,
-          symbol: "AAPL",
+          companyName: "삼성전자",
+          currentPrice: 182000,
+          changePercent: -1.08,
+          exchange: "KR",
+          previousClose: 184000,
+          symbol: "005930",
           trendSummary:
-            "이란 전쟁발 지정학 리스크와 대형 기술주 약세가 겹치며 전일 대비 조정받았습니다."
+            "평단 188,129원 기준 27주 보유 중이며, AI 메모리와 외국인 수급 변화에 민감한 구간입니다."
+        },
+        {
+          companyName: "SK하이닉스",
+          currentPrice: 934000,
+          changePercent: -1.58,
+          exchange: "KR",
+          previousClose: 949000,
+          symbol: "000660",
+          trendSummary:
+            "평단 947,250원 기준 7주 보유 중이며, HBM 수요 기대와 대형 반도체 변동성에 같이 노출돼 있습니다."
+        },
+        {
+          companyName: "현대차",
+          currentPrice: 228500,
+          changePercent: 1.33,
+          exchange: "KR",
+          previousClose: 225500,
+          symbol: "005380",
+          trendSummary:
+            "평단 224,500원 기준 6주 보유 중이며, 환율과 북미 판매 지표가 단기 방향성에 중요합니다."
+        },
+        {
+          companyName: "에코프로",
+          currentPrice: 149000,
+          changePercent: -2.61,
+          exchange: "KR",
+          previousClose: 153000,
+          symbol: "086520",
+          trendSummary:
+            "평단 152,200원 기준 10주 보유 중이며, 2차전지 밸류체인 수급과 변동성 영향이 큰 구간입니다."
+        },
+        {
+          companyName: "현대글로비스",
+          currentPrice: 229000,
+          changePercent: 1.10,
+          exchange: "KR",
+          previousClose: 226500,
+          symbol: "086280",
+          trendSummary:
+            "평단 224,500원 기준 6주 보유 중이며, 완성차 물동량과 해상 운임 흐름을 함께 볼 필요가 있습니다."
+        },
+        {
+          companyName: "HMM",
+          currentPrice: 20800,
+          changePercent: -1.42,
+          exchange: "KR",
+          previousClose: 21100,
+          symbol: "011200",
+          trendSummary:
+            "평단 21,100원 기준 100주 보유 중이며, 컨테이너 운임과 지정학 리스크에 따른 물류 차질 이슈를 같이 봐야 합니다."
         }
       ],
       keyIndicatorSummaries: [
@@ -119,18 +169,18 @@ export function buildMockTelegramReportPreview(input?: {
       portfolioNewsBriefs: [
         {
           holding: {
-            companyName: "Apple Inc.",
-            exchange: "US",
-            symbol: "AAPL"
+            companyName: "삼성전자",
+            exchange: "KR",
+            symbol: "005930"
           },
           articles: [],
           events: [
             {
               confidence: "high",
               eventType: "product",
-              headline: "신제품 공개",
+              headline: "HBM 및 AI 서버 메모리 수요 기대",
               sentiment: "positive",
-              summary: "수요 기대가 커지고 있습니다.",
+              summary: "AI 반도체 투자 심리가 유지되며 메모리 업황 기대가 이어지고 있습니다.",
               supportingArticleIds: ["mock-article-1"]
             }
           ],
@@ -139,20 +189,38 @@ export function buildMockTelegramReportPreview(input?: {
       ],
       quantScorecards: [
         {
-          companyName: "Apple Inc.",
-          symbol: "AAPL",
-          macroScore: -0.4,
-          trendScore: -0.4,
+          companyName: "삼성전자",
+          symbol: "005930",
+          macroScore: -0.6,
+          trendScore: -0.3,
           eventScore: 0.2,
           flowScore: -0.1,
-          totalScore: -0.23,
+          totalScore: -0.29,
           action: "REDUCE",
           actionSummary:
-            "Apple Inc.는 반등 시 비중 축소 또는 손절 기준 재점검이 우선입니다."
+            "삼성전자는 신규 매수보다 기존 비중 점검과 분할 대응이 우선입니다."
+        },
+        {
+          companyName: "현대차",
+          symbol: "005380",
+          macroScore: -0.4,
+          trendScore: 0.2,
+          eventScore: 0.1,
+          flowScore: 0.1,
+          totalScore: -0.09,
+          action: "HOLD",
+          actionSummary:
+            "현대차는 환율 수혜 기대가 남아 있어 성급한 추격보다 보유 관점 유지가 적절합니다."
         }
       ],
-      quantScenarios: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
-      riskCheckpoints: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."]
+      quantScenarios: [
+        "반도체 비중은 단기 반등 시 분할 축소 여부를 점검하시고, 자동차는 환율 수혜가 유지되는지 확인하며 보유 관점을 유지하시는 편이 좋습니다.",
+        "에코프로와 HMM처럼 변동성이 큰 종목은 신규 매수보다 손절 기준과 목표 비중을 먼저 정하시는 편이 좋습니다."
+      ],
+      riskCheckpoints: [
+        "중동 지정학 리스크가 원자재와 해운 변동성을 동시에 자극할 수 있습니다.",
+        "반도체주 비중이 높아 미국 기술주 조정이 국내 대형주로 전이되는지 확인하시는 편이 좋습니다."
+      ]
     })
   };
 }
