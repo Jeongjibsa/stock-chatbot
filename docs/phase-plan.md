@@ -130,8 +130,8 @@
 
 - [x] 텔레그램 adapter와 core application service 경계 고정
 - [x] future web/app API 계약 초안 정의
-- [ ] GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의
-- [ ] 사용자 계정 확장 전략 초안 정의
+- [x] GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의
+- [x] 사용자 계정 확장 전략 초안 정의
 - [x] 공통 리포트 조회 모델과 히스토리 모델 정의
 
 ### Phase 7. Optional Expansion
@@ -147,7 +147,7 @@
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 6`의 GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의 항목이다.
+현재 권장 시작점은 `Phase 7`의 온디맨드 `/report` 요청 처리 또는 사용자별 예약 리포트 전송 정책 정의 항목이다.
 
 우선순위:
 
@@ -201,3 +201,4 @@
 - 2026-03-21: 텔레그램 `/register`를 추가하고, 그룹 채팅에서는 계정만 등록하되 DM에서 다시 `/register`할 때 개인 발송 대상 chat을 저장하는 정책을 실제 코드와 스키마에 반영
 - 2026-03-21: 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고 관련 unit/integration 검증을 통과
 - 2026-03-21: 공개 브리핑 JSON 생성 worker 엔트리포인트, root/archive index 재생성 로직, GitHub Pages deploy job, 텔레그램 하단 상세 브리핑 링크 주입 규칙을 추가해 `공개 상세 브리핑 생성 -> Pages 배포 -> 텔레그램 요약 발송` 순서를 workflow 기준선으로 고정
+- 2026-03-21: 멀티채널 역할을 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 관리·조회`로 분리하고, 사용자 확장 전략을 `core user + channel identity` 방향으로 문서화

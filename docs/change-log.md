@@ -93,6 +93,7 @@
 | CHG-0066 | 2026-03-21 | ADD | 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고, 미등록 사용자는 `/register`를 먼저 요구하도록 bot runtime과 service 계층을 확장 | PRD, Plan, Change Log, Context, Code, Tests | yes |
 | CHG-0067 | 2026-03-21 | ADD | 공개 상세 브리핑 JSON 생성 worker 엔트리포인트와 GitHub Pages root/archive index 재생성 로직을 추가해 같은 날짜 재실행 시 canonical/archive 경로를 idempotent하게 덮어쓰는 공개 배포 경로를 실제 코드로 정의 | PRD, Plan, Change Log, Context, README, Code, Tests | yes |
 | CHG-0068 | 2026-03-21 | ADD | `Daily Report` workflow에 GitHub Pages build/deploy job을 선행 단계로 추가하고, daily report worker가 `PUBLIC_BRIEFING_BASE_URL` 기반 상세 브리핑 permalink를 텔레그램 하단에 삽입하도록 연결 | PRD, Plan, Change Log, Context, README, Code, Tests | yes |
+| CHG-0069 | 2026-03-21 | DECISION | 멀티채널 역할을 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 관리·조회`로 분리하고, 계정 확장 전략을 `core user + channel identity` 방향으로 문서화 | PRD, Plan, Change Log, Context | yes |
 
 ## 4. Open Change Notes
 
