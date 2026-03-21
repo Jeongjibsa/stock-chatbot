@@ -185,3 +185,5 @@
 - 2026-03-21: 브리핑 구조를 `시장 / 매크로 / 자금 / 이벤트` 섹션까지 확장하고, LLM prompt v3, 텔레그램 렌더러, mock preview, harness snapshot을 새 구조로 갱신 완료
 - 2026-03-21: GitHub Actions `Daily Report Smoke` workflow를 추가해 GitHub-hosted runner의 임시 PostgreSQL과 seeded mock portfolio로 Gemini 기반 일 리포트 생성 경로를 수동 검증할 수 있게 함
 - 2026-03-21: GitHub Actions smoke 실행 중 드러난 app runtime script 경로 버그를 수정해 `api`, `telegram-bot`, `worker`의 `start` 및 `run:daily-report` 스크립트가 실제 `tsc` 산출물을 가리키도록 정리
+- 2026-03-21: build된 worker가 workspace 내부 패키지를 런타임에 해석할 수 있도록 internal package의 `main`/`types`/`exports` entry를 보강
+- 2026-03-21: GitHub Actions와 현재 운영 경로에서는 workspace ESM 해석 이슈를 줄이기 위해 app runtime 스크립트를 `tsx` source entrypoint 기준으로 전환하고, `build`는 검증 단계로 유지

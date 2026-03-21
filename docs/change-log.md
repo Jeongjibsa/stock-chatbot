@@ -77,6 +77,8 @@
 | CHG-0050 | 2026-03-21 | UPDATE | Google provider의 기본 모델을 공식 Gemini 3 Flash 모델 ID인 `gemini-3-flash-preview`로 통일하고 관련 문서를 갱신 | Change Log, Context, LLM Plan, Code | yes |
 | CHG-0051 | 2026-03-21 | ADD | GitHub Actions에 Gemini 기반 `Daily Report Smoke` workflow를 추가하고, `Daily Report` workflow에도 `GEMINI_API_KEY`와 `LLM_PROVIDER` env 주입을 반영해 GitHub-hosted runner에서 seeded mock portfolio 기준 일 리포트 생성 경로를 수동 검증할 수 있게 함 | Plan, Change Log, Context, README, Code | yes |
 | CHG-0052 | 2026-03-21 | FIX | GitHub Actions smoke 실행 중 드러난 app build artifact 경로 문제를 수정해 `api`, `telegram-bot`, `worker`의 `start` 및 `run:daily-report` 스크립트가 실제 `tsc` 산출물 경로를 가리키도록 조정 | Change Log, Context, Code | yes |
+| CHG-0053 | 2026-03-21 | FIX | build된 worker가 workspace 내부 패키지(`@stock-chatbot/application`, `@stock-chatbot/database`, `@stock-chatbot/core-types`)를 런타임에 해석할 수 있도록 각 package.json에 `main`/`types`/`exports` entry를 추가 | Change Log, Context, Code | yes |
+| CHG-0054 | 2026-03-21 | FIX | GitHub Actions와 현재 운영 경로에서 workspace ESM 해석 이슈를 피하기 위해 `api`, `telegram-bot`, `worker`의 실제 실행 스크립트를 compiled `dist` 대신 `tsx` source entrypoint로 전환하고, `build`는 검증용 단계로 유지 | Change Log, Context, README, Code | yes |
 
 ## 4. Open Change Notes
 

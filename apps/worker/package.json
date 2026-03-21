@@ -5,8 +5,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
-    "run:daily-report": "node dist/apps/worker/src/run-daily-report.js",
-    "start": "node dist/apps/worker/src/index.js",
+    "run:daily-report": "tsx src/run-daily-report.ts",
+    "start": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
