@@ -87,6 +87,19 @@ export function buildPublicBriefingUrl(baseUrl: string, runDate: string): string
   return `${normalizedBaseUrl}${buildPublicBriefingCanonicalPath(runDate)}`;
 }
 
+export function buildPublicReportDetailPath(reportId: string): string {
+  return `/reports/${reportId}`;
+}
+
+export function buildPublicReportDetailUrl(
+  baseUrl: string,
+  reportId: string
+): string {
+  const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
+
+  return `${normalizedBaseUrl}${buildPublicReportDetailPath(reportId)}`;
+}
+
 export function buildPublicBriefingArchivePath(runDate: string): string {
   const [year, month, day] = runDate.split("-");
 

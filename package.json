@@ -7,6 +7,7 @@
     "build": "pnpm -r build",
     "dev:api": "pnpm --filter @stock-chatbot/api dev",
     "dev:bot": "pnpm --filter @stock-chatbot/telegram-bot dev",
+    "dev:web": "pnpm --filter @stock-chatbot/web dev",
     "dev:worker": "pnpm --filter @stock-chatbot/worker dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

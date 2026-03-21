@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f3f0e8;
+  --surface: #fffaf1;
+  --surface-strong: #fffef8;
+  --foreground: #171512;
+  --muted: #655e54;
+  --line: #ddd4c6;
+  --accent: #8d2f24;
+  --accent-soft: #f6e0da;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #161311;
+    --surface: #211d1a;
+    --surface-strong: #28231f;
+    --foreground: #f6f2eb;
+    --muted: #c3b9aa;
+    --line: #3a332d;
+    --accent: #f0a08d;
+    --accent-soft: #41261f;
+  }
+}
+
+html {
+  background: var(--background);
+}
+
+body {
+  color: var(--foreground);
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--accent-soft) 32%, transparent), transparent 40%),
+    var(--background);
+  font-family:
+    "Iowan Old Style",
+    "Noto Serif KR",
+    Georgia,
+    serif;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}

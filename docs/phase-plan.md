@@ -39,7 +39,7 @@
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | done |
 | Phase 5 | GitHub Actions 기반 CI/스케줄 운영 자동화 구축 | done |
 | Phase 6 | 멀티채널 확장 준비 | done |
-| Phase 7 | 선택형 확장 기능 구축 | in progress |
+| Phase 7 | 공개 웹 전환 및 후속 운영 확장 | in progress |
 
 ## 4. Detailed Plan
 
@@ -129,32 +129,37 @@
 ### Phase 6. Multi-Channel Readiness
 
 - [x] 텔레그램 adapter와 core application service 경계 고정
-- [x] future web/app API 계약 초안 정의
-- [x] GitHub Pages 공개 브리핑과 future 앱/웹 런타임의 역할 분리 기준 정의
+- [x] future authenticated web API 계약 초안 정의
+- [x] GitHub Pages 공개 브리핑과 future authenticated web 런타임의 역할 분리 기준 정의
 - [x] 사용자 계정 확장 전략 초안 정의
 - [x] 텔레그램 `채널 / 그룹 / DM` 운영 역할과 멀티 사용자 테스트 시나리오 문서화
 - [x] 공통 리포트 조회 모델과 히스토리 모델 정의
 
-### Phase 7. Optional Expansion
+### Phase 7. Public Web Transition and Expansion
 
 - [x] 온디맨드 `/report` 요청 처리 추가
 - [x] 사용자별 예약 리포트 전송
 - [x] GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
-- [x] GitHub Pages 기반 공개 웹사이트 구현
-- [ ] 모바일 앱 구현
+- [x] 공개 브리핑 DB read model(`reports`) 도입
+- [x] 공개 브리핑 생성 경로를 `reports` 저장까지 확장
+- [x] `apps/web`를 Next.js App Router 앱으로 전환
+- [x] 공개 feed `/` 구현
+- [x] 공개 detail `/reports/[id]` 구현
+- [x] Telegram 공개 상세 링크를 새 웹으로 전환
+- [x] README 및 운영 문서를 Vercel + Neon 기준으로 갱신
 - [ ] 웹 관리 콘솔
 - [ ] 전략 성과 추적 및 백테스트
 - [ ] 사용자 설정 고도화
 
 ## 5. Immediate Next Work
 
-현재 권장 시작점은 `Phase 7`의 사용자 설정 고도화 또는 전략 성과 추적 항목이다.
+현재 권장 시작점은 `Phase 7`의 웹 관리 콘솔 또는 전략 성과 추적 항목이다.
 
 우선순위:
 
-1. 사용자 설정 고도화
+1. 웹 관리 콘솔
 2. 전략 성과 추적 및 백테스트
-3. 모바일 앱 구현은 후속 phase로 유지
+3. 사용자 설정 고도화
 
 ## 6. Completion Log
 
@@ -178,7 +183,7 @@
 - 2026-03-20: daily report orchestrator, report run log 저장 구조, 텔레그램 렌더러, 중복 실행 방지, partial failure 규칙, worker 수직 slice 연결, unit/integration 테스트 추가 완료
 - 2026-03-20: Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진, worker 뉴스 연동 추가 완료
 - 2026-03-20: harness fixture 포맷, 일 배치/뉴스/퀀트/report 샘플 fixture, grader 기준, snapshot 비교 스크립트, verify 연동, prompt/skill version 기록 연결 완료
-- 2026-03-21: mock telegram delivery adapter, reusable report preview 템플릿, future web/app API 계약 초안, 공통 report query model 추가 완료
+- 2026-03-21: mock telegram delivery adapter, reusable report preview 템플릿, future authenticated web API 계약 초안, 공통 report query model 추가 완료
 - 2026-03-21: 텔레그램 리포트를 PRD 6.4 순서에 맞게 재정렬하고 보유 종목 `전일 종가 → 현재가` 표기, 주요 지표 변동 요약, 면책 문구, 이란 전쟁 이슈 예시를 포함한 mock preview로 개선 완료
 - 2026-03-21: 텔레그램 리포트 전체 문체를 존댓말로 통일하고 면책 문구를 `❗` 한 줄 형식으로 조정, 관련 테스트와 하네스 스냅샷 갱신 완료
 - 2026-03-21: public GitHub repository를 기준으로 남은 운영 자동화 계획을 GitHub Actions 우선 전략으로 재편하고, CI/일 배치 스케줄/수동 실행/secret 관리/지연 허용 규칙을 다음 우선 작업으로 상향 조정
@@ -200,7 +205,10 @@
 - 2026-03-21: 텔레그램 `/register`를 추가하고, 그룹 채팅에서는 계정만 등록하되 DM에서 다시 `/register`할 때 개인 발송 대상 chat을 저장하는 정책을 실제 코드와 스키마에 반영
 - 2026-03-21: 텔레그램 `/portfolio_add`, `/portfolio_list`, `/portfolio_remove`, `/market_add`, `/market_items`를 실제 DB 저장/조회와 연결하고 관련 unit/integration 검증을 통과
 - 2026-03-21: 공개 브리핑 JSON 생성 worker 엔트리포인트, root/archive index 재생성 로직, GitHub Pages deploy job, 텔레그램 하단 상세 브리핑 링크 주입 규칙을 추가해 `공개 상세 브리핑 생성 -> Pages 배포 -> 텔레그램 요약 생성` 순서를 workflow 기준선으로 고정
-- 2026-03-21: 멀티채널 역할을 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 관리·조회`로 분리하고, 사용자 확장 전략을 `core user + channel identity` 방향으로 문서화
+- 2026-03-21: 멀티채널 역할을 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future authenticated web=인증 사용자용 관리·조회`로 분리하고, 사용자 확장 전략을 `core user + channel identity` 방향으로 문서화
 - 2026-03-21: 텔레그램 실운영 검증을 위한 `채널=공개`, `그룹=온보딩`, `DM=개인화 delivery` 정책과 멀티 사용자 등록/포트폴리오 입력/개인 리포트 검증 체크리스트 문서를 추가
 - 2026-03-21: dedicated worker 이관 기준 문서와 external trigger contract를 추가하고, `DAILY_REPORT_TRIGGER_URL` secret이 있을 때 GitHub Actions가 local worker 대신 외부 worker endpoint를 호출하도록 전환 경로를 구현
 - 2026-03-21: GitHub Actions `Daily Report` workflow의 `REPORT_RUN_DATE` 입력 참조 오류를 수정하고, GitHub Pages `/app/` 공개 웹사이트와 `/app/admin.html` 운영 개요 페이지를 추가
+- 2026-03-21: 모바일 앱을 현재 MVP 범위에서 제거하고, 공개 채널 확장은 `Telegram + 공개 웹 frontend`까지만 유지하는 방향으로 plan을 재정렬
+- 2026-03-21: 개발 및 테스트는 로컬 Docker PostgreSQL 기준으로 유지하고, Neon은 최종 production 배포 시에만 연결하는 운영 원칙을 기준선으로 고정
+- 2026-03-21: `reports` 읽기 모델과 공개 브리핑 저장 경로를 추가하고, `apps/web`를 Next.js App Router 기반 공개 feed/detail 웹으로 전환했으며, Telegram 공개 상세 링크와 README를 새 공개 웹 기준으로 갱신

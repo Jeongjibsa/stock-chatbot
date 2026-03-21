@@ -2,6 +2,7 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
   numeric,
   pgTable,
   text,
@@ -118,6 +119,17 @@ export const reportRuns = pgTable(
   })
 );
 
+export const reports = pgTable("reports", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  reportDate: date("report_date").notNull(),
+  summary: text("summary").notNull(),
+  marketRegime: text("market_regime").notNull(),
+  totalScore: numeric("total_score").notNull(),
+  signals: jsonb("signals").$type<string[]>().notNull(),
+  contentMarkdown: text("content_markdown").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+});
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
@@ -128,3 +140,5 @@ export type UserMarketWatchItemRecord = typeof userMarketWatchItems.$inferSelect
 export type NewUserMarketWatchItemRecord = typeof userMarketWatchItems.$inferInsert;
 export type ReportRunRecord = typeof reportRuns.$inferSelect;
 export type NewReportRunRecord = typeof reportRuns.$inferInsert;
+export type ReportRecord = typeof reports.$inferSelect;
+export type NewReportRecord = typeof reports.$inferInsert;

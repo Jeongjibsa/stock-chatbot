@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildPublicBriefingArchivePath,
   buildPublicBriefingCanonicalPath,
+  buildPublicReportDetailPath,
+  buildPublicReportDetailUrl,
   buildPublicBriefingUrl,
   buildPublicDailyBriefing
 } from "./public-daily-briefing.js";
@@ -56,5 +58,12 @@ describe("public daily briefing", () => {
     expect(
       buildPublicBriefingUrl("https://jeongjibsa.github.io/stock-chatbot/", "2026-03-20")
     ).toBe("https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/");
+    expect(buildPublicReportDetailPath("report-1")).toBe("/reports/report-1");
+    expect(
+      buildPublicReportDetailUrl(
+        "https://jeongjibsa.github.io/stock-chatbot/",
+        "report-1"
+      )
+    ).toBe("https://jeongjibsa.github.io/stock-chatbot/reports/report-1");
   });
 });

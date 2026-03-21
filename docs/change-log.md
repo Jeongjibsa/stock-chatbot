@@ -104,6 +104,10 @@
 | CHG-0077 | 2026-03-21 | ADD | dedicated worker 이관 기준 문서와 external trigger contract를 정의하고, `DAILY_REPORT_TRIGGER_URL` secret이 있을 때 GitHub Actions `Daily Report`가 local worker 대신 외부 worker endpoint를 호출하도록 전환 경로를 추가 | Plan, README, Change Log, Context, Workflow, Docs | yes |
 | CHG-0078 | 2026-03-21 | FIX | GitHub Actions `Daily Report` workflow가 `push`와 `schedule` 이벤트에서 `github.event.inputs.report_run_date`를 직접 참조해 즉시 실패하던 문제를 수정하고, 빈 문자열 fallback과 외부 worker trigger 분기 로직을 함께 정리 | Plan, README, Change Log, Context, Workflow | yes |
 | CHG-0079 | 2026-03-21 | ADD | GitHub Pages 공개 브리핑 JSON을 기반으로 `/app/` 정적 웹사이트와 `/app/admin.html` 운영 개요 페이지를 추가하고, Pages build script가 공개 웹 자산과 최신 브리핑 데이터를 함께 배포하도록 확장 | PRD, Plan, README, Change Log, Context, Code | yes |
+| CHG-0080 | 2026-03-21 | DECISION | 모바일 앱을 현재 MVP와 활성 phase 범위에서 제거하고, 공개 채널 확장은 `Telegram + 공개 웹 frontend`까지만 유지하도록 기준선을 조정 | PRD, Plan, README, Change Log, Context | yes |
+| CHG-0081 | 2026-03-21 | DECISION | managed Postgres는 개발·테스트 중 직접 연결하지 않고 로컬 Docker PostgreSQL을 기준으로 구현과 검증을 완료한 뒤, 최종 production 배포 시에만 Neon connection string을 사용하도록 운영 원칙을 고정 | PRD, Plan, README, Change Log, Context | yes |
+| CHG-0082 | 2026-03-21 | UPDATE | 공개 브리핑 채널을 GitHub Pages 정적 공개 웹에서 `Vercel + Next.js App Router + Neon(배포 대상)` 기반 공개 웹 frontend로 단계 전환하고, `reports` 읽기 모델과 feed/detail 웹을 현재 Phase 7 최우선 작업으로 승격 | PRD, Plan, README, Change Log, Context, Code | yes |
+| CHG-0083 | 2026-03-21 | ADD | `reports` 읽기 모델과 공개 브리핑 저장 경로를 추가하고, `apps/web`를 Next.js App Router 기반 공개 feed/detail 웹으로 전환했으며, Telegram 공개 상세 링크와 README/운영 문서를 새 공개 웹 기준으로 갱신 | PRD, Plan, README, Change Log, Context, Workflow, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

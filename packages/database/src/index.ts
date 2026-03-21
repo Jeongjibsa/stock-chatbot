@@ -7,16 +7,19 @@ export { runMigrations } from "./migrate.js";
 export {
   marketWatchCatalogItems,
   portfolioHoldings,
+  reports,
   reportRuns,
   userMarketWatchItems,
   users,
   type MarketWatchCatalogItemRecord,
   type NewReportRunRecord,
+  type NewReportRecord,
   type NewMarketWatchCatalogItemRecord,
   type NewPortfolioHoldingRecord,
   type NewUserRecord,
   type NewUserMarketWatchItemRecord,
   type PortfolioHoldingRecord,
+  type ReportRecord,
   type ReportRunRecord,
   type UserMarketWatchItemRecord,
   type UserRecord
@@ -26,6 +29,10 @@ export {
   PortfolioHoldingRepository,
   type UpsertPortfolioHoldingInput
 } from "./portfolio-holding-repository.js";
+export {
+  PublicReportRepository,
+  type InsertPublicReportInput
+} from "./public-report-repository.js";
 export {
   ReportRunRepository,
   type CompleteReportRunInput,

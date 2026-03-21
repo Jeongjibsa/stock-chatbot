@@ -254,6 +254,11 @@ describe("DailyReportOrchestrator", () => {
         listByUserId: vi.fn(async () => [])
       },
       publicBriefingBaseUrl: "https://jeongjibsa.github.io/stock-chatbot/",
+      publicReportRepository: {
+        findLatestByReportDate: vi.fn(async () => ({
+          id: "report-2026-03-20"
+        }))
+      },
       reportRunRepository: {
         startRun: vi.fn(async () => ({
           created: true,
@@ -284,7 +289,7 @@ describe("DailyReportOrchestrator", () => {
     });
 
     expect(result.reportText).toContain(
-      "🔎 상세 브리핑: https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/"
+      "🔎 상세 브리핑: https://jeongjibsa.github.io/stock-chatbot/reports/report-2026-03-20"
     );
   });
 });

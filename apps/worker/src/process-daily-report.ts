@@ -18,6 +18,7 @@ import {
   createDatabase,
   createPool,
   PortfolioHoldingRepository,
+  PublicReportRepository,
   ReportRunRepository,
   UserMarketWatchItemRepository,
   UserRepository
@@ -347,6 +348,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
     }),
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
     ...(publicBriefingBaseUrl ? { publicBriefingBaseUrl } : {}),
+    publicReportRepository: new PublicReportRepository(db),
     reportRunRepository: new ReportRunRepository(db),
     userMarketWatchRepository: new UserMarketWatchItemRepository(db)
   };

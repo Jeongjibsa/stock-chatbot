@@ -77,3 +77,14 @@ CREATE TABLE IF NOT EXISTS "report_runs" (
   "completed_at" timestamp with time zone,
   CONSTRAINT "report_runs_user_run_date_schedule_type_unique" UNIQUE("user_id", "run_date", "schedule_type")
 );
+
+CREATE TABLE IF NOT EXISTS "reports" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "report_date" date NOT NULL,
+  "summary" text NOT NULL,
+  "market_regime" text NOT NULL,
+  "total_score" numeric NOT NULL,
+  "signals" jsonb NOT NULL,
+  "content_markdown" text NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);

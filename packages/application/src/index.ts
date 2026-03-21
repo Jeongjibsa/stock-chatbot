@@ -107,9 +107,14 @@ export {
   buildPublicDailyBriefing,
   buildPublicBriefingArchivePath,
   buildPublicBriefingCanonicalPath,
+  buildPublicReportDetailPath,
+  buildPublicReportDetailUrl,
   buildPublicBriefingUrl,
   type PublicDailyBriefing
 } from "./public-daily-briefing.js";
+export {
+  renderPublicDailyBriefingMarkdown
+} from "./public-daily-briefing-markdown.js";
 export {
   renderPublicDailyBriefingHtml
 } from "./public-daily-briefing-renderer.js";

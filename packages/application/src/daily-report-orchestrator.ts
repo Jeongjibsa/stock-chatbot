@@ -2,7 +2,10 @@ import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js"
 import type { DailyReportComposition } from "./daily-report-composition-service.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
-import { buildPublicBriefingUrl } from "./public-daily-briefing.js";
+import {
+  buildPublicBriefingUrl,
+  buildPublicReportDetailUrl
+} from "./public-daily-briefing.js";
 import {
   buildQuantScorecards,
   toQuantStrategyBullets
@@ -103,6 +106,11 @@ export class DailyReportOrchestrator {
       portfolioHoldingRepository: PortfolioHoldingRepositoryPort;
       portfolioNewsBriefService?: PortfolioNewsBriefServicePort;
       publicBriefingBaseUrl?: string;
+      publicReportRepository?: {
+        findLatestByReportDate(reportDate: string): Promise<{
+          id: string;
+        } | null>;
+      };
       reportCompositionService?: ReportCompositionServicePort;
       reportRunRepository: ReportRunRepositoryPort;
       userMarketWatchRepository: UserMarketWatchRepositoryPort;
@@ -264,10 +272,19 @@ export class DailyReportOrchestrator {
     }
 
     if (this.dependencies.publicBriefingBaseUrl) {
-      renderInput.publicBriefingUrl = buildPublicBriefingUrl(
-        this.dependencies.publicBriefingBaseUrl,
+      const latestPublicReport = await this.dependencies.publicReportRepository?.findLatestByReportDate(
         input.runDate
       );
+
+      renderInput.publicBriefingUrl = latestPublicReport
+        ? buildPublicReportDetailUrl(
+            this.dependencies.publicBriefingBaseUrl,
+            latestPublicReport.id
+          )
+        : buildPublicBriefingUrl(
+            this.dependencies.publicBriefingBaseUrl,
+            input.runDate
+          );
     }
 
     const reportText = renderTelegramDailyReport(renderInput);

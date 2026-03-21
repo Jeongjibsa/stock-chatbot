@@ -18,7 +18,12 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["apps/**/*.test.ts", "packages/**/*.test.ts"],
+    include: [
+      "apps/**/*.test.ts",
+      "apps/**/*.test.tsx",
+      "packages/**/*.test.ts",
+      "packages/**/*.test.tsx"
+    ],
     exclude: ["**/*.integration.test.ts", "**/node_modules/**"]
   }
 });

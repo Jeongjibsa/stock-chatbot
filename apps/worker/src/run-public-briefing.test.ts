@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { MarketDataFetchResult } from "@stock-chatbot/application";
 
 import {
+  buildPublicReportInsertInput,
   buildPublicBriefing,
   formatPublicBriefingBuildSummary,
   readPublicBriefingOutputPath
@@ -174,5 +175,24 @@ describe("run-public-briefing", () => {
     ).toBe(
       "[public-briefing] runDate=2026-03-20 snapshotCount=12 outputPath=site/public-daily-briefing.json"
     );
+  });
+
+  it("builds a public report insert payload without personal sections", async () => {
+    const briefing = await buildPublicBriefing({
+      runDate: "2026-03-20",
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      }
+    });
+
+    expect(
+      buildPublicReportInsertInput({
+        briefing
+      })
+    ).toMatchObject({
+      reportDate: "2026-03-20",
+      marketRegime: "Neutral",
+      signals: []
+    });
   });
 });

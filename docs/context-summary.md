@@ -23,7 +23,7 @@
 ## 3. Rollup Status
 
 - last_rollup_date: 2026-03-21
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -31,9 +31,9 @@
 - 제품은 개인화된 주식 리포트를 제공하는 서비스다.
 - 현재 MVP는 텔레그램 기반이며, 매일 오전 9시에 한 번 자동 리포트를 발송한다.
 - 초기 MVP에는 온디맨드 `/report`가 포함되지 않는다.
-- MVP 전달 채널은 `텔레그램 요약본 + GitHub Pages 상세 브리핑`의 이중 구조다.
+- MVP 전달 채널은 `텔레그램 요약본 + 공개 웹 frontend`의 이중 구조다.
 - 사용자 포트폴리오와 사용자별 시장 지표를 저장하고, 이를 바탕으로 시장 요약, 뉴스 요약, 퀀트 기반 시나리오를 생성한다.
-- 장기적으로는 동일한 코어 서비스 위에 웹 앱과 모바일 앱까지 확장할 계획이 있으나, 우선순위는 가장 낮다.
+- 장기적으로는 동일한 코어 서비스 위에 공개 웹과 인증된 웹 관리 화면까지 확장할 계획이 있으나, 모바일 앱은 현재 활성 로드맵에서 제외됐다.
 
 ## 5. Current Technical Direction
 
@@ -63,7 +63,7 @@
 - `Phase 4`는 완료됐다.
 - `Phase 5`는 진행 중이다.
 - `Phase 6`은 완료됐다.
-- `Phase 7`은 부분 완료 상태다.
+- `Phase 7`은 공개 웹 전환 작업을 다음 우선순위로 두고 부분 완료 상태다.
 - `Phase 2`에서 사용자 모델, 포트폴리오 보유 종목, 기본 시장 지표 카탈로그, 사용자별 시장 지표 override에 대한 Drizzle 저장 계층과 unit/integration 테스트가 추가됐다.
 - application 계층에는 정적 alias registry와 코드 정규화 기반의 포트폴리오/시장 지표 resolver가 추가됐다.
 - application 계층에는 task별 provider-agnostic LLM 라우팅 정책 함수가 추가됐다.
@@ -109,9 +109,9 @@
 - 2026-03-21 live Gemini 검증에서는 종목 뉴스 이벤트 추출 단계에서 `Gemini API request failed with status 429`가 발생해 기사 섹션이 fallback 문구로 내려간 사례가 확인됐다.
 - 2026-03-20 기준 재검증에서는 Yahoo 중복 거래일 제거 이후 `NASDAQ -2.01%`, `S&P500 -1.51%`, `DOW -0.96%`, `VIX +11.31%`, `KOSPI +0.31%`, `KOSDAQ +1.58%`가 정상 복구됐고, Gemini의 한 줄 요약도 `미국 증시 급락 + 공포지수 급등 -> 반등 시 비중 축소 및 리스크 관리` 방향으로 더 날카롭게 바뀌었다.
 - 일 리포트 prompt v4는 데이터가 없는 섹션에 대해 더 엄격하다. `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`는 입력 부재 시 빈 배열만 허용하고, `marketResults.asOfDate`가 다르면 같은 시점의 사건처럼 과장하지 않도록 제한한다.
-- 공개 브리핑 채널은 code-first 모델로 정의됐다. canonical 경로는 `/briefings/YYYY-MM-DD/`, archive 경로는 `/briefings/YYYY/MM/DD/`이며, 공개본에서는 `holdings`, `holdingTrendBullets`, `articleSummaryBullets`, `portfolioNewsBriefs`, `personalizedQuantScorecards`를 제외한다.
+- 공개 브리핑 채널은 code-first 모델로 정의됐다. legacy fallback 경로는 `/briefings/YYYY-MM-DD/`, archive 경로는 `/briefings/YYYY/MM/DD/`이며, 공개본에서는 `holdings`, `holdingTrendBullets`, `articleSummaryBullets`, `portfolioNewsBriefs`, `personalizedQuantScorecards`를 제외한다.
 - 공개 브리핑에는 HTML renderer와 `build-public-briefing` script가 추가돼 canonical/archive 두 경로에 동일한 정적 페이지를 출력할 수 있다.
-- managed Postgres free-tier 기본 추천은 현재 `Neon`이다. 이유는 PostgreSQL 전용 구조, branching, scale-to-zero, GitHub Actions/preview branch와의 궁합 때문이다. `Supabase`는 추후 웹/앱에서 Auth·Storage·Realtime까지 함께 필요해질 때 재검토하는 대안으로 유지한다.
+- managed Postgres free-tier 기본 추천은 현재 `Neon`이다. 이유는 PostgreSQL 전용 구조, branching, scale-to-zero, Vercel 배포와의 궁합 때문이다. 단, 개발 및 테스트 기본 DB는 로컬 Docker PostgreSQL이고 Neon은 모든 구현/검증 완료 후 production 연결 대상으로만 사용한다. `Supabase`는 추후 인증/스토리지/리얼타임이 함께 필요해질 때 재검토한다.
 - 텔레그램 그룹 채팅 확장 요구에 따라 `/register`가 MVP 필수 명령으로 올라갔다. 그룹 채팅에서의 `/register`는 계정만 만들고, 개인화 리포트 발송 대상 `preferred_delivery_chat_id`는 DM(`private` chat)에서 다시 `/register`할 때만 저장하는 정책이 기준선이다.
 - 텔레그램 실운영 채널 정책은 `채널=공개 브리핑`, `그룹=온보딩/안내`, `DM=개인화 delivery` 3계층을 기본으로 한다.
 - 그룹에 새 사용자가 들어오면 봇이 `/register` 안내 메시지를 자동으로 보내고, 미등록 사용자가 그룹에서 일반 메시지를 남기면 1회 등록 안내를 다시 보내는 보조 온보딩 흐름이 추가됐다.
@@ -121,15 +121,18 @@
 - 멀티 사용자 실채널 테스트 체크리스트는 `docs/telegram-multi-user-test-scenarios.md`를 기준으로 사용한다.
 - daily report worker는 이제 생성 성공 후 `preferred_delivery_chat_id`가 있는 사용자에게 Telegram DM delivery를 시도한다.
 - worker summary 로그에는 `delivered`, `deliverySkipped`, `deliveryFailed` 집계가 추가됐다.
-- GitHub Pages 상세 브리핑은 같은 날의 공개 가능한 상세 시장 브리핑을 블로그형 정적 페이지로 게시하는 채널이다.
-- GitHub Pages 공개본에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
-- 텔레그램 메시지 하단에는 해당 날짜의 GitHub Pages 상세 브리핑 링크를 포함하는 방향으로 계획이 조정됐다.
+- 현재 공개 브리핑에는 GitHub Pages fallback 경로가 있으나, primary public web은 `Vercel + Next.js App Router + reports read model` 기준으로 이미 전환 구현됐다.
+- database 계층에는 공개 브리핑용 `reports` 읽기 모델이 추가됐다. 이 테이블은 `report_date`, `summary`, `market_regime`, `total_score`, `signals`, `content_markdown`, `created_at`을 저장하고, 공개 웹 feed/detail의 조회 모델로만 사용한다.
+- `run-public-briefing`은 이제 공개 브리핑 JSON 파일만 만드는 것이 아니라, `DATABASE_URL`이 설정된 경우 공개 가능한 브리핑을 `reports`에도 저장한다.
+- 공개 웹에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
+- 텔레그램 메시지 하단 상세 링크는 `reports`에서 같은 날짜의 최신 공개 report를 조회해 새 공개 웹의 `/reports/[id]` 경로를 우선 사용한다. 조회 실패 시 기존 `/briefings/YYYY-MM-DD/` fallback 링크를 계속 사용할 수 있다.
 - 공개 상세 브리핑 permalink는 canonical `/briefings/YYYY-MM-DD/`, archive `/briefings/YYYY/MM/DD/`를 함께 유지하고, 같은 `runDate` 재실행 시 동일 경로를 덮어쓰는 방식으로 idempotent하게 운영한다.
-- 공개 브리핑 build 스크립트는 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
-- GitHub Actions `Daily Report` workflow는 이제 `public briefing build -> Pages deploy -> daily report generate` 순서로 동작하며, 생성된 텔레그램 본문은 `PUBLIC_BRIEFING_BASE_URL + /briefings/YYYY-MM-DD/` 링크를 하단에 붙인다.
+- 공개 브리핑 build 스크립트는 legacy fallback용 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
+- GitHub Actions `Daily Report` workflow는 `public briefing build -> Pages deploy(fallback) -> daily report generate` 순서로 동작할 수 있으며, 생성된 텔레그램 본문은 `reports` 조회 성공 시 `PUBLIC_BRIEFING_BASE_URL + /reports/[id]` 링크를, 실패 시 legacy `/briefings/YYYY-MM-DD/` fallback 링크를 하단에 붙인다.
 - GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.
-- 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `GitHub Pages=공개 상세 archive`, `future web/app=인증 사용자용 포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
-- GitHub Pages 공개 웹사이트는 `/app/` 경로에서 최신 공개 브리핑 요약과 아카이브 진입점을 제공하며, `/app/admin.html`은 공개 브리핑 운영 개요를 보여준다.
+- 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `public web frontend=공개 상세 archive/feed`, `future authenticated web=포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
+- 현재 `apps/web`는 `Next.js App Router` 기반 공개 웹으로 전환됐고, Vercel 배포를 primary public frontend로 사용한다.
+- `apps/web`는 이제 Next.js App Router 기반 공개 웹으로 전환됐고, `/`에서 날짜별 latest-first feed를, `/reports/[id]`에서 markdown detail을 제공한다.
 - 계정 확장 전략은 현재 `telegram_user_id` 중심 MVP를 유지하되, 이후 `core user + channel identity` 구조로 확장할 수 있게 `preferred_delivery_chat_id` 같은 채널 delivery 속성을 별도 identity 성격 데이터로 취급하는 방향이다.
 - Telegram DM의 기본 UX는 한국어 온보딩 기준으로 유지한다. `/start`와 `/help`는 `등록 -> 종목 추가 -> 목록 확인 -> 관심 지표 추가 -> 브리핑 수신` 흐름과 명령별 짧은 설명을 함께 안내하고, `/register` 성공 후에도 같은 다음 단계가 이어져야 한다.
 - Telegram DM에서는 `/report`를 바로 사용할 수 있다. 등록만 완료되어 있으면 보유 종목이 없어도 실행 가능하며, 이 경우 보유 종목 관련 섹션을 제외한 시장 중심 브리핑을 생성한다.
@@ -146,10 +149,10 @@
 - `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 4`는 뉴스 요약 및 퀀트 전략 엔진 구현 단계였고 현재 완료됐다.
 - `Phase 5`는 하네스, 평가, 운영 자동화 구축 단계이며 fixture, grader, snapshot 비교 흐름이 이미 들어갔다.
-- `Phase 7`의 다음 우선순위는 사용자 설정 고도화, 전략 성과 추적 및 백테스트이며, 모바일 앱은 후속 phase로 유지한다.
+- `Phase 7`의 다음 우선순위는 웹 관리 콘솔, 전략 성과 추적/백테스트, 사용자 설정 고도화다.
 - `Phase 6`은 멀티채널 준비 단계이며 mock delivery와 공통 report query model, API 계약 초안까지 들어간 상태다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
-- `Phase 7`은 온디맨드 `/report`, 웹 클라이언트, 모바일 앱 같은 후순위 확장 단계다.
+- `Phase 7`은 온디맨드 `/report` 이후의 공개 웹 전환, 전략 성과 추적, 사용자 설정 고도화 단계다.
 
 ## 7. Guardrails
 

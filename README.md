@@ -1,67 +1,71 @@
 # Stock Briefing Bot
 
-거시 지표, 시장 이벤트, 퀀트 시그널을 종합해 텔레그램으로 자동 발송하는 주식 브리핑 자동화 시스템
+거시 지표, 시장 이벤트, 퀀트 시그널을 종합해 텔레그램으로 자동 발송하고, 공개 브리핑은 웹 아카이브로 제공하는 시장 브리핑 자동화 시스템
 
 ## 문제 정의
 
-시장을 매일 직접 확인하는 일은 단순 조회보다 해석 비용이 더 큽니다.  
-미국/한국 지수, 금리, 환율, 원자재, 뉴스, 이벤트, 포트폴리오를 따로 보고 다시 연결해야 하기 때문입니다.
+매일 시장을 확인하는 일의 핵심 비용은 조회보다 해석에 있습니다.  
+미국/한국 지수, 금리, 환율, 원자재, 뉴스, 이벤트, 보유 종목을 따로 보고 다시 연결해야 하기 때문입니다.
 
-이 프로젝트는 그 과정을 자동화합니다.
+이 프로젝트는 그 해석 비용을 줄이기 위해 만들어졌습니다.
 
 - 시장 데이터를 수집합니다.
-- 거시/이벤트/추세/자금 신호를 계산합니다.
+- 거시/추세/이벤트/자금 신호를 계산합니다.
 - LLM은 마지막 브리핑 생성 레이어로만 사용합니다.
-- 최종 결과를 텔레그램 요약본과 GitHub Pages 공개 브리핑으로 전달합니다.
+- 개인화 결과는 Telegram DM으로, 공개 가능한 결과는 웹 archive로 전달합니다.
 
-핵심은 “뉴스 요약 봇”이 아니라 “시장 브리핑 자동화 시스템”이라는 점입니다.
+핵심은 “뉴스 요약 봇”이 아니라 **시장 브리핑 자동화 시스템**이라는 점입니다.
 
-## 왜 이 프로젝트가 필요한가
+## 왜 필요한가
 
-- 매일 같은 데이터를 반복 조회하고 해석하는 시간을 줄입니다.
-- 사람마다 들쑥날쑥한 해석 대신, 같은 구조의 브리핑을 일관되게 제공합니다.
-- 미국/한국 시장을 함께 보는 투자자에게 맞는 입력과 출력 구조를 가집니다.
-- 공개 시장 브리핑과 개인화 포트폴리오 브리핑을 분리해 운영할 수 있습니다.
+- 매일 반복되는 시장 점검과 요약 작업을 자동화합니다.
+- 같은 입력에서 같은 구조의 브리핑을 일관되게 생성합니다.
+- 미국/한국 시장을 함께 보는 투자자 관점의 입력과 출력 구조를 가집니다.
+- 공개 브리핑과 개인화 브리핑을 분리해 개인정보 노출 없이 운영할 수 있습니다.
 
 ## 핵심 기능
 
-### 1. 시장 상태를 구조화해서 읽기 쉽게 전달
+### 1. 시장 상태를 구조화해 전달
 
-- 미국 지수와 한국 지수를 함께 묶어 봅니다.
+- 미국 지수와 한국 지수를 함께 봅니다.
 - 금리, 환율, 달러 인덱스, 원자재를 같은 브리핑 안에서 해석합니다.
-- `전일값 -> 현재값`, 등락률, 리스크 온/오프 신호를 함께 제공합니다.
+- `전일값 → 현재값`, 등락률, 리스크 온/오프 시그널을 함께 보여줍니다.
 
-### 2. 단순 생성이 아니라 해석 가능한 분석 파이프라인
+### 2. 코드 기반 분석 + LLM 기반 해석
 
 - 데이터 수집과 점수 계산은 코드가 담당합니다.
-- LLM은 이미 계산된 입력을 바탕으로 최종 브리핑 문장화만 담당합니다.
-- LLM이 실패해도 규칙 기반 fallback으로 공개 브리핑은 계속 생성됩니다.
+- LLM은 이미 계산된 입력을 바탕으로 최종 브리핑을 문장화합니다.
+- LLM이 실패해도 공개 브리핑은 규칙 기반 fallback으로 계속 생성됩니다.
 
-### 3. 개인화 가능한 텔레그램 delivery
+### 3. Telegram 개인화 delivery
 
-- `/register`, `/portfolio_add`, `/report` 흐름으로 사용자별 입력을 받을 수 있습니다.
-- 공개 브리핑은 GitHub Pages에 게시하고, 개인화 브리핑은 Telegram DM으로만 보냅니다.
-- 그룹은 온보딩, DM은 개인화 delivery, Pages는 공개 archive 역할로 분리됩니다.
+- `/register`, `/portfolio_add`, `/report` 흐름으로 사용자별 입력을 받습니다.
+- 개인화 리포트는 Telegram DM으로만 전송합니다.
+- 그룹은 온보딩, DM은 개인화 delivery, 웹은 공개 archive 역할로 분리됩니다.
 
-### 4. 스케줄 기반 무인 운영
+### 4. 공개 웹 브리핑 archive
 
-- GitHub Actions가 CI와 정기 브리핑 스케줄을 담당합니다.
-- Daily Report workflow가 공개 브리핑 생성, Pages 배포, 개인화 발송을 순서대로 실행합니다.
-- Secrets가 비어 있는 경우에도 workflow 전체는 실패하지 않고 필요한 단계만 skip 처리합니다.
+- 공개 가능한 시장/매크로/자금/이벤트 브리핑을 web feed로 제공합니다.
+- 날짜별 최신순 top-down feed와 단건 detail 화면을 제공합니다.
+- 보유 종목 정보와 개인 기사 요약은 공개 웹에 저장하지 않습니다.
+
+### 5. 스케줄 기반 무인 운영
+
+- GitHub Actions가 CI와 daily report orchestration을 담당합니다.
+- worker가 공개 브리핑 생성, Telegram delivery, 실행 로그 기록을 수행합니다.
+- 개발과 테스트는 로컬 Docker PostgreSQL 기준으로 진행하고, production은 Neon을 사용합니다.
 
 ## 주요 시그널 및 분석 항목
 
-| 구분 | 주요 항목 | 해석 목적 |
+| 구분 | 주요 항목 | 목적 |
 | --- | --- | --- |
 | 미국 시장 | `S&P 500`, `NASDAQ`, `DOW`, `VIX`, `미국 10년물 금리` | 위험 선호, 성장주 압력, 변동성 레짐 |
-| 한국 시장 | `KOSPI`, `KOSDAQ`, `USD/KRW`, 향후 `외국인/기관 수급` | 국내 리스크 프리미엄, 환율 부담, 수급 확인 |
+| 한국 시장 | `KOSPI`, `KOSDAQ`, `USD/KRW` | 국내 리스크 프리미엄, 환율 부담 |
 | 매크로/원자재 | `WTI`, `천연가스`, `구리`, `달러 인덱스`, `CPI/Fed 일정` | 인플레이션, 달러 강세, 경기 민감도 |
-| 이벤트 | 중동 리스크, 실적 일정, AI/반도체/원자재 이슈 | 단기 변동성, 섹터별 촉매 |
-| 퀀트 신호 | `Macro`, `Trend`, `Event`, `Flow`, `Total` | `BUY / HOLD / REDUCE` 해석 기반 |
+| 이벤트 | 지정학 리스크, 실적 일정, AI/반도체/원자재 이슈 | 단기 변동성, 섹터 촉매 |
+| 퀀트 신호 | `Macro`, `Trend`, `Event`, `Flow`, `Total` | `BUY / HOLD / REDUCE` 대신 시나리오 제안 |
 
 ## 시스템 아키텍처
-
-현재 구조는 “수집 / 해석 / 발송” 레이어가 분리된 TypeScript 모놀리식입니다.
 
 ```text
 [FRED / Yahoo Finance / News Sources]
@@ -75,42 +79,41 @@
                   v
       [LLM Composition Layer (OpenAI/Gemini)]
                   |
-        +---------+---------+
-        |                   |
-        v                   v
-[Telegram Summary / DM]   [GitHub Pages Public Briefing]
-        |
-        v
- [User Delivery / Schedule]
+        +---------+-----------+
+        |                     |
+        v                     v
+[Telegram DM / Channel]   [Public Report Read Model]
+        |                     |
+        v                     v
+ [Personal Delivery]     [Next.js Web Feed / Detail]
 ```
 
-운영 플로우는 아래와 같습니다.
+운영 플로우:
 
 ```text
 GitHub Actions cron / workflow_dispatch
-  -> public briefing JSON 생성
-  -> GitHub Pages 정적 사이트 빌드/배포
-  -> 사용자별 daily report 실행
-  -> Telegram DM 발송 또는 skip
+  -> public briefing 생성
+  -> reports read model 저장
+  -> Telegram 개인화 리포트 생성 / 발송
+  -> 공개 웹은 reports 테이블을 읽어 feed/detail 제공
 ```
 
 ## 기술 스택
 
-### Application
+### Core / Application
 
 - `Node.js 24`
 - `TypeScript 5.9`
 - `pnpm workspace`
 
 선택 이유:
-- 봇, worker, 공개 사이트를 하나의 저장소에서 일관되게 관리하기 쉽습니다.
-- 타입 기반으로 데이터 계약과 브리핑 구조를 안정적으로 유지할 수 있습니다.
+- bot, worker, web, shared packages를 한 저장소에서 일관되게 운영하기 쉽습니다.
 
 ### Data
 
 - `FRED`
 - `Yahoo Finance scraping`
-- 향후 `ECOS`, 수급/실적 캘린더 데이터 소스 확장 예정
+- 향후 `ECOS`, 수급/실적 캘린더 확장 예정
 
 선택 이유:
 - 초기 비용을 낮추면서 미국/매크로 지표와 주요 지수를 빠르게 커버할 수 있습니다.
@@ -122,8 +125,7 @@ GitHub Actions cron / workflow_dispatch
 - provider-agnostic client interface
 
 선택 이유:
-- 모델 교체와 fallback 전략을 코드 변경 최소화로 처리할 수 있습니다.
-- LLM은 해석/요약 레이어에만 사용해 데이터 신뢰성을 유지합니다.
+- 모델 교체와 fallback 전략을 최소 코드 변경으로 유지할 수 있습니다.
 
 ### Bot / Delivery
 
@@ -131,20 +133,29 @@ GitHub Actions cron / workflow_dispatch
 - `grammY`
 
 선택 이유:
-- 명령 기반 UX와 DM delivery가 명확합니다.
-- 개인화 입력과 최종 전달 채널을 빠르게 검증할 수 있습니다.
+- 명령 기반 UX와 DM delivery 분리가 명확합니다.
+
+### Web / Public Archive
+
+- `Next.js App Router`
+- `Tailwind CSS`
+- `shadcn/ui` 스타일 컴포넌트
+- `React Markdown`
+
+선택 이유:
+- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다.
 
 ### Infra / Ops
 
 - `GitHub Actions`
-- `GitHub Pages`
 - `Docker Compose`
 - `PostgreSQL`
 - `Redis`
+- `Neon` (production DB target)
+- `Vercel` (public web target)
 
 선택 이유:
-- public repo 기준으로 초기 운영 비용을 낮출 수 있습니다.
-- 로컬과 CI의 실행 경로를 비슷하게 유지할 수 있습니다.
+- 로컬 검증 루프와 production 배포 경로를 분리하면서도 구조를 단순하게 유지할 수 있습니다.
 
 ## 디렉토리 구조
 
@@ -171,23 +182,19 @@ GitHub Actions cron / workflow_dispatch
 └── README.md
 ```
 
-구조 역할:
-
-- `apps/api`: 조회/미리보기용 HTTP 엔드포인트
-- `apps/telegram-bot`: 텔레그램 명령 처리와 사용자 입력 UX
-- `apps/worker`: daily report 실행, 공개 브리핑 생성, 스케줄 처리
-- `apps/web`: GitHub Pages에 배포되는 공개 브리핑 웹사이트
+- `apps/telegram-bot`: Telegram 명령 처리와 사용자 입력 UX
+- `apps/worker`: daily report 실행, 공개 브리핑 생성, Telegram delivery
+- `apps/web`: 공개 브리핑 feed/detail 웹 앱
 - `packages/application`: 시장 데이터, 퀀트, LLM, 렌더링, orchestration
-- `packages/database`: Drizzle schema, repository, persistence logic
-- `scripts/pages`: 공개 브리핑 정적 사이트 생성 스크립트
-- `harness`: snapshot/fixture 기반 검증 자산
+- `packages/database`: schema, repository, persistence logic
+- `scripts/pages`: deprecated fallback Pages build 경로
 
 ## 실행 방법
 
 ### 1. 의존성 설치
 
 ```bash
-pnpm install
+COREPACK_HOME=/tmp/corepack pnpm install
 ```
 
 ### 2. 로컬 인프라 실행
@@ -202,6 +209,7 @@ make up
 make dev-api
 make dev-bot
 make dev-worker
+COREPACK_HOME=/tmp/corepack pnpm dev:web
 ```
 
 ### 4. 전체 검증
@@ -210,31 +218,44 @@ make dev-worker
 COREPACK_HOME=/tmp/corepack pnpm verify
 ```
 
-### 5. 공개 브리핑 정적 사이트 생성
+### 5. 웹 앱 빌드 확인
 
 ```bash
-COREPACK_HOME=/tmp/corepack pnpm build
-COREPACK_HOME=/tmp/corepack pnpm pages:build artifacts/public-briefing/public-daily-briefing.json /tmp/public-briefing-site
+COREPACK_HOME=/tmp/corepack pnpm --filter @stock-chatbot/web build
+```
+
+### 6. 통합 테스트
+
+```bash
+make test-integration
 ```
 
 ## 환경 변수 설정
 
 ```bash
+DATABASE_URL=postgresql://stockbot:stockbot@localhost:5432/stockbot
+REDIS_URL=redis://localhost:6379
+
 OPENAI_API_KEY=sk-...
 GEMINI_API_KEY=AIza...
+LLM_PROVIDER=google
+
 TELEGRAM_BOT_TOKEN=123456:telegram-bot-token
 TELEGRAM_TEST_CHAT_ID=123456789
+
 FRED_API_KEY=fred_api_key
-DATABASE_URL=postgresql://user:password@localhost:5432/stock_chatbot
-REDIS_URL=redis://localhost:6379
-LLM_PROVIDER=google
-PUBLIC_BRIEFING_BASE_URL=https://jeongjibsa.github.io/stock-chatbot
+
+PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
 REPORT_TIMEZONE=Asia/Seoul
 DAILY_REPORT_PATTERN="0 0 9 * * *"
 DAILY_REPORT_WINDOW_MINUTES=15
 ```
 
-현재 저장소는 `ECOS_API_KEY`를 필수로 쓰지 않지만, 한국 거시 데이터 확장 시 같은 방식으로 추가할 수 있게 설계되어 있습니다.
+운영 원칙:
+
+- **개발/테스트**: 로컬 Docker PostgreSQL 사용
+- **배포**: Vercel env의 `DATABASE_URL`을 Neon connection string으로 설정
+- `.env`, `.env.*`, 키 파일은 git ignore 대상
 
 ## 스케줄링 / 자동화 방식
 
@@ -245,34 +266,33 @@ DAILY_REPORT_WINDOW_MINUTES=15
 - `Daily Report`
   - `schedule` 또는 `workflow_dispatch`
   - 공개 브리핑 생성
-  - GitHub Pages 배포
-  - 사용자별 daily report 실행
+  - `reports` read model 저장
+  - 사용자별 daily report 생성 및 Telegram DM 발송
 - `Daily Report Smoke`
   - seeded mock portfolio 기준 worker 경로 검증
 - `Telegram Smoke Test`
   - 실제 Bot API로 `getMe` / `sendMessage` 검증
 
-현재 `Daily Report` workflow는 다음 원칙으로 동작합니다.
+중요한 운영 규칙:
 
-- 공개 브리핑 생성은 항상 우선 수행
-- Pages 배포는 개인화 발송과 분리
-- `DATABASE_URL`이 비어 있으면 개인화 발송 단계는 실패가 아니라 skip
-- `DAILY_REPORT_TRIGGER_URL`이 있으면 외부 전용 worker로 전환 가능
+- `PUBLIC_BRIEFING_BASE_URL`은 Vercel 공개 웹 URL을 기준으로 설정
+- `DATABASE_URL`이 없으면 개인화 delivery 단계는 skip
+- 공개 웹은 개인화 데이터를 저장하거나 노출하지 않음
 
-## 텔레그램 브리핑 예시
+## Telegram 브리핑 예시
 
 ```text
 🗞️ 오늘의 브리핑 (2026-03-20 기준)
 
 📌 한 줄 요약
-→ 미국 증시 약세와 변동성 확대가 겹쳐 신규 매수는 보수적으로 접근하시는 편이 좋습니다.
+→ 미국 증시 급락과 변동성 급등이 겹쳐 반등 시 비중 조절이 우선입니다.
 
 ━━━━━━━━━━━━━━━
 🌍 거시 시장 스냅샷
 • NASDAQ: 22,090.69 → 21,647.61  🔵▼ 2.01%
 • S&P 500: 6,606.49 → 6,506.48  🔵▼ 1.51%
 • DOW: 46,021.43 → 45,577.47  🔵▼ 0.96%
-• VIX: 24.06 → 26.78  🔴▲ 11.31%
+• VIX: 24.06 → 26.78  🔴▲ 11.30%
 
 • KOSPI: 5,763.22 → 5,781.20  🔴▲ 0.31%
 • KOSDAQ: 1,143.48 → 1,161.52  🔴▲ 1.58%
@@ -285,79 +305,84 @@ DAILY_REPORT_WINDOW_MINUTES=15
 • USD/KRW 환율: 1,491.81 → 1,498.88  🔴▲ 0.47%
 • 달러인덱스: 119.82 → 120.55  🔴▲ 0.61%
 
-━━━━━━━━━━━━━━━
-📍 주요 지표 변동 요약
-• VIX 급등 → 변동성 경계 강화
-• NASDAQ -2% → 성장주 압력 확대
-• 달러 강세 → 환율 부담 점검 필요
-
-━━━━━━━━━━━━━━━
-🧠 퀀트 시그널 및 매매 아이디어
-• Macro: -0.6 / Trend: -0.4 / Event: +0.2 / Flow: -0.3
-→ Total: -0.42 → REDUCE
-
+🔎 상세 브리핑: https://your-vercel-domain.vercel.app/reports/report-2026-03-20
 ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.
 ```
 
-## 퀀트 스코어링 아이디어 요약
+## 퀀트 스코어링 아이디어
 
-현재 스코어링은 설명 가능한 규칙 기반 구조입니다.
+현재 점수카드는 설명 가능한 규칙 기반입니다.
 
-| 축 | 의미 | 예시 |
-| --- | --- | --- |
-| `Macro` | 금리, 달러, 변동성, 원자재 | 강달러, VIX 급등, 금리 급등 |
-| `Trend` | 지수/종목 가격 추세 | 이동평균 훼손, 최근 수익률 둔화 |
-| `Event` | 뉴스와 이벤트 | 지정학 리스크, AI/실적 촉매 |
-| `Flow` | 수급/ETF/자금 흐름 | 외국인/기관 수급, 테마 자금 쏠림 |
+- `Macro`: 금리, 환율, 달러 강세, 레짐
+- `Trend`: 가격 추세, 이동평균, 모멘텀
+- `Event`: 뉴스/이벤트 방향성
+- `Flow`: 자금 흐름 또는 대용 지표
+- `Total`: 종합 점수
+- `Action`: `BUY / HOLD / REDUCE` 대신 시나리오 제안
 
-최종 해석:
+예시:
 
-- `BUY`: 우호적 조건이 겹치고 리스크가 제한적
-- `HOLD`: 방향성은 있으나 확신이 부족
-- `REDUCE`: 방어 우선, 신규 매수 제한 또는 비중 축소 검토
-
-향후에는 레짐 판단도 더 명확하게 분리할 계획입니다.
-
-- `Risk-On`
-- `Neutral`
-- `Risk-Off`
+```text
+Macro: -0.60 / Trend: -0.40 / Event: +0.20 / Flow: -0.30
+→ Total: -0.42 → REDUCE
+```
 
 ## 운영 시 고려사항 / 리스크
 
 ### 비용
 
-- LLM 호출은 브리핑 생성 레이어에만 제한해야 합니다.
+- LLM 호출은 가장 비싼 단계입니다.
 - 공개 브리핑과 개인화 브리핑을 분리해 호출 수를 줄이는 구조가 유리합니다.
-
-### Rate Limit
-
-- Gemini/OpenAI는 호출 제한이 있습니다.
-- 현재 공개 브리핑 경로는 LLM이 실패해도 fallback으로 계속 진행합니다.
-- 뉴스/종목별 enrichment는 429 대응이 특히 중요합니다.
+- production DB는 Neon을 사용하되, 개발 단계에서는 비용 없는 로컬 Docker 경로를 유지합니다.
 
 ### 데이터 품질
 
-- 미국/한국/매크로 데이터의 기준 시점이 다를 수 있습니다.
-- `asOfDate`가 다르면 같은 시점의 사건처럼 과장하지 않아야 합니다.
-- Yahoo Finance scraping은 응답 형식 변화 리스크가 있습니다.
+- FRED와 Yahoo Finance의 기준 시점이 다를 수 있습니다.
+- 일부 지표는 `asOfDate`가 다르므로 같은 시점 데이터처럼 과장하면 안 됩니다.
+- 기사 품질이 낮거나 데이터가 누락돼도 전체 브리핑은 계속 생성되도록 설계합니다.
 
 ### 장애 대응
 
-- Pages 배포와 개인화 발송을 분리해 한쪽 실패가 전체를 막지 않게 해야 합니다.
-- secret이 없을 때는 실패보다 skip으로 처리하는 편이 운영상 낫습니다.
-- 공개 브리핑은 항상 생성하고, 개인화 발송은 준비된 환경에서만 실행하는 구조가 안전합니다.
+- Telegram delivery 실패와 report generation 실패를 분리 기록합니다.
+- LLM composition 실패 시 fallback renderer로 계속 진행합니다.
+- GitHub Actions schedule은 지연될 수 있으므로 idempotency가 필요합니다.
+
+### 개인정보
+
+- 공개 웹에는 개인화 포트폴리오 데이터가 포함되지 않습니다.
+- 보유 종목, 개인 기사 요약, 개인 점수카드는 Telegram DM 전용입니다.
 
 ## 향후 개선 계획
 
-- 포트폴리오별 맞춤 브리핑 고도화
-- 종목별 이벤트 분석 강화
-- 외국인/기관 수급, ETF flow, 실적 캘린더 실데이터 연결
-- 점수 기반 전략의 백테스트 및 튜닝
-- 다중 LLM fallback 정책 강화
-- GitHub Pages feed를 날짜별 최신순 공개 브리핑 허브로 확장
-- 필요 시 공개 웹사이트를 `Next.js` 기반 feed/ISR 구조로 이관
-- 모바일 앱은 후속 phase에서 별도 진행
+- `reports` read model을 기반으로 공개 웹 feed/detail 고도화
+- 공개 웹을 Vercel 기준으로 안정화한 뒤 GitHub Pages fallback 축소
+- 인증된 웹 관리 콘솔 추가
+- 전략 성과 추적 및 백테스트
+- 자금 흐름/실적 캘린더 데이터 소스 확장
+- LLM fallback 정책 고도화
+
+현재 범위에서 제외:
+
+- 모바일 앱
+- 자동 매매
+- 인증 기반 개인 웹 대시보드
+
+## Vercel 배포 메모
+
+이 프로젝트의 공개 웹은 `apps/web`를 root directory로 두고 배포하는 것을 기준으로 합니다.
+
+1. Vercel에서 repo import
+2. Root Directory를 `apps/web`로 설정
+3. Environment Variables에 최소 아래를 설정
+
+```bash
+DATABASE_URL=postgresql://neondb_owner:***@ep-***.neon.tech/neondb?sslmode=require
+PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
+```
+
+4. build는 기본 `next build`
+5. 공개 웹은 `reports` 테이블만 읽고, 개인화 Telegram 기능은 계속 worker가 담당
 
 ## 라이선스
 
-현재 별도 라이선스 파일이 없습니다. 외부 공개/배포 전에 라이선스 정책을 먼저 확정하는 것을 권장합니다.
+별도 라이선스를 아직 지정하지 않았습니다. 필요 시 프로젝트 성격에 맞춰 추가합니다.

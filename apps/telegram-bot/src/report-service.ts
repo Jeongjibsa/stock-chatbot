@@ -15,6 +15,7 @@ import {
   createDatabase,
   createPool,
   PortfolioHoldingRepository,
+  PublicReportRepository,
   ReportRunRepository,
   UserMarketWatchItemRepository,
   UserRepository
@@ -86,6 +87,7 @@ export function buildTelegramReportRuntime(env: Environment = process.env): {
       yahooFinanceAdapter: new YahooFinanceScrapingMarketDataAdapter()
     }),
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
+    publicReportRepository: new PublicReportRepository(db),
     reportRunRepository: new ReportRunRepository(db),
     userMarketWatchRepository: new UserMarketWatchItemRepository(db)
   };

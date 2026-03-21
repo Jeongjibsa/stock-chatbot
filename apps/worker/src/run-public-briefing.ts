@@ -13,13 +13,19 @@ import {
   GOOGLE_PROVIDER_PROFILE,
   createLlmClient,
   OPENAI_PROVIDER_PROFILE,
+  renderPublicDailyBriefingMarkdown,
   toQuantStrategyBullets,
   YahooFinanceScrapingMarketDataAdapter,
   type DailyReportComposition,
   type MarketDataAdapter,
   type MarketDataFetchResult
 } from "@stock-chatbot/application";
-import { DEFAULT_MARKET_WATCH_CATALOG } from "@stock-chatbot/database";
+import {
+  createDatabase,
+  createPool,
+  DEFAULT_MARKET_WATCH_CATALOG,
+  PublicReportRepository
+} from "@stock-chatbot/database";
 
 import {
   readFredApiKey,
@@ -102,6 +108,29 @@ export async function buildPublicBriefing(
   });
 }
 
+export function buildPublicReportInsertInput(input: {
+  briefing: Awaited<ReturnType<typeof buildPublicBriefing>>;
+}): {
+  contentMarkdown: string;
+  marketRegime: string;
+  reportDate: string;
+  signals: string[];
+  summary: string;
+  totalScore: string;
+} {
+  const marketRegime = deriveMarketRegime(input.briefing);
+  const totalScore = deriveTotalScore(input.briefing);
+
+  return {
+    reportDate: input.briefing.runDate,
+    summary: input.briefing.summaryLine,
+    marketRegime,
+    totalScore: totalScore.toFixed(2),
+    signals: input.briefing.keyIndicatorBullets.slice(0, 3),
+    contentMarkdown: renderPublicDailyBriefingMarkdown(input.briefing)
+  };
+}
+
 export function formatPublicBriefingBuildSummary(input: {
   outputPath: string;
   runDate: string;
@@ -117,6 +146,7 @@ export function formatPublicBriefingBuildSummary(input: {
 export async function runPublicBriefing(
   env: Environment = process.env
 ): Promise<{
+  persistedReportId?: string;
   outputPath: string;
   runDate: string;
   snapshotCount: number;
@@ -140,11 +170,30 @@ export async function runPublicBriefing(
   }
 
   const briefing = await buildPublicBriefing(buildInput);
+  const databaseUrl = readOptionalDatabaseUrl(env);
+  let persistedReportId: string | undefined;
 
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${JSON.stringify(briefing, null, 2)}\n`);
 
+  if (databaseUrl) {
+    const pool = createPool(databaseUrl);
+
+    try {
+      const repository = new PublicReportRepository(createDatabase(pool));
+      const created = await repository.insertReport(
+        buildPublicReportInsertInput({
+          briefing
+        })
+      );
+      persistedReportId = created.id;
+    } finally {
+      await pool.end();
+    }
+  }
+
   return {
+    ...(persistedReportId ? { persistedReportId } : {}),
     runDate,
     outputPath,
     snapshotCount: briefing.marketSnapshot.length
@@ -196,6 +245,16 @@ function buildReportCompositionService(
   });
 }
 
+function readOptionalDatabaseUrl(env: Environment): string | undefined {
+  const databaseUrl = env.DATABASE_URL?.trim();
+
+  if (!databaseUrl || databaseUrl === "replace-me") {
+    return undefined;
+  }
+
+  return databaseUrl;
+}
+
 function buildFallbackSummaryLine(results: MarketDataFetchResult[]): string {
   const marketMap = new Map(
     results.flatMap((result) =>
@@ -245,6 +304,58 @@ function buildKeyIndicatorBullets(results: MarketDataFetchResult[]): string[] {
   }
 
   return bullets.slice(0, 4);
+}
+
+function deriveMarketRegime(
+  briefing: Awaited<ReturnType<typeof buildPublicBriefing>>
+): string {
+  const negativeSignals = [
+    ...briefing.keyIndicatorBullets.filter(
+      (bullet) =>
+        bullet.includes("변동성") ||
+        bullet.includes("약세") ||
+        bullet.includes("환율 부담")
+    )
+  ].length;
+  const positiveSignals = [
+    ...briefing.keyIndicatorBullets.filter(
+      (bullet) => bullet.includes("강세") || bullet.includes("수요 기대")
+    )
+  ].length;
+
+  if (negativeSignals - positiveSignals >= 2) {
+    return "Risk-Off";
+  }
+
+  if (positiveSignals - negativeSignals >= 2) {
+    return "Risk-On";
+  }
+
+  return "Neutral";
+}
+
+function deriveTotalScore(
+  briefing: Awaited<ReturnType<typeof buildPublicBriefing>>
+): number {
+  return Number.parseFloat(
+    (
+      briefing.keyIndicatorBullets.reduce((score, bullet) => {
+        if (bullet.includes("변동성") || bullet.includes("약세")) {
+          return score - 0.2;
+        }
+
+        if (bullet.includes("강세") || bullet.includes("수요 기대")) {
+          return score + 0.15;
+        }
+
+        if (bullet.includes("환율 부담")) {
+          return score - 0.1;
+        }
+
+        return score;
+      }, 0)
+    ).toFixed(2)
+  );
 }
 
 const isEntrypoint = process.argv[1] === fileURLToPath(import.meta.url);

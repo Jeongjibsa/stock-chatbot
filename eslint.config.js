@@ -5,7 +5,7 @@ import globals from "globals";
 
 export default [
   {
-    ignores: ["**/dist/**", "**/node_modules/**"]
+    ignores: ["**/.next/**", "**/dist/**", "**/node_modules/**"]
   },
   js.configs.recommended,
   {
@@ -35,7 +35,7 @@ export default [
     }
   },
   {
-    files: ["**/*.ts"],
+    files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       ecmaVersion: "latest",
       globals: {
@@ -43,6 +43,9 @@ export default [
       },
       parser: tsParser,
       parserOptions: {
+        ecmaFeatures: {
+          jsx: true
+        },
         sourceType: "module"
       }
     },
@@ -51,6 +54,7 @@ export default [
     },
     rules: {
       "@typescript-eslint/consistent-type-imports": "error",
+      "no-undef": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
