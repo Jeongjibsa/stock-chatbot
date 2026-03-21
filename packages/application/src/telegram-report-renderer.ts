@@ -1,6 +1,8 @@
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
 
+const SECTION_DIVIDER = "━━━━━━━━━━━━━━━";
+
 export type TelegramReportRenderInput = {
   eventBullets?: string[];
   displayName: string;
@@ -44,34 +46,45 @@ export function renderTelegramDailyReport(
     "",
     `📌 한 줄 요약`,
     buildSummaryLine(
+      successfulMarketItems,
       successfulMarketItems.length,
       failedMarketItems.length,
       input.holdings.length,
       input.summaryLine
     ),
     "",
+    SECTION_DIVIDER,
     "🌍 거시 시장 스냅샷",
     ...renderMarketSnapshot(successfulMarketItems),
     "",
+    SECTION_DIVIDER,
     "📍 주요 지표 변동 요약",
     ...renderIndicatorSummarySection(
       successfulMarketItems,
       input.keyIndicatorSummaries
     ),
     "",
+    SECTION_DIVIDER,
     "📈 보유 종목별 최근 동향",
     ...renderHoldings(input.holdings, input.holdingTrendBullets)
   ];
 
   lines.push(
     "",
+    SECTION_DIVIDER,
     "📰 종목 관련 핵심 기사 및 이벤트 요약",
-    ...renderPortfolioNews(input.portfolioNewsBriefs, input.articleSummaryBullets)
+    ...renderPortfolioNews(input.holdings.length, input.portfolioNewsBriefs, input.articleSummaryBullets)
   );
-  lines.push("", "🧠 퀀트 기반 시그널 및 매매 아이디어", ...renderScenarioLines(input.quantScenarios));
-  lines.push("", "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
   lines.push(
     "",
+    SECTION_DIVIDER,
+    "🧠 퀀트 기반 시그널 및 매매 아이디어",
+    ...renderScenarioLines(input.quantScenarios)
+  );
+  lines.push("", SECTION_DIVIDER, "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
+  lines.push(
+    "",
+    SECTION_DIVIDER,
     "🧭 시장, 매크로, 자금 브리핑",
     ...renderCombinedBriefingSection(
       input.marketBullets,
@@ -81,6 +94,7 @@ export function renderTelegramDailyReport(
   );
   lines.push(
     "",
+    SECTION_DIVIDER,
     "🗓️ 주요 일정 및 이벤트 브리핑",
     ...renderCustomBulletSection(input.eventBullets, [
       "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
@@ -88,29 +102,50 @@ export function renderTelegramDailyReport(
   );
 
   if (failedMarketItems.length > 0) {
-    lines.push("", "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
+    lines.push("", SECTION_DIVIDER, "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
   }
 
-  lines.push("", ...renderDisclaimer());
+  lines.push("", SECTION_DIVIDER, ...renderDisclaimer());
 
   return lines.join("\n");
 }
 
 function buildSummaryLine(
+  results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>,
   marketOkCount: number,
   marketErrorCount: number,
   holdingCount: number,
   customSummary?: string
 ): string {
   if (customSummary) {
-    return customSummary;
+    return customSummary.startsWith("→") ? customSummary : `→ ${customSummary}`;
+  }
+
+  const nasdaq = results.find((result) => result.data.itemCode === "NASDAQ");
+  const sp500 = results.find((result) => result.data.itemCode === "SP500");
+  const vix = results.find((result) => result.data.itemCode === "VIX");
+
+  if (
+    (nasdaq?.data.changePercent ?? 0) < 0 &&
+    (sp500?.data.changePercent ?? 0) < 0 &&
+    (vix?.data.changePercent ?? 0) > 5
+  ) {
+    return "→ Risk-Off 재진입 구간으로 보이며, 신규 매수는 보수적으로 접근하시는 편이 좋습니다.";
+  }
+
+  if (
+    (nasdaq?.data.changePercent ?? 0) > 0 &&
+    (sp500?.data.changePercent ?? 0) > 0 &&
+    (vix?.data.changePercent ?? 0) < 0
+  ) {
+    return "→ Risk-On 완화 흐름으로 보이며, 추격 매수보다 선별적 분할 접근이 적절합니다.";
   }
 
   if (marketErrorCount === 0) {
-    return `시장 지표 ${marketOkCount}개와 보유 종목 ${holdingCount}개 기준으로 정리했습니다.`;
+    return `→ 시장 지표 ${marketOkCount}개와 보유 종목 ${holdingCount}개 기준으로 핵심 대응 포인트를 정리했습니다.`;
   }
 
-  return `시장 지표 ${marketOkCount}개를 반영했고 ${marketErrorCount}개는 누락됐습니다. 보유 종목 ${holdingCount}개 기준으로 정리했습니다.`;
+  return `→ 시장 지표 ${marketOkCount}개를 반영했고 ${marketErrorCount}개는 누락됐습니다. 보유 종목 ${holdingCount}개 기준으로 대응 포인트를 정리했습니다.`;
 }
 
 function renderMarketSnapshot(
@@ -196,7 +231,7 @@ function renderHoldings(
   }
 
   if (holdings.length === 0) {
-    return ["• 등록된 보유 종목이 없습니다."];
+    return ["• (보유 종목 없음)"];
   }
 
   const lines: string[] = [];
@@ -228,6 +263,7 @@ function renderFailures(
 }
 
 function renderPortfolioNews(
+  holdingCount: number,
   briefs?: HoldingNewsBrief[],
   customBullets?: string[]
 ): string[] {
@@ -236,7 +272,9 @@ function renderPortfolioNews(
   }
 
   if (!briefs || briefs.length === 0) {
-    return ["• 관련 기사 요약이 아직 없습니다."];
+    return holdingCount === 0
+      ? ["• (보유 종목 입력 시 자동 생성)"]
+      : ["• 관련 기사 및 이벤트 요약이 아직 없습니다."];
   }
 
   const lines: string[] = [];
@@ -265,7 +303,7 @@ function renderPortfolioNews(
 
 function renderScenarioLines(quantScenarios?: string[]): string[] {
   if (!quantScenarios || quantScenarios.length === 0) {
-    return ["• 규칙 기반 시그널이 아직 없습니다."];
+    return ["• 규칙 기반 점수 산출 전입니다."];
   }
 
   return quantScenarios.map((scenario) => `• ${scenario}`);

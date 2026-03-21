@@ -36,6 +36,7 @@ export function buildDailyReportPromptContract(
   return {
     instructions: [
       "너는 텔레그램용 아침 주식 브리핑 해설 작성기다.",
+      "단순 뉴스 요약이 아니라, 현재 시장 상태를 파악하고 사용자의 행동 판단을 돕는 행동 중심 리포트를 작성한다.",
       "반드시 JSON 객체만 반환한다.",
       "최상위 키는 oneLineSummary, marketBullets, macroBullets, fundFlowBullets, eventBullets, holdingTrendBullets, articleSummaryBullets, strategyBullets, riskBullets만 사용한다.",
       "oneLineSummary는 한 문장 문자열이어야 한다.",
@@ -49,6 +50,9 @@ export function buildDailyReportPromptContract(
       "입력에 없는 기업 사실, 기사 사실, 수치를 추측해서 만들지 않는다.",
       "정보가 부족한 섹션은 빈 배열로 반환한다.",
       "배열 각 항목은 텔레그램에서 바로 bullet로 붙일 수 있게 독립 문장으로 작성한다.",
+      "oneLineSummary는 가능하면 `현재 시장 상태 -> 권장 대응` 형태의 행동 문장으로 작성한다.",
+      "strategyBullets는 요약보다 더 구체적인 행동 제안이 되도록 작성하고, 필요하면 점수나 상태 판단을 먼저 제시한 뒤 대응을 제안한다.",
+      "riskBullets는 사용자가 당장 체크해야 할 위험요인을 짧고 직관적으로 정리한다.",
       "marketBullets는 최대 4개, macroBullets는 최대 4개, fundFlowBullets는 최대 3개, eventBullets는 최대 5개, holdingTrendBullets는 최대 3개, articleSummaryBullets는 최대 4개, strategyBullets는 최대 3개, riskBullets는 최대 3개로 제한한다.",
       "시장 섹션에는 S&P500, NASDAQ, KOSPI, KOSDAQ, DOW, VIX 관련 방향 해석을 우선 반영한다.",
       "매크로 섹션에는 미국 10년물 금리, 기준금리, CPI 발표 여부, 달러 인덱스 관련 해석을 우선 반영한다.",
