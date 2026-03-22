@@ -205,7 +205,7 @@ describe("DailyReportOrchestrator", () => {
     });
 
     expect(result.reportText).toContain(
-      "시세 기준은 184,000 → 182,000, 전일 대비 -1.09%입니다."
+      "시세 스냅샷은 184,000 → 182,000, 전일 대비 -1.09% 기준입니다."
     );
   });
 
