@@ -46,30 +46,118 @@ export class PublicReportRepository {
   }
 
   async listReports(): Promise<ReportRecord[]> {
-    return this.db
-      .select()
-      .from(reports)
-      .orderBy(desc(reports.reportDate), desc(reports.createdAt));
+    try {
+      return await this.db
+        .select()
+        .from(reports)
+        .orderBy(desc(reports.reportDate), desc(reports.createdAt));
+    } catch (error) {
+      if (!isMissingIndicatorTagsError(error)) {
+        throw error;
+      }
+
+      return this.db
+        .select({
+          id: reports.id,
+          reportDate: reports.reportDate,
+          summary: reports.summary,
+          marketRegime: reports.marketRegime,
+          totalScore: reports.totalScore,
+          signals: reports.signals,
+          contentMarkdown: reports.contentMarkdown,
+          createdAt: reports.createdAt
+        })
+        .from(reports)
+        .orderBy(desc(reports.reportDate), desc(reports.createdAt))
+        .then((rows) => rows.map((row) => ({ ...row, indicatorTags: [] } as ReportRecord)));
+    }
   }
 
   async getReportById(id: string): Promise<ReportRecord | null> {
-    const result = await this.db
-      .select()
-      .from(reports)
-      .where(eq(reports.id, id))
-      .limit(1);
+    try {
+      const result = await this.db
+        .select()
+        .from(reports)
+        .where(eq(reports.id, id))
+        .limit(1);
 
-    return result[0] ?? null;
+      return result[0] ?? null;
+    } catch (error) {
+      if (!isMissingIndicatorTagsError(error)) {
+        throw error;
+      }
+
+      const result = await this.db
+        .select({
+          id: reports.id,
+          reportDate: reports.reportDate,
+          summary: reports.summary,
+          marketRegime: reports.marketRegime,
+          totalScore: reports.totalScore,
+          signals: reports.signals,
+          contentMarkdown: reports.contentMarkdown,
+          createdAt: reports.createdAt
+        })
+        .from(reports)
+        .where(eq(reports.id, id))
+        .limit(1);
+
+      return result[0]
+        ? ({ ...result[0], indicatorTags: [] } as ReportRecord)
+        : null;
+    }
   }
 
   async findLatestByReportDate(reportDate: string): Promise<ReportRecord | null> {
-    const result = await this.db
-      .select()
-      .from(reports)
-      .where(eq(reports.reportDate, reportDate))
-      .orderBy(desc(reports.createdAt))
-      .limit(1);
+    try {
+      const result = await this.db
+        .select()
+        .from(reports)
+        .where(eq(reports.reportDate, reportDate))
+        .orderBy(desc(reports.createdAt))
+        .limit(1);
 
-    return result[0] ?? null;
+      return result[0] ?? null;
+    } catch (error) {
+      if (!isMissingIndicatorTagsError(error)) {
+        throw error;
+      }
+
+      const result = await this.db
+        .select({
+          id: reports.id,
+          reportDate: reports.reportDate,
+          summary: reports.summary,
+          marketRegime: reports.marketRegime,
+          totalScore: reports.totalScore,
+          signals: reports.signals,
+          contentMarkdown: reports.contentMarkdown,
+          createdAt: reports.createdAt
+        })
+        .from(reports)
+        .where(eq(reports.reportDate, reportDate))
+        .orderBy(desc(reports.createdAt))
+        .limit(1);
+
+      return result[0]
+        ? ({ ...result[0], indicatorTags: [] } as ReportRecord)
+        : null;
+    }
   }
+}
+
+function isMissingIndicatorTagsError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const code =
+    "code" in error && typeof error.code === "string" ? error.code : undefined;
+  const message =
+    "message" in error && typeof error.message === "string" ? error.message : "";
+
+  return (
+    code === "42703" ||
+    message.includes('column "indicator_tags" does not exist')
+  );
 }

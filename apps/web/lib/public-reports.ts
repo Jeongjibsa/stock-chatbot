@@ -6,25 +6,55 @@ import { getWebPool } from "./db";
 export async function listPublicReports(): Promise<PublicReport[]> {
   noStore();
   const pool = getWebPool();
-  const result = await pool.query<{
-    content_markdown: string;
-    created_at: Date;
-    id: string;
-    indicator_tags: string[];
-    market_regime: string;
-    report_date: Date | string;
-    signals: string[];
-    summary: string;
-    total_score: string;
-  }>(
-    [
-      'SELECT DISTINCT ON ("report_date") "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
-      'FROM "reports"',
-      'ORDER BY "report_date" DESC, "created_at" DESC'
-    ].join(" ")
-  );
+  try {
+    const result = await pool.query<{
+      content_markdown: string;
+      created_at: Date;
+      id: string;
+      indicator_tags: string[];
+      market_regime: string;
+      report_date: Date | string;
+      signals: string[];
+      summary: string;
+      total_score: string;
+    }>(
+      [
+        'SELECT DISTINCT ON ("report_date") "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
+        'FROM "reports"',
+        'ORDER BY "report_date" DESC, "created_at" DESC'
+      ].join(" ")
+    );
 
-  return result.rows.map(mapRowToPublicReport);
+    return result.rows.map(mapRowToPublicReport);
+  } catch (error) {
+    if (!isMissingIndicatorTagsError(error)) {
+      throw error;
+    }
+
+    const legacyResult = await pool.query<{
+      content_markdown: string;
+      created_at: Date;
+      id: string;
+      market_regime: string;
+      report_date: Date | string;
+      signals: string[];
+      summary: string;
+      total_score: string;
+    }>(
+      [
+        'SELECT DISTINCT ON ("report_date") "id", "report_date", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"',
+        'FROM "reports"',
+        'ORDER BY "report_date" DESC, "created_at" DESC'
+      ].join(" ")
+    );
+
+    return legacyResult.rows.map((row) =>
+      mapRowToPublicReport({
+        ...row,
+        indicator_tags: []
+      })
+    );
+  }
 }
 
 export async function getPublicReportById(
@@ -32,27 +62,59 @@ export async function getPublicReportById(
 ): Promise<PublicReport | null> {
   noStore();
   const pool = getWebPool();
-  const result = await pool.query<{
-    content_markdown: string;
-    created_at: Date;
-    id: string;
-    indicator_tags: string[];
-    market_regime: string;
-    report_date: Date | string;
-    signals: string[];
-    summary: string;
-    total_score: string;
-  }>(
-    [
-      'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
-      'FROM "reports"',
-      'WHERE "id" = $1',
-      'LIMIT 1'
-    ].join(" "),
-    [id]
-  );
+  try {
+    const result = await pool.query<{
+      content_markdown: string;
+      created_at: Date;
+      id: string;
+      indicator_tags: string[];
+      market_regime: string;
+      report_date: Date | string;
+      signals: string[];
+      summary: string;
+      total_score: string;
+    }>(
+      [
+        'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
+        'FROM "reports"',
+        'WHERE "id" = $1',
+        'LIMIT 1'
+      ].join(" "),
+      [id]
+    );
 
-  return result.rows[0] ? mapRowToPublicReport(result.rows[0]) : null;
+    return result.rows[0] ? mapRowToPublicReport(result.rows[0]) : null;
+  } catch (error) {
+    if (!isMissingIndicatorTagsError(error)) {
+      throw error;
+    }
+
+    const legacyResult = await pool.query<{
+      content_markdown: string;
+      created_at: Date;
+      id: string;
+      market_regime: string;
+      report_date: Date | string;
+      signals: string[];
+      summary: string;
+      total_score: string;
+    }>(
+      [
+        'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"',
+        'FROM "reports"',
+        'WHERE "id" = $1',
+        'LIMIT 1'
+      ].join(" "),
+      [id]
+    );
+
+    return legacyResult.rows[0]
+      ? mapRowToPublicReport({
+          ...legacyResult.rows[0],
+          indicator_tags: []
+        })
+      : null;
+  }
 }
 
 function mapRowToPublicReport(report: {
@@ -85,4 +147,20 @@ function normalizeDate(value: Date | string): string {
   }
 
   return value.slice(0, 10);
+}
+
+function isMissingIndicatorTagsError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const code =
+    "code" in error && typeof error.code === "string" ? error.code : undefined;
+  const message =
+    "message" in error && typeof error.message === "string" ? error.message : "";
+
+  return (
+    code === "42703" ||
+    message.includes('column "indicator_tags" does not exist')
+  );
 }

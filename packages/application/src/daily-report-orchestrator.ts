@@ -225,320 +225,358 @@ export class DailyReportOrchestrator {
       };
     }
 
-    const defaultMarketItems = this.dependencies.defaultMarketItems;
-    const [holdings, marketWatchItems] = await Promise.all([
-      this.dependencies.portfolioHoldingRepository.listByUserId(input.user.id),
-      defaultMarketItems
-        ? Promise.resolve(defaultMarketItems)
-        : this.dependencies.userMarketWatchRepository?.listEffectiveByUserId(input.user.id) ??
-          Promise.resolve([])
-    ]);
-    const marketResults = await this.dependencies.marketDataAdapter.fetchMany(
-      marketWatchItems.map((item) => ({
-        asOfDate: input.runDate,
-        itemCode: item.itemCode,
-        itemName: item.itemName,
-        sourceKey: item.sourceKey
-      }))
-    );
-    const portfolioNewsBriefs = this.dependencies.portfolioNewsBriefService
-      ? await this.dependencies.portfolioNewsBriefService.generateBriefsForHoldings(
-          holdings.map((holding) => ({
+    let marketResults: MarketDataFetchResult[] = [];
+    let portfolioNewsBriefs: HoldingNewsBrief[] = [];
+
+    try {
+      const defaultMarketItems = this.dependencies.defaultMarketItems;
+      const [holdings, marketWatchItems] = await Promise.all([
+        this.dependencies.portfolioHoldingRepository.listByUserId(input.user.id),
+        defaultMarketItems
+          ? Promise.resolve(defaultMarketItems)
+          : this.dependencies.userMarketWatchRepository?.listEffectiveByUserId(input.user.id) ??
+            Promise.resolve([])
+      ]);
+      marketResults = await this.dependencies.marketDataAdapter.fetchMany(
+        marketWatchItems.map((item) => ({
+          asOfDate: input.runDate,
+          itemCode: item.itemCode,
+          itemName: item.itemName,
+          sourceKey: item.sourceKey
+        }))
+      );
+      portfolioNewsBriefs = this.dependencies.portfolioNewsBriefService
+        ? await this.dependencies.portfolioNewsBriefService.generateBriefsForHoldings(
+            holdings.map((holding) => ({
+              companyName: holding.companyName,
+              symbol: holding.symbol,
+              exchange: holding.exchange
+            }))
+          )
+        : [];
+      const holdingInputs = holdings.map((holding) => ({
+        companyName: holding.companyName,
+        symbol: holding.symbol,
+        exchange: holding.exchange
+      }));
+      const holdingSnapshots = await buildHoldingSnapshotMap({
+        holdings: holdingInputs,
+        ...(this.dependencies.holdingPriceSnapshotProvider
+          ? { provider: this.dependencies.holdingPriceSnapshotProvider }
+          : {}),
+        runDate: input.runDate
+      });
+      const quantScorecards = buildQuantScorecards({
+        holdings: holdingInputs,
+        marketResults,
+        portfolioNewsBriefs
+      });
+      const quantScenarios = toQuantStrategyBullets(quantScorecards);
+      const effectiveDateResolution = resolveEffectiveReportDate({
+        marketResults,
+        requestedSeoulDate: input.runDate
+      });
+      const effectiveReportDate = effectiveDateResolution.effectiveReportDate;
+      const portfolioRebalancing = await this.resolvePortfolioRebalancing({
+        holdings: holdings.map((holding) => {
+          const snapshot = holdingSnapshots.get(holding.symbol);
+
+          return {
             companyName: holding.companyName,
             symbol: holding.symbol,
-            exchange: holding.exchange
-          }))
-        )
-      : [];
-    const holdingInputs = holdings.map((holding) => ({
-      companyName: holding.companyName,
-      symbol: holding.symbol,
-      exchange: holding.exchange
-    }));
-    const holdingSnapshots = await buildHoldingSnapshotMap({
-      holdings: holdingInputs,
-      ...(this.dependencies.holdingPriceSnapshotProvider
-        ? { provider: this.dependencies.holdingPriceSnapshotProvider }
-        : {}),
-      runDate: input.runDate
-    });
-    const quantScorecards = buildQuantScorecards({
-      holdings: holdingInputs,
-      marketResults,
-      portfolioNewsBriefs
-    });
-    const quantScenarios = toQuantStrategyBullets(quantScorecards);
-    const effectiveDateResolution = resolveEffectiveReportDate({
-      marketResults,
-      requestedSeoulDate: input.runDate
-    });
-    const effectiveReportDate = effectiveDateResolution.effectiveReportDate;
-    const portfolioRebalancing = await this.resolvePortfolioRebalancing({
-      holdings: holdings.map((holding) => {
-        const snapshot = holdingSnapshots.get(holding.symbol);
+            exchange: holding.exchange,
+            ...(snapshot?.currentPrice !== undefined
+              ? { currentPrice: snapshot.currentPrice }
+              : {}),
+            ...(snapshot?.previousClose !== undefined
+              ? { previousClose: snapshot.previousClose }
+              : {}),
+            ...(snapshot?.changePercent !== undefined
+              ? { changePercent: snapshot.changePercent }
+              : {})
+          };
+        }),
+        marketResults,
+        portfolioNewsBriefs,
+        quantScorecards,
+        userId: input.user.id,
+        ...(input.portfolioRebalancing
+          ? { provided: input.portfolioRebalancing }
+          : {}),
+        ...effectiveDateResolution
+      });
+      let strategySnapshotError: string | undefined;
 
-        return {
-          companyName: holding.companyName,
-          symbol: holding.symbol,
-          exchange: holding.exchange,
-          ...(snapshot?.currentPrice !== undefined
-            ? { currentPrice: snapshot.currentPrice }
-            : {}),
-          ...(snapshot?.previousClose !== undefined
-            ? { previousClose: snapshot.previousClose }
-            : {}),
-          ...(snapshot?.changePercent !== undefined
-            ? { changePercent: snapshot.changePercent }
-            : {})
-        };
-      }),
-      marketResults,
-      portfolioNewsBriefs,
-      quantScorecards,
-      userId: input.user.id,
-      ...(input.portfolioRebalancing
-        ? { provided: input.portfolioRebalancing }
-        : {}),
-      ...effectiveDateResolution
-    });
-    let strategySnapshotError: string | undefined;
+      if (this.dependencies.strategySnapshotRepository) {
+        try {
+          const holdingMap = new Map(
+            holdings.map((holding) => [holding.symbol, holding])
+          );
 
-    if (this.dependencies.strategySnapshotRepository) {
-      try {
-        const holdingMap = new Map(
-          holdings.map((holding) => [holding.symbol, holding])
-        );
+          await this.dependencies.strategySnapshotRepository.insertMany(
+            quantScorecards.map((scorecard) => {
+              const matchingHolding = scorecard.symbol
+                ? holdingMap.get(scorecard.symbol)
+                : undefined;
+              const snapshotInput: {
+                action: string;
+                actionSummary: string;
+                companyName: string;
+                eventScore: string;
+                exchange?: string;
+                flowScore: string;
+                macroScore: string;
+                reportRunId: string;
+                runDate: string;
+                scheduleType: string;
+                symbol?: string;
+                totalScore: string;
+                trendScore: string;
+                userId: string;
+              } = {
+                reportRunId: started.run.id,
+                userId: input.user.id,
+                runDate: input.runDate,
+                scheduleType: input.scheduleType,
+                companyName: scorecard.companyName,
+                action: scorecard.action,
+                actionSummary: scorecard.actionSummary,
+                macroScore: scorecard.macroScore.toFixed(2),
+                trendScore: scorecard.trendScore.toFixed(2),
+                eventScore: scorecard.eventScore.toFixed(2),
+                flowScore: scorecard.flowScore.toFixed(2),
+                totalScore: scorecard.totalScore.toFixed(2)
+              };
 
-        await this.dependencies.strategySnapshotRepository.insertMany(
-          quantScorecards.map((scorecard) => {
-            const matchingHolding = scorecard.symbol
-              ? holdingMap.get(scorecard.symbol)
-              : undefined;
-            const snapshotInput: {
-              action: string;
-              actionSummary: string;
-              companyName: string;
-              eventScore: string;
-              exchange?: string;
-              flowScore: string;
-              macroScore: string;
-              reportRunId: string;
-              runDate: string;
-              scheduleType: string;
-              symbol?: string;
-              totalScore: string;
-              trendScore: string;
-              userId: string;
-            } = {
-              reportRunId: started.run.id,
-              userId: input.user.id,
-              runDate: input.runDate,
-              scheduleType: input.scheduleType,
-              companyName: scorecard.companyName,
-              action: scorecard.action,
-              actionSummary: scorecard.actionSummary,
-              macroScore: scorecard.macroScore.toFixed(2),
-              trendScore: scorecard.trendScore.toFixed(2),
-              eventScore: scorecard.eventScore.toFixed(2),
-              flowScore: scorecard.flowScore.toFixed(2),
-              totalScore: scorecard.totalScore.toFixed(2)
-            };
+              if (matchingHolding?.exchange) {
+                snapshotInput.exchange = matchingHolding.exchange;
+              }
 
-            if (matchingHolding?.exchange) {
-              snapshotInput.exchange = matchingHolding.exchange;
-            }
+              if (scorecard.symbol) {
+                snapshotInput.symbol = scorecard.symbol;
+              }
 
-            if (scorecard.symbol) {
-              snapshotInput.symbol = scorecard.symbol;
-            }
-
-            return snapshotInput;
-          })
-        );
-      } catch (error) {
-        strategySnapshotError =
-          error instanceof Error
-            ? error.message
-            : "strategy snapshot persistence failed";
+              return snapshotInput;
+            })
+          );
+        } catch (error) {
+          strategySnapshotError =
+            error instanceof Error
+              ? error.message
+              : "strategy snapshot persistence failed";
+        }
       }
-    }
 
-    let composition: DailyReportComposition | undefined;
-    let compositionError: string | undefined;
-    const fallbackBriefing = buildRuleBasedBriefing(marketResults);
+      let composition: DailyReportComposition | undefined;
+      let compositionError: string | undefined;
+      const fallbackBriefing = buildRuleBasedBriefing(marketResults);
 
-    if (this.dependencies.reportCompositionService) {
-      try {
-        composition = await this.dependencies.reportCompositionService.compose({
-          audience: "telegram_personalized",
-          holdings: holdings.map((holding) => ({
+      if (this.dependencies.reportCompositionService) {
+        try {
+          composition = await this.dependencies.reportCompositionService.compose({
+            audience: "telegram_personalized",
+            holdings: holdings.map((holding) => ({
+              companyName: holding.companyName,
+              symbol: holding.symbol,
+              exchange: holding.exchange
+            })),
+            marketResults,
+            newsBriefs: portfolioNewsBriefs,
+            ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
+            quantScorecards,
+            quantScenarios,
+            riskCheckpoints: [],
+            runDate: effectiveReportDate
+          });
+        } catch (error) {
+          compositionError =
+            error instanceof Error
+              ? error.message
+              : "daily report composition failed";
+        }
+      }
+
+      const status = resolveRunStatus(
+        marketResults,
+        portfolioNewsBriefs,
+        compositionError,
+        strategySnapshotError
+      );
+      const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
+        displayName: input.user.displayName,
+        runDate: effectiveReportDate,
+        holdings: holdings.map((holding) => {
+          const snapshot = holdingSnapshots.get(holding.symbol);
+
+          return {
             companyName: holding.companyName,
             symbol: holding.symbol,
-            exchange: holding.exchange
-          })),
-          marketResults,
-          newsBriefs: portfolioNewsBriefs,
-          ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
-          quantScorecards,
-          quantScenarios,
-          riskCheckpoints: [],
-          runDate: effectiveReportDate
-        });
-      } catch (error) {
-        compositionError =
-          error instanceof Error
-            ? error.message
-            : "daily report composition failed";
+            exchange: holding.exchange,
+            ...(snapshot?.currentPrice !== undefined
+              ? { currentPrice: snapshot.currentPrice }
+              : {}),
+            ...(snapshot?.previousClose !== undefined
+              ? { previousClose: snapshot.previousClose }
+              : {}),
+            ...(snapshot?.changePercent !== undefined
+              ? { changePercent: snapshot.changePercent }
+              : {})
+          };
+        }),
+        marketResults,
+        portfolioNewsBriefs,
+        ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
+        quantScorecards
+      };
+
+      if (input.user.reportDetailLevel) {
+        renderInput.reportDetailLevel = input.user.reportDetailLevel;
       }
-    }
 
-    const status = resolveRunStatus(
-      marketResults,
-      portfolioNewsBriefs,
-      compositionError,
-      strategySnapshotError
-    );
-    const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
-      displayName: input.user.displayName,
-      runDate: effectiveReportDate,
-      holdings: holdings.map((holding) => {
-        const snapshot = holdingSnapshots.get(holding.symbol);
+      if (composition?.oneLineSummary) {
+        renderInput.summaryLine = composition.oneLineSummary;
+      }
 
-        return {
-          companyName: holding.companyName,
-          symbol: holding.symbol,
-          exchange: holding.exchange,
-          ...(snapshot?.currentPrice !== undefined
-            ? { currentPrice: snapshot.currentPrice }
-            : {}),
-          ...(snapshot?.previousClose !== undefined
-            ? { previousClose: snapshot.previousClose }
-            : {}),
-          ...(snapshot?.changePercent !== undefined
-            ? { changePercent: snapshot.changePercent }
-            : {})
-        };
-      }),
-      marketResults,
-      portfolioNewsBriefs,
-      ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
-      quantScorecards
-    };
+      if (composition?.holdingTrendBullets) {
+        renderInput.holdingTrendBullets = composition.holdingTrendBullets;
+      }
 
-    if (input.user.reportDetailLevel) {
-      renderInput.reportDetailLevel = input.user.reportDetailLevel;
-    }
+      if (composition?.marketBullets?.length) {
+        renderInput.marketBullets = composition.marketBullets;
+      } else if (fallbackBriefing.marketBullets.length > 0) {
+        renderInput.marketBullets = fallbackBriefing.marketBullets;
+      }
 
-    if (composition?.oneLineSummary) {
-      renderInput.summaryLine = composition.oneLineSummary;
-    }
+      if (composition?.macroBullets?.length) {
+        renderInput.macroBullets = composition.macroBullets;
+      } else if (fallbackBriefing.macroBullets.length > 0) {
+        renderInput.macroBullets = fallbackBriefing.macroBullets;
+      }
 
-    if (composition?.holdingTrendBullets) {
-      renderInput.holdingTrendBullets = composition.holdingTrendBullets;
-    }
+      if (composition?.fundFlowBullets?.length) {
+        renderInput.fundFlowBullets = composition.fundFlowBullets;
+      } else if (fallbackBriefing.fundFlowBullets.length > 0) {
+        renderInput.fundFlowBullets = fallbackBriefing.fundFlowBullets;
+      }
 
-    if (composition?.marketBullets?.length) {
-      renderInput.marketBullets = composition.marketBullets;
-    } else if (fallbackBriefing.marketBullets.length > 0) {
-      renderInput.marketBullets = fallbackBriefing.marketBullets;
-    }
+      if (composition?.eventBullets?.length) {
+        renderInput.eventBullets = composition.eventBullets;
+      } else if (fallbackBriefing.eventBullets.length > 0) {
+        renderInput.eventBullets = fallbackBriefing.eventBullets;
+      }
 
-    if (composition?.macroBullets?.length) {
-      renderInput.macroBullets = composition.macroBullets;
-    } else if (fallbackBriefing.macroBullets.length > 0) {
-      renderInput.macroBullets = fallbackBriefing.macroBullets;
-    }
+      if (composition?.macroBullets?.length) {
+        renderInput.keyIndicatorSummaries = composition.macroBullets;
+      } else if (fallbackBriefing.keyIndicatorBullets.length > 0) {
+        renderInput.keyIndicatorSummaries = fallbackBriefing.keyIndicatorBullets;
+      }
 
-    if (composition?.fundFlowBullets?.length) {
-      renderInput.fundFlowBullets = composition.fundFlowBullets;
-    } else if (fallbackBriefing.fundFlowBullets.length > 0) {
-      renderInput.fundFlowBullets = fallbackBriefing.fundFlowBullets;
-    }
+      if (composition?.articleSummaryBullets) {
+        renderInput.articleSummaryBullets = composition.articleSummaryBullets;
+      }
 
-    if (composition?.eventBullets?.length) {
-      renderInput.eventBullets = composition.eventBullets;
-    } else if (fallbackBriefing.eventBullets.length > 0) {
-      renderInput.eventBullets = fallbackBriefing.eventBullets;
-    }
+      if (composition?.strategyBullets) {
+        renderInput.quantScenarios = composition.strategyBullets;
+      } else {
+        renderInput.quantScenarios = quantScenarios;
+      }
 
-    if (composition?.macroBullets?.length) {
-      renderInput.keyIndicatorSummaries = composition.macroBullets;
-    } else if (fallbackBriefing.keyIndicatorBullets.length > 0) {
-      renderInput.keyIndicatorSummaries = fallbackBriefing.keyIndicatorBullets;
-    }
+      if (composition?.riskBullets?.length) {
+        renderInput.riskCheckpoints = composition.riskBullets;
+      } else if (fallbackBriefing.riskBullets.length > 0) {
+        renderInput.riskCheckpoints = fallbackBriefing.riskBullets;
+      }
 
-    if (composition?.articleSummaryBullets) {
-      renderInput.articleSummaryBullets = composition.articleSummaryBullets;
-    }
+      if (!renderInput.summaryLine && fallbackBriefing.summaryLine) {
+        renderInput.summaryLine = fallbackBriefing.summaryLine;
+      }
 
-    if (composition?.strategyBullets) {
-      renderInput.quantScenarios = composition.strategyBullets;
-    } else {
-      renderInput.quantScenarios = quantScenarios;
-    }
+      if (
+        this.dependencies.publicBriefingBaseUrl &&
+        input.user.includePublicBriefingLink !== false
+      ) {
+        const latestPublicReport = await this.dependencies.publicReportRepository?.findLatestByReportDate(
+          effectiveReportDate
+        );
 
-    if (composition?.riskBullets?.length) {
-      renderInput.riskCheckpoints = composition.riskBullets;
-    } else if (fallbackBriefing.riskBullets.length > 0) {
-      renderInput.riskCheckpoints = fallbackBriefing.riskBullets;
-    }
+        renderInput.publicBriefingUrl = latestPublicReport
+          ? buildPublicReportDetailUrl(
+              this.dependencies.publicBriefingBaseUrl,
+              latestPublicReport.id
+            )
+          : buildPublicBriefingUrl(
+              this.dependencies.publicBriefingBaseUrl,
+              effectiveReportDate
+            );
+      }
 
-    if (!renderInput.summaryLine && fallbackBriefing.summaryLine) {
-      renderInput.summaryLine = fallbackBriefing.summaryLine;
-    }
+      const reportText = renderTelegramDailyReport(renderInput);
+      const errorMessage = buildErrorMessage(
+        marketResults,
+        portfolioNewsBriefs,
+        compositionError,
+        strategySnapshotError
+      );
+      const completeRunInput: {
+        errorMessage?: string;
+        id: string;
+        reportText?: string;
+        status: "completed" | "failed" | "partial_success";
+      } = {
+        id: started.run.id,
+        status,
+        reportText
+      };
 
-    if (
-      this.dependencies.publicBriefingBaseUrl &&
-      input.user.includePublicBriefingLink !== false
-    ) {
-      const latestPublicReport = await this.dependencies.publicReportRepository?.findLatestByReportDate(
-        effectiveReportDate
+      if (errorMessage) {
+        completeRunInput.errorMessage = errorMessage;
+      }
+
+      const completedRun = await this.dependencies.reportRunRepository.completeRun(
+        completeRunInput
       );
 
-      renderInput.publicBriefingUrl = latestPublicReport
-        ? buildPublicReportDetailUrl(
-            this.dependencies.publicBriefingBaseUrl,
-            latestPublicReport.id
-          )
-        : buildPublicBriefingUrl(
-            this.dependencies.publicBriefingBaseUrl,
-            effectiveReportDate
-          );
+      return {
+        status,
+        reportRun: completedRun,
+        reportText,
+        marketResults,
+        portfolioNewsBriefs
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "daily report orchestration failed";
+
+      let completedRun: {
+        id: string;
+        errorMessage?: string | null;
+        reportText?: string | null;
+        status: string;
+      } = {
+        ...started.run,
+        status: "failed",
+        errorMessage,
+        reportText: null
+      };
+
+      try {
+        completedRun = await this.dependencies.reportRunRepository.completeRun({
+          id: started.run.id,
+          status: "failed",
+          errorMessage
+        });
+      } catch {
+        // Best-effort cleanup. The caller still gets a failed status instead of wedging.
+      }
+
+      return {
+        status: "failed",
+        reportRun: completedRun,
+        reportText: "",
+        marketResults,
+        portfolioNewsBriefs
+      };
     }
-
-    const reportText = renderTelegramDailyReport(renderInput);
-    const errorMessage = buildErrorMessage(
-      marketResults,
-      portfolioNewsBriefs,
-      compositionError,
-      strategySnapshotError
-    );
-    const completeRunInput: {
-      errorMessage?: string;
-      id: string;
-      reportText?: string;
-      status: "completed" | "failed" | "partial_success";
-    } = {
-      id: started.run.id,
-      status,
-      reportText
-    };
-
-    if (errorMessage) {
-      completeRunInput.errorMessage = errorMessage;
-    }
-
-    const completedRun = await this.dependencies.reportRunRepository.completeRun(
-      completeRunInput
-    );
-
-    return {
-      status,
-      reportRun: completedRun,
-      reportText,
-      marketResults,
-      portfolioNewsBriefs
-    };
   }
 
   private async resolvePortfolioRebalancing(input: {

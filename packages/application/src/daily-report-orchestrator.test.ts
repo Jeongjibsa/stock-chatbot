@@ -209,6 +209,61 @@ describe("DailyReportOrchestrator", () => {
     );
   });
 
+  it("marks the run as failed when an unexpected error occurs after startRun", async () => {
+    const reportRunRepository = {
+      startRun: vi.fn(async () => ({
+        created: true,
+        run: {
+          id: "run-failed",
+          status: "running"
+        }
+      })),
+      completeRun: vi.fn(async (input) => ({
+        id: input.id,
+        status: input.status,
+        reportText: input.reportText ?? null,
+        errorMessage: input.errorMessage
+      }))
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [])
+      },
+      publicBriefingBaseUrl: "https://example.com",
+      publicReportRepository: {
+        findLatestByReportDate: vi.fn(async () => {
+          throw new Error('column "indicator_tags" does not exist');
+        })
+      },
+      reportRunRepository,
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+
+    expect(result.status).toBe("failed");
+    expect(result.reportText).toBe("");
+    expect(reportRunRepository.completeRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "run-failed",
+        status: "failed",
+        errorMessage: expect.stringContaining("indicator_tags")
+      })
+    );
+  });
+
   it("passes optional personalized rebalancing payload into the rendered report", async () => {
     const reportRunRepository = {
       startRun: vi.fn(async () => ({

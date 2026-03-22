@@ -251,3 +251,5 @@
 - 2026-03-22: Telegram 설정 UI를 `브리핑 켜기 / 브리핑 끄기 / 시간 변경`만 남기도록 단순화하고, webhook/register 경로의 `allowed_updates`에 `callback_query`를 추가해 inline button이 실제로 동작하도록 복구
 - 2026-03-22: 관심 지표 개인화는 deprecated 처리하고 `/report`와 공개 브리핑을 시스템 기본 시장 지표 세트 기준으로 통일했으며, 홈 keyboard에서 `📈 관심 지표`를 제거하고 `/market_add`, `/market_items`, `/report_mode`, `/report_link_*`는 deprecation 응답으로 정리
 - 2026-03-22: 공개 `reports` read model에 `indicator_tags`를 추가하고, public feed/detail 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했으며, 공개 적재 경로를 `report_date` 기준 latest-upsert + feed date dedupe 구조로 조정
+- 2026-03-23: Telegram `/report`가 예외 발생 시에도 `report_runs`를 `failed`로 정리해 stale `running`을 남기지 않도록 보강하고, optional read model이 아직 반영되지 않은 환경에서 개인화 `/report`와 공개 feed 읽기 경로가 graceful fallback으로 계속 동작하도록 수정
+- 2026-03-23: Neon production branch에 최신 schema migration을 적용하고 runtime/user 데이터를 초기화한 뒤 공개 브리핑을 2026-03-16~2026-03-20 기준으로 재적재했으며, Telegram webhook을 `callback_query` 포함 allowed updates로 재등록

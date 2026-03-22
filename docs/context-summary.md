@@ -187,6 +187,7 @@
 - 실제 `/report` 경로에서 rich 3대 관점이 보이려면 `portfolioRebalancing` payload가 오케스트레이터 입력까지 들어와야 하며, 2026-03-22 기준으로 `DailyReportOrchestrator`와 `TelegramReportService`가 이 payload를 renderer/prompt까지 전달하도록 연결됐다.
 - Telegram `/report`와 공개 브리핑의 제목 날짜는 요청일이 아니라 서울 기준 `공통 마감일(effective report date)`을 사용한다. 국장과 미장의 대표 지표에서 확인된 최신 마감일을 각각 구한 뒤 더 이른 날짜를 공통 기준일로 사용한다.
 - Telegram `/report`는 이제 사용자별 `portfolioRebalancing` payload가 외부에서 직접 들어오지 않아도, 현재 보유 종목/시장 데이터/퀀트 점수카드로 fallback snapshot을 만들어 `personal_rebalancing_snapshots` cache에 저장한 뒤 새 리밸런싱 템플릿을 렌더링한다.
+- Telegram `/report`는 예외가 나더라도 `report_runs`를 `failed`로 정리해 stale `running` 상태를 남기면 안 된다. optional read model(`personal_rebalancing_snapshots`, `reports.indicator_tags`)이 아직 반영되지 않은 환경에서도 개인화 `/report`와 공개 feed 읽기 경로는 graceful fallback으로 계속 응답해야 한다.
 - 공개 웹 feed/detail의 우상단 태그는 더 이상 `market_regime + total_score` badge를 사용하지 않는다. 대신 `KOSPI`, `KOSDAQ`, `S&P500`, `NASDAQ`의 indicator chip을 `indicator_tags` 컬럼에서 읽어 보여준다.
 - Telegram command runtime은 `REPORT_RUN_DATE` env가 있으면 `/report` 기준일을 해당 날짜로 고정한다. 이 경로는 historical market fetch와 함께 특정 거래일 실데이터 재현에 사용한다.
 - 공개 웹 브리핑은 `오늘의 시장 브리핑` 구조로 분리됐고, 개인 포트 용어와 action language는 renderer 단계에서 제외된다.
@@ -225,5 +226,6 @@
 
 ## 9. Handoff Notes
 
+- 2026-03-23 운영 복구 기준선: production Neon에는 `personal_rebalancing_snapshots`와 `reports.indicator_tags`가 실제 반영돼 있어야 하고, runtime/user 데이터는 초기화 후 공개 브리핑 2026-03-16~2026-03-20 5영업일분이 적재된 상태를 정상 기준으로 본다. Telegram webhook의 `allowed_updates`에는 반드시 `callback_query`가 포함돼야 한다.
 - 상세 배경은 change-log를 보면 되지만, 새 스레드는 이 문서를 우선 기준으로 사용한다.
 - 이 문서가 오래됐거나 누락이 의심되면 `context-rollup` skill로 먼저 갱신한다.

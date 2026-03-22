@@ -144,6 +144,7 @@
 | CHG-0117 | 2026-03-22 | UPDATE | Telegram DM에 홈 reply keyboard와 설정 inline keyboard를 추가해 `/start`, `/help`, `/register`, `/report_settings` 이후 버튼 기반 탐색을 지원하고, 기존 slash command semantics는 그대로 유지 | PRD, Change Log, Context, Docs, Code, Tests | yes |
 | CHG-0118 | 2026-03-22 | FIX | Telegram `/report`가 새 리밸런싱 템플릿 껍데기만 사용하고 실제 `portfolioRebalancing` payload를 오케스트레이터에서 renderer/prompt로 전달하지 않던 누락을 수정하고, 온디맨드 `/report`가 `REPORT_RUN_DATE` override를 읽어 특정 기준일 실데이터 재현이 가능하도록 보강 | PRD, Plan, Change Log, Context, README, Code, Tests, Ops | yes |
 | CHG-0119 | 2026-03-22 | UPDATE | Telegram `/report`와 공개 브리핑이 서울 기준 `공통 마감일(effective report date)`을 사용하도록 정렬하고, `personal_rebalancing_snapshots` JSONB cache를 추가해 개인화 리밸런싱 payload를 기준일별로 재사용하도록 보강했다. 동시에 Telegram 설정 UI를 `브리핑 켜기/끄기 + 시간 변경`만 남기고 `callback_query` webhook 수신을 활성화했으며, 관심 지표 개인화는 deprecated 처리하고 공개 feed/detail의 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했다. | PRD, Plan, Change Log, Context, README, Telegram Docs, Code, Tests, Ops | yes |
+| CHG-0120 | 2026-03-23 | FIX | 운영 장애 복구를 위해 Telegram `/report`가 예외 발생 시에도 `report_runs`를 `failed`로 정리해 stale `running` 상태를 남기지 않도록 보강하고, `indicator_tags` 컬럼이나 `personal_rebalancing_snapshots` 테이블이 늦게 반영된 환경에서도 공개 feed와 개인화 `/report` 읽기 경로가 graceful fallback으로 동작하도록 수정했다. 또한 production Neon 스키마를 최신 상태로 마이그레이션하고, runtime/user 데이터를 초기화한 뒤 공개 브리핑을 2026-03-16~2026-03-20 기준으로 재적재했으며, Telegram webhook을 `callback_query` 포함 allowed updates로 재등록했다. | PRD, Plan, Change Log, Context, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 

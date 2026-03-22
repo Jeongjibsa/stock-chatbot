@@ -711,13 +711,22 @@ export function buildTelegramBotApp(
       await context.answerCallbackQuery({
         text: "설정을 반영했습니다."
       });
-      await context.editMessageText(formatReportSettings(updated), {
-        reply_markup: buildSettingsInlineKeyboard()
-      });
+      try {
+        await context.editMessageText(formatReportSettings(updated), {
+          reply_markup: buildSettingsInlineKeyboard()
+        });
+      } catch {
+        await context.reply(formatReportSettings(updated), {
+          reply_markup: buildSettingsInlineKeyboard()
+        });
+      }
     } catch (error) {
+      const message = resolveTelegramCommandError(error);
+
       await context.answerCallbackQuery({
-        text: resolveTelegramCommandError(error)
+        text: message
       });
+      await context.reply(message);
     }
   });
 
