@@ -89,13 +89,11 @@
 - 기본 거시 시장 카탈로그에는 `코스피`, `코스닥`, `S&P 500`, `국제 유가 (WTI)`, `천연가스 (Henry Hub)`, `구리`가 포함된다.
 - `commodity:COPPER`는 FRED `PCOPPUSDM`으로 연결돼 있고 월간 지표로 해석한다.
 - 지수성 자산(`S&P500`, `NASDAQ`, `DOW`, `VIX`, `KOSPI`, `KOSDAQ`)은 Yahoo Finance scraping을 우선 사용하고, 금리/환율/원자재는 FRED를 우선 사용한다.
-- 매일 1회 정기 브리핑 성격에 맞춰 텔레그램 리포트 제목에는 기준일을 포함하고, `거시 시장 스냅샷` 자체에는 별도 일자 라벨을 반복 노출하지 않는다.
-- 텔레그램 브리핑 제목은 `오늘의 브리핑 (YYYY-MM-DD 기준)` 형식을 사용한다.
-- 텔레그램 브리핑 구조는 `한 줄 요약 -> 거시 시장 스냅샷 -> 주요 지표 변동 요약 -> 보유 종목별 최근 동향 -> 종목 관련 핵심 기사 및 이벤트 요약 -> 퀀트 기반 시그널 및 매매 아이디어 -> 리스크 체크리스트 -> 시장, 매크로, 자금 브리핑 -> 주요 일정 및 이벤트 브리핑 -> 면책 문구` 순서를 따른다.
-- `보유 종목별 최근 동향`은 가능하면 `runDate` 기준 최근 가용 거래일의 `전일 종가 → 현재가` 스냅샷과 등락률을 붙인다.
-- `퀀트 기반 시그널 및 매매 아이디어`는 점수카드 앞에 `비중 확대 검토 / 유지 우세 / 비중 조절 필요 / 우선 관찰 대상` 리밸런싱 요약을 먼저 보여준다.
-- 텔레그램 요약본은 구분선과 짧은 액션 문장을 사용해 한눈에 스캔 가능해야 하며, `현재 시장 상태 판단 -> 행동 제안 -> 근거` 흐름을 우선한다.
-- 텔레그램의 `퀀트 기반 시그널 및 매매 아이디어` 섹션은 `Macro / Trend / Event / Flow -> Total -> Action` 점수카드를 먼저 보여주고, 그 아래에 행동 bullet을 붙이는 방식으로 확장됐다.
+- 텔레그램 개인화 리포트 제목은 `오늘의 포트폴리오 리밸런싱 브리핑 (YYYY-MM-DD)` 형식을 사용한다.
+- 텔레그램 브리핑 구조는 `오늘 한 줄 결론 -> 오늘의 리밸런싱 제안 -> 성향별 해석 -> 내 포트폴리오 요약 -> 시장 레짐 요약 -> 종목별 리밸런싱 가이드 -> 오늘의 포트 리스크 체크 -> 참고용 시장 브리핑 -> 공개 상세 링크 -> 면책 문구` 순서를 따른다.
+- 종목별 리밸런싱 가이드는 가능하면 `내재 가치 / 가격·추세 / 미래 기대치 / 포트 적합성 / 제약 요인 / 가이드`를 노출하고, rich payload가 없을 때는 자연스러운 fallback label을 사용한다.
+- 시세 스냅샷은 별도 큰 섹션이 아니라 종목별 가이드 문장 안에서 `전일 종가 → 현재가` 형태로 유지된다.
+- 텔레그램 요약본은 `hard rule -> final action -> 시장 레짐 -> 3대 관점 -> 기타 사실` 순서의 해석을 우선한다.
 - mock telegram report의 기본 포트폴리오는 사용자 제공 예시인 삼성전자, SK하이닉스, 현대차, 에코프로, 현대글로비스, HMM 기준으로 맞춰졌다.
 - 텔레그램의 보유 종목 섹션과 퀀트 점수카드 헤더는 회사명만 노출하고, 종목 코드는 사용자 노출에서 제외한다.
 - LLM 계층은 이제 `LLM_PROVIDER=openai|google`와 `OPENAI_API_KEY` / `GEMINI_API_KEY`를 통해 OpenAI와 Gemini를 선택할 수 있다.
@@ -106,7 +104,7 @@
 - 현재 운영용 실행 스크립트는 compiled `dist` 대신 `tsx` source entrypoint를 사용한다. `pnpm build`는 여전히 타입/산출물 검증용으로 유지되지만, Actions와 로컬 런타임은 workspace ESM 해석 이슈를 줄이기 위해 source 실행을 기준으로 삼는다.
 - worker의 `readRunDate`는 이제 `REPORT_RUN_DATE`가 비어 있거나 공백만 있어도 오늘 날짜로 폴백한다. 따라서 GitHub Actions `workflow_dispatch` 입력을 비워 둔 경우에도 Postgres `date` 컬럼에 빈 문자열이 들어가지 않는다.
 - GitHub Actions workflow에는 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`가 추가돼 `actions/checkout@v4`, `actions/setup-node@v4`의 Node 20 deprecation 경고를 사전에 흡수하도록 조정됐다.
-- 텔레그램 리포트는 섹션 구조는 유지하되 제목/섹션 사이의 불필요한 빈 줄을 줄였고, 거시 시장 스냅샷의 원자재 그룹 정렬은 `미국 10년물 -> WTI -> 천연가스 -> 구리 -> FX` 순서로 다시 고정됐다.
+- 텔레그램 리포트의 현재 기준선은 `거시 시장 스냅샷` 단독 섹션이 아니라 개인화 리밸런싱 구조다. 이전 스냅샷 정렬 규칙은 legacy note로만 유지한다.
 - Yahoo Finance daily chart 응답은 같은 거래일의 종가 시점과 후속 메타 시점을 함께 반환할 수 있으므로, 지수성 자산의 전일 대비 계산은 timestamp가 아니라 `asOfDate` 기준으로 중복 제거한 뒤 마지막 두 거래일을 비교하도록 보정됐다.
 - live Gemini 검증 경로는 로컬 Docker PostgreSQL에 mock 포트폴리오를 seed한 뒤 worker를 `LLM_PROVIDER=google`로 실행하고, 생성된 `report_runs.report_text`를 Telegram Bot API로 직접 발송하는 방식으로 확인했다.
 - 2026-03-21 live Gemini 검증에서는 종목 뉴스 이벤트 추출 단계에서 `Gemini API request failed with status 429`가 발생해 기사 섹션이 fallback 문구로 내려간 사례가 확인됐다.
@@ -169,8 +167,8 @@
 - 사용자별 정기 브리핑 설정은 `daily_report_enabled`, `daily_report_hour`, `daily_report_minute`, `timezone` 기준으로 저장된다. GitHub Actions 스케줄은 매시간 실행되고, worker는 예약 윈도우 안에 들어온 사용자만 실제 발송한다.
 - GitHub Actions `Daily Report` workflow는 기본적으로 local worker를 직접 실행하지만, `DAILY_REPORT_TRIGGER_URL` secret이 설정되면 dedicated worker endpoint를 호출하는 전환 경로를 지원한다.
 - 그룹 온보딩은 `new_chat_members`와 `chat_member`를 둘 다 구독하되, 같은 사용자와 그룹 조합에는 짧은 시간 안에 한 번만 환영 메시지를 보내도록 dedupe한다.
-- `거시 시장 스냅샷`은 `NASDAQ -> S&P500 -> DOW -> VIX -> KOSPI -> KOSDAQ -> 미국 10년물 금리 -> 국제 유가(WTI) -> 천연가스 -> 구리 -> USD/KRW -> 달러인덱스` 순서를 기본으로 하고, 그룹 사이를 빈 줄로 구분한다.
-- `거시 시장 스냅샷`에서는 `USD/KRW`와 `달러인덱스`를 하단에 연속 배치하고, 두 지표를 함께 해석하는 FX 문장을 바로 아래에 붙인다.
+- legacy note: 과거 텔레그램 `거시 시장 스냅샷` 섹션에서는 `NASDAQ -> S&P500 -> DOW -> VIX -> KOSPI -> KOSDAQ -> 미국 10년물 금리 -> 국제 유가(WTI) -> 천연가스 -> 구리 -> USD/KRW -> 달러인덱스` 순서를 사용했다.
+- legacy note: 과거 텔레그램 `거시 시장 스냅샷` 섹션에서는 `USD/KRW`와 `달러인덱스`를 하단에 연속 배치하고 FX 문장을 바로 아래에 붙였다.
 - `market-report-composition` prompt는 v3로 올라갔고, `시장 / 매크로 / 자금 / 이벤트` 섹션을 별도 structured output 배열로 반환한다.
 - database 계층에는 report_runs 저장 구조와 dedupe용 unique 키가 추가됐다.
 - telegram-bot에는 command별 in-memory 대화 상태 저장소와 상태 전이 로직이 추가됐다.
@@ -185,6 +183,8 @@
 - live Telegram E2E의 `report_with_holdings`는 이제 보유 종목명 노출 여부뿐 아니라 `오늘의 리밸런싱 제안` 문구와 `시세 스냅샷 연결 전입니다` placeholder 부재까지 함께 검증한다.
 - Telegram `/report` 최종 템플릿은 이제 `오늘의 포트폴리오 리밸런싱 브리핑 -> 오늘 한 줄 결론 -> 오늘의 리밸런싱 제안 -> 성향별 해석 -> 시장 레짐 요약 -> 종목별 리밸런싱 가이드` 구조를 사용한다.
 - `packages/application/src/rebalancing-contract.ts`가 개인화 리밸런싱 payload의 현재 source-of-truth contract다. runtime payload에 rich score가 없으면 renderer는 `확인 필요 / 점검 필요 / 데이터 보강 필요` fallback을 사용한다.
+- 실제 `/report` 경로에서 rich 3대 관점이 보이려면 `portfolioRebalancing` payload가 오케스트레이터 입력까지 들어와야 하며, 2026-03-22 기준으로 `DailyReportOrchestrator`와 `TelegramReportService`가 이 payload를 renderer/prompt까지 전달하도록 연결됐다.
+- Telegram command runtime은 `REPORT_RUN_DATE` env가 있으면 `/report` 기준일을 해당 날짜로 고정한다. 이 경로는 historical market fetch와 함께 특정 거래일 실데이터 재현에 사용한다.
 - 공개 웹 브리핑은 `오늘의 시장 브리핑` 구조로 분리됐고, 개인 포트 용어와 action language는 renderer 단계에서 제외된다.
 - Telegram DM에는 홈 reply keyboard(`📊 브리핑 보기`, `➕ 종목 추가`, `📁 내 종목`, `⚙️ 설정`)와 설정 inline keyboard가 추가됐다. 기존 slash command semantics는 유지한다.
 - Telegram DM `/register`는 같은 private chat에 이미 등록된 사용자를 감지하면 중복 등록 대신 `/report`, `/portfolio_list`, `/unregister` 다음 단계를 안내한다.

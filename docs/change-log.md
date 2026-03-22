@@ -142,6 +142,7 @@
 | CHG-0115 | 2026-03-22 | UPDATE | Telegram `/report` fast path에 보유 종목 일별 종가 스냅샷을 연결하고, 퀀트 섹션 시작부에 `비중 확대 검토 / 유지 우세 / 비중 조절 필요 / 우선 관찰 대상` 리밸런싱 요약을 추가했으며, E2E `report_with_holdings`가 스냅샷 placeholder 부재와 리밸런싱 문구를 함께 검증하도록 강화 | PRD, Change Log, Context, Telegram E2E Docs, Code, Tests | yes |
 | CHG-0116 | 2026-03-22 | UPDATE | Telegram `/report`와 공개 웹 브리핑 템플릿을 todo_260322 기준의 `개인화 리밸런싱 브리핑 / 공개 시장 브리핑` 구조로 재편하고, renderer·public builder·prompt contract·query model·mock preview를 새 섹션 계약에 맞춰 동기화 | PRD, Change Log, Context, Docs, Code, Tests | yes |
 | CHG-0117 | 2026-03-22 | UPDATE | Telegram DM에 홈 reply keyboard와 설정 inline keyboard를 추가해 `/start`, `/help`, `/register`, `/report_settings` 이후 버튼 기반 탐색을 지원하고, 기존 slash command semantics는 그대로 유지 | PRD, Change Log, Context, Docs, Code, Tests | yes |
+| CHG-0118 | 2026-03-22 | FIX | Telegram `/report`가 새 리밸런싱 템플릿 껍데기만 사용하고 실제 `portfolioRebalancing` payload를 오케스트레이터에서 renderer/prompt로 전달하지 않던 누락을 수정하고, 온디맨드 `/report`가 `REPORT_RUN_DATE` override를 읽어 특정 기준일 실데이터 재현이 가능하도록 보강 | PRD, Plan, Change Log, Context, README, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 

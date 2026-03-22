@@ -207,6 +207,83 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain("시세 스냅샷은 184,000 → 182,000, 전일 대비 -1.09% 기준입니다.");
   });
 
+  it("passes optional personalized rebalancing payload into the rendered report", async () => {
+    const reportRunRepository = {
+      startRun: vi.fn(async () => ({
+        created: true,
+        run: {
+          id: "run-rebalancing",
+          status: "running"
+        }
+      })),
+      completeRun: vi.fn(async (input) => ({
+        id: input.id,
+        status: input.status,
+        reportText: input.reportText,
+        errorMessage: input.errorMessage
+      }))
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [
+          {
+            companyName: "삼성전자",
+            symbol: "005930",
+            exchange: "KR"
+          }
+        ])
+      },
+      reportRunRepository,
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report",
+      portfolioRebalancing: {
+        selectedProfile: "balanced",
+        marketOverlay: {
+          market: "KOSPI",
+          marketCompositeLabel: "다소과열",
+          sentimentLabel: "적정",
+          marketStrengthLabel: "적정",
+          marketFundamentalLabel: "과열",
+          blackSwanLabel: "과열",
+          buffettByMarketLabel: "매우 고평가",
+          finalMarketRegimeScoreBalanced: 31
+        },
+        rebalancingSummary: {
+          increaseCandidates: ["삼성전자"]
+        },
+        holdings: [
+          {
+            name: "삼성전자",
+            finalAction: "확대 검토",
+            intrinsicValueScore: 71,
+            priceTrendScore: 63,
+            futureExpectationScore: 58,
+            portfolioFitScore: 76,
+            oneLineJudgment: "시장 부담은 있지만 선별적으로 볼 수 있습니다."
+          }
+        ]
+      }
+    });
+
+    expect(result.reportText).toContain("- 비중 확대 검토: 삼성전자");
+    expect(result.reportText).toContain("- 최종 의견: 확대 검토");
+    expect(result.reportText).toContain("- 내재 가치: 양호");
+    expect(result.reportText).toContain("- 구조 리스크: 과열");
+  });
+
   it("completes with news brief sections when enrichment succeeds", async () => {
     const successfulMarketResults: MarketDataFetchResult[] = [
       {

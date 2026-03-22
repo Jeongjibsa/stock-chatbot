@@ -42,7 +42,7 @@ import {
 import { parsePortfolioBulkArgument } from "./portfolio-bulk.js";
 import {
   buildTelegramReportRuntime,
-  getRunDateForTimezone,
+  resolveTelegramReportRunDate,
   resolveTelegramReportFollowUpMessage
 } from "./report-service.js";
 import {
@@ -216,7 +216,9 @@ export function buildTelegramBotApp(
     await context.reply("브리핑을 생성하고 있습니다. 잠시만 기다려 주세요.");
 
     try {
-      const runDate = getRunDateForTimezone("Asia/Seoul");
+      const runDate = resolveTelegramReportRunDate(env, {
+        timeZone: "Asia/Seoul"
+      });
       const result = await getReportRuntime().reportService.runForTelegramUser({
         telegramUserId: userKey,
         runDate

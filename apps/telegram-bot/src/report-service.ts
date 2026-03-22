@@ -9,6 +9,7 @@ import {
   GoogleNewsRssAdapter,
   OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
+  type PersonalizedPortfolioRebalancingData,
   YahooHoldingPriceSnapshotProvider,
   YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
@@ -51,6 +52,7 @@ export class TelegramReportService {
   ) {}
 
   async runForTelegramUser(input: {
+    portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
     runDate: string;
     telegramUserId: string;
   }): Promise<DailyReportOrchestratorResult> {
@@ -80,11 +82,27 @@ export class TelegramReportService {
       orchestratorUser.reportDetailLevel = user.reportDetailLevel;
     }
 
-    return this.dependencies.orchestrator.runForUser({
+    const runInput: {
+      portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
+      runDate: string;
+      scheduleType: string;
+      user: {
+        displayName: string;
+        id: string;
+        includePublicBriefingLink?: boolean;
+        reportDetailLevel?: "compact" | "standard";
+      };
+    } = {
       user: orchestratorUser,
       runDate: input.runDate,
       scheduleType: "telegram-report"
-    });
+    };
+
+    if (input.portfolioRebalancing) {
+      runInput.portfolioRebalancing = input.portfolioRebalancing;
+    }
+
+    return this.dependencies.orchestrator.runForUser(runInput);
   }
 }
 
@@ -168,6 +186,22 @@ export function getRunDateForTimezone(
     month: "2-digit",
     day: "2-digit"
   }).format(now);
+}
+
+export function resolveTelegramReportRunDate(
+  env: Environment = process.env,
+  options?: {
+    now?: Date;
+    timeZone?: string;
+  }
+): string {
+  const override = env.REPORT_RUN_DATE?.trim();
+
+  if (override && /^\d{4}-\d{2}-\d{2}$/.test(override)) {
+    return override;
+  }
+
+  return getRunDateForTimezone(options?.timeZone ?? "Asia/Seoul", options?.now);
 }
 
 export function resolveTelegramReportFollowUpMessage(

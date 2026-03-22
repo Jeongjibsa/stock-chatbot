@@ -159,6 +159,10 @@
 - [x] 웹 관리 콘솔
 - [x] 전략 성과 추적 및 백테스트
 - [x] 사용자 설정 고도화
+- [x] Telegram `/report`를 개인화 리밸런싱 브리핑 템플릿으로 재편
+- [x] 공개 웹 브리핑을 public-market 전용 구조로 분리
+- [x] Telegram DM home reply keyboard 및 settings inline keyboard 추가
+- [x] Telegram `/report`에 `portfolioRebalancing` payload를 실제 런타임으로 연결하고 `REPORT_RUN_DATE` 기준일 override를 지원
 
 ## 5. Immediate Next Work
 
@@ -239,3 +243,7 @@
 - 2026-03-22: 실제 production webhook + DB side effect를 대상으로 하는 Telegram E2E harness와 outbound reply audit 로그를 추가하고, 최소 회귀 세트 8개와 full suite 실행 경로를 문서화
 - 2026-03-21: 실제 Telegram 운영 검증용 `docs/telegram-production-test-scenarios.md`를 추가해 DM/그룹/공개 웹/개인정보 경계/E2E 기대 결과를 운영 체크리스트로 정리
 - 2026-03-22: 시장 데이터 조회를 `runDate` 기준 historical fetch로 보정하고, Telegram fast `/report`와 공개 브리핑 생성 경로에 rule-based fallback 섹션을 추가했으며, 공개 웹 feed/detail을 dynamic DB 조회로 전환하고 2026-03-16~2026-03-21 공개 브리핑 backfill을 적재
+- 2026-03-22: Telegram `/report`를 `오늘의 포트폴리오 리밸런싱 브리핑` 구조로 재편하고, optional `portfolioRebalancing` payload contract, 종목별 리밸런싱 가이드, 시장 레짐 요약, 성향별 해석 fallback을 코드 기준선으로 반영
+- 2026-03-22: 공개 웹 브리핑을 `오늘의 시장 브리핑` 구조로 재편하고, 개인 포트 용어를 renderer 단계에서 배제하도록 public builder/markdown/html renderer를 동기화
+- 2026-03-22: Telegram DM에 home reply keyboard와 settings inline keyboard를 추가하고, `/start`, `/help`, `/register`, `/report_settings` 이후 버튼 기반 탐색을 지원하면서 기존 slash command semantics를 유지
+- 2026-03-22: Telegram `/report`가 실제 runtime에서 `portfolioRebalancing` payload를 renderer/prompt까지 전달하도록 오케스트레이터와 report service를 연결하고, `REPORT_RUN_DATE=2026-03-20` override로 synthetic bot update 기준 실데이터 브리핑 재현을 확인

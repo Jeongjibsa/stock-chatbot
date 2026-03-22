@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   getRunDateForTimezone,
   isTelegramReportEnrichmentEnabled,
+  resolveTelegramReportRunDate,
   resolveTelegramReportFollowUpMessage,
   TelegramReportService
 } from "./report-service.js";
@@ -49,6 +50,51 @@ describe("TelegramReportService", () => {
     });
   });
 
+  it("passes optional rebalancing payload through to the orchestrator", async () => {
+    const orchestrator = {
+      runForUser: vi.fn().mockResolvedValue({
+        status: "completed",
+        reportRun: {
+          id: "run-2",
+          status: "completed"
+        },
+        reportText: "report",
+        marketResults: [],
+        portfolioNewsBriefs: []
+      })
+    };
+    const service = new TelegramReportService({
+      orchestrator,
+      userRepository: {
+        async getByTelegramUserId() {
+          return {
+            id: "user-1",
+            displayName: "Sara Kim"
+          };
+        }
+      }
+    });
+
+    await service.runForTelegramUser({
+      telegramUserId: "telegram-1",
+      runDate: "2026-03-21",
+      portfolioRebalancing: {
+        selectedProfile: "balanced",
+        rebalancingSummary: {
+          increaseCandidates: ["삼성전자"]
+        }
+      }
+    });
+
+    expect(orchestrator.runForUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        portfolioRebalancing: expect.objectContaining({
+          selectedProfile: "balanced"
+        })
+      })
+    );
+  });
+
   it("throws when the telegram user is not registered", async () => {
     const service = new TelegramReportService({
       orchestrator: {
@@ -74,6 +120,34 @@ describe("getRunDateForTimezone", () => {
   it("formats run date using the provided timezone", () => {
     expect(
       getRunDateForTimezone("Asia/Seoul", new Date("2026-03-20T16:00:00.000Z"))
+    ).toBe("2026-03-21");
+  });
+});
+
+describe("resolveTelegramReportRunDate", () => {
+  it("prefers REPORT_RUN_DATE when provided", () => {
+    expect(
+      resolveTelegramReportRunDate(
+        {
+          REPORT_RUN_DATE: "2026-03-20"
+        },
+        {
+          now: new Date("2026-03-21T16:00:00.000Z"),
+          timeZone: "Asia/Seoul"
+        }
+      )
+    ).toBe("2026-03-20");
+  });
+
+  it("falls back to timezone-aware current date when override is missing", () => {
+    expect(
+      resolveTelegramReportRunDate(
+        {},
+        {
+          now: new Date("2026-03-20T16:00:00.000Z"),
+          timeZone: "Asia/Seoul"
+        }
+      )
     ).toBe("2026-03-21");
   });
 });

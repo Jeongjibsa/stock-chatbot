@@ -6,6 +6,7 @@ import type {
 } from "./holding-price-snapshot.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
+import type { PersonalizedPortfolioRebalancingData } from "./rebalancing-contract.js";
 import { buildRuleBasedBriefing } from "./rule-based-briefing.js";
 import {
   buildPublicBriefingUrl,
@@ -147,6 +148,7 @@ export class DailyReportOrchestrator {
   ) {}
 
   async runForUser(input: {
+    portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
     promptVersion?: string;
     runDate: string;
     scheduleType: string;
@@ -306,6 +308,9 @@ export class DailyReportOrchestrator {
           })),
           marketResults,
           newsBriefs: portfolioNewsBriefs,
+          ...(input.portfolioRebalancing
+            ? { portfolioRebalancing: input.portfolioRebalancing }
+            : {}),
           quantScorecards,
           quantScenarios,
           riskCheckpoints: [],
@@ -348,6 +353,9 @@ export class DailyReportOrchestrator {
       }),
       marketResults,
       portfolioNewsBriefs,
+      ...(input.portfolioRebalancing
+        ? { portfolioRebalancing: input.portfolioRebalancing }
+        : {}),
       quantScorecards
     };
 
