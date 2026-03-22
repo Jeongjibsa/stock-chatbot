@@ -4,7 +4,8 @@ import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
 import {
   buildDailyReportPromptContract,
-  parseDailyReportStructuredOutput
+  parseDailyReportStructuredOutput,
+  type DailyReportPromptAudience
 } from "./report-prompt-contract.js";
 
 export type DailyReportComposition = {
@@ -28,6 +29,7 @@ export class DailyReportCompositionService {
   ) {}
 
   async compose(input: {
+    audience?: DailyReportPromptAudience;
     holdings: Array<{
       companyName: string;
       exchange: string;
@@ -41,6 +43,7 @@ export class DailyReportCompositionService {
     runDate: string;
   }): Promise<DailyReportComposition> {
     const prompt = buildDailyReportPromptContract({
+      ...(input.audience ? { audience: input.audience } : {}),
       holdings: input.holdings,
       marketResults: input.marketResults,
       newsBriefs: input.newsBriefs,

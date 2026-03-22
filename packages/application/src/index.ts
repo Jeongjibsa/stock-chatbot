@@ -85,6 +85,7 @@ export {
 export {
   buildDailyReportPromptContract,
   parseDailyReportStructuredOutput,
+  type DailyReportPromptAudience,
   type DailyReportPromptInput,
   type DailyReportStructuredOutput
 } from "./report-prompt-contract.js";

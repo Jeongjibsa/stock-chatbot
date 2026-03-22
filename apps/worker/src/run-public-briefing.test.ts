@@ -77,23 +77,25 @@ describe("run-public-briefing", () => {
       }
     ];
 
+    const compose = vi.fn(async () => ({
+      oneLineSummary: "미국 증시 약세와 달러 강세가 겹쳐 방어적으로 대응하시는 편이 좋습니다.",
+      marketBullets: ["미국 지수 약세가 위험 선호를 눌렀습니다."],
+      macroBullets: ["달러 강세가 이어져 환율 부담을 함께 확인하셔야 합니다."],
+      fundFlowBullets: [],
+      eventBullets: [],
+      holdingTrendBullets: [],
+      articleSummaryBullets: [],
+      strategyBullets: [],
+      riskBullets: ["변동성 확대 시 추격 매수는 보수적으로 보시는 편이 좋습니다."]
+    }));
+
     const briefing = await buildPublicBriefing({
       runDate: "2026-03-20",
       marketDataAdapter: {
         fetchMany: vi.fn(async () => marketResults)
       },
       reportCompositionService: {
-        compose: vi.fn(async () => ({
-          oneLineSummary: "미국 증시 약세와 달러 강세가 겹쳐 방어적으로 대응하시는 편이 좋습니다.",
-          marketBullets: ["미국 지수 약세가 위험 선호를 눌렀습니다."],
-          macroBullets: ["달러 강세가 이어져 환율 부담을 함께 확인하셔야 합니다."],
-          fundFlowBullets: [],
-          eventBullets: [],
-          holdingTrendBullets: [],
-          articleSummaryBullets: [],
-          strategyBullets: [],
-          riskBullets: ["변동성 확대 시 추격 매수는 보수적으로 보시는 편이 좋습니다."]
-        }))
+        compose
       }
     });
 
@@ -108,6 +110,11 @@ describe("run-public-briefing", () => {
     expect(briefing.marketBullets).toEqual([
       "미국 지수 약세가 위험 선호를 눌렀습니다."
     ]);
+    expect(compose).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audience: "public_web"
+      })
+    );
   });
 
   it("falls back to rule-based output when composition fails", async () => {

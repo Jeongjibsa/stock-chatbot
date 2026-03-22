@@ -73,6 +73,7 @@ type PortfolioNewsBriefServicePort = {
 
 type ReportCompositionServicePort = {
   compose(input: {
+    audience?: "telegram_personalized" | "public_web";
     holdings: Array<{
       companyName: string;
       exchange: string;
@@ -284,6 +285,7 @@ export class DailyReportOrchestrator {
     if (this.dependencies.reportCompositionService) {
       try {
         composition = await this.dependencies.reportCompositionService.compose({
+          audience: "telegram_personalized",
           holdings: holdings.map((holding) => ({
             companyName: holding.companyName,
             symbol: holding.symbol,

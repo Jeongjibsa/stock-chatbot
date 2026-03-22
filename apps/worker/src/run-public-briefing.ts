@@ -78,6 +78,7 @@ export async function buildPublicBriefing(
   if (dependencies.reportCompositionService) {
     try {
       composition = await dependencies.reportCompositionService.compose({
+        audience: "public_web",
         holdings: [],
         marketResults,
         newsBriefs: [],

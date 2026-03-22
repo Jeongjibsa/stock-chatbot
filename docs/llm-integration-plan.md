@@ -9,6 +9,7 @@
 - PRD: [docs/initial-prd.md](/Users/jisung/Projects/stock-chatbot/docs/initial-prd.md)
 - 실행 계획: [docs/phase-plan.md](/Users/jisung/Projects/stock-chatbot/docs/phase-plan.md)
 - 변경 이력: [docs/change-log.md](/Users/jisung/Projects/stock-chatbot/docs/change-log.md)
+- prompt 계약: [docs/prompt-contract.md](/Users/jisung/Projects/stock-chatbot/docs/prompt-contract.md)
 
 ## 2. Current Decision
 
@@ -93,8 +94,11 @@
 - 요약 단계는 기사/지표 출처 ID를 함께 반환
 - 리포트 조합 단계는 최종 텔레그램 섹션 구조를 고정
 - 모델에게 매수/매도 확정 지시를 요구하지 않고 시나리오 제안 형식으로 제한
-- 현재 일 리포트 prompt v3의 출력 키는 `oneLineSummary`, `marketBullets`, `macroBullets`, `fundFlowBullets`, `eventBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `strategyBullets`, `riskBullets`로 고정한다.
-- 현재 일 리포트 prompt v4는 `입력 부재 시 빈 배열 강제` 규칙을 추가해 `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`에서 근거 없는 추론을 금지한다.
+- 현재 일 리포트 prompt의 출력 키는 `oneLineSummary`, `marketBullets`, `macroBullets`, `fundFlowBullets`, `eventBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `strategyBullets`, `riskBullets`로 고정한다.
+- prompt v4는 `입력 부재 시 빈 배열 강제` 규칙을 추가해 `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`에서 근거 없는 추론을 금지한다.
+- prompt v5는 같은 structured output을 유지하되 `telegram_personalized`와 `public_web` audience를 분리한다.
+- Telegram personalized prompt는 `제약/하드룰 -> 최종 action -> 점수/시장 레짐 -> 기타 사실` 우선순위와 개인화 리밸런싱 해석을 강화한다.
+- Public web prompt는 개인 포트폴리오 언어를 금지하고, 공개 시장 해석과 공용 리스크 설명에만 집중한다.
 - 리포트 조합 결과는 renderer가 그대로 섹션에 주입할 수 있어야 하며, 숫자 재계산 대신 해석 문장만 생성해야 한다.
 - 정보가 부족한 섹션은 빈 배열로 반환하도록 강제한다.
 
@@ -109,8 +113,9 @@
 
 현재 상태:
 
-- `market-report-composition` prompt v4가 텔레그램 템플릿 구조와 직접 매핑되는 structured output 계약으로 구현됐고, 부재 데이터 추론을 더 강하게 억제한다.
+- `market-report-composition` prompt v5가 채널별 audience 분리를 포함한 structured output 계약으로 구현됐고, 부재 데이터 추론을 더 강하게 억제한다.
 - `DailyReportCompositionService`가 실제 daily report worker 경로에 연결됐다.
+- public briefing build는 같은 service를 쓰되 `public_web` audience로 호출해 개인 행동 언어를 금지한다.
 - `OPENAI_API_KEY`가 없거나 composition 단계가 실패하면 기존 규칙 기반 renderer fallback으로 계속 생성한다.
 - `GEMINI_API_KEY`와 `LLM_PROVIDER=google`를 설정하면 같은 worker 경로에서 Gemini 모델을 바로 사용할 수 있다.
 

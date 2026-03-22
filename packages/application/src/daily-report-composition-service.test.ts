@@ -29,6 +29,7 @@ describe("DailyReportCompositionService", () => {
     });
 
     const result = await service.compose({
+      audience: "telegram_personalized",
       holdings: [
         {
           companyName: "Apple Inc.",
@@ -59,6 +60,10 @@ describe("DailyReportCompositionService", () => {
 
     expect(generate).toHaveBeenCalledWith(
       expect.objectContaining({
+        metadata: expect.objectContaining({
+          promptAudience: "telegram_personalized",
+          promptKind: "telegram-personalized-report-composition"
+        }),
         task: "market-report-composition"
       })
     );

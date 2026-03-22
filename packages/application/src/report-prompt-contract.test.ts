@@ -6,8 +6,9 @@ import {
 } from "./report-prompt-contract.js";
 
 describe("report prompt contract", () => {
-  it("builds a JSON-only prompt contract", () => {
+  it("builds a telegram personalized JSON-only prompt contract", () => {
     const prompt = buildDailyReportPromptContract({
+      audience: "telegram_personalized",
       holdings: [
         {
           companyName: "Apple Inc.",
@@ -36,20 +37,26 @@ describe("report prompt contract", () => {
       runDate: "2026-03-20"
     });
 
-    expect(prompt.instructions).toContain("반드시 JSON 객체만 반환");
-    expect(prompt.instructions).toContain("한국어 존댓말");
+    expect(prompt.instructions).toContain(
+      "텔레그램 DM용 개인화 포트폴리오 리밸런싱 브리핑 작성기"
+    );
+    expect(prompt.instructions).toContain(
+      "설명 우선순위는 `제약/하드룰 -> 최종 action 또는 actionSummary -> 점수/시장 레짐 -> 기타 사실`"
+    );
     expect(prompt.instructions).toContain(
       "입력에 실제 자금 데이터가 없으면 fundFlowBullets는 반드시 빈 배열"
     );
     expect(prompt.instructions).toContain(
-      "입력에 종목별 시세나 전일 종가 정보가 없으면 holdingTrendBullets는 반드시 빈 배열"
+      "입력에 종목별 가격/추세 사실이 없으면 holdingTrendBullets는 반드시 빈 배열로 반환하고 업종 일반론으로 종목 동향을 추정하지 않는다."
     );
     expect(prompt.metadata).toEqual({
-      promptKind: "market-report-composition",
+      promptAudience: "telegram_personalized",
+      promptKind: "telegram-personalized-report-composition",
       runDate: "2026-03-20"
     });
     expect(JSON.parse(prompt.input)).toEqual(
       expect.objectContaining({
+        audience: "telegram_personalized",
         dataAvailability: expect.objectContaining({
           eventInputAvailable: false,
           fundFlowInputAvailable: false,
@@ -68,6 +75,38 @@ describe("report prompt contract", () => {
           })
         ],
         quantScenarios: ["분할 매수 관찰"]
+      })
+    );
+  });
+
+  it("builds a public web prompt contract with personal-action guardrails", () => {
+    const prompt = buildDailyReportPromptContract({
+      audience: "public_web",
+      holdings: [],
+      marketResults: [],
+      newsBriefs: [],
+      quantScorecards: [],
+      quantScenarios: [],
+      riskCheckpoints: [],
+      runDate: "2026-03-22"
+    });
+
+    expect(prompt.instructions).toContain("공개 웹용 한국어 시장 브리핑 작성기");
+    expect(prompt.instructions).toContain(
+      "비중 확대, 축소 우선, 교체 검토, 매수 기회, 지금 사야 한다 같은 개인 행동 언어를 쓰지 않는다."
+    );
+    expect(prompt.instructions).toContain(
+      "holdingTrendBullets, articleSummaryBullets, strategyBullets는 공개 웹에서는 사용하지 않으므로 반드시 빈 배열로 반환한다."
+    );
+    expect(prompt.metadata).toEqual({
+      promptAudience: "public_web",
+      promptKind: "public-market-briefing-composition",
+      runDate: "2026-03-22"
+    });
+    expect(JSON.parse(prompt.input)).toEqual(
+      expect.objectContaining({
+        audience: "public_web",
+        holdings: []
       })
     );
   });

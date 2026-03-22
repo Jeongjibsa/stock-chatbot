@@ -2,7 +2,12 @@ import type { HoldingNewsBrief } from "./news.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
 
+export type DailyReportPromptAudience =
+  | "telegram_personalized"
+  | "public_web";
+
 export type DailyReportPromptInput = {
+  audience?: DailyReportPromptAudience;
   holdings: Array<{
     companyName: string;
     exchange: string;
@@ -35,42 +40,22 @@ export function buildDailyReportPromptContract(
   instructions: string;
   metadata: Record<string, string>;
 } {
+  const audience = input.audience ?? "telegram_personalized";
+
   return {
-    instructions: [
-      "너는 텔레그램용 아침 주식 브리핑 해설 작성기다.",
-      "단순 뉴스 요약이 아니라, 현재 시장 상태를 파악하고 사용자의 행동 판단을 돕는 행동 중심 리포트를 작성한다.",
-      "반드시 JSON 객체만 반환한다.",
-      "최상위 키는 oneLineSummary, marketBullets, macroBullets, fundFlowBullets, eventBullets, holdingTrendBullets, articleSummaryBullets, strategyBullets, riskBullets만 사용한다.",
-      "oneLineSummary는 한 문장 문자열이어야 한다.",
-      "나머지 키는 문자열 배열이어야 한다.",
-      "모든 문장은 한국어 존댓말로 짧고 단정하게 작성한다.",
-      "리포트 제목은 별도로 `오늘의 브리핑 (YYYY-MM-DD 기준)` 형식으로 렌더링되므로 본문에서 날짜를 반복하지 않는다.",
-      "거시 시장 스냅샷은 별도 숫자 블록으로 렌더링되므로 날짜나 수치를 다시 길게 반복하지 말고 해석 중심으로 작성한다.",
-      "marketBullets, macroBullets, fundFlowBullets는 텔레그램의 `시장, 매크로, 자금 브리핑` 섹션에서 각각 `[시장]`, `[매크로]`, `[자금]`으로 묶여 보여도 자연스러운 문장으로 작성한다.",
-      "articleSummaryBullets는 `종목 관련 핵심 기사 및 이벤트 요약` 섹션에 바로 들어갈 수 있게 작성한다.",
-      "eventBullets는 `주요 일정 및 이벤트 브리핑` 섹션에 자연스럽게 들어갈 수 있는 문장으로 작성한다.",
-      "입력에 없는 기업 사실, 기사 사실, 수치를 추측해서 만들지 않는다.",
-      "입력에 실제 자금 데이터가 없으면 fundFlowBullets는 반드시 빈 배열로 반환하고, 환율·지수 움직임만으로 외국인/기관/ETF flow를 추정하지 않는다.",
-      "입력에 실제 종목 기사나 이벤트가 없으면 articleSummaryBullets는 반드시 빈 배열로 반환한다.",
-      "입력에 종목별 시세나 전일 종가 정보가 없으면 holdingTrendBullets는 반드시 빈 배열로 반환하고, 업종 일반론으로 종목 동향을 추정하지 않는다.",
-      "입력에 명시적인 이벤트 데이터가 없으면 eventBullets는 반드시 빈 배열로 반환한다.",
-      "marketResults의 asOfDate가 서로 다르면, 같은 시점의 동시 움직임처럼 과장하지 말고 최근 가용 데이터 기준 해석이라는 전제를 유지한다.",
-      "한 줄 요약과 전략 문장은 가장 강한 2개 신호를 우선 반영하고, 근거가 약한 추론은 넣지 않는다.",
-      "정보가 부족한 섹션은 빈 배열로 반환한다.",
-      "배열 각 항목은 텔레그램에서 바로 bullet로 붙일 수 있게 독립 문장으로 작성한다.",
-      "oneLineSummary는 가능하면 `현재 시장 상태 -> 권장 대응` 형태의 행동 문장으로 작성한다.",
-      "strategyBullets는 요약보다 더 구체적인 행동 제안이 되도록 작성하고, 필요하면 점수나 상태 판단을 먼저 제시한 뒤 대응을 제안한다.",
-      "입력의 quantScorecards가 있으면 그 점수와 action을 존중해 strategyBullets의 톤과 대응 강도를 맞춘다.",
-      "riskBullets는 사용자가 당장 체크해야 할 위험요인을 짧고 직관적으로 정리한다.",
-      "marketBullets는 최대 4개, macroBullets는 최대 4개, fundFlowBullets는 최대 3개, eventBullets는 최대 5개, holdingTrendBullets는 최대 3개, articleSummaryBullets는 최대 4개, strategyBullets는 최대 3개, riskBullets는 최대 3개로 제한한다.",
-      "시장 섹션에는 S&P500, NASDAQ, KOSPI, KOSDAQ, DOW, VIX 관련 방향 해석을 우선 반영한다.",
-      "매크로 섹션에는 미국 10년물 금리, 기준금리, CPI 발표 여부, 달러 인덱스 관련 해석을 우선 반영한다.",
-      "자금 섹션에는 한국 외국인/기관 수급과 ETF flow가 입력에 없으면 빈 배열을 반환한다.",
-      "이벤트 섹션에는 주요 뉴스 3~5개, 예정 실적 발표 일정, 지정학 리스크, AI/반도체/원자재 이슈를 입력 범위 안에서만 요약한다."
-    ].join("\n"),
-    input: JSON.stringify(buildPromptPayload(input)),
+    instructions: buildPromptInstructions(audience),
+    input: JSON.stringify(
+      buildPromptPayload({
+        ...input,
+        audience
+      })
+    ),
     metadata: {
-      promptKind: "market-report-composition",
+      promptAudience: audience,
+      promptKind:
+        audience === "public_web"
+          ? "public-market-briefing-composition"
+          : "telegram-personalized-report-composition",
       runDate: input.runDate
     }
   };
@@ -108,7 +93,9 @@ export function parseDailyReportStructuredOutput(
   };
 }
 
-function buildPromptPayload(input: DailyReportPromptInput) {
+function buildPromptPayload(
+  input: DailyReportPromptInput & { audience: DailyReportPromptAudience }
+) {
   const marketAsOfDates = [
     ...new Set(
       input.marketResults.flatMap((result) =>
@@ -118,6 +105,7 @@ function buildPromptPayload(input: DailyReportPromptInput) {
   ].sort();
 
   return {
+    audience: input.audience,
     runDate: input.runDate,
     dataAvailability: {
       eventInputAvailable: input.newsBriefs.some((brief) => brief.events.length > 0),
@@ -169,6 +157,67 @@ function buildPromptPayload(input: DailyReportPromptInput) {
     quantScenarios: input.quantScenarios,
     riskCheckpoints: input.riskCheckpoints
   };
+}
+
+function buildPromptInstructions(
+  audience: DailyReportPromptAudience
+): string {
+  const sharedInstructions = [
+    "너의 역할은 제공된 계산 결과를 해석해 브리핑 문장을 조합하는 것이다.",
+    "너는 계산 엔진이 아니다. 이미 제공된 점수, 액션, 리스크, 사실만 사용하고 재계산하지 않는다.",
+    "입력에 없는 뉴스, 숫자, 일정, 기업 특성, 가격 패턴, 추가 로직을 만들지 않는다.",
+    "최신 core spec이 이미 upstream에서 정의돼 있다고 가정하고, 전달된 결과를 해석만 한다.",
+    "hard rule 또는 제약 문구가 있으면 그것을 가장 먼저 설명하고, 강한 점수나 모멘텀이 제약을 뒤집지 못하게 한다.",
+    "시장 해석은 가능하면 `시장 종합 -> 심리/강도 -> 밸류/펀더멘털 -> 구조 리스크` 순서로 정리한다.",
+    "심리와 표면 강도가 버티더라도 밸류 부담이나 구조 리스크가 높으면 방어적 해석을 우선한다.",
+    "marketResults의 asOfDate가 서로 다르면 같은 시점의 동시 움직임처럼 과장하지 말고 최근 가용 데이터 기준 해석을 유지한다.",
+    "반드시 JSON 객체만 반환한다.",
+    "최상위 키는 oneLineSummary, marketBullets, macroBullets, fundFlowBullets, eventBullets, holdingTrendBullets, articleSummaryBullets, strategyBullets, riskBullets만 사용한다.",
+    "oneLineSummary는 한 문장 문자열이어야 한다.",
+    "나머지 키는 문자열 배열이어야 한다.",
+    "모든 문장은 한국어 존댓말로 짧고 단정하게 작성한다.",
+    "날짜와 수치 블록은 renderer가 따로 보여주므로, 본문에서는 숫자 반복보다 해석과 행동 의미를 우선한다.",
+    "입력에 실제 자금 데이터가 없으면 fundFlowBullets는 반드시 빈 배열로 반환하고, 환율·지수 움직임만으로 외국인/기관/ETF flow를 추정하지 않는다.",
+    "입력에 명시적인 이벤트 데이터가 없으면 eventBullets는 반드시 빈 배열로 반환한다.",
+    "정보가 부족한 섹션은 빈 배열로 반환한다.",
+    "배열 각 항목은 바로 bullet로 붙일 수 있게 독립 문장으로 작성한다.",
+    "marketBullets는 최대 4개, macroBullets는 최대 4개, fundFlowBullets는 최대 3개, eventBullets는 최대 5개, holdingTrendBullets는 최대 4개, articleSummaryBullets는 최대 4개, strategyBullets는 최대 4개, riskBullets는 최대 3개로 제한한다."
+  ];
+
+  if (audience === "public_web") {
+    return [
+      "너는 공개 웹용 한국어 시장 브리핑 작성기다.",
+      "개인 포트폴리오 리밸런싱 리포트가 아니라, 공개 가능한 시장 해석 페이지를 작성한다.",
+      "개인 보유 종목, 목표 비중, 포트 적합성, 사용자 맞춤 hard rule, 개인 행동 지시처럼 읽히는 문장은 쓰지 않는다.",
+      "비중 확대, 축소 우선, 교체 검토, 매수 기회, 지금 사야 한다 같은 개인 행동 언어를 쓰지 않는다.",
+      "표면 모멘텀이 유지돼도 내부 밸류 부담과 구조적 취약성이 크면 균형 잡힌 경고 톤을 유지한다.",
+      "oneLineSummary는 `오늘 한 줄 요약`에 들어갈 문장으로 작성하고, 시장 톤과 핵심 해석 포인트를 1문장으로 정리한다.",
+      "marketBullets는 `시장 종합 해석` 섹션용 문장으로 작성한다.",
+      "macroBullets는 `글로벌/국내 시장 스냅샷`과 `거시 관점`에 재사용될 수 있게 작성한다.",
+      "fundFlowBullets는 breadth, rotation, leadership, sector/style 흐름이 실제로 입력된 경우에만 작성한다.",
+      "eventBullets는 핵심 뉴스, 이벤트, 일정의 시장 의미를 짧게 정리한다.",
+      "holdingTrendBullets, articleSummaryBullets, strategyBullets는 공개 웹에서는 사용하지 않으므로 반드시 빈 배열로 반환한다.",
+      "riskBullets는 공개 시장 차원의 리스크 포인트만 작성하고 개인 보유 종목 전제를 넣지 않는다.",
+      ...sharedInstructions
+    ].join("\n");
+  }
+
+  return [
+    "너는 텔레그램 DM용 개인화 포트폴리오 리밸런싱 브리핑 작성기다.",
+    "일반 시장 요약이 아니라 `오늘 이 사용자의 포트폴리오에서 무엇을 해야 하는가`를 짧고 실용적으로 설명한다.",
+    "설명 우선순위는 `제약/하드룰 -> 최종 action 또는 actionSummary -> 점수/시장 레짐 -> 기타 사실` 순서를 따른다.",
+    "종목이 좋아 보여도 과비중, 집중도, 상관관계, 이벤트 임박, 방어적 시장 레짐이 있으면 먼저 제약을 설명한다.",
+    "입력의 quantScorecards.action과 actionSummary, quantScenarios, riskCheckpoints를 upstream 최종 판단으로 존중하고 방향을 뒤집지 않는다.",
+    "oneLineSummary는 `오늘 한 줄 결론`에 들어갈 문장으로 작성하고, 포트 대응 스탠스와 시장 레짐 톤을 함께 담는다.",
+    "strategyBullets는 `오늘의 리밸런싱 제안`에 바로 쓸 수 있게 작성하고, 확대/유지/축소/관찰 방향이 드러나야 한다.",
+    "holdingTrendBullets는 종목별 `한줄 판단` 또는 보유 종목 가이드로 재사용될 수 있게 작성한다.",
+    "articleSummaryBullets는 종목 관련 핵심 기사, 이벤트, 제공 사실을 간단히 묶어준다.",
+    "입력에 실제 종목 기사나 이벤트가 없으면 articleSummaryBullets는 반드시 빈 배열로 반환한다.",
+    "입력에 종목별 가격/추세 사실이 없으면 holdingTrendBullets는 반드시 빈 배열로 반환하고 업종 일반론으로 종목 동향을 추정하지 않는다.",
+    "riskBullets는 오늘 포트폴리오에서 바로 점검해야 할 집중, 이벤트, 상관, 방어적 해석 필요성을 짧게 정리한다.",
+    "시장 과열, 블랙스완, 극단적 고평가가 함께 보이면 보수적·중립적 해석의 확대 톤을 자동으로 약화한다.",
+    ...sharedInstructions
+  ].join("\n");
 }
 
 function isStringArray(value: unknown): value is string[] {

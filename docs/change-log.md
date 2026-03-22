@@ -138,6 +138,7 @@
 | CHG-0111 | 2026-03-22 | FIX | 시장 데이터 어댑터가 항상 최신값만 조회하던 문제를 수정해 `runDate` 기준 최근 가용일 스냅샷을 사용하도록 `asOfDate` historical fetch를 도입하고, 공개 브리핑 2026-03-16~2026-03-21 backfill을 가능하게 함 | PRD, Change Log, Context, Code, Tests, Ops | yes |
 | CHG-0112 | 2026-03-22 | FIX | Telegram fast `/report`와 공개 브리핑 생성에서 LLM composition이 비활성화되거나 실패할 때 `시장/매크로/자금/이벤트/리스크` 섹션이 모두 비어 있던 문제를 수정해 rule-based fallback briefing 섹션과 상세 링크 base URL fallback을 추가 | PRD, Change Log, Context, README, Code, Tests | yes |
 | CHG-0113 | 2026-03-22 | FIX | 공개 웹 feed/detail이 Next.js 정적 최적화로 build 시점 empty state를 계속 서빙하던 문제를 수정해 DB 조회를 `force-dynamic + noStore`로 전환하고, `report_date`를 문자열로 정규화해 실시간 공개 브리핑 적재분을 바로 노출하도록 보강 | Change Log, Context, README, Code, Tests | yes |
+| CHG-0114 | 2026-03-22 | UPDATE | 일 브리핑 prompt 계약을 `telegram_personalized`와 `public_web` audience로 분리하고, 개인화 리밸런싱 해석 우선순위와 공개 웹의 비개인화 guardrail을 코드·문서 기준선으로 고정 | Change Log, Context, LLM Plan, Docs, Code, Tests | yes |
 
 ## 4. Open Change Notes
 
