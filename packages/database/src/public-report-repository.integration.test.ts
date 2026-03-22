@@ -41,6 +41,7 @@ describeIntegration("PublicReportRepository integration", () => {
       marketRegime: "Risk-Off",
       totalScore: "-0.42",
       signals: ["VIX 급등", "달러 강세"],
+      indicatorTags: ["KOSPI +0.31%", "NASDAQ -2.01%"],
       contentMarkdown: "# 오늘의 브리핑"
     });
 
@@ -55,7 +56,8 @@ describeIntegration("PublicReportRepository integration", () => {
     expect(fetched).toMatchObject({
       id: created.id,
       reportDate: "2026-03-21",
-      signals: ["VIX 급등", "달러 강세"]
+      signals: ["VIX 급등", "달러 강세"],
+      indicatorTags: ["KOSPI +0.31%", "NASDAQ -2.01%"]
     });
   });
 });

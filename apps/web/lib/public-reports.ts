@@ -10,6 +10,7 @@ export async function listPublicReports(): Promise<PublicReport[]> {
     content_markdown: string;
     created_at: Date;
     id: string;
+    indicator_tags: string[];
     market_regime: string;
     report_date: Date | string;
     signals: string[];
@@ -17,7 +18,7 @@ export async function listPublicReports(): Promise<PublicReport[]> {
     total_score: string;
   }>(
     [
-      'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"',
+      'SELECT DISTINCT ON ("report_date") "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
       'FROM "reports"',
       'ORDER BY "report_date" DESC, "created_at" DESC'
     ].join(" ")
@@ -35,6 +36,7 @@ export async function getPublicReportById(
     content_markdown: string;
     created_at: Date;
     id: string;
+    indicator_tags: string[];
     market_regime: string;
     report_date: Date | string;
     signals: string[];
@@ -42,7 +44,7 @@ export async function getPublicReportById(
     total_score: string;
   }>(
     [
-      'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"',
+      'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
       'FROM "reports"',
       'WHERE "id" = $1',
       'LIMIT 1'
@@ -57,6 +59,7 @@ function mapRowToPublicReport(report: {
   content_markdown: string;
   created_at: Date;
   id: string;
+  indicator_tags: string[];
   market_regime: string;
   report_date: Date | string;
   signals: string[];
@@ -67,6 +70,7 @@ function mapRowToPublicReport(report: {
     id: report.id,
     reportDate: normalizeDate(report.report_date),
     summary: report.summary,
+    indicatorTags: report.indicator_tags ?? [],
     marketRegime: report.market_regime,
     totalScore: Number.parseFloat(report.total_score),
     signals: report.signals,

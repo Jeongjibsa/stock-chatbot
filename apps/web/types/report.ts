@@ -2,6 +2,7 @@ export type PublicReport = {
   contentMarkdown: string;
   createdAt: string;
   id: string;
+  indicatorTags: string[];
   marketRegime: string;
   reportDate: string;
   signals: string[];

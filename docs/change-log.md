@@ -143,6 +143,7 @@
 | CHG-0116 | 2026-03-22 | UPDATE | Telegram `/report`와 공개 웹 브리핑 템플릿을 todo_260322 기준의 `개인화 리밸런싱 브리핑 / 공개 시장 브리핑` 구조로 재편하고, renderer·public builder·prompt contract·query model·mock preview를 새 섹션 계약에 맞춰 동기화 | PRD, Change Log, Context, Docs, Code, Tests | yes |
 | CHG-0117 | 2026-03-22 | UPDATE | Telegram DM에 홈 reply keyboard와 설정 inline keyboard를 추가해 `/start`, `/help`, `/register`, `/report_settings` 이후 버튼 기반 탐색을 지원하고, 기존 slash command semantics는 그대로 유지 | PRD, Change Log, Context, Docs, Code, Tests | yes |
 | CHG-0118 | 2026-03-22 | FIX | Telegram `/report`가 새 리밸런싱 템플릿 껍데기만 사용하고 실제 `portfolioRebalancing` payload를 오케스트레이터에서 renderer/prompt로 전달하지 않던 누락을 수정하고, 온디맨드 `/report`가 `REPORT_RUN_DATE` override를 읽어 특정 기준일 실데이터 재현이 가능하도록 보강 | PRD, Plan, Change Log, Context, README, Code, Tests, Ops | yes |
+| CHG-0119 | 2026-03-22 | UPDATE | Telegram `/report`와 공개 브리핑이 서울 기준 `공통 마감일(effective report date)`을 사용하도록 정렬하고, `personal_rebalancing_snapshots` JSONB cache를 추가해 개인화 리밸런싱 payload를 기준일별로 재사용하도록 보강했다. 동시에 Telegram 설정 UI를 `브리핑 켜기/끄기 + 시간 변경`만 남기고 `callback_query` webhook 수신을 활성화했으며, 관심 지표 개인화는 deprecated 처리하고 공개 feed/detail의 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했다. | PRD, Plan, Change Log, Context, README, Telegram Docs, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 

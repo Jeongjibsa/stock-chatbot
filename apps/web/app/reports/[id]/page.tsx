@@ -2,11 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
-import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { MarkdownReport } from "../../../components/markdown-report";
-import { normalizeMarketRegime, scoreTone } from "../../../lib/report-feed";
 import { getPublicReportById } from "../../../lib/public-reports";
 
 export const dynamic = "force-dynamic";
@@ -24,15 +22,6 @@ export default async function ReportDetailPage({
     if (!report) {
       notFound();
     }
-
-    const marketRegime = normalizeMarketRegime(report.marketRegime);
-    const regimeTone =
-      marketRegime === "Risk-On"
-        ? "positive"
-        : marketRegime === "Risk-Off"
-          ? "negative"
-          : "neutral";
-    const totalScoreTone = scoreTone(report.totalScore);
 
     return (
       <main className="pb-12">
@@ -56,11 +45,11 @@ export default async function ReportDetailPage({
               {report.summary}
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              <Badge tone={regimeTone}>{marketRegime}</Badge>
-              <Badge tone={totalScoreTone}>
-                Total {report.totalScore > 0 ? "+" : ""}
-                {report.totalScore.toFixed(2)}
-              </Badge>
+              {report.indicatorTags.map((tag) => (
+                <span key={tag} className="signal-chip">
+                  {tag}
+                </span>
+              ))}
             </div>
           </header>
 

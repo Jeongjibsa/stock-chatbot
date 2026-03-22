@@ -1,5 +1,10 @@
 import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js";
 import type { DailyReportComposition } from "./daily-report-composition-service.js";
+import {
+  buildPersonalRebalancingSnapshot,
+  DEFAULT_PERSONAL_REBALANCING_SNAPSHOT_VERSION
+} from "./personal-rebalancing-snapshot.js";
+import { resolveEffectiveReportDate } from "./effective-report-date.js";
 import type {
   HoldingPriceSnapshot,
   HoldingPriceSnapshotProvider
@@ -36,6 +41,12 @@ type UserMarketWatchRepositoryPort = {
       sourceKey: string;
     }>
   >;
+};
+
+type DefaultMarketItem = {
+  itemCode: string;
+  itemName: string;
+  sourceKey: string;
 };
 
 type ReportRunRepositoryPort = {
@@ -114,6 +125,26 @@ type StrategySnapshotRepositoryPort = {
   ): Promise<unknown>;
 };
 
+type PersonalRebalancingSnapshotRepositoryPort = {
+  deleteOlderThan(cutoffDate: string): Promise<number>;
+  findByUserAndEffectiveDate(input: {
+    effectiveReportDate: string;
+    snapshotVersion: string;
+    userId: string;
+  }): Promise<{
+    payload: Record<string, unknown>;
+  } | null>;
+  upsert(input: {
+    effectiveReportDate: string;
+    krSessionDate?: string | null;
+    payload: Record<string, unknown>;
+    requestedSeoulDate: string;
+    snapshotVersion: string;
+    usSessionDate?: string | null;
+    userId: string;
+  }): Promise<unknown>;
+};
+
 export type DailyReportOrchestratorResult = {
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs: HoldingNewsBrief[];
@@ -130,8 +161,10 @@ export type DailyReportOrchestratorResult = {
 export class DailyReportOrchestrator {
   constructor(
     private readonly dependencies: {
+      defaultMarketItems?: DefaultMarketItem[];
       holdingPriceSnapshotProvider?: HoldingPriceSnapshotProvider;
       marketDataAdapter: MarketDataAdapter;
+      personalRebalancingSnapshotRepository?: PersonalRebalancingSnapshotRepositoryPort;
       portfolioHoldingRepository: PortfolioHoldingRepositoryPort;
       portfolioNewsBriefService?: PortfolioNewsBriefServicePort;
       publicBriefingBaseUrl?: string;
@@ -143,7 +176,7 @@ export class DailyReportOrchestrator {
       reportCompositionService?: ReportCompositionServicePort;
       reportRunRepository: ReportRunRepositoryPort;
       strategySnapshotRepository?: StrategySnapshotRepositoryPort;
-      userMarketWatchRepository: UserMarketWatchRepositoryPort;
+      userMarketWatchRepository?: UserMarketWatchRepositoryPort;
     }
   ) {}
 
@@ -192,9 +225,13 @@ export class DailyReportOrchestrator {
       };
     }
 
+    const defaultMarketItems = this.dependencies.defaultMarketItems;
     const [holdings, marketWatchItems] = await Promise.all([
       this.dependencies.portfolioHoldingRepository.listByUserId(input.user.id),
-      this.dependencies.userMarketWatchRepository.listEffectiveByUserId(input.user.id)
+      defaultMarketItems
+        ? Promise.resolve(defaultMarketItems)
+        : this.dependencies.userMarketWatchRepository?.listEffectiveByUserId(input.user.id) ??
+          Promise.resolve([])
     ]);
     const marketResults = await this.dependencies.marketDataAdapter.fetchMany(
       marketWatchItems.map((item) => ({
@@ -231,6 +268,39 @@ export class DailyReportOrchestrator {
       portfolioNewsBriefs
     });
     const quantScenarios = toQuantStrategyBullets(quantScorecards);
+    const effectiveDateResolution = resolveEffectiveReportDate({
+      marketResults,
+      requestedSeoulDate: input.runDate
+    });
+    const effectiveReportDate = effectiveDateResolution.effectiveReportDate;
+    const portfolioRebalancing = await this.resolvePortfolioRebalancing({
+      holdings: holdings.map((holding) => {
+        const snapshot = holdingSnapshots.get(holding.symbol);
+
+        return {
+          companyName: holding.companyName,
+          symbol: holding.symbol,
+          exchange: holding.exchange,
+          ...(snapshot?.currentPrice !== undefined
+            ? { currentPrice: snapshot.currentPrice }
+            : {}),
+          ...(snapshot?.previousClose !== undefined
+            ? { previousClose: snapshot.previousClose }
+            : {}),
+          ...(snapshot?.changePercent !== undefined
+            ? { changePercent: snapshot.changePercent }
+            : {})
+        };
+      }),
+      marketResults,
+      portfolioNewsBriefs,
+      quantScorecards,
+      userId: input.user.id,
+      ...(input.portfolioRebalancing
+        ? { provided: input.portfolioRebalancing }
+        : {}),
+      ...effectiveDateResolution
+    });
     let strategySnapshotError: string | undefined;
 
     if (this.dependencies.strategySnapshotRepository) {
@@ -308,13 +378,11 @@ export class DailyReportOrchestrator {
           })),
           marketResults,
           newsBriefs: portfolioNewsBriefs,
-          ...(input.portfolioRebalancing
-            ? { portfolioRebalancing: input.portfolioRebalancing }
-            : {}),
+          ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
           quantScorecards,
           quantScenarios,
           riskCheckpoints: [],
-          runDate: input.runDate
+          runDate: effectiveReportDate
         });
       } catch (error) {
         compositionError =
@@ -332,7 +400,7 @@ export class DailyReportOrchestrator {
     );
     const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
       displayName: input.user.displayName,
-      runDate: input.runDate,
+      runDate: effectiveReportDate,
       holdings: holdings.map((holding) => {
         const snapshot = holdingSnapshots.get(holding.symbol);
 
@@ -353,9 +421,7 @@ export class DailyReportOrchestrator {
       }),
       marketResults,
       portfolioNewsBriefs,
-      ...(input.portfolioRebalancing
-        ? { portfolioRebalancing: input.portfolioRebalancing }
-        : {}),
+      ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
       quantScorecards
     };
 
@@ -426,7 +492,7 @@ export class DailyReportOrchestrator {
       input.user.includePublicBriefingLink !== false
     ) {
       const latestPublicReport = await this.dependencies.publicReportRepository?.findLatestByReportDate(
-        input.runDate
+        effectiveReportDate
       );
 
       renderInput.publicBriefingUrl = latestPublicReport
@@ -436,7 +502,7 @@ export class DailyReportOrchestrator {
           )
         : buildPublicBriefingUrl(
             this.dependencies.publicBriefingBaseUrl,
-            input.runDate
+            effectiveReportDate
           );
     }
 
@@ -473,6 +539,105 @@ export class DailyReportOrchestrator {
       marketResults,
       portfolioNewsBriefs
     };
+  }
+
+  private async resolvePortfolioRebalancing(input: {
+    effectiveReportDate: string;
+    holdings: Array<{
+      changePercent?: number;
+      companyName: string;
+      currentPrice?: number;
+      exchange: string;
+      previousClose?: number;
+      symbol: string;
+    }>;
+    krSessionDate?: string;
+    marketResults: MarketDataFetchResult[];
+    portfolioNewsBriefs: HoldingNewsBrief[];
+    provided?: PersonalizedPortfolioRebalancingData;
+    quantScorecards: QuantScorecard[];
+    requestedSeoulDate: string;
+    usSessionDate?: string;
+    userId: string;
+  }): Promise<PersonalizedPortfolioRebalancingData | undefined> {
+    const repository = this.dependencies.personalRebalancingSnapshotRepository;
+    const snapshotVersion = DEFAULT_PERSONAL_REBALANCING_SNAPSHOT_VERSION;
+
+    if (input.provided) {
+      await this.persistPersonalSnapshot({
+        effectiveReportDate: input.effectiveReportDate,
+        payload: input.provided,
+        requestedSeoulDate: input.requestedSeoulDate,
+        snapshotVersion,
+        userId: input.userId,
+        ...(input.krSessionDate ? { krSessionDate: input.krSessionDate } : {}),
+        ...(input.usSessionDate ? { usSessionDate: input.usSessionDate } : {})
+      });
+      return input.provided;
+    }
+
+    if (repository) {
+      const cached = await repository.findByUserAndEffectiveDate({
+        userId: input.userId,
+        effectiveReportDate: input.effectiveReportDate,
+        snapshotVersion
+      });
+
+      if (cached?.payload) {
+        const cachedPayload = cached.payload as PersonalizedPortfolioRebalancingData;
+
+        if (!isSnapshotStale(cachedPayload, input.holdings)) {
+          return cachedPayload;
+        }
+      }
+    }
+
+    const built = buildPersonalRebalancingSnapshot({
+      holdings: input.holdings,
+      marketResults: input.marketResults,
+      portfolioNewsBriefs: input.portfolioNewsBriefs,
+      quantScorecards: input.quantScorecards
+    });
+
+    await this.persistPersonalSnapshot({
+      effectiveReportDate: input.effectiveReportDate,
+      payload: built,
+      requestedSeoulDate: input.requestedSeoulDate,
+      snapshotVersion,
+      userId: input.userId,
+      ...(input.krSessionDate ? { krSessionDate: input.krSessionDate } : {}),
+      ...(input.usSessionDate ? { usSessionDate: input.usSessionDate } : {})
+    });
+
+    return built;
+  }
+
+  private async persistPersonalSnapshot(input: {
+    effectiveReportDate: string;
+    krSessionDate?: string;
+    payload: PersonalizedPortfolioRebalancingData;
+    requestedSeoulDate: string;
+    snapshotVersion: string;
+    usSessionDate?: string;
+    userId: string;
+  }): Promise<void> {
+    const repository = this.dependencies.personalRebalancingSnapshotRepository;
+
+    if (!repository) {
+      return;
+    }
+
+    await repository.upsert({
+      userId: input.userId,
+      requestedSeoulDate: input.requestedSeoulDate,
+      effectiveReportDate: input.effectiveReportDate,
+      ...(input.krSessionDate ? { krSessionDate: input.krSessionDate } : {}),
+      ...(input.usSessionDate ? { usSessionDate: input.usSessionDate } : {}),
+      snapshotVersion: input.snapshotVersion,
+      payload: input.payload as Record<string, unknown>
+    });
+
+    await repository.deleteOlderThan(subtractDays(input.effectiveReportDate, 90));
   }
 }
 
@@ -528,6 +693,27 @@ function buildErrorMessage(
     ...(compositionError ? [`report_composition: ${compositionError}`] : []),
     ...(strategySnapshotError ? [`strategy_snapshot: ${strategySnapshotError}`] : [])
   ].join("; ");
+}
+
+function subtractDays(dateOnly: string, days: number): string {
+  const value = new Date(`${dateOnly}T00:00:00.000Z`);
+  value.setUTCDate(value.getUTCDate() - days);
+  return value.toISOString().slice(0, 10);
+}
+
+function isSnapshotStale(
+  payload: PersonalizedPortfolioRebalancingData,
+  holdings: Array<{ companyName: string; symbol: string }>
+): boolean {
+  const cachedHoldings = payload.holdings ?? [];
+
+  if (cachedHoldings.length !== holdings.length) {
+    return true;
+  }
+
+  const cachedNames = new Set(cachedHoldings.map((holding) => holding.name));
+
+  return holdings.some((holding) => !cachedNames.has(holding.companyName));
 }
 
 async function buildHoldingSnapshotMap(input: {

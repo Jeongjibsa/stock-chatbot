@@ -38,7 +38,7 @@
   - `/report`
   - `/portfolio_add`
   - `/portfolio_list`
-  - `/market_add`
+  - `/report_settings`
 - 설명은 짧고 명확해야 한다.
 
 ## 시나리오 0. webhook secret 보호 경계
@@ -86,36 +86,33 @@
 - `/report`에 해당 종목 기반 개인화 섹션이 포함된다.
 - 다른 사용자의 종목은 절대 섞이지 않는다.
 
-## 시나리오 4. 관심 지표 설정
+## 시나리오 4. 관심 지표 deprecation
 
 ### 절차
 
 1. DM에서 `/market_add`를 실행한다.
-2. 관심 지표를 추가한다.
 3. `/market_items`를 실행한다.
 
 ### 기대 결과
 
-- 사용자의 관심 지표가 저장된다.
-- `/market_items`는 사용자별 목록만 보여준다.
-- 이후 `/report`에서 반영 가능한 지표는 해당 사용자 맥락으로 사용된다.
+- 두 명령 모두 더 이상 개인화 대상이 아니라는 안내를 반환한다.
+- 이후 `/report`는 사용자별 관심 지표가 아니라 시스템 기본 시장 지표 세트를 사용한다.
 
 ## 시나리오 5. 리포트 설정
 
 ### 절차
 
 1. DM에서 `/report_settings`를 실행한다.
-2. `/report_mode compact`를 실행한다.
-3. `/report`를 실행한다.
-4. `/report_link_off`를 실행한다.
-5. `/report`를 다시 실행한다.
-6. `/report_mode standard`와 `/report_link_on`으로 원복한다.
+2. `브리핑 켜기` inline button을 누른다.
+3. `브리핑 끄기` inline button을 누른다.
+4. `시간 변경` inline button을 누른다.
+5. `08:30` 같은 `HH:MM` 형식 시간을 입력한다.
 
 ### 기대 결과
 
-- `compact` 모드에서는 하단 상세 섹션이 압축된다.
-- `link_off` 상태에서는 공개 링크가 제거된다.
-- 설정은 사용자별로만 반영된다.
+- inline button이 실제로 반응하고 상태가 갱신된다.
+- 시간 변경 버튼은 `HH:MM` 입력 대기 상태로 전환된다.
+- 입력한 시간이 사용자별 정기 브리핑 설정에 저장된다.
 
 ## 시나리오 6. 그룹 온보딩
 

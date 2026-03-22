@@ -33,7 +33,7 @@ describe("telegram onboarding helpers", () => {
     expect(message).toContain("사용 방법은 간단합니다.");
     expect(message).toContain("1. /register 로 등록");
     expect(message).toContain("2. /report 로 브리핑 확인");
-    expect(message).toContain("/market_items - 추적 지표 확인");
+    expect(message).not.toContain("/market_items - 추적 지표 확인");
     expect(message).toContain("/unregister - 등록 초기화");
   });
 

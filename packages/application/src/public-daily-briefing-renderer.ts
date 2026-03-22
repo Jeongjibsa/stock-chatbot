@@ -46,6 +46,8 @@ export function renderPublicDailyBriefingHtml(briefing: PublicDailyBriefing): st
     "    body { margin: 0; font-family: 'Iowan Old Style', 'Noto Serif KR', serif; background: linear-gradient(180deg, #fff8e6 0%, var(--bg) 34%, #f3efe8 100%); color: var(--ink); }",
     "    main { max-width: 920px; margin: 0 auto; padding: 48px 20px 80px; }",
     "    header { margin-bottom: 24px; }",
+    "    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }",
+    "    .chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.75); color: var(--ink); font-size: 0.86rem; }",
     "    h1 { margin: 0 0 8px; font-size: clamp(2rem, 4vw, 3.1rem); line-height: 1.05; }",
     "    .meta { color: var(--muted); font-size: 0.95rem; }",
     "    section { background: rgba(255, 253, 249, 0.88); border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 16px 44px rgba(28, 24, 18, 0.06); }",
@@ -64,6 +66,9 @@ export function renderPublicDailyBriefingHtml(briefing: PublicDailyBriefing): st
     "    <header>",
     `      <h1>${escapeHtml(briefing.title)}</h1>`,
     `      <div class="meta">기준일 ${escapeHtml(briefing.runDate)} · 공개 시장 브리핑</div>`,
+    `      <div class="chips">${briefing.indicatorTags
+      .map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`)
+      .join("")}</div>`,
     "    </header>",
     sections,
     "    <footer>",

@@ -155,6 +155,35 @@ export const reportRuns = pgTable(
   })
 );
 
+export const personalRebalancingSnapshots = pgTable(
+  "personal_rebalancing_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    requestedSeoulDate: date("requested_seoul_date").notNull(),
+    effectiveReportDate: date("effective_report_date").notNull(),
+    krSessionDate: date("kr_session_date"),
+    usSessionDate: date("us_session_date"),
+    snapshotVersion: text("snapshot_version").notNull(),
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    userEffectiveSnapshotUnique: unique(
+      "personal_rebalancing_snapshots_user_effective_snapshot_unique"
+    ).on(table.userId, table.effectiveReportDate, table.snapshotVersion),
+    userEffectiveDateIndex: index(
+      "personal_rebalancing_snapshots_user_effective_date_idx"
+    ).on(table.userId, table.effectiveReportDate),
+    effectiveDateIndex: index("personal_rebalancing_snapshots_effective_date_idx").on(
+      table.effectiveReportDate
+    )
+  })
+);
+
 export const reports = pgTable("reports", {
   id: uuid("id").defaultRandom().primaryKey(),
   reportDate: date("report_date").notNull(),
@@ -162,6 +191,7 @@ export const reports = pgTable("reports", {
   marketRegime: text("market_regime").notNull(),
   totalScore: numeric("total_score").notNull(),
   signals: jsonb("signals").$type<string[]>().notNull(),
+  indicatorTags: jsonb("indicator_tags").$type<string[]>().notNull(),
   contentMarkdown: text("content_markdown").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 });
@@ -231,6 +261,10 @@ export type UserMarketWatchItemRecord = typeof userMarketWatchItems.$inferSelect
 export type NewUserMarketWatchItemRecord = typeof userMarketWatchItems.$inferInsert;
 export type ReportRunRecord = typeof reportRuns.$inferSelect;
 export type NewReportRunRecord = typeof reportRuns.$inferInsert;
+export type PersonalRebalancingSnapshotRecord =
+  typeof personalRebalancingSnapshots.$inferSelect;
+export type NewPersonalRebalancingSnapshotRecord =
+  typeof personalRebalancingSnapshots.$inferInsert;
 export type ReportRecord = typeof reports.$inferSelect;
 export type NewReportRecord = typeof reports.$inferInsert;
 export type StrategySnapshotRecord = typeof strategySnapshots.$inferSelect;

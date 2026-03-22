@@ -41,6 +41,7 @@ describe("public daily briefing", () => {
     expect(briefing.canonicalPath).toBe("/briefings/2026-03-20/");
     expect(briefing.archivePath).toBe("/briefings/2026/03/20/");
     expect(briefing.excludedTelegramOnlySections).toContain("portfolioRebalancing");
+    expect(briefing.indicatorTags).toEqual(["S&P500 -1.51%"]);
     expect(briefing.marketSummary.overall).toContain("미국 증시 약세");
     expect(briefing.disclaimer).toContain("개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다.");
     expect(JSON.stringify(briefing)).not.toContain("비중 확대");

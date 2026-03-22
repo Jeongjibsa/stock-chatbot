@@ -41,8 +41,6 @@ export function formatReportSettings(input: {
   dailyReportEnabled?: boolean;
   dailyReportHour?: number;
   dailyReportMinute?: number;
-  includePublicBriefingLink?: boolean;
-  reportDetailLevel?: string | null;
   timezone?: string;
 }): string {
   return [
@@ -53,15 +51,10 @@ export function formatReportSettings(input: {
       input.dailyReportMinute ?? 0
     )}`,
     `- 타임존: ${input.timezone ?? "Asia/Seoul"}`,
-    `- 리포트 밀도: ${input.reportDetailLevel === "compact" ? "compact" : "standard"}`,
-    `- 상세 링크: ${input.includePublicBriefingLink === false ? "숨김" : "표시"}`,
     "",
     "변경 명령:",
     "- /report_on",
     "- /report_off",
-    "- /report_time 09:00",
-    "- /report_mode compact",
-    "- /report_link_on",
-    "- /report_link_off"
+    "- /report_time 09:00"
   ].join("\n");
 }

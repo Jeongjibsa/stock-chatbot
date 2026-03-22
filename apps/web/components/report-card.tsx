@@ -2,27 +2,11 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 import type { PublicReport } from "../types/report";
-import { normalizeMarketRegime, scoreTone } from "../lib/report-feed";
-import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Separator } from "./ui/separator";
 
 export function ReportCard({ report }: { report: PublicReport }) {
-  const marketRegime = normalizeMarketRegime(report.marketRegime);
-  const scoreBadgeTone =
-    scoreTone(report.totalScore) === "positive"
-      ? "positive"
-      : scoreTone(report.totalScore) === "negative"
-        ? "negative"
-        : "neutral";
-  const regimeTone =
-    marketRegime === "Risk-On"
-      ? "positive"
-      : marketRegime === "Risk-Off"
-        ? "negative"
-        : "neutral";
-
   return (
     <Card className="group overflow-hidden hover:-translate-y-px hover:shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
       <CardContent className="space-y-5">
@@ -41,11 +25,11 @@ export function ReportCard({ report }: { report: PublicReport }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge tone={regimeTone}>{marketRegime}</Badge>
-            <Badge tone={scoreBadgeTone}>
-              Total {report.totalScore > 0 ? "+" : ""}
-              {report.totalScore.toFixed(2)}
-            </Badge>
+            {report.indicatorTags.map((tag) => (
+              <span key={tag} className="signal-chip">
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
         <Separator />

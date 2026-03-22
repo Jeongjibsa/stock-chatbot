@@ -5,22 +5,31 @@ import { PublicReportRepository } from "./public-report-repository.js";
 
 function createDbDouble() {
   const state = {
-    result: [] as unknown[]
+    insertResult: [] as unknown[],
+    selectResult: [] as unknown[],
+    updateResult: [] as unknown[]
   };
 
   const db = {
     insert: () => ({
       values: () => ({
-        returning: async () => state.result
+        returning: async () => state.insertResult
+      })
+    }),
+    update: () => ({
+      set: () => ({
+        where: () => ({
+          returning: async () => state.updateResult
+        })
       })
     }),
     select: () => ({
       from: () => ({
-        orderBy: async () => state.result,
+        orderBy: async () => state.selectResult,
         where: () => ({
-          limit: async () => state.result,
+          limit: async () => state.selectResult,
           orderBy: () => ({
-            limit: async () => state.result
+            limit: async () => state.selectResult
           })
         })
       })
@@ -33,7 +42,8 @@ function createDbDouble() {
 describe("PublicReportRepository", () => {
   it("returns the inserted public report", async () => {
     const { db, state } = createDbDouble();
-    state.result = [
+    state.selectResult = [];
+    state.insertResult = [
       {
         id: "report-1",
         reportDate: "2026-03-21",
@@ -41,6 +51,7 @@ describe("PublicReportRepository", () => {
         marketRegime: "Risk-Off",
         totalScore: "-0.42",
         signals: ["VIX 급등", "달러 강세"],
+        indicatorTags: ["KOSPI +0.31%"],
         contentMarkdown: "# 보고서"
       }
     ];
@@ -53,6 +64,7 @@ describe("PublicReportRepository", () => {
         marketRegime: "Risk-Off",
         totalScore: "-0.42",
         signals: ["VIX 급등", "달러 강세"],
+        indicatorTags: ["KOSPI +0.31%"],
         contentMarkdown: "# 보고서"
       })
     ).resolves.toMatchObject({
@@ -63,7 +75,7 @@ describe("PublicReportRepository", () => {
 
   it("lists reports in repository order", async () => {
     const { db, state } = createDbDouble();
-    state.result = [
+    state.selectResult = [
       { id: "report-2", reportDate: "2026-03-22" },
       { id: "report-1", reportDate: "2026-03-21" }
     ];
@@ -77,7 +89,7 @@ describe("PublicReportRepository", () => {
 
   it("returns null when a report is missing", async () => {
     const { db, state } = createDbDouble();
-    state.result = [];
+    state.selectResult = [];
     const repository = new PublicReportRepository(db);
 
     await expect(repository.getReportById("missing")).resolves.toBeNull();
@@ -85,7 +97,7 @@ describe("PublicReportRepository", () => {
 
   it("returns the latest report for a date", async () => {
     const { db, state } = createDbDouble();
-    state.result = [
+    state.selectResult = [
       {
         id: "report-latest",
         reportDate: "2026-03-21"
@@ -95,6 +107,38 @@ describe("PublicReportRepository", () => {
 
     await expect(repository.findLatestByReportDate("2026-03-21")).resolves.toMatchObject({
       id: "report-latest"
+    });
+  });
+
+  it("updates the latest report when the report date already exists", async () => {
+    const { db, state } = createDbDouble();
+    state.selectResult = [
+      {
+        id: "report-existing",
+        reportDate: "2026-03-21"
+      }
+    ];
+    state.updateResult = [
+      {
+        id: "report-existing",
+        reportDate: "2026-03-21",
+        indicatorTags: ["NASDAQ -1.20%"]
+      }
+    ];
+    const repository = new PublicReportRepository(db);
+
+    await expect(
+      repository.insertReport({
+        reportDate: "2026-03-21",
+        summary: "updated",
+        marketRegime: "Neutral",
+        totalScore: "0.00",
+        signals: [],
+        indicatorTags: ["NASDAQ -1.20%"],
+        contentMarkdown: "# updated"
+      })
+    ).resolves.toMatchObject({
+      id: "report-existing"
     });
   });
 });

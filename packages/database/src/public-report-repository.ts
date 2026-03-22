@@ -1,10 +1,11 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 
 import type { DatabaseClient } from "./client.js";
 import { reports, type ReportRecord } from "./schema.js";
 
 export type InsertPublicReportInput = {
   contentMarkdown: string;
+  indicatorTags: string[];
   marketRegime: string;
   reportDate: string;
   signals: string[];
@@ -16,17 +17,26 @@ export class PublicReportRepository {
   constructor(private readonly db: DatabaseClient) {}
 
   async insertReport(input: InsertPublicReportInput): Promise<ReportRecord> {
-    const [created] = await this.db
-      .insert(reports)
-      .values({
-        reportDate: input.reportDate,
-        summary: input.summary,
-        marketRegime: input.marketRegime,
-        totalScore: input.totalScore,
-        signals: input.signals,
-        contentMarkdown: input.contentMarkdown
-      })
-      .returning();
+    const existing = await this.findLatestByReportDate(input.reportDate);
+    const values = {
+      reportDate: input.reportDate,
+      summary: input.summary,
+      marketRegime: input.marketRegime,
+      totalScore: input.totalScore,
+      signals: input.signals,
+      indicatorTags: input.indicatorTags,
+      contentMarkdown: input.contentMarkdown
+    };
+    const [created] = existing
+      ? await this.db
+          .update(reports)
+          .set({
+            ...values,
+            createdAt: sql`now()`
+          })
+          .where(eq(reports.id, existing.id))
+          .returning()
+      : await this.db.insert(reports).values(values).returning();
 
     if (!created) {
       throw new Error("Failed to insert public report");

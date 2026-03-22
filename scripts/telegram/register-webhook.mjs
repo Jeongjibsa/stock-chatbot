@@ -1,7 +1,7 @@
 const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
 const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL?.trim();
 const secretToken = process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN?.trim();
-const allowedUpdates = ["message", "chat_member", "my_chat_member"];
+const allowedUpdates = ["message", "callback_query", "chat_member", "my_chat_member"];
 
 if (!token) {
   console.error("TELEGRAM_BOT_TOKEN is missing");

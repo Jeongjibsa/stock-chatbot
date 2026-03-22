@@ -97,6 +97,21 @@ CREATE TABLE IF NOT EXISTS "report_runs" (
   CONSTRAINT "report_runs_user_run_date_schedule_type_unique" UNIQUE("user_id", "run_date", "schedule_type")
 );
 
+CREATE TABLE IF NOT EXISTS "personal_rebalancing_snapshots" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE CASCADE,
+  "requested_seoul_date" date NOT NULL,
+  "effective_report_date" date NOT NULL,
+  "kr_session_date" date,
+  "us_session_date" date,
+  "snapshot_version" text NOT NULL,
+  "payload" jsonb NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "personal_rebalancing_snapshots_user_effective_snapshot_unique"
+    UNIQUE("user_id", "effective_report_date", "snapshot_version")
+);
+
 CREATE TABLE IF NOT EXISTS "reports" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "report_date" date NOT NULL,
@@ -104,9 +119,13 @@ CREATE TABLE IF NOT EXISTS "reports" (
   "market_regime" text NOT NULL,
   "total_score" numeric NOT NULL,
   "signals" jsonb NOT NULL,
+  "indicator_tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
   "content_markdown" text NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
+
+ALTER TABLE "reports"
+  ADD COLUMN IF NOT EXISTS "indicator_tags" jsonb DEFAULT '[]'::jsonb NOT NULL;
 
 CREATE TABLE IF NOT EXISTS "strategy_snapshots" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -162,3 +181,7 @@ CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_symbol_trgm_idx"
   ON "ticker_masters" USING gin ("normalized_symbol" gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS "telegram_outbound_messages_chat_id_created_at_idx"
   ON "telegram_outbound_messages" ("chat_id", "created_at");
+CREATE INDEX IF NOT EXISTS "personal_rebalancing_snapshots_user_effective_date_idx"
+  ON "personal_rebalancing_snapshots" ("user_id", "effective_report_date");
+CREATE INDEX IF NOT EXISTS "personal_rebalancing_snapshots_effective_date_idx"
+  ON "personal_rebalancing_snapshots" ("effective_report_date");

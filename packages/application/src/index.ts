@@ -61,9 +61,18 @@ export {
   YahooFinanceScrapingMarketDataAdapter
 } from "./yahoo-finance-market-data-adapter.js";
 export {
+  buildIndicatorTags,
+  buildPersonalRebalancingSnapshot,
+  DEFAULT_PERSONAL_REBALANCING_SNAPSHOT_VERSION
+} from "./personal-rebalancing-snapshot.js";
+export {
   dedupeNewsArticles,
   normalizeNewsArticles
 } from "./news-normalization.js";
+export {
+  resolveEffectiveReportDate,
+  type EffectiveReportDateResolution
+} from "./effective-report-date.js";
 export {
   buildNewsEventExtractionPrompt,
   parseNewsEventExtractionOutput,

@@ -247,14 +247,17 @@ COREPACK_HOME=/tmp/corepack pnpm dev:web
 /unregister       등록 및 설정 초기화
 /report           지금 브리핑 생성
 /report_settings  정기 브리핑 설정 확인
+/report_on        정기 브리핑 켜기
+/report_off       정기 브리핑 끄기
 /report_time      발송 시간 변경
-/report_mode      standard / compact 전환
-/report_link_on   공개 상세 링크 표시
-/report_link_off  공개 상세 링크 숨김
 /portfolio_add    보유 종목 추가
 /portfolio_bulk   여러 종목 빠르게 추가
 /portfolio_list   보유 종목 확인
+/portfolio_remove 보유 종목 삭제
+/mock_report      예시 리포트 보기
 ```
+
+`/report`와 공개 브리핑 날짜는 서울 기준 요청일이 아니라 `공통 마감일(effective report date)`을 사용합니다. 즉 국장과 미장의 대표 지표에서 모두 확인 가능한 가장 최근 마감일을 제목과 공개 `report_date` 기준으로 삼습니다. 관심 지표 개인 설정은 현재 개인화 입력 대상에서 제외됐고, `/report`와 공개 브리핑은 시스템 기본 시장 지표 세트를 공통으로 사용합니다.
 
 ### 5. 종목 마스터 CSV 적재
 

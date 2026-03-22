@@ -1,4 +1,5 @@
 import type { MarketDataFetchResult } from "./market-data.js";
+import { buildIndicatorTags } from "./personal-rebalancing-snapshot.js";
 
 export type PublicDailyBriefing = {
   archivePath: string;
@@ -7,6 +8,7 @@ export type PublicDailyBriefing = {
   disclaimer: string;
   eventBullets: string[];
   excludedTelegramOnlySections: string[];
+  indicatorTags: string[];
   globalSnapshot: {
     majorIndices: string;
     ratesFxCommodities: string;
@@ -95,6 +97,7 @@ export function buildPublicDailyBriefing(input: {
   return {
     title: `🗞️ 오늘의 시장 브리핑 (${input.runDate})`,
     runDate: input.runDate,
+    indicatorTags: buildIndicatorTags(input.marketResults),
     summaryLine: input.summaryLine,
     marketSnapshot,
     marketSummary: {

@@ -4,11 +4,13 @@ import type {
   RankedTickerSearchResult,
   StaticInstrumentResolver
 } from "@stock-chatbot/application";
+import { parseReportTimeArgument } from "./report-settings.js";
 
 export type ConversationCommand =
   | "market_add"
   | "portfolio_add"
-  | "portfolio_remove";
+  | "portfolio_remove"
+  | "report_time";
 
 export type PortfolioTickerSearchPort = {
   pickHighConfidenceSingleResult(
@@ -60,10 +62,17 @@ export type MarketAddState = {
   step: "awaiting_query";
 };
 
+export type ReportTimeState = {
+  command: "report_time";
+  draft: {};
+  step: "awaiting_time";
+};
+
 export type ConversationState =
   | MarketAddState
   | PortfolioAddState
-  | PortfolioRemoveState;
+  | PortfolioRemoveState
+  | ReportTimeState;
 
 export type ConversationCompletion =
   | {
@@ -81,6 +90,11 @@ export type ConversationCompletion =
   | {
       command: "portfolio_remove";
       resolution: PortfolioTickerResolution;
+    }
+  | {
+      command: "report_time";
+      hour: number;
+      minute: number;
     };
 
 export type ConversationTransitionResult =
@@ -137,6 +151,12 @@ export function createInitialConversationState(command: ConversationCommand): Co
         step: "awaiting_query",
         draft: {}
       };
+    case "report_time":
+      return {
+        command,
+        step: "awaiting_time",
+        draft: {}
+      };
   }
 }
 
@@ -148,6 +168,8 @@ export function getConversationStartMessage(command: ConversationCommand): strin
       return "삭제할 종목명 또는 종목 코드를 입력해 주세요.";
     case "market_add":
       return "추가할 시장 지표 이름이나 코드(KOSPI, VIX 등)를 입력해 주세요.";
+    case "report_time":
+      return "변경할 브리핑 시간을 HH:MM 형식으로 입력해 주세요. 예: 08:30";
   }
 }
 
@@ -163,7 +185,34 @@ export async function advanceConversation(
       return advancePortfolioRemoveConversation(state, input, dependencies);
     case "market_add":
       return advanceMarketAddConversation(state, input, dependencies);
+    case "report_time":
+      return advanceReportTimeConversation(state, input);
   }
+}
+
+async function advanceReportTimeConversation(
+  state: ReportTimeState,
+  input: string
+): Promise<ConversationTransitionResult> {
+  const parsed = parseReportTimeArgument(input.trim());
+
+  if (!parsed) {
+    return {
+      status: "invalid",
+      nextState: state,
+      message: "시간 형식이 올바르지 않습니다. 예: 08:30"
+    };
+  }
+
+  return {
+    status: "completed",
+    completion: {
+      command: "report_time",
+      hour: parsed.hour,
+      minute: parsed.minute
+    },
+    message: `정기 브리핑 시간을 ${input.trim()}로 변경합니다.`
+  };
 }
 
 async function advancePortfolioAddConversation(

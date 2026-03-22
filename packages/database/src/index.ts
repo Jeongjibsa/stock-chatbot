@@ -5,6 +5,7 @@ export {
 } from "./default-market-watch-catalog.js";
 export { runMigrations } from "./migrate.js";
 export {
+  personalRebalancingSnapshots,
   marketWatchCatalogItems,
   portfolioHoldings,
   reports,
@@ -20,11 +21,13 @@ export {
   type NewReportRecord,
   type NewMarketWatchCatalogItemRecord,
   type NewPortfolioHoldingRecord,
+  type NewPersonalRebalancingSnapshotRecord,
   type NewStrategySnapshotRecord,
   type NewTickerMasterRecord,
   type NewUserRecord,
   type NewUserMarketWatchItemRecord,
   type PortfolioHoldingRecord,
+  type PersonalRebalancingSnapshotRecord,
   type ReportRecord,
   type ReportRunRecord,
   type StrategySnapshotRecord,
@@ -44,6 +47,10 @@ export {
   type SearchTickerCandidate,
   type UpsertTickerMasterInput
 } from "./ticker-master-repository.js";
+export {
+  PersonalRebalancingSnapshotRepository,
+  type UpsertPersonalRebalancingSnapshotInput
+} from "./personal-rebalancing-snapshot-repository.js";
 export {
   PublicReportRepository,
   type InsertPublicReportInput

@@ -247,3 +247,7 @@
 - 2026-03-22: 공개 웹 브리핑을 `오늘의 시장 브리핑` 구조로 재편하고, 개인 포트 용어를 renderer 단계에서 배제하도록 public builder/markdown/html renderer를 동기화
 - 2026-03-22: Telegram DM에 home reply keyboard와 settings inline keyboard를 추가하고, `/start`, `/help`, `/register`, `/report_settings` 이후 버튼 기반 탐색을 지원하면서 기존 slash command semantics를 유지
 - 2026-03-22: Telegram `/report`가 실제 runtime에서 `portfolioRebalancing` payload를 renderer/prompt까지 전달하도록 오케스트레이터와 report service를 연결하고, `REPORT_RUN_DATE=2026-03-20` override로 synthetic bot update 기준 실데이터 브리핑 재현을 확인
+- 2026-03-22: Telegram `/report`와 공개 브리핑이 서울 기준 `공통 마감일(effective report date)`을 사용하도록 오케스트레이터/public builder를 정렬하고, `personal_rebalancing_snapshots` JSONB cache를 추가해 `user_id + effective_report_date` 기준 snapshot reuse와 90일 retention cleanup을 구현
+- 2026-03-22: Telegram 설정 UI를 `브리핑 켜기 / 브리핑 끄기 / 시간 변경`만 남기도록 단순화하고, webhook/register 경로의 `allowed_updates`에 `callback_query`를 추가해 inline button이 실제로 동작하도록 복구
+- 2026-03-22: 관심 지표 개인화는 deprecated 처리하고 `/report`와 공개 브리핑을 시스템 기본 시장 지표 세트 기준으로 통일했으며, 홈 keyboard에서 `📈 관심 지표`를 제거하고 `/market_add`, `/market_items`, `/report_mode`, `/report_link_*`는 deprecation 응답으로 정리
+- 2026-03-22: 공개 `reports` read model에 `indicator_tags`를 추가하고, public feed/detail 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했으며, 공개 적재 경로를 `report_date` 기준 latest-upsert + feed date dedupe 구조로 조정

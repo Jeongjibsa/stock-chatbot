@@ -31,17 +31,11 @@ describe("report-settings helpers", () => {
         dailyReportEnabled: false,
         dailyReportHour: 21,
         dailyReportMinute: 15,
-        reportDetailLevel: "compact",
-        includePublicBriefingLink: false,
         timezone: "Asia/Seoul"
       })
     ).toContain("21:15");
-    expect(
-      formatReportSettings({
-        reportDetailLevel: "compact",
-        includePublicBriefingLink: false
-      })
-    ).toContain("compact");
+    expect(formatReportSettings({})).not.toContain("compact");
+    expect(formatReportSettings({})).not.toContain("상세 링크");
     expect(formatHourMinute(9, 0)).toBe("09:00");
   });
 });

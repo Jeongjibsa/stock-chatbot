@@ -101,6 +101,7 @@ describe("run-public-briefing", () => {
 
     expect(briefing.title).toBe("🗞️ 오늘의 시장 브리핑 (2026-03-20)");
     expect(briefing.marketSnapshot).toHaveLength(4);
+    expect(briefing.indicatorTags).toEqual(["NASDAQ -2.01%"]);
     expect(briefing.keyIndicatorBullets).toEqual(
       expect.arrayContaining([
         "VIX 급등으로 변동성 경계가 강화됐습니다.",
@@ -211,7 +212,8 @@ describe("run-public-briefing", () => {
     ).toMatchObject({
       reportDate: "2026-03-20",
       marketRegime: "Neutral",
-      signals: []
+      signals: [],
+      indicatorTags: []
     });
   });
 });

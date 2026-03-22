@@ -204,7 +204,9 @@ describe("DailyReportOrchestrator", () => {
       scheduleType: "telegram-report"
     });
 
-    expect(result.reportText).toContain("시세 스냅샷은 184,000 → 182,000, 전일 대비 -1.09% 기준입니다.");
+    expect(result.reportText).toContain(
+      "시세 기준은 184,000 → 182,000, 전일 대비 -1.09%입니다."
+    );
   });
 
   it("passes optional personalized rebalancing payload into the rendered report", async () => {
@@ -662,5 +664,95 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain(
       "https://jeongjibsa.github.io/stock-chatbot/reports/report-2026-03-20"
     );
+  });
+
+  it("uses the effective common close date for rendering and snapshot lookup", async () => {
+    const personalSnapshotRepository = {
+      findByUserAndEffectiveDate: vi.fn(async () => ({
+        payload: {
+          selectedProfile: "balanced",
+          rebalancingSummary: {
+            increaseCandidates: ["삼성전자"]
+          }
+        }
+      })),
+      upsert: vi.fn(async () => ({})),
+      deleteOlderThan: vi.fn(async () => 0)
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async (): Promise<MarketDataFetchResult[]> => [
+          {
+            status: "ok",
+            data: {
+              itemCode: "KOSPI",
+              itemName: "코스피",
+              source: "yahoo_finance",
+              sourceKey: "index:KRX:KOSPI",
+              asOfDate: "2026-03-20",
+              value: 2600
+            }
+          },
+          {
+            status: "ok",
+            data: {
+              itemCode: "NASDAQ",
+              itemName: "나스닥 종합",
+              source: "yahoo_finance",
+              sourceKey: "index:NASDAQ:IXIC",
+              asOfDate: "2026-03-21",
+              value: 18000
+            }
+          }
+        ])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [])
+      },
+      defaultMarketItems: [
+        {
+          itemCode: "KOSPI",
+          itemName: "코스피",
+          sourceKey: "index:KRX:KOSPI"
+        },
+        {
+          itemCode: "NASDAQ",
+          itemName: "나스닥 종합",
+          sourceKey: "index:NASDAQ:IXIC"
+        }
+      ],
+      personalRebalancingSnapshotRepository: personalSnapshotRepository,
+      reportRunRepository: {
+        startRun: vi.fn(async () => ({
+          created: true,
+          run: {
+            id: "run-effective-date",
+            status: "running"
+          }
+        })),
+        completeRun: vi.fn(async (input) => ({
+          id: input.id,
+          status: input.status,
+          reportText: input.reportText,
+          errorMessage: input.errorMessage
+        }))
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-22",
+      scheduleType: "telegram-report"
+    });
+
+    expect(personalSnapshotRepository.findByUserAndEffectiveDate).toHaveBeenCalledWith({
+      userId: "user-1",
+      effectiveReportDate: "2026-03-20",
+      snapshotVersion: "v1"
+    });
+    expect(result.reportText).toContain("오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-20)");
   });
 });

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   buildPublicDailyBriefing,
+  resolveEffectiveReportDate,
   buildRuleBasedBriefing,
   buildQuantScorecards,
   CompositeMarketDataAdapter,
@@ -66,6 +67,10 @@ export async function buildPublicBriefing(
         sourceKey: item.sourceKey
       }))
   );
+  const dateResolution = resolveEffectiveReportDate({
+    marketResults,
+    requestedSeoulDate: dependencies.runDate
+  });
 
   const quantScorecards = buildQuantScorecards({
     holdings: [],
@@ -81,11 +86,11 @@ export async function buildPublicBriefing(
         audience: "public_web",
         holdings: [],
         marketResults,
-        newsBriefs: [],
+    newsBriefs: [],
         quantScorecards,
         quantScenarios,
         riskCheckpoints: [],
-        runDate: dependencies.runDate
+        runDate: dateResolution.effectiveReportDate
       });
     } catch (error) {
       console.warn(
@@ -98,7 +103,7 @@ export async function buildPublicBriefing(
   const fallbackBriefing = buildRuleBasedBriefing(marketResults);
 
   return buildPublicDailyBriefing({
-    runDate: dependencies.runDate,
+    runDate: dateResolution.effectiveReportDate,
     summaryLine:
       composition?.oneLineSummary ??
       fallbackBriefing.summaryLine,
@@ -126,6 +131,7 @@ export function buildPublicReportInsertInput(input: {
   briefing: Awaited<ReturnType<typeof buildPublicBriefing>>;
 }): {
   contentMarkdown: string;
+  indicatorTags: string[];
   marketRegime: string;
   reportDate: string;
   signals: string[];
@@ -141,6 +147,7 @@ export function buildPublicReportInsertInput(input: {
     marketRegime,
     totalScore: totalScore.toFixed(2),
     signals: input.briefing.keyIndicatorBullets.slice(0, 3),
+    indicatorTags: input.briefing.indicatorTags,
     contentMarkdown: renderPublicDailyBriefingMarkdown(input.briefing)
   };
 }
@@ -208,7 +215,7 @@ export async function runPublicBriefing(
 
   return {
     ...(persistedReportId ? { persistedReportId } : {}),
-    runDate,
+    runDate: briefing.runDate,
     outputPath,
     snapshotCount: briefing.marketSnapshot.length
   };

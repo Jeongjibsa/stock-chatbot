@@ -64,11 +64,11 @@ const HOME_REPORT_BUTTON = "📊 브리핑 보기";
 const HOME_PORTFOLIO_ADD_BUTTON = "➕ 종목 추가";
 const HOME_PORTFOLIO_LIST_BUTTON = "📁 내 종목";
 const HOME_SETTINGS_BUTTON = "⚙️ 설정";
-const HOME_MARKET_ITEMS_BUTTON = "📈 관심 지표";
 const HOME_MOCK_REPORT_BUTTON = "🧪 예시 리포트";
 
 export const TELEGRAM_ALLOWED_UPDATES = [
   "message",
+  "callback_query",
   "chat_member",
   "my_chat_member"
 ] as const;
@@ -301,28 +301,12 @@ export function buildTelegramBotApp(
   };
 
   const handleMarketItems = async (context: any) => {
-    const userKey = getUserKey(context.from?.id);
-
-    if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
-      return;
-    }
-
-    try {
-      const items = await userPortfolioService.listMarketIndicators(userKey);
-
-      await context.reply(
-        [
-          "현재 추적 중인 시장 지표입니다.",
-          ...items.map((item) => `- ${item.itemName} (${item.itemCode})${item.isDefault ? "" : " · custom"}`)
-        ].join("\n"),
-        {
-          reply_markup: buildHomeReplyKeyboard()
-        }
-      );
-    } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
-    }
+    await context.reply(
+      "관심 지표 개인 설정은 더 이상 사용하지 않습니다. /report 와 공개 브리핑은 시스템 기본 시장 지표 세트를 기준으로 제공됩니다.",
+      {
+        reply_markup: buildHomeReplyKeyboard()
+      }
+    );
   };
 
   bot.command("start", handleStart);
@@ -501,84 +485,21 @@ export function buildTelegramBotApp(
   });
 
   bot.command("report_mode", async (context) => {
-    const userKey = getUserKey(context.from?.id);
-
-    if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
-      return;
-    }
-
-    const rawMode = String(context.match ?? "")
-      .trim()
-      .toLowerCase();
-
-    if (rawMode !== "compact" && rawMode !== "standard") {
-      await context.reply("사용 예시: /report_mode compact");
-      return;
-    }
-
-    try {
-      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
-        reportDetailLevel: rawMode
-      });
-
-      await context.reply(
-        [
-          `리포트 밀도를 ${rawMode}로 변경했습니다.`,
-          formatReportSettings(updated)
-        ].join("\n\n")
-      );
-    } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
-    }
+    await context.reply(
+      "리포트 밀도 설정은 더 이상 사용하지 않습니다. 현재는 단일 개인화 브리핑 형식으로 제공됩니다."
+    );
   });
 
   bot.command("report_link_on", async (context) => {
-    const userKey = getUserKey(context.from?.id);
-
-    if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
-      return;
-    }
-
-    try {
-      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
-        includePublicBriefingLink: true
-      });
-
-      await context.reply(
-        [
-          "공개 상세 브리핑 링크를 표시하도록 설정했습니다.",
-          formatReportSettings(updated)
-        ].join("\n\n")
-      );
-    } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
-    }
+    await context.reply(
+      "공개 상세 브리핑 링크 설정은 더 이상 개별 옵션으로 제공하지 않습니다."
+    );
   });
 
   bot.command("report_link_off", async (context) => {
-    const userKey = getUserKey(context.from?.id);
-
-    if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
-      return;
-    }
-
-    try {
-      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
-        includePublicBriefingLink: false
-      });
-
-      await context.reply(
-        [
-          "공개 상세 브리핑 링크를 숨기도록 설정했습니다.",
-          formatReportSettings(updated)
-        ].join("\n\n")
-      );
-    } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
-    }
+    await context.reply(
+      "공개 상세 브리핑 링크 설정은 더 이상 개별 옵션으로 제공하지 않습니다."
+    );
   });
 
   bot.command("portfolio_add", async (context) =>
@@ -734,7 +655,9 @@ export function buildTelegramBotApp(
   );
 
   bot.command("market_add", async (context) =>
-    startConversation(context.from?.id, "market_add", (text) => context.reply(text))
+    context.reply(
+      "관심 지표 개인 설정은 더 이상 사용하지 않습니다. /report 와 공개 브리핑은 시스템 기본 시장 지표 세트를 기준으로 제공됩니다."
+    )
   );
 
   bot.command("market_items", handleMarketItems);
@@ -758,11 +681,12 @@ export function buildTelegramBotApp(
     const action = context.callbackQuery.data.replace(/^settings:/, "");
 
     try {
-      if (action === "time_help") {
+      if (action === "time_change") {
+        await conversationStateStore.set(userKey, createInitialConversationState("report_time"));
         await context.answerCallbackQuery({
-          text: "시간 변경은 /report_time 09:00 형식으로 입력해 주세요."
+          text: "변경할 시간을 입력해 주세요."
         });
-        await context.reply("브리핑 시간은 /report_time 09:00 형식으로 변경할 수 있습니다.");
+        await context.reply("변경할 브리핑 시간을 HH:MM 형식으로 입력해 주세요. 예: 08:30");
         return;
       }
 
@@ -775,23 +699,7 @@ export function buildTelegramBotApp(
             ? await userPortfolioService.updateDailyReportSettings(userKey, {
                 dailyReportEnabled: false
               })
-            : action === "mode_compact"
-              ? await userPortfolioService.updateDailyReportSettings(userKey, {
-                  reportDetailLevel: "compact"
-                })
-              : action === "mode_standard"
-                ? await userPortfolioService.updateDailyReportSettings(userKey, {
-                    reportDetailLevel: "standard"
-                  })
-                : action === "link_on"
-                  ? await userPortfolioService.updateDailyReportSettings(userKey, {
-                      includePublicBriefingLink: true
-                    })
-                  : action === "link_off"
-                    ? await userPortfolioService.updateDailyReportSettings(userKey, {
-                        includePublicBriefingLink: false
-                      })
-                    : null;
+            : null;
 
       if (!updated) {
         await context.answerCallbackQuery({
@@ -917,11 +825,6 @@ export function buildTelegramBotApp(
           return;
         }
 
-        if (text === HOME_MARKET_ITEMS_BUTTON) {
-          await handleMarketItems(context);
-          return;
-        }
-
         if (text === HOME_MOCK_REPORT_BUTTON) {
           await context.reply(buildMockTelegramReportPreview().renderedText, {
             reply_markup: buildHomeReplyKeyboard()
@@ -990,6 +893,23 @@ export function buildTelegramBotApp(
               `${transition.completion.resolution.itemName} 지표를 추적 항목에 반영했습니다.`
             );
             break;
+          case "report_time": {
+            const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
+              dailyReportEnabled: true,
+              dailyReportHour: transition.completion.hour,
+              dailyReportMinute: transition.completion.minute
+            });
+            await context.reply(
+              [
+                `정기 브리핑 시간을 ${formatHourMinute(
+                  transition.completion.hour,
+                  transition.completion.minute
+                )}로 변경했습니다.`,
+                formatReportSettings(updated)
+              ].join("\n\n")
+            );
+            break;
+          }
         }
       } catch (error) {
         await context.reply(resolveTelegramCommandError(error));
@@ -1018,7 +938,7 @@ export function buildHomeReplyKeyboard(): Keyboard {
   return new Keyboard([
     [HOME_REPORT_BUTTON, HOME_PORTFOLIO_ADD_BUTTON],
     [HOME_PORTFOLIO_LIST_BUTTON, HOME_SETTINGS_BUTTON],
-    [HOME_MARKET_ITEMS_BUTTON, HOME_MOCK_REPORT_BUTTON]
+    [HOME_MOCK_REPORT_BUTTON]
   ]).resized();
 }
 
@@ -1027,13 +947,7 @@ export function buildSettingsInlineKeyboard(): InlineKeyboard {
     .text("브리핑 켜기", "settings:report_on")
     .text("브리핑 끄기", "settings:report_off")
     .row()
-    .text("간단 모드", "settings:mode_compact")
-    .text("표준 모드", "settings:mode_standard")
-    .row()
-    .text("링크 표시", "settings:link_on")
-    .text("링크 숨김", "settings:link_off")
-    .row()
-    .text("시간 변경 안내", "settings:time_help");
+    .text("시간 변경", "settings:time_change");
 }
 
 function extractTelegramOutboundMessage(

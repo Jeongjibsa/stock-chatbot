@@ -18,11 +18,12 @@ import {
 import {
   createDatabase,
   createPool,
+  DEFAULT_MARKET_WATCH_CATALOG,
+  PersonalRebalancingSnapshotRepository,
   PortfolioHoldingRepository,
   PublicReportRepository,
   ReportRunRepository,
   StrategySnapshotRepository,
-  UserMarketWatchItemRepository,
   UserRepository
 } from "@stock-chatbot/database";
 
@@ -364,6 +365,11 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const orchestratorDependencies: ConstructorParameters<
     typeof DailyReportOrchestrator
   >[0] = {
+    defaultMarketItems: DEFAULT_MARKET_WATCH_CATALOG.map((item) => ({
+      itemCode: item.itemCode,
+      itemName: item.itemName,
+      sourceKey: item.sourceKey
+    })),
     holdingPriceSnapshotProvider: new YahooHoldingPriceSnapshotProvider(),
     marketDataAdapter: new CompositeMarketDataAdapter({
       fredAdapter: new FredMarketDataAdapter({
@@ -371,12 +377,12 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
       }),
       yahooFinanceAdapter: new YahooFinanceScrapingMarketDataAdapter()
     }),
+    personalRebalancingSnapshotRepository: new PersonalRebalancingSnapshotRepository(db),
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
     ...(publicBriefingBaseUrl ? { publicBriefingBaseUrl } : {}),
     publicReportRepository: new PublicReportRepository(db),
     reportRunRepository: new ReportRunRepository(db),
-    strategySnapshotRepository: new StrategySnapshotRepository(db),
-    userMarketWatchRepository: new UserMarketWatchItemRepository(db)
+    strategySnapshotRepository: new StrategySnapshotRepository(db)
   };
 
   const selectedProvider =

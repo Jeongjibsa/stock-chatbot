@@ -39,15 +39,10 @@ const COMMAND_SUMMARIES = [
   "/report_on - 정기 브리핑 켜기",
   "/report_off - 정기 브리핑 끄기",
   "/report_time - 브리핑 시간 변경",
-  "/report_mode - 브리핑 밀도 변경",
-  "/report_link_on - 상세 링크 표시",
-  "/report_link_off - 상세 링크 숨김",
   "/portfolio_add - 보유 종목 추가",
   "/portfolio_bulk - 종목 여러 개 빠르게 추가",
   "/portfolio_list - 내 종목 확인",
   "/portfolio_remove - 보유 종목 삭제",
-  "/market_add - 관심 지표 추가",
-  "/market_items - 추적 지표 확인",
   "/mock_report - 예시 리포트 보기"
 ] as const;
 
@@ -60,8 +55,7 @@ export function buildStartMessage(): string {
     "3. /portfolio_add - 보유 종목 추가",
     "4. /portfolio_bulk - 여러 종목 한번에 추가",
     "5. /portfolio_list - 저장 결과 확인",
-    "6. /market_add - 관심 지표 추가",
-    "7. 매일 오전 브리핑 수신",
+    "6. 매일 오전 브리핑 수신",
     "",
     "지원 명령:",
     ...COMMAND_SUMMARIES
@@ -76,7 +70,6 @@ export function buildHelpMessage(): string {
     "3. /portfolio_add 로 종목 추가",
     "4. /portfolio_bulk 로 여러 종목 빠르게 추가",
     "5. /portfolio_list 로 확인",
-    "6. 필요하면 /market_add 로 관심 지표 추가",
     "",
     "지원 명령:",
     ...COMMAND_SUMMARIES
@@ -92,8 +85,6 @@ export function buildPrivateRegisterSuccessMessage(): string {
     "2. /portfolio_add 로 보유 종목을 추가해 주세요.",
     "3. /portfolio_bulk 삼성전자, SK하이닉스, 현대차 처럼 여러 종목을 한번에 추가할 수 있습니다.",
     "4. /portfolio_list 로 저장 결과를 확인해 주세요.",
-    "5. 필요하면 /market_add 로 관심 지표를 추가해 주세요.",
-    "6. /report_mode compact 로 더 짧은 브리핑으로 바꿀 수 있습니다.",
     "보유 종목이 없어도 시장 브리핑은 먼저 받아보실 수 있습니다."
   ].join("\n");
 }
