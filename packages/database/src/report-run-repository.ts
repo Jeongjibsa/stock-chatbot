@@ -62,7 +62,7 @@ export class ReportRunRepository {
       throw new Error("Failed to resolve existing report run after conflict");
     }
 
-    if (this.isStaleRunningRun(existing)) {
+    if (this.canRestartExistingRun(existing)) {
       const restarted = await this.restartStaleRun(existing.id, input);
 
       return {
@@ -140,6 +140,14 @@ export class ReportRunRepository {
     }
 
     return Date.now() - startedAtTime >= STALE_RUNNING_RUN_MINUTES * 60_000;
+  }
+
+  private canRestartExistingRun(run: ReportRunRecord): boolean {
+    if (this.isStaleRunningRun(run)) {
+      return true;
+    }
+
+    return run.status !== "completed" && !run.reportText;
   }
 
   private async restartStaleRun(

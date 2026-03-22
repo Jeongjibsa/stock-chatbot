@@ -108,6 +108,21 @@ describe("resolveTelegramReportFollowUpMessage", () => {
     ).toBe("이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.");
   });
 
+  it("returns a retry message when the previous run failed without text", () => {
+    expect(
+      resolveTelegramReportFollowUpMessage({
+        status: "skipped_duplicate",
+        reportRun: {
+          id: "run-1",
+          status: "failed"
+        },
+        reportText: "",
+        marketResults: [],
+        portfolioNewsBriefs: []
+      })
+    ).toBe("이전 브리핑 생성이 실패했습니다. 다시 /report 를 실행해 새로 생성해 주세요.");
+  });
+
   it("returns null when a completed report contains text", () => {
     expect(
       resolveTelegramReportFollowUpMessage({

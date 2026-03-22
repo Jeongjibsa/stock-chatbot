@@ -175,8 +175,20 @@ export function resolveTelegramReportFollowUpMessage(
     return "브리핑 생성 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
   }
 
-  if (result.status === "skipped_duplicate" && !result.reportText) {
+  if (
+    result.status === "skipped_duplicate" &&
+    result.reportRun.status === "running" &&
+    !result.reportText
+  ) {
     return "이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.";
+  }
+
+  if (
+    result.status === "skipped_duplicate" &&
+    result.reportRun.status === "failed" &&
+    !result.reportText
+  ) {
+    return "이전 브리핑 생성이 실패했습니다. 다시 /report 를 실행해 새로 생성해 주세요.";
   }
 
   if (!result.reportText) {

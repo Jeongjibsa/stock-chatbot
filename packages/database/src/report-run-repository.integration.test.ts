@@ -119,4 +119,34 @@ describeIntegration("ReportRunRepository integration", () => {
     expect(restarted.run.completedAt).toBeNull();
     expect(restarted.run.errorMessage).toBeNull();
   });
+
+  it("restarts a failed report without text for the same user/date/schedule", async () => {
+    const user = await userRepository.upsert({
+      telegramUserId: "4004",
+      displayName: "Retry Report User"
+    });
+    const first = await repository.startRun({
+      userId: user.id,
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+
+    await repository.completeRun({
+      id: first.run.id,
+      status: "failed",
+      errorMessage: "upstream timeout"
+    });
+
+    const restarted = await repository.startRun({
+      userId: user.id,
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+
+    expect(restarted.created).toBe(true);
+    expect(restarted.run.id).toBe(first.run.id);
+    expect(restarted.run.status).toBe("running");
+    expect(restarted.run.reportText).toBeNull();
+    expect(restarted.run.errorMessage).toBeNull();
+  });
 });
