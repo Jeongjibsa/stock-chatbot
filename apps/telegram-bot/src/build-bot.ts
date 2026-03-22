@@ -672,7 +672,7 @@ export function buildTelegramBotApp(
     const userKey = getUserKey(context.from?.id);
 
     if (!userKey) {
-      await context.answerCallbackQuery({
+      await safeAnswerCallbackQuery(context, {
         text: "사용자 식별 정보를 확인하지 못했습니다."
       });
       return;
@@ -683,7 +683,7 @@ export function buildTelegramBotApp(
     try {
       if (action === "time_change") {
         await conversationStateStore.set(userKey, createInitialConversationState("report_time"));
-        await context.answerCallbackQuery({
+        await safeAnswerCallbackQuery(context, {
           text: "변경할 시간을 입력해 주세요."
         });
         await context.reply("변경할 브리핑 시간을 HH:MM 형식으로 입력해 주세요. 예: 08:30");
@@ -702,13 +702,13 @@ export function buildTelegramBotApp(
             : null;
 
       if (!updated) {
-        await context.answerCallbackQuery({
+        await safeAnswerCallbackQuery(context, {
           text: "지원하지 않는 설정입니다."
         });
         return;
       }
 
-      await context.answerCallbackQuery({
+      await safeAnswerCallbackQuery(context, {
         text: "설정을 반영했습니다."
       });
       try {
@@ -723,7 +723,7 @@ export function buildTelegramBotApp(
     } catch (error) {
       const message = resolveTelegramCommandError(error);
 
-      await context.answerCallbackQuery({
+      await safeAnswerCallbackQuery(context, {
         text: message
       });
       await context.reply(message);
@@ -1034,4 +1034,17 @@ export function resolveTelegramCommandError(error: unknown): string {
   }
 
   return "요청을 처리하는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.";
+}
+
+async function safeAnswerCallbackQuery(
+  context: {
+    answerCallbackQuery: (options: { text: string }) => Promise<unknown>;
+  },
+  options: { text: string }
+): Promise<void> {
+  try {
+    await context.answerCallbackQuery(options);
+  } catch {
+    // Callback ACK failure should not prevent the fallback reply path.
+  }
 }
