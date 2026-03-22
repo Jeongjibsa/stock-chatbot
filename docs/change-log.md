@@ -139,6 +139,7 @@
 | CHG-0112 | 2026-03-22 | FIX | Telegram fast `/report`와 공개 브리핑 생성에서 LLM composition이 비활성화되거나 실패할 때 `시장/매크로/자금/이벤트/리스크` 섹션이 모두 비어 있던 문제를 수정해 rule-based fallback briefing 섹션과 상세 링크 base URL fallback을 추가 | PRD, Change Log, Context, README, Code, Tests | yes |
 | CHG-0113 | 2026-03-22 | FIX | 공개 웹 feed/detail이 Next.js 정적 최적화로 build 시점 empty state를 계속 서빙하던 문제를 수정해 DB 조회를 `force-dynamic + noStore`로 전환하고, `report_date`를 문자열로 정규화해 실시간 공개 브리핑 적재분을 바로 노출하도록 보강 | Change Log, Context, README, Code, Tests | yes |
 | CHG-0114 | 2026-03-22 | UPDATE | 일 브리핑 prompt 계약을 `telegram_personalized`와 `public_web` audience로 분리하고, 개인화 리밸런싱 해석 우선순위와 공개 웹의 비개인화 guardrail을 코드·문서 기준선으로 고정 | Change Log, Context, LLM Plan, Docs, Code, Tests | yes |
+| CHG-0115 | 2026-03-22 | UPDATE | Telegram `/report` fast path에 보유 종목 일별 종가 스냅샷을 연결하고, 퀀트 섹션 시작부에 `비중 확대 검토 / 유지 우세 / 비중 조절 필요 / 우선 관찰 대상` 리밸런싱 요약을 추가했으며, E2E `report_with_holdings`가 스냅샷 placeholder 부재와 리밸런싱 문구를 함께 검증하도록 강화 | PRD, Change Log, Context, Telegram E2E Docs, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

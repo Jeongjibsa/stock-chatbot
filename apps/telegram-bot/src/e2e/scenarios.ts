@@ -580,10 +580,22 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         throw new Error("Expected personalized /report to mention at least one holding");
       }
 
+      if (!reportReply.text.includes("오늘의 리밸런싱 제안")) {
+        throw new Error("Expected personalized /report to include a rebalancing summary");
+      }
+
+      if (reportReply.text.includes("시세 스냅샷 연결 전입니다")) {
+        throw new Error("Expected personalized /report to include holding price snapshots");
+      }
+
       const latestRun = await findLatestTelegramReportRun(runtime, runtime.config.primaryUserId);
 
       if (!latestRun?.reportText?.includes("삼성전자")) {
         throw new Error("Expected report_runs.report_text to include holding content");
+      }
+
+      if (!latestRun.reportText.includes("오늘의 리밸런싱 제안")) {
+        throw new Error("Expected report_runs.report_text to include rebalancing content");
       }
     }
   },

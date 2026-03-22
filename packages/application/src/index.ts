@@ -20,6 +20,12 @@ export {
   FredMarketDataAdapter
 } from "./fred-market-data-adapter.js";
 export {
+  YahooHoldingPriceSnapshotProvider,
+  resolveYahooSymbolCandidates,
+  type HoldingPriceSnapshot,
+  type HoldingPriceSnapshotProvider
+} from "./holding-price-snapshot.js";
+export {
   buildHoldingNewsQuery,
   GoogleNewsRssAdapter
 } from "./google-news-rss-adapter.js";

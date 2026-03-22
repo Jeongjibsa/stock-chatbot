@@ -306,8 +306,10 @@ describe("renderTelegramDailyReport", () => {
     expect(report).toContain("→ 오늘은 변동성이 큰 항목과 보유 종목 핵심 흐름만 추려서 정리했습니다.");
     expect(report).toContain("• Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다.");
     expect(report).toContain("• Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다.");
+    expect(report).toContain("• 오늘의 리밸런싱 제안");
+    expect(report).toContain("  • 비중 조절 필요: Apple Inc.");
     expect(report).toContain("Macro: -0.40 / Trend: -0.40 / Event: +0.20 / Flow: -0.10");
-    expect(report).toContain("→ Total: -0.23 → REDUCE");
+    expect(report).toContain("→ Total: -0.23 → 비중 조절 필요");
     expect(report).toContain("• 전략");
     expect(report).toContain("  • 추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다.");
     expect(report).toContain("예정 실적 발표 일정 데이터는 아직 연결되지 않았습니다.");

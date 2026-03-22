@@ -9,6 +9,7 @@ import {
   GoogleNewsRssAdapter,
   OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
+  YahooHoldingPriceSnapshotProvider,
   YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
 import {
@@ -100,6 +101,7 @@ export function buildTelegramReportRuntime(env: Environment = process.env): {
   const orchestratorDependencies: ConstructorParameters<
     typeof DailyReportOrchestrator
   >[0] = {
+    holdingPriceSnapshotProvider: new YahooHoldingPriceSnapshotProvider(),
     marketDataAdapter: new CompositeMarketDataAdapter({
       fredAdapter: new FredMarketDataAdapter({
         apiKey: fredApiKey

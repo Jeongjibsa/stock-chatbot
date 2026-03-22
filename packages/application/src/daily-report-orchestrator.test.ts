@@ -151,6 +151,62 @@ describe("DailyReportOrchestrator", () => {
     expect(reportRunRepository.completeRun).not.toHaveBeenCalled();
   });
 
+  it("hydrates holding price snapshots into the rendered report", async () => {
+    const reportRunRepository = {
+      startRun: vi.fn(async () => ({
+        created: true,
+        run: {
+          id: "run-snapshot",
+          status: "running"
+        }
+      })),
+      completeRun: vi.fn(async (input) => ({
+        id: input.id,
+        status: input.status,
+        reportText: input.reportText,
+        errorMessage: input.errorMessage
+      }))
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      holdingPriceSnapshotProvider: {
+        getHoldingPriceSnapshot: vi.fn(async () => ({
+          asOfDate: "2026-03-20",
+          currentPrice: 182000,
+          previousClose: 184000,
+          changePercent: -1.09
+        }))
+      },
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [
+          {
+            companyName: "삼성전자",
+            symbol: "005930",
+            exchange: "KR"
+          }
+        ])
+      },
+      reportRunRepository,
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+
+    expect(result.reportText).toContain("삼성전자: 184,000 → 182,000  🔵▼ 1.09%");
+    expect(result.reportText).not.toContain("시세 스냅샷 연결 전입니다");
+  });
+
   it("completes with news brief sections when enrichment succeeds", async () => {
     const successfulMarketResults: MarketDataFetchResult[] = [
       {

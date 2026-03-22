@@ -104,6 +104,12 @@ COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=minimum --allow-pr
 7. `report_without_holdings`
 8. `report_with_holdings`
 
+`report_with_holdings`는 현재 아래까지 함께 본다.
+
+- 보유 종목명이 실제 답장과 `report_runs.report_text`에 포함되는지
+- `오늘의 리밸런싱 제안` 묶음이 보이는지
+- `시세 스냅샷 연결 전입니다` placeholder가 남지 않는지
+
 ## 자동화 범위
 
 완전 자동화 가능:

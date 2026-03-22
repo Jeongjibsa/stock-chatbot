@@ -1,5 +1,9 @@
 import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js";
 import type { DailyReportComposition } from "./daily-report-composition-service.js";
+import type {
+  HoldingPriceSnapshot,
+  HoldingPriceSnapshotProvider
+} from "./holding-price-snapshot.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
 import { buildRuleBasedBriefing } from "./rule-based-briefing.js";
@@ -125,6 +129,7 @@ export type DailyReportOrchestratorResult = {
 export class DailyReportOrchestrator {
   constructor(
     private readonly dependencies: {
+      holdingPriceSnapshotProvider?: HoldingPriceSnapshotProvider;
       marketDataAdapter: MarketDataAdapter;
       portfolioHoldingRepository: PortfolioHoldingRepositoryPort;
       portfolioNewsBriefService?: PortfolioNewsBriefServicePort;
@@ -206,12 +211,20 @@ export class DailyReportOrchestrator {
           }))
         )
       : [];
+    const holdingInputs = holdings.map((holding) => ({
+      companyName: holding.companyName,
+      symbol: holding.symbol,
+      exchange: holding.exchange
+    }));
+    const holdingSnapshots = await buildHoldingSnapshotMap({
+      holdings: holdingInputs,
+      ...(this.dependencies.holdingPriceSnapshotProvider
+        ? { provider: this.dependencies.holdingPriceSnapshotProvider }
+        : {}),
+      runDate: input.runDate
+    });
     const quantScorecards = buildQuantScorecards({
-      holdings: holdings.map((holding) => ({
-        companyName: holding.companyName,
-        symbol: holding.symbol,
-        exchange: holding.exchange
-      })),
+      holdings: holdingInputs,
       marketResults,
       portfolioNewsBriefs
     });
@@ -315,11 +328,24 @@ export class DailyReportOrchestrator {
     const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
       displayName: input.user.displayName,
       runDate: input.runDate,
-      holdings: holdings.map((holding) => ({
-        companyName: holding.companyName,
-        symbol: holding.symbol,
-        exchange: holding.exchange
-      })),
+      holdings: holdings.map((holding) => {
+        const snapshot = holdingSnapshots.get(holding.symbol);
+
+        return {
+          companyName: holding.companyName,
+          symbol: holding.symbol,
+          exchange: holding.exchange,
+          ...(snapshot?.currentPrice !== undefined
+            ? { currentPrice: snapshot.currentPrice }
+            : {}),
+          ...(snapshot?.previousClose !== undefined
+            ? { previousClose: snapshot.previousClose }
+            : {}),
+          ...(snapshot?.changePercent !== undefined
+            ? { changePercent: snapshot.changePercent }
+            : {})
+        };
+      }),
       marketResults,
       portfolioNewsBriefs,
       quantScorecards
@@ -494,4 +520,40 @@ function buildErrorMessage(
     ...(compositionError ? [`report_composition: ${compositionError}`] : []),
     ...(strategySnapshotError ? [`strategy_snapshot: ${strategySnapshotError}`] : [])
   ].join("; ");
+}
+
+async function buildHoldingSnapshotMap(input: {
+  holdings: Array<{
+    companyName: string;
+    exchange: string;
+    symbol: string;
+  }>;
+  provider?: HoldingPriceSnapshotProvider;
+  runDate: string;
+}): Promise<Map<string, HoldingPriceSnapshot>> {
+  const snapshotMap = new Map<string, HoldingPriceSnapshot>();
+
+  if (!input.provider) {
+    return snapshotMap;
+  }
+
+  await Promise.all(
+    input.holdings.map(async (holding) => {
+      try {
+        const snapshot = await input.provider?.getHoldingPriceSnapshot({
+          exchange: holding.exchange,
+          runDate: input.runDate,
+          symbol: holding.symbol
+        });
+
+        if (snapshot) {
+          snapshotMap.set(holding.symbol, snapshot);
+        }
+      } catch {
+        // Holding snapshots are best-effort for Telegram readability.
+      }
+    })
+  );
+
+  return snapshotMap;
 }

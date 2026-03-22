@@ -1,6 +1,6 @@
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
-import type { QuantScorecard } from "./quant-scorecard.js";
+import type { QuantAction, QuantScorecard } from "./quant-scorecard.js";
 
 const SECTION_DIVIDER = "━━━━━━━━━━━━━━━";
 
@@ -342,13 +342,17 @@ function renderScenarioLines(
   const lines: string[] = [];
 
   if (quantScorecards && quantScorecards.length > 0) {
+    lines.push("• 오늘의 리밸런싱 제안");
+    lines.push(...renderRebalancingBuckets(quantScorecards));
+    lines.push("");
+
     for (const scorecard of quantScorecards) {
       lines.push(`• ${scorecard.companyName}`);
       lines.push(
         `  Macro: ${formatSignedScore(scorecard.macroScore)} / Trend: ${formatSignedScore(scorecard.trendScore)} / Event: ${formatSignedScore(scorecard.eventScore)} / Flow: ${formatSignedScore(scorecard.flowScore)}`
       );
       lines.push(
-        `  → Total: ${formatSignedScore(scorecard.totalScore)} → ${scorecard.action}`
+        `  → Total: ${formatSignedScore(scorecard.totalScore)} → ${translateQuantAction(scorecard.action)}`
       );
       lines.push(`  → ${scorecard.actionSummary}`);
     }
@@ -366,6 +370,28 @@ function renderScenarioLines(
   }
 
   return lines;
+}
+
+function renderRebalancingBuckets(scorecards: QuantScorecard[]): string[] {
+  const accumulate = scorecards
+    .filter((scorecard) => scorecard.action === "ACCUMULATE")
+    .map((scorecard) => scorecard.companyName);
+  const hold = scorecards
+    .filter((scorecard) => scorecard.action === "HOLD")
+    .map((scorecard) => scorecard.companyName);
+  const reduce = scorecards
+    .filter((scorecard) => scorecard.action === "REDUCE")
+    .map((scorecard) => scorecard.companyName);
+  const defensive = scorecards
+    .filter((scorecard) => scorecard.action === "DEFENSIVE")
+    .map((scorecard) => scorecard.companyName);
+
+  return [
+    `  • 비중 확대 검토: ${formatCompanyList(accumulate, "현재 뚜렷한 후보 없음")}`,
+    `  • 유지 우세: ${formatCompanyList(hold, "선별 관찰 우선")}`,
+    `  • 비중 조절 필요: ${formatCompanyList(reduce, "비중 점검 우선")}`,
+    `  • 우선 관찰 대상: ${formatCompanyList(defensive, "현재 뚜렷한 후보 없음")}`
+  ];
 }
 
 function renderRiskLines(riskCheckpoints?: string[]): string[] {
@@ -502,6 +528,23 @@ function formatChangeBadge(value?: number): string {
 
 function formatSignedScore(score: number): string {
   return score > 0 ? `+${score.toFixed(2)}` : score.toFixed(2);
+}
+
+function translateQuantAction(action: QuantAction): string {
+  switch (action) {
+    case "ACCUMULATE":
+      return "비중 확대 검토";
+    case "DEFENSIVE":
+      return "우선 관찰 대상";
+    case "HOLD":
+      return "유지 우세";
+    case "REDUCE":
+      return "비중 조절 필요";
+  }
+}
+
+function formatCompanyList(values: string[], fallback: string): string {
+  return values.length > 0 ? values.join(", ") : fallback;
 }
 
 function formatSentimentBadge(sentiment: HoldingNewsBrief["events"][number]["sentiment"]): string {

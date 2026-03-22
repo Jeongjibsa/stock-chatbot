@@ -12,6 +12,7 @@ import {
   PortfolioNewsBriefService,
   TelegramBotApiClient,
   TelegramReportDeliveryAdapter,
+  YahooHoldingPriceSnapshotProvider,
   YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
 import {
@@ -363,6 +364,7 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
   const orchestratorDependencies: ConstructorParameters<
     typeof DailyReportOrchestrator
   >[0] = {
+    holdingPriceSnapshotProvider: new YahooHoldingPriceSnapshotProvider(),
     marketDataAdapter: new CompositeMarketDataAdapter({
       fredAdapter: new FredMarketDataAdapter({
         apiKey: fredApiKey
