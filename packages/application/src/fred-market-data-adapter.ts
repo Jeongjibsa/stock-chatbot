@@ -59,7 +59,9 @@ export class FredMarketDataAdapter implements MarketDataAdapter {
     }
 
     try {
-      const response = await this.fetchFn(buildFredUrl(this.baseUrl, this.apiKey, seriesId));
+      const response = await this.fetchFn(
+        buildFredUrl(this.baseUrl, this.apiKey, seriesId, item.asOfDate)
+      );
 
       if (!response.ok) {
         return {
@@ -100,13 +102,22 @@ export class FredMarketDataAdapter implements MarketDataAdapter {
   }
 }
 
-function buildFredUrl(baseUrl: string, apiKey: string, seriesId: string): URL {
+function buildFredUrl(
+  baseUrl: string,
+  apiKey: string,
+  seriesId: string,
+  asOfDate?: string
+): URL {
   const url = new URL(baseUrl);
   url.searchParams.set("series_id", seriesId);
   url.searchParams.set("api_key", apiKey);
   url.searchParams.set("file_type", "json");
   url.searchParams.set("sort_order", "desc");
   url.searchParams.set("limit", "10");
+
+  if (asOfDate) {
+    url.searchParams.set("observation_end", asOfDate);
+  }
 
   return url;
 }

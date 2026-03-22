@@ -9,6 +9,8 @@ import { MarkdownReport } from "../../../components/markdown-report";
 import { normalizeMarketRegime, scoreTone } from "../../../lib/report-feed";
 import { getPublicReportById } from "../../../lib/public-reports";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReportDetailPage({
   params
 }: {

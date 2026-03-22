@@ -23,19 +23,23 @@ declare global {
   var __stockChatbotWebhookHandler:
     | ((request: Request) => Promise<Response>)
     | undefined;
+  var __stockChatbotWebhookHandlerBaseUrl: string | undefined;
   var __stockChatbotTelegramUpdateRepository:
     | TelegramProcessedUpdateRepository
     | undefined;
 }
 
-async function getWebhookHandler() {
+async function getWebhookHandler(publicBriefingBaseUrl: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
 
   if (!token) {
     throw new Error("TELEGRAM_BOT_TOKEN is missing");
   }
 
-  if (!globalThis.__stockChatbotWebhookHandler) {
+  if (
+    !globalThis.__stockChatbotWebhookHandler ||
+    globalThis.__stockChatbotWebhookHandlerBaseUrl !== publicBriefingBaseUrl
+  ) {
     const app = buildTelegramBotApp(token, {
       ADMIN_DASHBOARD_PASSWORD: process.env.ADMIN_DASHBOARD_PASSWORD,
       ADMIN_DASHBOARD_USERNAME: process.env.ADMIN_DASHBOARD_USERNAME,
@@ -46,13 +50,14 @@ async function getWebhookHandler() {
       GEMINI_API_KEY: process.env.GEMINI_API_KEY,
       LLM_PROVIDER: process.env.LLM_PROVIDER,
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-      PUBLIC_BRIEFING_BASE_URL: process.env.PUBLIC_BRIEFING_BASE_URL,
+      PUBLIC_BRIEFING_BASE_URL: publicBriefingBaseUrl,
       REDIS_URL: process.env.REDIS_URL,
       REPORT_TIMEZONE: process.env.REPORT_TIMEZONE,
       TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
       TELEGRAM_WEBHOOK_SECRET_TOKEN: process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN
     });
     const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN?.trim();
+    globalThis.__stockChatbotWebhookHandlerBaseUrl = publicBriefingBaseUrl;
     globalThis.__stockChatbotWebhookHandler = webhookSecret
       ? webhookCallback(app.bot, "std/http", {
           secretToken: webhookSecret
@@ -129,7 +134,9 @@ export async function POST(request: Request) {
     }
   }
 
-  const handler = await getWebhookHandler();
+  const publicBriefingBaseUrl =
+    process.env.PUBLIC_BRIEFING_BASE_URL?.trim() || new URL(request.url).origin;
+  const handler = await getWebhookHandler(publicBriefingBaseUrl);
   return handler(
     new Request(request.url, {
       method: request.method,

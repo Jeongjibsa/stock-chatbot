@@ -1,14 +1,17 @@
+import { unstable_noStore as noStore } from "next/cache";
+
 import type { PublicReport } from "../types/report";
 import { getWebPool } from "./db";
 
 export async function listPublicReports(): Promise<PublicReport[]> {
+  noStore();
   const pool = getWebPool();
   const result = await pool.query<{
     content_markdown: string;
     created_at: Date;
     id: string;
     market_regime: string;
-    report_date: string;
+    report_date: Date | string;
     signals: string[];
     summary: string;
     total_score: string;
@@ -26,13 +29,14 @@ export async function listPublicReports(): Promise<PublicReport[]> {
 export async function getPublicReportById(
   id: string
 ): Promise<PublicReport | null> {
+  noStore();
   const pool = getWebPool();
   const result = await pool.query<{
     content_markdown: string;
     created_at: Date;
     id: string;
     market_regime: string;
-    report_date: string;
+    report_date: Date | string;
     signals: string[];
     summary: string;
     total_score: string;
@@ -54,14 +58,14 @@ function mapRowToPublicReport(report: {
   created_at: Date;
   id: string;
   market_regime: string;
-  report_date: string;
+  report_date: Date | string;
   signals: string[];
   summary: string;
   total_score: string;
 }): PublicReport {
   return {
     id: report.id,
-    reportDate: report.report_date,
+    reportDate: normalizeDate(report.report_date),
     summary: report.summary,
     marketRegime: report.market_regime,
     totalScore: Number.parseFloat(report.total_score),
@@ -69,4 +73,12 @@ function mapRowToPublicReport(report: {
     contentMarkdown: report.content_markdown,
     createdAt: report.created_at.toISOString()
   };
+}
+
+function normalizeDate(value: Date | string): string {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  return value.slice(0, 10);
 }

@@ -4,7 +4,7 @@ import { isAuthorizedCronRequest } from "../../../../lib/cron-auth";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-function readCronRuntimeEnvironment() {
+function readCronRuntimeEnvironment(publicBriefingBaseUrl: string) {
   return {
     CRON_SECRET: process.env.CRON_SECRET,
     DAILY_REPORT_WINDOW_MINUTES: process.env.DAILY_REPORT_WINDOW_MINUTES,
@@ -13,7 +13,8 @@ function readCronRuntimeEnvironment() {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     LLM_PROVIDER: process.env.LLM_PROVIDER,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    PUBLIC_BRIEFING_BASE_URL: process.env.PUBLIC_BRIEFING_BASE_URL,
+    PUBLIC_BRIEFING_BASE_URL:
+      process.env.PUBLIC_BRIEFING_BASE_URL || publicBriefingBaseUrl,
     REDIS_URL: process.env.REDIS_URL,
     REPORT_TIMEZONE: process.env.REPORT_TIMEZONE,
     TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN
@@ -28,7 +29,7 @@ export async function GET(request: Request) {
   }
 
   const summary = await runDailyReport({
-    ...readCronRuntimeEnvironment(),
+    ...readCronRuntimeEnvironment(new URL(request.url).origin),
     REPORT_TRIGGER_TYPE: "schedule"
   });
 

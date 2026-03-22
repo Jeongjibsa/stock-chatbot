@@ -40,7 +40,7 @@
 ### 3. Telegram 개인화 delivery
 
 - `/register`, `/unregister`, `/portfolio_add`, `/portfolio_bulk`, `/report` 흐름으로 사용자별 입력을 받습니다.
-- Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast rule-based 경로를 기본값으로 사용합니다. 보유 종목별 뉴스 수집과 LLM 조합은 기본적으로 끄고, 시장 데이터와 규칙 기반 렌더러로 먼저 빠르게 응답합니다.
+- Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast rule-based 경로를 기본값으로 사용합니다. 보유 종목별 뉴스 수집과 LLM 조합은 기본적으로 끄고, 시장 데이터와 규칙 기반 렌더러로 먼저 빠르게 응답합니다. 이 경로에서도 시장/매크로/자금/이벤트/리스크 섹션과 공개 상세 링크는 rule-based fallback으로 비어 있지 않게 유지합니다.
 - `/portfolio_add`는 CSV 기반 ticker master 검색 결과를 보여주고, 상위 5개 후보 중 번호 선택으로 종목을 추가합니다.
 - `삼전`, `현대차`, `app`, `tesl` 같은 짧은 alias는 curated fallback으로 보강하되, 최종 저장과 표시는 PostgreSQL ticker master를 기준으로 합니다.
 - `/portfolio_bulk`는 comma/newline/semicolon으로 여러 키워드를 받아 각 항목을 독립 검색한 뒤 `추가 성공 / 이미 등록 / 실패` 요약을 돌려줍니다.
@@ -72,6 +72,7 @@
 - GitHub Actions는 CI와 backup/reconcile/manual rerun 역할을 담당합니다.
 - worker와 shared application 계층이 공개 브리핑 생성, Telegram delivery, 실행 로그 기록을 수행합니다.
 - 개발과 테스트는 로컬 Docker PostgreSQL 기준으로 진행하고, production은 Neon을 사용합니다.
+- 시장 데이터는 `runDate` 기준 최근 가용일 스냅샷을 조회하므로 과거 날짜 backfill과 manual rerun도 같은 로직으로 처리합니다.
 
 ## 주요 시그널 및 분석 항목
 
@@ -390,6 +391,7 @@ DAILY_REPORT_WINDOW_MINUTES=15
 중요한 운영 규칙:
 
 - `PUBLIC_BRIEFING_BASE_URL`은 Vercel 공개 웹 URL을 기준으로 설정
+- 공개 feed/detail은 정적 build snapshot이 아니라 dynamic DB 조회로 동작하므로, `reports` 적재 후 redeploy 없이 바로 반영되어야 합니다.
 - Vercel cron 보안을 위해 production에서는 `CRON_SECRET`을 설정
 - production webhook 보안을 위해 `TELEGRAM_WEBHOOK_SECRET_TOKEN`을 반드시 설정
 - `DATABASE_URL`이 없으면 local worker fallback 단계는 skip

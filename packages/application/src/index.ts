@@ -116,6 +116,9 @@ export {
   renderPublicDailyBriefingMarkdown
 } from "./public-daily-briefing-markdown.js";
 export {
+  buildRuleBasedBriefing
+} from "./rule-based-briefing.js";
+export {
   renderPublicDailyBriefingHtml
 } from "./public-daily-briefing-renderer.js";
 export {

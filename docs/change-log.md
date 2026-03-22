@@ -135,6 +135,9 @@
 | CHG-0108 | 2026-03-22 | ADD | 실제 Telegram 운영 경로를 대상으로 하는 production-like E2E harness를 추가하고, synthetic webhook update + 실제 Bot API outbound + DB side effect 검증 조합으로 `/start`, `/register`, `/portfolio_add`, `/portfolio_bulk`, `/report`, 멀티유저 격리, 그룹 온보딩 시나리오를 자동화 가능한 범위까지 실행하도록 확장 | PRD, Plan, Change Log, Context, README, Docs, Code, Tests | yes |
 | CHG-0109 | 2026-03-22 | ADD | Telegram-visible reply text를 E2E에서 검증할 수 있도록 outbound `sendMessage` audit 로그 저장 모델과 repository를 추가하고, webhook/polling 공용 bot runtime이 전송한 메시지를 chat 기준으로 조회 가능하게 보강 | Change Log, Context, Code, Tests | yes |
 | CHG-0110 | 2026-03-22 | FIX | Telegram `/portfolio_add`가 동일 사용자·종목 조합을 upsert로 덮어쓰며 항상 `추가되었습니다`로 응답하던 문제를 수정해, 이미 등록된 종목은 중복 추가하지 않고 `이미 등록되어 있습니다`로 안내하도록 실제 저장/응답 semantics를 PRD 기준으로 정렬 | Change Log, Context, Code, Tests | yes |
+| CHG-0111 | 2026-03-22 | FIX | 시장 데이터 어댑터가 항상 최신값만 조회하던 문제를 수정해 `runDate` 기준 최근 가용일 스냅샷을 사용하도록 `asOfDate` historical fetch를 도입하고, 공개 브리핑 2026-03-16~2026-03-21 backfill을 가능하게 함 | PRD, Change Log, Context, Code, Tests, Ops | yes |
+| CHG-0112 | 2026-03-22 | FIX | Telegram fast `/report`와 공개 브리핑 생성에서 LLM composition이 비활성화되거나 실패할 때 `시장/매크로/자금/이벤트/리스크` 섹션이 모두 비어 있던 문제를 수정해 rule-based fallback briefing 섹션과 상세 링크 base URL fallback을 추가 | PRD, Change Log, Context, README, Code, Tests | yes |
+| CHG-0113 | 2026-03-22 | FIX | 공개 웹 feed/detail이 Next.js 정적 최적화로 build 시점 empty state를 계속 서빙하던 문제를 수정해 DB 조회를 `force-dynamic + noStore`로 전환하고, `report_date`를 문자열로 정규화해 실시간 공개 브리핑 적재분을 바로 노출하도록 보강 | Change Log, Context, README, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

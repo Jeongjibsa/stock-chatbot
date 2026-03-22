@@ -155,11 +155,13 @@
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `public web frontend=공개 상세 archive/feed`, `future authenticated web=포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
 - 현재 `apps/web`는 `Next.js App Router` 기반 공개 웹으로 전환됐고, Vercel 배포를 primary public frontend로 사용한다.
 - `apps/web`는 이제 Next.js App Router 기반 공개 웹으로 전환됐고, `/`에서 날짜별 latest-first feed를, `/reports/[id]`에서 markdown detail을 제공한다.
+- 공개 웹의 `/`와 `/reports/[id]`는 정적 build snapshot이 아니라 dynamic DB 조회(`force-dynamic + noStore`)를 사용한다. 공개 브리핑이 적재되면 redeploy 없이 feed/detail에 바로 반영되어야 한다.
 - `apps/web`는 Pretendard 기반 타이포그래피와 shadcn/ui 스타일 `ui/*` 컴포넌트(`Button`, `Badge`, `Card`, `Separator`)를 사용해 공개 feed/detail을 렌더링한다.
 - 계정 확장 전략은 현재 `telegram_user_id` 중심 MVP를 유지하되, 이후 `core user + channel identity` 구조로 확장할 수 있게 `preferred_delivery_chat_id` 같은 채널 delivery 속성을 별도 identity 성격 데이터로 취급하는 방향이다.
 - Telegram DM의 기본 UX는 한국어 온보딩 기준으로 유지한다. `/start`와 `/help`는 `등록 -> 종목 추가 -> 목록 확인 -> 관심 지표 추가 -> 브리핑 수신` 흐름과 명령별 짧은 설명을 함께 안내하고, `/register` 성공 후에도 같은 다음 단계가 이어져야 한다. 현재 설정 명령은 `/report_mode compact|standard`, `/report_link_on`, `/report_link_off`까지 포함한다.
 - Telegram DM에서는 `/report`를 바로 사용할 수 있다. 등록만 완료되어 있으면 보유 종목이 없어도 실행 가능하며, 이 경우 보유 종목 관련 섹션을 제외한 시장 중심 브리핑을 생성한다.
 - 현재 운영 기준으로 Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast path를 기본으로 사용한다. 즉, 장시간이 걸릴 수 있는 보유 종목 뉴스 수집과 LLM 조합은 기본적으로 비활성화돼 있고, 규칙 기반 브리핑을 먼저 빠르게 생성한다.
+- fast path에서도 `시장/매크로/자금/이벤트/리스크` 섹션과 상세 링크가 비어 있지 않도록 시장 데이터 기반 rule-based fallback 문장을 사용한다.
 - `report_runs`는 같은 `userId + runDate + scheduleType` 조합으로 중복을 막지만, `running` 상태가 3분 이상 지속되면 stale run으로 보고 같은 row를 재시작한다. 이 규칙은 webhook timeout이나 중간 종료로 인해 하루 종일 `/report`가 막히는 상황을 방지하기 위한 것이다.
 - 사용자별 정기 브리핑 설정은 `daily_report_enabled`, `daily_report_hour`, `daily_report_minute`, `timezone` 기준으로 저장된다. GitHub Actions 스케줄은 매시간 실행되고, worker는 예약 윈도우 안에 들어온 사용자만 실제 발송한다.
 - GitHub Actions `Daily Report` workflow는 기본적으로 local worker를 직접 실행하지만, `DAILY_REPORT_TRIGGER_URL` secret이 설정되면 dedicated worker endpoint를 호출하는 전환 경로를 지원한다.
@@ -185,6 +187,7 @@
 - Telegram `/portfolio_add`는 이제 `종목명을 입력해주세요 -> 단건 확인 또는 상위 5개 번호 선택 -> 평균단가/수량/메모` 흐름으로 동작한다.
 - Telegram `/portfolio_add`는 동일 사용자·종목 조합이 이미 있으면 중복 row를 만들지 않고 `이미 등록되어 있습니다`로 안내한다.
 - Telegram `/portfolio_bulk`는 각 입력을 독립적으로 검색하고 `추가 성공 / 이미 등록 / 실패(후보 없음 또는 후보 다수)` 요약을 반환한다.
+- 시장 데이터 어댑터는 이제 `runDate` 기준 최근 가용일 데이터를 조회한다. 따라서 과거 날짜 backfill이나 manual rerun에서도 항상 해당 날짜 이전 마지막 거래일 스냅샷을 사용해야 한다.
 - 공개 웹은 Pretendard + shadcn/ui 스타일 컴포넌트를 유지하되, 현재 기본 배경은 완전한 화이트와 블랙 텍스트 기준으로 고정됐다.
 - 공개 웹 디자인 시스템은 이후 soft white/gray 기반의 premium fintech 톤으로 다시 정리됐다. 배경은 `#F8FAFC`, surface는 white, border는 slate gray, accent는 단일 blue를 기준으로 feed/detail/admin 전반의 시각 계층을 맞춘다.
 - `Phase 6`은 멀티채널 준비 단계이며 mock delivery와 공통 report query model, API 계약 초안까지 들어간 상태다.

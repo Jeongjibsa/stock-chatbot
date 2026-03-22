@@ -13,6 +13,7 @@ export type MarketDataPoint = {
 };
 
 export type MarketDataItemRequest = {
+  asOfDate?: string;
   itemCode: string;
   itemName: string;
   sourceKey: string;

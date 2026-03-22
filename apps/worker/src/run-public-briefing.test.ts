@@ -137,6 +137,19 @@ describe("run-public-briefing", () => {
           value: 26.78,
           changePercent: 11.31
         }
+      },
+      {
+        status: "ok",
+        data: {
+          itemCode: "DXY",
+          itemName: "달러인덱스",
+          source: "fred",
+          sourceKey: "index:DXY",
+          asOfDate: "2026-03-13",
+          previousValue: 119.82,
+          value: 120.55,
+          changePercent: 0.61
+        }
       }
     ];
 
@@ -155,10 +168,11 @@ describe("run-public-briefing", () => {
     });
 
     expect(briefing.summaryLine).toBe(
-      "미국 성장주 약세와 변동성 확대가 겹쳐 있어 신규 매수는 보수적으로 접근하시는 편이 좋습니다."
+      "달러 강세와 환율 부담이 이어지고 있어, 비중 확대보다 관망과 리스크 관리에 집중하시는 편이 좋습니다."
     );
-    expect(briefing.marketBullets).toEqual([]);
-    expect(briefing.riskBullets).toEqual([]);
+    expect(briefing.marketBullets.length).toBeGreaterThan(0);
+    expect(briefing.macroBullets.length).toBeGreaterThan(0);
+    expect(briefing.riskBullets.length).toBeGreaterThan(0);
     expect(warning).toHaveBeenCalledWith(
       "[public-briefing] falling back to rule-based summary",
       "Gemini API request failed with status 429"

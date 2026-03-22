@@ -2,6 +2,7 @@ import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js"
 import type { DailyReportComposition } from "./daily-report-composition-service.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
+import { buildRuleBasedBriefing } from "./rule-based-briefing.js";
 import {
   buildPublicBriefingUrl,
   buildPublicReportDetailUrl
@@ -189,6 +190,7 @@ export class DailyReportOrchestrator {
     ]);
     const marketResults = await this.dependencies.marketDataAdapter.fetchMany(
       marketWatchItems.map((item) => ({
+        asOfDate: input.runDate,
         itemCode: item.itemCode,
         itemName: item.itemName,
         sourceKey: item.sourceKey
@@ -277,6 +279,7 @@ export class DailyReportOrchestrator {
 
     let composition: DailyReportComposition | undefined;
     let compositionError: string | undefined;
+    const fallbackBriefing = buildRuleBasedBriefing(marketResults);
 
     if (this.dependencies.reportCompositionService) {
       try {
@@ -332,24 +335,34 @@ export class DailyReportOrchestrator {
       renderInput.holdingTrendBullets = composition.holdingTrendBullets;
     }
 
-    if (composition?.marketBullets) {
+    if (composition?.marketBullets?.length) {
       renderInput.marketBullets = composition.marketBullets;
+    } else if (fallbackBriefing.marketBullets.length > 0) {
+      renderInput.marketBullets = fallbackBriefing.marketBullets;
     }
 
-    if (composition?.macroBullets) {
+    if (composition?.macroBullets?.length) {
       renderInput.macroBullets = composition.macroBullets;
+    } else if (fallbackBriefing.macroBullets.length > 0) {
+      renderInput.macroBullets = fallbackBriefing.macroBullets;
     }
 
-    if (composition?.fundFlowBullets) {
+    if (composition?.fundFlowBullets?.length) {
       renderInput.fundFlowBullets = composition.fundFlowBullets;
+    } else if (fallbackBriefing.fundFlowBullets.length > 0) {
+      renderInput.fundFlowBullets = fallbackBriefing.fundFlowBullets;
     }
 
-    if (composition?.eventBullets) {
+    if (composition?.eventBullets?.length) {
       renderInput.eventBullets = composition.eventBullets;
+    } else if (fallbackBriefing.eventBullets.length > 0) {
+      renderInput.eventBullets = fallbackBriefing.eventBullets;
     }
 
-    if (composition?.macroBullets) {
+    if (composition?.macroBullets?.length) {
       renderInput.keyIndicatorSummaries = composition.macroBullets;
+    } else if (fallbackBriefing.keyIndicatorBullets.length > 0) {
+      renderInput.keyIndicatorSummaries = fallbackBriefing.keyIndicatorBullets;
     }
 
     if (composition?.articleSummaryBullets) {
@@ -362,8 +375,14 @@ export class DailyReportOrchestrator {
       renderInput.quantScenarios = quantScenarios;
     }
 
-    if (composition?.riskBullets) {
+    if (composition?.riskBullets?.length) {
       renderInput.riskCheckpoints = composition.riskBullets;
+    } else if (fallbackBriefing.riskBullets.length > 0) {
+      renderInput.riskCheckpoints = fallbackBriefing.riskBullets;
+    }
+
+    if (!renderInput.summaryLine && fallbackBriefing.summaryLine) {
+      renderInput.summaryLine = fallbackBriefing.summaryLine;
     }
 
     if (

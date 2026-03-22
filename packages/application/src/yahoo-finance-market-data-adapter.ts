@@ -146,13 +146,17 @@ function buildYahooMarketDataPoint(
     .filter((entry): entry is { asOfDate: string; value: number } => entry !== null);
   const dedupedByDate = [...new Map(paired.map((entry) => [entry.asOfDate, entry])).values()];
 
-  const latest = dedupedByDate.at(-1);
+  const latestAllowedDate = item.asOfDate ?? "9999-12-31";
+  const filteredByAsOfDate = dedupedByDate.filter(
+    (entry) => entry.asOfDate <= latestAllowedDate
+  );
+  const latest = filteredByAsOfDate.at(-1);
 
   if (!latest) {
     return null;
   }
 
-  const previous = dedupedByDate.at(-2);
+  const previous = filteredByAsOfDate.at(-2);
   const dataPoint: MarketDataPoint = {
     itemCode: item.itemCode,
     itemName: item.itemName,

@@ -245,6 +245,136 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 
+  it("falls back to rule-based market, macro, risk, and link sections when composition is unavailable", async () => {
+    const marketResults: MarketDataFetchResult[] = [
+      {
+        status: "ok",
+        data: {
+          itemCode: "NASDAQ",
+          itemName: "나스닥 종합",
+          source: "yahoo_finance",
+          sourceKey: "index:NASDAQ:IXIC",
+          asOfDate: "2026-03-20",
+          previousValue: 22090.6895,
+          value: 21647.6113,
+          changePercent: -2.0057,
+          changeValue: -443.0782
+        }
+      },
+      {
+        status: "ok",
+        data: {
+          itemCode: "SP500",
+          itemName: "S&P 500",
+          source: "yahoo_finance",
+          sourceKey: "index:SP:SPX",
+          asOfDate: "2026-03-20",
+          previousValue: 6606.4902,
+          value: 6506.48,
+          changePercent: -1.5138,
+          changeValue: -100.0102
+        }
+      },
+      {
+        status: "ok",
+        data: {
+          itemCode: "VIX",
+          itemName: "VIX",
+          source: "yahoo_finance",
+          sourceKey: "index:CBOE:VIX",
+          asOfDate: "2026-03-20",
+          previousValue: 24.06,
+          value: 26.78,
+          changePercent: 11.3051,
+          changeValue: 2.72
+        }
+      },
+      {
+        status: "ok",
+        data: {
+          itemCode: "DXY",
+          itemName: "달러인덱스",
+          source: "fred",
+          sourceKey: "index:DXY",
+          asOfDate: "2026-03-13",
+          previousValue: 119.8227,
+          value: 120.5518,
+          changePercent: 0.6085,
+          changeValue: 0.7291
+        }
+      },
+      {
+        status: "ok",
+        data: {
+          itemCode: "USD_KRW",
+          itemName: "USD/KRW 환율",
+          source: "fred",
+          sourceKey: "fx:USDKRW",
+          asOfDate: "2026-03-13",
+          previousValue: 1491.81,
+          value: 1498.88,
+          changePercent: 0.4739,
+          changeValue: 7.07
+        }
+      }
+    ];
+    const reportRunRepository = {
+      startRun: vi.fn(async () => ({
+        created: true,
+        run: {
+          id: "run-fallback",
+          status: "running"
+        }
+      })),
+      completeRun: vi.fn(async (input) => ({
+        id: input.id,
+        status: input.status,
+        reportText: input.reportText,
+        errorMessage: input.errorMessage
+      }))
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => marketResults)
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [])
+      },
+      publicBriefingBaseUrl: "https://example.com",
+      publicReportRepository: {
+        findLatestByReportDate: vi.fn(async () => ({
+          id: "public-report-1"
+        }))
+      },
+      reportRunRepository,
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [
+          {
+            itemCode: "NASDAQ",
+            itemName: "나스닥 종합",
+            sourceKey: "index:NASDAQ:IXIC"
+          }
+        ])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+
+    expect(result.reportText).toContain("🌍 거시 시장 스냅샷");
+    expect(result.reportText).toContain("📍 주요 지표 변동 요약");
+    expect(result.reportText).toContain("🧭 시장, 매크로, 자금 브리핑");
+    expect(result.reportText).toContain("⚠️ 리스크 체크리스트");
+    expect(result.reportText).toContain("🔎 상세 브리핑: https://example.com/reports/public-report-1");
+    expect(result.reportText).not.toContain("시장, 매크로, 자금 브리핑 데이터가 아직 충분하지 않습니다.");
+  });
+
   it("persists strategy snapshots for generated quant scorecards", async () => {
     const strategySnapshotRepository = {
       insertMany: vi.fn(async () => [])

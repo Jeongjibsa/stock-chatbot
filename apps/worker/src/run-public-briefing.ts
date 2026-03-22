@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   buildPublicDailyBriefing,
+  buildRuleBasedBriefing,
   buildQuantScorecards,
   CompositeMarketDataAdapter,
   DailyReportCompositionService,
@@ -17,8 +18,7 @@ import {
   toQuantStrategyBullets,
   YahooFinanceScrapingMarketDataAdapter,
   type DailyReportComposition,
-  type MarketDataAdapter,
-  type MarketDataFetchResult
+  type MarketDataAdapter
 } from "@stock-chatbot/application";
 import {
   createDatabase,
@@ -60,6 +60,7 @@ export async function buildPublicBriefing(
       .slice()
       .sort((left, right) => left.sortOrder - right.sortOrder)
       .map((item) => ({
+        asOfDate: dependencies.runDate,
         itemCode: item.itemCode,
         itemName: item.itemName,
         sourceKey: item.sourceKey
@@ -93,18 +94,30 @@ export async function buildPublicBriefing(
     }
   }
 
+  const fallbackBriefing = buildRuleBasedBriefing(marketResults);
+
   return buildPublicDailyBriefing({
     runDate: dependencies.runDate,
     summaryLine:
       composition?.oneLineSummary ??
-      buildFallbackSummaryLine(marketResults),
+      fallbackBriefing.summaryLine,
     marketResults,
-    keyIndicatorBullets: buildKeyIndicatorBullets(marketResults),
-    marketBullets: composition?.marketBullets ?? [],
-    macroBullets: composition?.macroBullets ?? [],
-    fundFlowBullets: composition?.fundFlowBullets ?? [],
-    eventBullets: composition?.eventBullets ?? [],
-    riskBullets: composition?.riskBullets ?? []
+    keyIndicatorBullets: fallbackBriefing.keyIndicatorBullets,
+    marketBullets: composition?.marketBullets?.length
+      ? composition.marketBullets
+      : fallbackBriefing.marketBullets,
+    macroBullets: composition?.macroBullets?.length
+      ? composition.macroBullets
+      : fallbackBriefing.macroBullets,
+    fundFlowBullets: composition?.fundFlowBullets?.length
+      ? composition.fundFlowBullets
+      : fallbackBriefing.fundFlowBullets,
+    eventBullets: composition?.eventBullets?.length
+      ? composition.eventBullets
+      : fallbackBriefing.eventBullets,
+    riskBullets: composition?.riskBullets?.length
+      ? composition.riskBullets
+      : fallbackBriefing.riskBullets
   });
 }
 
@@ -253,57 +266,6 @@ function readOptionalDatabaseUrl(env: Environment): string | undefined {
   }
 
   return databaseUrl;
-}
-
-function buildFallbackSummaryLine(results: MarketDataFetchResult[]): string {
-  const marketMap = new Map(
-    results.flatMap((result) =>
-      result.status === "ok" ? [[result.data.itemCode, result.data]] : []
-    )
-  );
-  const nasdaqChange = marketMap.get("NASDAQ")?.changePercent ?? 0;
-  const vixChange = marketMap.get("VIX")?.changePercent ?? 0;
-  const dxyChange = marketMap.get("DXY")?.changePercent ?? 0;
-
-  if (nasdaqChange <= -1.5 && vixChange >= 5) {
-    return "미국 성장주 약세와 변동성 확대가 겹쳐 있어 신규 매수는 보수적으로 접근하시는 편이 좋습니다.";
-  }
-
-  if (dxyChange >= 0.5) {
-    return "달러 강세 압력이 이어지고 있어 환율 부담을 확인하며 방어적으로 대응하시는 편이 좋습니다.";
-  }
-
-  return "최근 가용 시장 지표 기준으로 핵심 대응 포인트를 정리했습니다.";
-}
-
-function buildKeyIndicatorBullets(results: MarketDataFetchResult[]): string[] {
-  const marketMap = new Map(
-    results.flatMap((result) =>
-      result.status === "ok" ? [[result.data.itemCode, result.data]] : []
-    )
-  );
-  const bullets: string[] = [];
-
-  if ((marketMap.get("VIX")?.changePercent ?? 0) >= 5) {
-    bullets.push("VIX 급등으로 변동성 경계가 강화됐습니다.");
-  }
-
-  if ((marketMap.get("NASDAQ")?.changePercent ?? 0) <= -1.5) {
-    bullets.push("NASDAQ 약세가 커지며 성장주 변동성이 확대됐습니다.");
-  }
-
-  if ((marketMap.get("COPPER")?.changePercent ?? 0) >= 5) {
-    bullets.push("구리 강세가 이어져 산업 수요 기대는 완전히 꺾이지 않았습니다.");
-  }
-
-  if (
-    (marketMap.get("USD_KRW")?.changePercent ?? 0) >= 0.3 &&
-    (marketMap.get("DXY")?.changePercent ?? 0) >= 0.3
-  ) {
-    bullets.push("달러 강세와 원화 약세가 함께 나타나 환율 부담을 점검하시는 편이 좋습니다.");
-  }
-
-  return bullets.slice(0, 4);
 }
 
 function deriveMarketRegime(

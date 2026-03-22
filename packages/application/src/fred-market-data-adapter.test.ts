@@ -167,4 +167,49 @@ describe("FredMarketDataAdapter", () => {
       }
     });
   });
+
+  it("passes observation_end when asOfDate is provided", async () => {
+    const fetchFn = vi.fn(async (input: string | URL | Request) => {
+      const url = new URL(typeof input === "string" ? input : input.toString());
+
+      expect(url.searchParams.get("observation_end")).toBe("2026-03-17");
+
+      return new Response(
+        JSON.stringify({
+          observations: [
+            { date: "2026-03-17", value: "120.00" },
+            { date: "2026-03-16", value: "119.50" }
+          ]
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json"
+          }
+        }
+      );
+    });
+    const adapter = new FredMarketDataAdapter({
+      apiKey: "fred-key",
+      fetchFn
+    });
+
+    const [result] = await adapter.fetchMany([
+      {
+        asOfDate: "2026-03-17",
+        itemCode: "DXY",
+        itemName: "달러인덱스",
+        sourceKey: "index:DXY"
+      }
+    ]);
+
+    expect(result).toMatchObject({
+      status: "ok",
+      data: {
+        asOfDate: "2026-03-17",
+        previousValue: 119.5,
+        value: 120
+      }
+    });
+  });
 });

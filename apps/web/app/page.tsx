@@ -9,6 +9,8 @@ import { Card, CardContent } from "../components/ui/card";
 import { groupReportsByDate } from "../lib/report-feed";
 import { listPublicReports } from "../lib/public-reports";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   try {
     const reports = await listPublicReports();

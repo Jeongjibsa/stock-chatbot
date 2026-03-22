@@ -107,6 +107,56 @@ describe("YahooFinanceScrapingMarketDataAdapter", () => {
     });
   });
 
+  it("respects asOfDate when selecting the latest available market date", async () => {
+    const fetchFn = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          chart: {
+            result: [
+              {
+                timestamp: [1773792000, 1773878400, 1773964800],
+                indicators: {
+                  quote: [
+                    {
+                      close: [6700, 6650, 6600]
+                    }
+                  ]
+                }
+              }
+            ],
+            error: null
+          }
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json"
+          }
+        }
+      )
+    );
+    const adapter = new YahooFinanceScrapingMarketDataAdapter({ fetchFn });
+
+    const [result] = await adapter.fetchMany([
+      {
+        asOfDate: "2026-03-19",
+        itemCode: "SP500",
+        itemName: "S&P 500",
+        sourceKey: "index:SP:SPX"
+      }
+    ]);
+
+    expect(result).toMatchObject({
+      status: "ok",
+      data: {
+        asOfDate: "2026-03-19",
+        previousValue: 6700,
+        value: 6650,
+        changePercent: -0.7463
+      }
+    });
+  });
+
   it("marks unsupported source keys explicitly", async () => {
     const adapter = new YahooFinanceScrapingMarketDataAdapter({
       fetchFn: vi.fn()
