@@ -806,7 +806,7 @@ describe("DailyReportOrchestrator", () => {
     expect(personalSnapshotRepository.findByUserAndEffectiveDate).toHaveBeenCalledWith({
       userId: "user-1",
       effectiveReportDate: "2026-03-20",
-      snapshotVersion: "v1"
+      snapshotVersion: "v2"
     });
     expect(result.reportText).toContain("오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-20)");
   });

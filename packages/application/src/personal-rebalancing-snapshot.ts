@@ -3,7 +3,7 @@ import type { HoldingNewsBrief } from "./news.js";
 import type { QuantAction, QuantScorecard } from "./quant-scorecard.js";
 import type { PersonalizedPortfolioRebalancingData } from "./rebalancing-contract.js";
 
-export const DEFAULT_PERSONAL_REBALANCING_SNAPSHOT_VERSION = "v1";
+export const DEFAULT_PERSONAL_REBALANCING_SNAPSHOT_VERSION = "v2";
 
 type HoldingInput = {
   changePercent?: number;
