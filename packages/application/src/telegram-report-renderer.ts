@@ -1,503 +1,621 @@
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantAction, QuantScorecard } from "./quant-scorecard.js";
-
-const SECTION_DIVIDER = "━━━━━━━━━━━━━━━";
+import {
+  formatMarketRegimeLabel,
+  formatPortfolioFitLabel,
+  formatStockViewLabel,
+  type HoldingRebalancingSnapshot,
+  type PersonalizedPortfolioRebalancingData,
+  type ProfileType
+} from "./rebalancing-contract.js";
 
 export type TelegramReportRenderInput = {
-  eventBullets?: string[];
-  displayName: string;
-  fundFlowBullets?: string[];
-  macroBullets?: string[];
-  marketBullets?: string[];
   articleSummaryBullets?: string[];
-  publicBriefingUrl?: string;
+  displayName: string;
+  eventBullets?: string[];
+  fundFlowBullets?: string[];
+  holdingTrendBullets?: string[];
   holdings: Array<{
+    changePercent?: number;
     companyName: string;
     currentPrice?: number;
     exchange: string;
     previousClose?: number;
     symbol: string;
     trendSummary?: string;
-    changePercent?: number;
   }>;
-  holdingTrendBullets?: string[];
   keyIndicatorSummaries?: string[];
+  macroBullets?: string[];
+  marketBullets?: string[];
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs?: HoldingNewsBrief[];
-  reportDetailLevel?: "compact" | "standard";
+  portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
+  publicBriefingUrl?: string;
   quantScorecards?: QuantScorecard[];
   quantScenarios?: string[];
+  reportDetailLevel?: "compact" | "standard";
   riskCheckpoints?: string[];
   runDate: string;
   summaryLine?: string;
 };
 
+type ActionBucket = "hold" | "increase" | "reduce" | "watch";
+
 export function renderTelegramDailyReport(
   input: TelegramReportRenderInput
 ): string {
-  const successfulMarketItems = input.marketResults.filter(
-    (result): result is Extract<MarketDataFetchResult, { status: "ok" }> =>
-      result.status === "ok"
-  );
   const failedMarketItems = input.marketResults.filter(
     (result): result is Extract<MarketDataFetchResult, { status: "error" }> =>
       result.status === "error"
   );
-
-  const lines = [
-    `🗞️ 오늘의 브리핑 (${input.runDate} 기준)`,
-    `📌 한 줄 요약`,
-    buildSummaryLine(
-      successfulMarketItems,
-      successfulMarketItems.length,
-      failedMarketItems.length,
-      input.holdings.length,
-      input.summaryLine
-    ),
-    SECTION_DIVIDER,
-    "🌍 거시 시장 스냅샷",
-    ...renderMarketSnapshot(successfulMarketItems),
-    SECTION_DIVIDER,
-    "📍 주요 지표 변동 요약",
-    ...renderIndicatorSummarySection(
-      successfulMarketItems,
-      input.keyIndicatorSummaries
-    ),
-    SECTION_DIVIDER,
-    "📈 보유 종목별 최근 동향",
-    ...renderHoldings(input.holdings, input.holdingTrendBullets)
+  const selectedProfile = input.portfolioRebalancing?.selectedProfile ?? "balanced";
+  const rebalancingSummary = buildRebalancingSummary(input);
+  const portfolioSummary = buildPortfolioSummary(input, rebalancingSummary);
+  const marketSummary = buildMarketSummary(input, selectedProfile, failedMarketItems.length);
+  const profileInterpretations = buildProfileInterpretations(input, marketSummary.tone);
+  const holdingGuides = buildHoldingGuides(input, marketSummary.tone);
+  const riskBullets = buildRiskBullets(input, failedMarketItems);
+  const referenceBrief = buildReferenceBrief(input);
+  const conclusion = buildConclusion(input, marketSummary.tone, failedMarketItems.length);
+  const lines: string[] = [
+    `1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑 (${input.runDate})`,
+    "",
+    "2. 📌 오늘 한 줄 결론",
+    `- ${conclusion}`,
+    "",
+    "3. 🎯 오늘의 리밸런싱 제안",
+    `- 비중 확대 검토: ${formatCompanyList(rebalancingSummary.increase, "현재 뚜렷한 후보 없음")}`,
+    `- 유지 우세: ${formatCompanyList(rebalancingSummary.hold, "선별 관찰 우선")}`,
+    `- 비중 조절 필요: ${formatCompanyList(rebalancingSummary.reduce, "비중 점검 우선")}`,
+    `- 우선 관찰 대상: ${formatCompanyList(rebalancingSummary.watch, "현재 뚜렷한 후보 없음")}`,
+    "",
+    "4. 🧩 성향별 해석",
+    `- 🛡️ 보수적: ${profileInterpretations.conservative}`,
+    `- ⚖️ 중립적: ${profileInterpretations.balanced}`,
+    `- 🚀 공격적: ${profileInterpretations.aggressive}`,
+    "",
+    "5. 📦 내 포트폴리오 요약",
+    `- 보유 종목: ${formatCount(portfolioSummary.holdingCount, "확인 필요")}`,
+    `- 확대 의견: ${formatCount(portfolioSummary.increaseCount, "확인 필요")}`,
+    `- 유지 의견: ${formatCount(portfolioSummary.holdCount, "확인 필요")}`,
+    `- 관찰 의견: ${formatCount(portfolioSummary.watchCount, "확인 필요")}`,
+    `- 축소 의견: ${formatCount(portfolioSummary.reduceCount, "확인 필요")}`,
+    `- 이벤트 주의 종목: ${formatCount(portfolioSummary.eventRiskCount, "점검 필요")}`,
+    "",
+    "6. 🌡️ 시장 레짐 요약",
+    `- 시장 종합: ${marketSummary.overall}`,
+    `- 심리/강도: ${marketSummary.sentimentStrength}`,
+    `- 밸류/펀더멘털: ${marketSummary.valuation}`,
+    `- 구조 리스크: ${marketSummary.structureRisk}`,
+    `- 한줄 해석: ${marketSummary.interpretation}`,
+    "",
+    "7. 📈 종목별 리밸런싱 가이드"
   ];
 
+  if (holdingGuides.length === 0) {
+    lines.push("- 현재 보유 종목 데이터가 없어 종목별 가이드는 점검 필요 상태입니다.");
+  } else {
+    for (const holding of holdingGuides) {
+      lines.push(`[${holding.name}]`);
+      lines.push(`- 최종 의견: ${holding.finalAction}`);
+      lines.push(`- 한줄 판단: ${holding.oneLine}`);
+      lines.push(`- 내재 가치: ${holding.intrinsicValue}`);
+      lines.push(`- 가격/추세: ${holding.priceTrend}`);
+      lines.push(`- 미래 기대치: ${holding.futureExpectation}`);
+      lines.push(`- 포트 적합성: ${holding.portfolioFit}`);
+
+      if (holding.constraint) {
+        lines.push(`- 제약 요인: ${holding.constraint}`);
+      }
+
+      lines.push(`- 가이드: ${holding.guide}`);
+      lines.push("");
+    }
+
+    if (lines.at(-1) === "") {
+      lines.pop();
+    }
+  }
+
   lines.push(
-    SECTION_DIVIDER,
-    "📰 종목 관련 핵심 기사 및 이벤트 요약",
-    ...renderPortfolioNews(input.holdings.length, input.portfolioNewsBriefs, input.articleSummaryBullets)
+    "",
+    "8. ⚠️ 오늘의 포트 리스크 체크",
+    ...riskBullets.map((bullet) => `- ${bullet}`),
+    "",
+    "9. 🌍 참고용 시장 브리핑",
+    `- 거시 요약: ${referenceBrief.macroSummary}`,
+    `- 자금 흐름: ${referenceBrief.flowSummary}`,
+    `- 핵심 이벤트: ${referenceBrief.eventSummary}`,
+    "",
+    "10. 🔎 공개 상세 브리핑",
+    input.publicBriefingUrl ?? "확인 필요",
+    "",
+    "11. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
   );
-  lines.push(
-    SECTION_DIVIDER,
-    "🧠 퀀트 기반 시그널 및 매매 아이디어",
-    ...renderScenarioLines(input.quantScorecards, input.quantScenarios)
-  );
-  lines.push(SECTION_DIVIDER, "⚠️ 리스크 체크리스트", ...renderRiskLines(input.riskCheckpoints));
 
-  if (input.reportDetailLevel !== "compact") {
-    lines.push(
-      SECTION_DIVIDER,
-      "🧭 시장, 매크로, 자금 브리핑",
-      ...renderCombinedBriefingSection(
-        input.marketBullets,
-        input.macroBullets,
-        input.fundFlowBullets
-      )
-    );
-    lines.push(
-      SECTION_DIVIDER,
-      "🗓️ 주요 일정 및 이벤트 브리핑",
-      ...renderCustomBulletSection(input.eventBullets, [
-        "주요 뉴스, 예정 실적, 지정학 리스크, AI·반도체·원자재 이벤트 데이터가 아직 충분하지 않습니다."
-      ])
-    );
-  }
-
-  if (failedMarketItems.length > 0) {
-    lines.push(SECTION_DIVIDER, "🧩 누락 또는 지연 항목", ...renderFailures(failedMarketItems));
-  }
-
-  if (input.publicBriefingUrl) {
-    lines.push(
-      SECTION_DIVIDER,
-      `🔎 상세 브리핑: ${input.publicBriefingUrl}`
-    );
-  }
-
-  lines.push(SECTION_DIVIDER, ...renderDisclaimer());
-
-  return compactTelegramLines(lines).join("\n");
+  return lines.join("\n");
 }
 
-function buildSummaryLine(
-  results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>,
-  marketOkCount: number,
-  marketErrorCount: number,
-  holdingCount: number,
-  customSummary?: string
+function buildConclusion(
+  input: TelegramReportRenderInput,
+  tone: "defensive" | "neutral" | "selective",
+  failedMarketItemCount: number
 ): string {
-  if (customSummary) {
-    return customSummary.startsWith("→") ? customSummary : `→ ${customSummary}`;
+  if (input.summaryLine) {
+    return stripArrow(input.summaryLine);
   }
 
-  const nasdaq = results.find((result) => result.data.itemCode === "NASDAQ");
-  const sp500 = results.find((result) => result.data.itemCode === "SP500");
-  const vix = results.find((result) => result.data.itemCode === "VIX");
-
-  if (
-    (nasdaq?.data.changePercent ?? 0) < 0 &&
-    (sp500?.data.changePercent ?? 0) < 0 &&
-    (vix?.data.changePercent ?? 0) > 5
-  ) {
-    return "→ Risk-Off 재진입 구간으로 보이며, 신규 매수는 보수적으로 접근하시는 편이 좋습니다.";
+  if (tone === "defensive") {
+    return failedMarketItemCount > 0
+      ? "시장 리스크 점검이 우선이며 일부 지표는 지연돼 있어, 오늘은 신규 확대보다 유지와 선별 조정에 무게를 두는 편이 적절합니다."
+      : "시장 해석이 방어적으로 기울어 있어, 오늘은 신규 확대보다 유지와 선별 조정에 무게를 두는 편이 적절합니다.";
   }
 
-  if (
-    (nasdaq?.data.changePercent ?? 0) > 0 &&
-    (sp500?.data.changePercent ?? 0) > 0 &&
-    (vix?.data.changePercent ?? 0) < 0
-  ) {
-    return "→ Risk-On 완화 흐름으로 보이며, 추격 매수보다 선별적 분할 접근이 적절합니다.";
+  if (tone === "selective") {
+    return "개별 종목 기회는 남아 있지만 전체 시장이 공격적 확대를 정당화하진 않아, 선택적 유지와 제한적 확대 검토가 적절합니다.";
   }
 
-  if (marketErrorCount === 0) {
-    return `→ 시장 지표 ${marketOkCount}개와 보유 종목 ${holdingCount}개 기준으로 핵심 대응 포인트를 정리했습니다.`;
-  }
-
-  return `→ 시장 지표 ${marketOkCount}개를 반영했고 ${marketErrorCount}개는 누락됐습니다. 보유 종목 ${holdingCount}개 기준으로 대응 포인트를 정리했습니다.`;
+  return failedMarketItemCount > 0
+    ? "현재 확보된 데이터 기준으로는 종목별 선별 대응이 가능하지만 일부 시장 지표는 추가 확인이 필요합니다."
+    : "현재 확보된 데이터 기준으로는 종목별 선별 대응이 가능하며, 무리한 추격보다 포트 균형 점검이 우선입니다.";
 }
 
-function renderMarketSnapshot(
-  results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>
-): string[] {
-  if (results.length === 0) {
-    return ["• 수집된 시장 지표가 아직 없습니다."];
+function buildRebalancingSummary(input: TelegramReportRenderInput): {
+  hold: string[];
+  increase: string[];
+  reduce: string[];
+  watch: string[];
+} {
+  const snapshot = input.portfolioRebalancing?.rebalancingSummary;
+
+  if (snapshot) {
+    return {
+      increase: snapshot.increaseCandidates ?? [],
+      hold: snapshot.holdCandidates ?? [],
+      reduce: snapshot.reduceCandidates ?? [],
+      watch: snapshot.watchCandidates ?? []
+    };
   }
 
-  const groups = [
-    ["NASDAQ", "SP500", "DOW", "VIX"],
-    ["KOSPI", "KOSDAQ"],
-    ["US10Y", "WTI", "HENRY_HUB_NATURAL_GAS", "COPPER"],
-    ["USD_KRW", "DXY"]
-  ] as const;
+  const buckets = {
+    increase: [] as string[],
+    hold: [] as string[],
+    reduce: [] as string[],
+    watch: [] as string[]
+  };
 
-  const resultMap = new Map(results.map((result) => [result.data.itemCode, result]));
-  const seen = new Set<string>();
-  const lines: string[] = [];
-
-  for (const group of groups) {
-    const groupLines = group
-      .map((itemCode) => resultMap.get(itemCode))
-      .filter((result): result is Extract<MarketDataFetchResult, { status: "ok" }> =>
-        result !== undefined
-      )
-      .map((result) => {
-        seen.add(result.data.itemCode);
-        return renderSnapshotLine(result);
-      });
-
-    if (groupLines.length === 0) {
-      continue;
-    }
-
-    if (lines.length > 0) {
-      lines.push("");
-    }
-
-    lines.push(...groupLines);
+  for (const scorecard of input.quantScorecards ?? []) {
+    const bucket = toActionBucket(undefined, scorecard.action);
+    buckets[bucket].push(scorecard.companyName);
   }
 
-  const remainingLines = results
-    .filter((result) => !seen.has(result.data.itemCode))
-    .sort((left, right) => left.data.itemName.localeCompare(right.data.itemName, "ko"))
-    .map((result) => renderSnapshotLine(result));
-
-  if (remainingLines.length > 0) {
-    if (lines.length > 0) {
-      lines.push("");
-    }
-
-    lines.push(...remainingLines);
-  }
-
-  const fxInsight = buildFxInsight(results);
-
-  if (fxInsight) {
-    lines.push(`  ↳ ${fxInsight}`);
-  }
-
-  return lines;
+  return buckets;
 }
 
-function compactTelegramLines(lines: string[]): string[] {
-  return lines.filter((line, index) => {
-    if (line !== "") {
-      return true;
-    }
+function buildPortfolioSummary(
+  input: TelegramReportRenderInput,
+  rebalancingSummary: {
+    hold: string[];
+    increase: string[];
+    reduce: string[];
+    watch: string[];
+  }
+): {
+  eventRiskCount?: number | null;
+  holdingCount?: number | null;
+  holdCount?: number | null;
+  increaseCount?: number | null;
+  reduceCount?: number | null;
+  watchCount?: number | null;
+} {
+  const snapshot = input.portfolioRebalancing?.portfolioSummary;
 
-    const previous = lines[index - 1];
-    const next = lines[index + 1];
+  if (snapshot) {
+    return {
+      eventRiskCount: snapshot.eventRiskCount ?? null,
+      holdingCount: snapshot.holdingCount ?? null,
+      holdCount: snapshot.holdCount ?? null,
+      increaseCount: snapshot.increaseCount ?? null,
+      reduceCount: snapshot.reduceCount ?? null,
+      watchCount: snapshot.watchCount ?? null
+    };
+  }
 
-    if (!previous || !next) {
-      return false;
-    }
+  return {
+    holdingCount: input.holdings.length,
+    increaseCount: rebalancingSummary.increase.length,
+    holdCount: rebalancingSummary.hold.length,
+    watchCount: rebalancingSummary.watch.length,
+    reduceCount: rebalancingSummary.reduce.length,
+    eventRiskCount: null
+  };
+}
 
-    if (previous === "" || next === "") {
-      return false;
-    }
+function buildMarketSummary(
+  input: TelegramReportRenderInput,
+  selectedProfile: ProfileType,
+  failedMarketItemCount: number
+): {
+  interpretation: string;
+  overall: string;
+  sentimentStrength: string;
+  structureRisk: string;
+  tone: "defensive" | "neutral" | "selective";
+  valuation: string;
+} {
+  const overlay = input.portfolioRebalancing?.marketOverlay;
+  const marketBullets = input.marketBullets ?? [];
+  const riskBullets = input.riskCheckpoints ?? [];
+  const highRiskOverlay =
+    isHighRiskLabel(overlay?.blackSwanLabel) &&
+    isHighRiskLabel(overlay?.marketFundamentalLabel) &&
+    isExtremeValuationLabel(overlay?.buffettByMarketLabel);
+  const tone: "defensive" | "neutral" | "selective" = highRiskOverlay
+    ? "defensive"
+    : failedMarketItemCount > 0 || riskBullets.length >= 2
+      ? "defensive"
+      : rebalancingHasIncrease(input)
+        ? "selective"
+        : "neutral";
 
-    if (previous === SECTION_DIVIDER || next === SECTION_DIVIDER) {
-      return false;
-    }
+  if (overlay) {
+    const regimeScore =
+      selectedProfile === "conservative"
+        ? overlay.finalMarketRegimeScoreConservative
+        : selectedProfile === "aggressive"
+          ? overlay.finalMarketRegimeScoreAggressive
+          : overlay.finalMarketRegimeScoreBalanced;
+    const regimeLabel = formatMarketRegimeLabel(regimeScore);
+    const overall = overlay.marketCompositeLabel
+      ? `${regimeLabel} 구간이며, 시장 종합은 ${overlay.marketCompositeLabel}로 해석됩니다.`
+      : `${regimeLabel} 구간으로 해석하는 편이 적절합니다.`;
+    const sentimentStrength =
+      overlay.sentimentLabel || overlay.marketStrengthLabel
+        ? `${overlay.sentimentLabel ?? "심리 점검 필요"} / ${overlay.marketStrengthLabel ?? "강도 점검 필요"}`
+        : "심리와 강도 세부 데이터는 점검 필요합니다.";
+    const valuation =
+      overlay.marketFundamentalLabel || overlay.buffettByMarketLabel
+        ? `${overlay.marketFundamentalLabel ?? "펀더멘털 점검 필요"} / ${overlay.buffettByMarketLabel ?? "밸류 점검 필요"}`
+        : "밸류와 펀더멘털 세부 데이터는 보강 중입니다.";
+    const structureRisk = overlay.blackSwanLabel
+      ? overlay.blackSwanLabel
+      : "구조 리스크 점검 필요";
+    const interpretation = highRiskOverlay
+      ? "표면 모멘텀은 유지되더라도 내부 밸류 부담과 구조적 취약성 때문에 방어적으로 읽는 편이 적절합니다."
+      : marketBullets[0] ?? stripArrow(input.summaryLine ?? "현재 확보된 시장 데이터 기준으로 핵심 변화만 우선 정리했습니다.");
 
-    return true;
+    return {
+      overall,
+      sentimentStrength,
+      valuation,
+      structureRisk,
+      interpretation,
+      tone
+    };
+  }
+
+  return {
+    overall:
+      marketBullets[0] ??
+      (tone === "defensive"
+        ? "현재 확보된 시장 데이터 기준으로는 방어적 해석이 우세합니다."
+        : "현재 확보된 시장 데이터 기준으로는 중립적 해석이 적절합니다."),
+    sentimentStrength:
+      buildSentimentStrengthFallback(input.marketResults) ??
+      "심리와 강도 세부 데이터는 추가 확인이 필요한 구간입니다.",
+    valuation: "밸류와 펀더멘털 세부 데이터는 보강 중입니다.",
+    structureRisk:
+      tone === "defensive"
+        ? "현재 확보된 리스크 신호 기준으로는 구조 리스크 점검이 우선입니다."
+        : "구조 리스크 세부 데이터는 추가 확인이 필요합니다.",
+    interpretation:
+      tone === "defensive"
+        ? "지수 방향성보다 내부 리스크 관리와 포트 균형 점검을 우선하는 해석이 적절합니다."
+        : "표면 흐름은 유지되지만 확신을 키우기엔 데이터 보강이 더 필요한 구간입니다.",
+    tone
+  };
+}
+
+function buildProfileInterpretations(
+  input: TelegramReportRenderInput,
+  tone: "defensive" | "neutral" | "selective"
+): Record<ProfileType, string> {
+  const overlay = input.portfolioRebalancing?.marketOverlay;
+  const highRiskOverlay =
+    isHighRiskLabel(overlay?.blackSwanLabel) &&
+    isHighRiskLabel(overlay?.marketFundamentalLabel) &&
+    isExtremeValuationLabel(overlay?.buffettByMarketLabel);
+
+  if (highRiskOverlay || tone === "defensive") {
+    return {
+      conservative:
+        "시장 리스크가 높은 구간으로 읽혀 신규 확대보다 비중 관리와 방어적 해석을 우선하는 편이 적절합니다.",
+      balanced:
+        "핵심 보유 종목은 유지 가능하지만 확대는 선별적으로만 보는 편이 적절합니다.",
+      aggressive:
+        "추세가 살아 있는 종목은 볼 수 있어도 시장 전체가 추격 확대를 정당화하는 환경은 아닙니다."
+    };
+  }
+
+  if (tone === "selective") {
+    return {
+      conservative:
+        "추가 확대보다 기존 비중과 리스크 노출을 먼저 점검하는 해석이 더 안전합니다.",
+      balanced:
+        "핵심 종목 중심으로만 제한적 확대 검토가 가능하고, 나머지는 유지 관점이 적절합니다.",
+      aggressive:
+        "상대적으로 강한 종목은 넓게 볼 수 있지만 제약 요인이 있는 종목은 그대로 존중해야 합니다."
+    };
+  }
+
+  return {
+    conservative:
+      "현재는 공격적 대응보다 기존 포지션 안정성 점검에 우선순위를 두는 해석이 적절합니다.",
+    balanced:
+      "유지 중심 대응이 기본이며, 확신이 있는 종목만 선별적으로 보는 편이 좋습니다.",
+    aggressive:
+      "관심 종목 폭은 넓게 가져갈 수 있지만 제약 요인과 이벤트 리스크는 그대로 반영해야 합니다."
+  };
+}
+
+function buildHoldingGuides(
+  input: TelegramReportRenderInput,
+  tone: "defensive" | "neutral" | "selective"
+): Array<{
+  constraint?: string;
+  finalAction: string;
+  futureExpectation: string;
+  guide: string;
+  intrinsicValue: string;
+  name: string;
+  oneLine: string;
+  portfolioFit: string;
+  priceTrend: string;
+}> {
+  const holdingsByName = new Map(
+    input.portfolioRebalancing?.holdings?.map((holding) => [holding.name, holding]) ?? []
+  );
+  const scorecardsByName = new Map(
+    (input.quantScorecards ?? []).map((scorecard) => [scorecard.companyName, scorecard])
+  );
+
+  return input.holdings.map((holding) => {
+    const snapshot = holdingsByName.get(holding.companyName);
+    const scorecard = scorecardsByName.get(holding.companyName);
+    const finalAction =
+      snapshot?.finalAction ?? translateQuantAction(scorecard?.action) ?? "관찰 필요";
+    const constraint = buildConstraint(snapshot);
+    const intrinsicValue = formatStockViewLabel(snapshot?.intrinsicValueScore);
+    const priceTrend = formatStockViewLabel(snapshot?.priceTrendScore);
+    const futureExpectation = formatStockViewLabel(snapshot?.futureExpectationScore);
+    const portfolioFit = formatPortfolioFitLabel(snapshot?.portfolioFitScore);
+
+    return {
+      name: holding.companyName,
+      finalAction,
+      oneLine:
+        snapshot?.oneLineJudgment ??
+        scorecard?.actionSummary ??
+        holding.trendSummary ??
+        "현재 확보된 데이터 기준으로는 추가 확인이 필요한 구간입니다.",
+      intrinsicValue,
+      priceTrend,
+      futureExpectation,
+      portfolioFit,
+      ...(constraint ? { constraint } : {}),
+      guide:
+        snapshot?.guide ??
+        buildGuide(finalAction, tone, holding, scorecard)
+    };
   });
 }
 
-function renderHoldings(
-  holdings: Array<{
-    companyName: string;
-    currentPrice?: number;
-    exchange: string;
-    previousClose?: number;
-    symbol: string;
-    trendSummary?: string;
-    changePercent?: number;
-  }>,
-  customBullets?: string[]
+function buildRiskBullets(
+  input: TelegramReportRenderInput,
+  failedMarketItems: Array<Extract<MarketDataFetchResult, { status: "error" }>>
 ): string[] {
-  if (customBullets && customBullets.length > 0) {
-    return customBullets.map((bullet) => `• ${bullet}`);
-  }
-
-  if (holdings.length === 0) {
-    return ["• (보유 종목 없음)"];
-  }
-
-  const lines: string[] = [];
-
-  for (const holding of holdings) {
-    const transition =
-      holding.currentPrice === undefined
-        ? undefined
-        : formatValueTransition(holding.previousClose, holding.currentPrice);
-    const changeText = formatChangeBadge(holding.changePercent);
-    const detailText = transition
-      ? `: ${transition}${changeText ? `  ${changeText}` : ""}`
-      : ": 시세 스냅샷 연결 전입니다";
-
-    lines.push(`• ${holding.companyName}${detailText}`);
-
-    if (holding.trendSummary) {
-      lines.push(`  ${holding.trendSummary}`);
-    }
-  }
-
-  return lines;
-}
-
-function renderFailures(
-  results: Array<Extract<MarketDataFetchResult, { status: "error" }>>
-): string[] {
-  return results.map((result) => `• ${result.sourceKey}: ${result.message}`);
-}
-
-function renderPortfolioNews(
-  holdingCount: number,
-  briefs?: HoldingNewsBrief[],
-  customBullets?: string[]
-): string[] {
-  if (customBullets && customBullets.length > 0) {
-    return customBullets.map((bullet) => `• ${bullet}`);
-  }
-
-  if (!briefs || briefs.length === 0) {
-    return holdingCount === 0
-      ? ["• (보유 종목 입력 시 자동 생성)"]
-      : ["• 관련 기사 및 이벤트 요약이 아직 없습니다."];
-  }
-
-  const lines: string[] = [];
-
-  for (const brief of briefs) {
-    if (brief.events.length === 0) {
-      lines.push(
-        `• ${brief.holding.companyName}: ${brief.errorMessage ?? "핵심 이벤트를 찾지 못했습니다."}`
-      );
-      continue;
-    }
-
-    for (const event of brief.events.slice(0, 2)) {
-      const sentimentBadge = formatSentimentBadge(event.sentiment);
-      const confidenceBadge = formatConfidenceBadge(event.confidence);
-
-      lines.push(
-        `• ${brief.holding.companyName}: ${sentimentBadge} ${event.headline} ${confidenceBadge}`
-      );
-      lines.push(`  ${event.summary}`);
-    }
-  }
-
-  return lines;
-}
-
-function renderScenarioLines(
-  quantScorecards?: QuantScorecard[],
-  quantScenarios?: string[]
-): string[] {
-  if (
-    (!quantScorecards || quantScorecards.length === 0) &&
-    (!quantScenarios || quantScenarios.length === 0)
-  ) {
-    return ["• 규칙 기반 점수 산출 전입니다."];
-  }
-
-  const lines: string[] = [];
-
-  if (quantScorecards && quantScorecards.length > 0) {
-    lines.push("• 오늘의 리밸런싱 제안");
-    lines.push(...renderRebalancingBuckets(quantScorecards));
-    lines.push("");
-
-    for (const scorecard of quantScorecards) {
-      lines.push(`• ${scorecard.companyName}`);
-      lines.push(
-        `  Macro: ${formatSignedScore(scorecard.macroScore)} / Trend: ${formatSignedScore(scorecard.trendScore)} / Event: ${formatSignedScore(scorecard.eventScore)} / Flow: ${formatSignedScore(scorecard.flowScore)}`
-      );
-      lines.push(
-        `  → Total: ${formatSignedScore(scorecard.totalScore)} → ${translateQuantAction(scorecard.action)}`
-      );
-      lines.push(`  → ${scorecard.actionSummary}`);
-    }
-  }
-
-  if (quantScenarios && quantScenarios.length > 0) {
-    if (lines.length > 0) {
-      lines.push("");
-      lines.push("• 전략");
-    }
-
-    for (const scenario of quantScenarios) {
-      lines.push(`  • ${scenario}`);
-    }
-  }
-
-  return lines;
-}
-
-function renderRebalancingBuckets(scorecards: QuantScorecard[]): string[] {
-  const accumulate = scorecards
-    .filter((scorecard) => scorecard.action === "ACCUMULATE")
-    .map((scorecard) => scorecard.companyName);
-  const hold = scorecards
-    .filter((scorecard) => scorecard.action === "HOLD")
-    .map((scorecard) => scorecard.companyName);
-  const reduce = scorecards
-    .filter((scorecard) => scorecard.action === "REDUCE")
-    .map((scorecard) => scorecard.companyName);
-  const defensive = scorecards
-    .filter((scorecard) => scorecard.action === "DEFENSIVE")
-    .map((scorecard) => scorecard.companyName);
-
-  return [
-    `  • 비중 확대 검토: ${formatCompanyList(accumulate, "현재 뚜렷한 후보 없음")}`,
-    `  • 유지 우세: ${formatCompanyList(hold, "선별 관찰 우선")}`,
-    `  • 비중 조절 필요: ${formatCompanyList(reduce, "비중 점검 우선")}`,
-    `  • 우선 관찰 대상: ${formatCompanyList(defensive, "현재 뚜렷한 후보 없음")}`
+  const riskBullets = [
+    ...(input.portfolioRebalancing?.riskBullets ?? []),
+    ...(input.riskCheckpoints ?? [])
   ];
-}
+  const uniqueBullets = [...new Set(riskBullets)];
 
-function renderRiskLines(riskCheckpoints?: string[]): string[] {
-  if (!riskCheckpoints || riskCheckpoints.length === 0) {
-    return ["• 현재 추가 리스크 체크리스트는 없습니다."];
+  if (failedMarketItems.length > 0) {
+    uniqueBullets.push("일부 시장 지표는 지연 또는 누락 상태라 추가 확인이 필요합니다.");
   }
 
-  return riskCheckpoints.map((checkpoint) => `• ${checkpoint}`);
+  if (uniqueBullets.length > 0) {
+    return uniqueBullets.slice(0, 3);
+  }
+
+  return ["현재 확보된 데이터 기준으로는 포트 전체 리스크를 한 번 더 점검하는 편이 적절합니다."];
 }
 
-function renderIndicatorSummarySection(
-  results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>,
-  supplementalBullets?: string[]
-): string[] {
-  const lines: string[] = [];
-  const rankedMovers = [...results]
-    .filter(
-      (result) =>
-        result.data.changePercent !== undefined &&
-        result.data.itemCode !== "USD_KRW" &&
-        result.data.itemCode !== "DXY"
+function buildReferenceBrief(input: TelegramReportRenderInput): {
+  eventSummary: string;
+  flowSummary: string;
+  macroSummary: string;
+} {
+  const reference = input.portfolioRebalancing?.referenceMarketBrief;
+
+  return {
+    macroSummary:
+      reference?.macroSummary ??
+      input.macroBullets?.[0] ??
+      "현재 확보된 거시 데이터 기준으로 핵심 변화만 우선 정리했습니다.",
+    flowSummary:
+      reference?.flowSummary ??
+      input.fundFlowBullets?.[0] ??
+      input.marketBullets?.[0] ??
+      "자금 흐름과 시장 리더십은 추가 확인이 필요한 구간입니다.",
+    eventSummary:
+      reference?.eventSummary ??
+      input.eventBullets?.[0] ??
+      input.articleSummaryBullets?.[0] ??
+      "주요 이벤트 데이터는 보강 중입니다."
+  };
+}
+
+function buildGuide(
+  finalAction: string,
+  tone: "defensive" | "neutral" | "selective",
+  holding: TelegramReportRenderInput["holdings"][number],
+  scorecard?: QuantScorecard
+): string {
+  const marketSuffix =
+    tone === "defensive"
+      ? " 시장이 방어적으로 읽히는 만큼 무리한 추격은 피하는 편이 좋습니다."
+      : tone === "selective"
+        ? " 추가 대응은 선별적으로만 보는 편이 적절합니다."
+        : "";
+  const snapshotSuffix =
+    holding.currentPrice !== undefined
+      ? ` 시세 스냅샷은 ${formatValueTransition(holding.previousClose, holding.currentPrice)}${formatChangeSuffix(holding.changePercent)} 기준입니다.`
+      : "";
+
+  switch (finalAction) {
+    case "확대 검토":
+    case "적극 확대":
+      return `분할 접근 여부를 검토하되 기존 비중과 타 종목 제약을 함께 점검하는 편이 적절합니다.${marketSuffix}${snapshotSuffix}`.trim();
+    case "유지 우세":
+      return `기존 포지션 유지에 무게를 두고 추가 확대는 신호 확인 뒤 판단하는 편이 좋습니다.${marketSuffix}${snapshotSuffix}`.trim();
+    case "일부 축소":
+    case "축소 우선":
+    case "교체 검토":
+      return `포트 변동성 완화와 비중 정상화에 우선순위를 두는 대응이 적절합니다.${marketSuffix}${snapshotSuffix}`.trim();
+    default:
+      return `${scorecard?.actionSummary ?? "방향 확인 전까지는 신호를 더 점검하는 편이 적절합니다."}${snapshotSuffix}`;
+  }
+}
+
+function buildConstraint(snapshot?: HoldingRebalancingSnapshot): string | undefined {
+  const hardRuleReason = snapshot?.hardRules?.find((item) => item.reason)?.reason;
+
+  if (hardRuleReason) {
+    return hardRuleReason;
+  }
+
+  if (snapshot?.constraints && snapshot.constraints.length > 0) {
+    return snapshot.constraints[0];
+  }
+
+  return undefined;
+}
+
+function translateQuantAction(action?: QuantAction): string | undefined {
+  switch (action) {
+    case "ACCUMULATE":
+      return "확대 검토";
+    case "DEFENSIVE":
+      return "관찰 필요";
+    case "HOLD":
+      return "유지 우세";
+    case "REDUCE":
+      return "일부 축소";
+    default:
+      return undefined;
+  }
+}
+
+function toActionBucket(finalAction?: string, quantAction?: QuantAction): ActionBucket {
+  const normalized = finalAction?.trim();
+
+  if (normalized) {
+    if (normalized.includes("확대")) {
+      return "increase";
+    }
+
+    if (normalized.includes("축소") || normalized.includes("교체")) {
+      return "reduce";
+    }
+
+    if (normalized.includes("관찰")) {
+      return "watch";
+    }
+
+    if (normalized.includes("유지")) {
+      return "hold";
+    }
+  }
+
+  switch (quantAction) {
+    case "ACCUMULATE":
+      return "increase";
+    case "REDUCE":
+      return "reduce";
+    case "DEFENSIVE":
+      return "watch";
+    default:
+      return "hold";
+  }
+}
+
+function rebalancingHasIncrease(input: TelegramReportRenderInput): boolean {
+  const summary = input.portfolioRebalancing?.rebalancingSummary;
+
+  if (summary?.increaseCandidates && summary.increaseCandidates.length > 0) {
+    return true;
+  }
+
+  return (input.quantScorecards ?? []).some((scorecard) => scorecard.action === "ACCUMULATE");
+}
+
+function isHighRiskLabel(value?: string): boolean {
+  return (
+    value === "과열" ||
+    value === "구조 리스크 매우 높음" ||
+    value === "구조 리스크 높음" ||
+    value === "매우 위험" ||
+    value === "위험"
+  );
+}
+
+function isExtremeValuationLabel(value?: string): boolean {
+  return value === "매우 고평가" || value === "극단적 고평가";
+}
+
+function buildSentimentStrengthFallback(
+  results: MarketDataFetchResult[]
+): string | undefined {
+  const marketMap = new Map(
+    results.flatMap((result) =>
+      result.status === "ok" ? [[result.data.itemCode, result.data]] : []
     )
-    .sort(
-      (left, right) =>
-        Math.abs((right.data.changePercent ?? 0)) - Math.abs((left.data.changePercent ?? 0))
-    )
-    .slice(0, 2);
+  );
+  const nasdaq = marketMap.get("NASDAQ")?.changePercent;
+  const sp500 = marketMap.get("SP500")?.changePercent;
+  const vix = marketMap.get("VIX")?.changePercent;
 
-  for (const mover of rankedMovers) {
-    const changePercent = mover.data.changePercent ?? 0;
-    const direction = changePercent > 0 ? "상승" : changePercent < 0 ? "하락" : "보합";
-    lines.push(
-      `• ${mover.data.itemName}${selectSubjectParticle(mover.data.itemName)} ${Math.abs(changePercent).toFixed(2)}% ${direction}하며 상대적으로 움직임이 컸습니다.`
-    );
+  if (nasdaq === undefined && sp500 === undefined && vix === undefined) {
+    return undefined;
   }
 
-  if (supplementalBullets && supplementalBullets.length > 0) {
-    lines.push(...supplementalBullets.map((line) => `• ${line}`));
+  if ((nasdaq ?? 0) <= -1.5 && (sp500 ?? 0) <= -1 && (vix ?? 0) >= 5) {
+    return "위험 선호는 약해졌고 단기 강도도 보수적으로 해석하는 편이 적절합니다.";
   }
 
-  if (lines.length === 0) {
-    return ["• 아직 강조할 만한 지표 변화 요약이 없습니다."];
+  if ((nasdaq ?? 0) >= 1 && (sp500 ?? 0) >= 0.8 && (vix ?? 0) <= -5) {
+    return "심리와 강도는 완전히 꺾이지 않았지만 추격보다 선별 대응이 더 자연스럽습니다.";
   }
 
-  return [...new Set(lines)];
+  return "표면 심리는 버티지만 강도 해석은 중립에 가깝습니다.";
 }
 
-function renderCombinedBriefingSection(
-  marketBullets?: string[],
-  macroBullets?: string[],
-  fundFlowBullets?: string[]
-): string[] {
-  const lines = [
-    ...prefixBullets("시장", marketBullets),
-    ...prefixBullets("매크로", macroBullets),
-    ...prefixBullets("자금", fundFlowBullets)
-  ];
-
-  if (lines.length === 0) {
-    return ["• 시장, 매크로, 자금 브리핑 데이터가 아직 충분하지 않습니다."];
-  }
-
-  return lines;
+function formatCompanyList(values: string[], fallback: string): string {
+  return values.length > 0 ? values.join(", ") : fallback;
 }
 
-function selectSubjectParticle(text: string): "가" | "이" {
-  const lastCharacter = text.trim().at(-1);
-
-  if (!lastCharacter) {
-    return "이";
-  }
-
-  const codePoint = lastCharacter.codePointAt(0);
-
-  if (!codePoint || codePoint < 0xac00 || codePoint > 0xd7a3) {
-    return "이";
-  }
-
-  return (codePoint - 0xac00) % 28 === 0 ? "가" : "이";
+function formatCount(value?: number | null, fallback = "확인 필요"): string {
+  return value === null || value === undefined ? fallback : `${value}개`;
 }
 
-function prefixBullets(label: string, bullets?: string[]): string[] {
-  if (!bullets || bullets.length === 0) {
-    return [];
-  }
-
-  return bullets.map((bullet) => `• [${label}] ${bullet}`);
-}
-
-function renderCustomBulletSection(
-  bullets: string[] | undefined,
-  fallbackLines: string[]
-): string[] {
-  if (!bullets || bullets.length === 0) {
-    return fallbackLines.map((line) => `• ${line}`);
-  }
-
-  return bullets.map((bullet) => `• ${bullet}`);
-}
-
-function renderDisclaimer(): string[] {
-  return ["❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."];
+function stripArrow(value: string): string {
+  return value.replace(/^→\s*/, "").trim();
 }
 
 function formatValue(value: number): string {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("ko-KR", {
     maximumFractionDigits: 2
   }).format(value);
 }
@@ -510,115 +628,18 @@ function formatValueTransition(previousValue: number | undefined, value: number)
   return `${formatValue(previousValue)} → ${formatValue(value)}`;
 }
 
-function formatChangeBadge(value?: number): string {
+function formatChangeSuffix(value?: number): string {
   if (value === undefined) {
     return "";
   }
 
   if (value > 0) {
-    return `🔴▲ ${value.toFixed(2)}%`;
+    return `, 전일 대비 +${value.toFixed(2)}%`;
   }
 
   if (value < 0) {
-    return `🔵▼ ${Math.abs(value).toFixed(2)}%`;
+    return `, 전일 대비 ${value.toFixed(2)}%`;
   }
 
-  return `⚪■ 0.00%`;
-}
-
-function formatSignedScore(score: number): string {
-  return score > 0 ? `+${score.toFixed(2)}` : score.toFixed(2);
-}
-
-function translateQuantAction(action: QuantAction): string {
-  switch (action) {
-    case "ACCUMULATE":
-      return "비중 확대 검토";
-    case "DEFENSIVE":
-      return "우선 관찰 대상";
-    case "HOLD":
-      return "유지 우세";
-    case "REDUCE":
-      return "비중 조절 필요";
-  }
-}
-
-function formatCompanyList(values: string[], fallback: string): string {
-  return values.length > 0 ? values.join(", ") : fallback;
-}
-
-function formatSentimentBadge(sentiment: HoldingNewsBrief["events"][number]["sentiment"]): string {
-  if (sentiment === "positive") {
-    return "🔴호재";
-  }
-
-  if (sentiment === "negative") {
-    return "🔵악재";
-  }
-
-  return "⚪중립";
-}
-
-function formatConfidenceBadge(
-  confidence: HoldingNewsBrief["events"][number]["confidence"]
-): string {
-  if (confidence === "high") {
-    return "신뢰도 높음";
-  }
-
-  if (confidence === "medium") {
-    return "신뢰도 보통";
-  }
-
-  return "신뢰도 낮음";
-}
-
-function buildFxInsight(
-  results: Array<Extract<MarketDataFetchResult, { status: "ok" }>>
-): string | undefined {
-  const usdKrw = results.find((result) => result.data.itemCode === "USD_KRW");
-  const dxy = results.find((result) => result.data.itemCode === "DXY");
-
-  if (!usdKrw || usdKrw.data.changePercent === undefined) {
-    return undefined;
-  }
-
-  if (!dxy || dxy.data.changePercent === undefined) {
-    if (usdKrw.data.changePercent > 0) {
-      return "원화 약세가 보이지만 달러인덱스가 없어 상대 약세까지는 확정하기 어렵습니다.";
-    }
-
-    if (usdKrw.data.changePercent < 0) {
-      return "원화 강세가 보이지만 달러인덱스가 없어 달러 전반 약세와의 구분은 제한적입니다.";
-    }
-
-    return undefined;
-  }
-
-  if (usdKrw.data.changePercent > 0 && dxy.data.changePercent > 0) {
-    return "달러인덱스와 USD/KRW가 함께 올라 전반적인 달러 강세 영향이 같이 반영된 흐름으로 보입니다.";
-  }
-
-  if (usdKrw.data.changePercent > 0 && dxy.data.changePercent <= 0) {
-    return "달러인덱스보다 USD/KRW 상승폭이 더 커 원화 약세 압력이 상대적으로 더 크게 작동한 흐름입니다.";
-  }
-
-  if (usdKrw.data.changePercent < 0 && dxy.data.changePercent > 0) {
-    return "달러는 강한데 USD/KRW는 내려 원화가 상대적으로 더 견조했던 흐름으로 보입니다.";
-  }
-
-  if (usdKrw.data.changePercent < 0 && dxy.data.changePercent <= 0) {
-    return "달러 약세와 함께 USD/KRW도 내려 원화 강세가 같이 나타난 흐름으로 보입니다.";
-  }
-
-  return "USD/KRW 변동이 제한적이라 원화의 상대 강도 판단은 중립에 가깝습니다.";
-}
-
-function renderSnapshotLine(
-  result: Extract<MarketDataFetchResult, { status: "ok" }>
-): string {
-  const changeText = formatChangeBadge(result.data.changePercent);
-  const valueText = formatValueTransition(result.data.previousValue, result.data.value);
-
-  return `• ${result.data.itemName}: ${valueText}${changeText ? `  ${changeText}` : ""}`;
+  return ", 전일 대비 보합";
 }

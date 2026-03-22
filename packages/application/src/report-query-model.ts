@@ -29,6 +29,7 @@ export function toReportHistoryItem(
   reportRun: ReportRunReadModel
 ): ReportHistoryItem {
   const renderedText = reportRun.reportText ?? "";
+  const summaryLine = extractSummaryLine(renderedText);
   const historyItem: ReportHistoryItem = {
     id: reportRun.id,
     promptVersion: reportRun.promptVersion ?? null,
@@ -36,7 +37,7 @@ export function toReportHistoryItem(
     scheduleType: reportRun.scheduleType,
     skillVersion: reportRun.skillVersion ?? null,
     status: reportRun.status,
-    summaryLine: renderedText.split("\n")[1] ?? ""
+    summaryLine
   };
   const completedAt = serializeDateTime(reportRun.completedAt);
 
@@ -45,6 +46,24 @@ export function toReportHistoryItem(
   }
 
   return historyItem;
+}
+
+function extractSummaryLine(renderedText: string): string {
+  const lines = renderedText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const titledIndex = lines.findIndex((line) => line === "2. 📌 오늘 한 줄 결론");
+
+  if (titledIndex >= 0) {
+    const nextLine = lines[titledIndex + 1];
+
+    if (nextLine) {
+      return nextLine.replace(/^-+\s*/, "");
+    }
+  }
+
+  return lines[1] ?? "";
 }
 
 export function toLatestReportView(

@@ -12,7 +12,7 @@ describe("report query model", () => {
       id: "run-1",
       promptVersion: "daily-report/v1",
       reportText:
-        "오늘의 브리핑 (2026-03-21)\n한 줄 요약: 시장 지표 1개와 보유 종목 1개 기준으로 정리했습니다.",
+        "1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-21)\n\n2. 📌 오늘 한 줄 결론\n- 시장 해석이 방어적으로 기울어 있어, 오늘은 신규 확대보다 유지와 선별 조정에 무게를 두는 편이 적절합니다.",
       runDate: "2026-03-21",
       scheduleType: "daily-9am",
       skillVersion: "daily-report-orchestrator/v1",
@@ -27,7 +27,7 @@ describe("report query model", () => {
       scheduleType: "daily-9am",
       skillVersion: "daily-report-orchestrator/v1",
       status: "completed",
-      summaryLine: "한 줄 요약: 시장 지표 1개와 보유 종목 1개 기준으로 정리했습니다."
+      summaryLine: "시장 해석이 방어적으로 기울어 있어, 오늘은 신규 확대보다 유지와 선별 조정에 무게를 두는 편이 적절합니다."
     });
   });
 

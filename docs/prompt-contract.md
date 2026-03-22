@@ -32,6 +32,12 @@
 - `strategyBullets`
 - `riskBullets`
 
+입력 payload 확장:
+
+- `portfolioRebalancing` optional object
+- Telegram 개인화 경로에서 리밸런싱 summary, holding-level snapshot, market overlay, portfolio summary, reference market brief를 담는 source-of-truth contract
+- 값이 없으면 renderer는 자연스러운 fallback을 사용하지만, 값이 있으면 hard rule > final action > market regime > stock-view 순으로 우선 해석한다.
+
 ## 3. Telegram Personalized Contract
 
 대상:
@@ -45,6 +51,7 @@
 - 설명 우선순위는 `제약/하드룰 -> 최종 action 또는 actionSummary -> 점수/시장 레짐 -> 기타 사실`이다.
 - 과비중, 집중도, 상관관계, 이벤트 임박, 방어적 시장 레짐이 있으면 먼저 제약을 설명한다.
 - `quantScorecards.action`, `actionSummary`, `quantScenarios`, `riskCheckpoints`를 upstream 최종 판단으로 존중한다.
+- `portfolioRebalancing`가 있으면 `내재 가치 / 가격·추세 / 미래 기대치 / 포트 적합성 / 시장 레짐 오버레이 / 하드룰`을 먼저 반영한다.
 - hard rule이나 최종 action 방향을 뒤집지 않는다.
 - 시장 과열, 블랙스완, 극단적 고평가가 함께 보이면 보수적·중립적 확대 톤을 자동으로 약화한다.
 
@@ -55,6 +62,17 @@ structured output 매핑:
 - `holdingTrendBullets`: 종목별 한줄 판단/가이드
 - `articleSummaryBullets`: 종목 관련 기사·이벤트 요약
 - `riskBullets`: 오늘의 포트 리스크 체크
+
+최종 Telegram renderer 구조:
+
+- `오늘 한 줄 결론`
+- `오늘의 리밸런싱 제안`
+- `성향별 해석`
+- `내 포트폴리오 요약`
+- `시장 레짐 요약`
+- `종목별 리밸런싱 가이드`
+- `오늘의 포트 리스크 체크`
+- `참고용 시장 브리핑`
 
 ## 4. Public Web Contract
 
@@ -70,6 +88,7 @@ structured output 매핑:
 - `비중 확대`, `축소 우선`, `교체 검토`, `매수 기회`, `지금 사야 한다` 같은 개인 행동 언어를 쓰지 않는다.
 - 표면 모멘텀이 유지돼도 밸류 부담과 구조 리스크가 높으면 균형 잡힌 경고 톤을 유지한다.
 - 공개 웹에서는 개인 섹션을 쓰지 않으므로 `holdingTrendBullets`, `articleSummaryBullets`, `strategyBullets`는 빈 배열로 강제한다.
+- 공개 웹 최종 renderer는 `오늘의 시장 브리핑 -> 시장 종합 해석 -> 글로벌/국내 시장 스냅샷 -> 리스크 포인트` 구조를 사용하고, 개인 포트 용어는 노출하지 않는다.
 
 structured output 매핑:
 

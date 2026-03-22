@@ -6,8 +6,8 @@ describe("buildMockReportReply", () => {
   it("returns a telegram preview template", () => {
     const preview = buildMockReportReply();
 
-    expect(preview).toContain("오늘의 브리핑 (");
-    expect(preview).toContain("📰 종목 관련 핵심 기사 및 이벤트 요약");
-    expect(preview).toContain("📈 보유 종목별 최근 동향");
+    expect(preview).toContain("오늘의 포트폴리오 리밸런싱 브리핑");
+    expect(preview).toContain("🎯 오늘의 리밸런싱 제안");
+    expect(preview).toContain("📈 종목별 리밸런싱 가이드");
   });
 });

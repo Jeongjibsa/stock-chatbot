@@ -140,6 +140,8 @@
 | CHG-0113 | 2026-03-22 | FIX | 공개 웹 feed/detail이 Next.js 정적 최적화로 build 시점 empty state를 계속 서빙하던 문제를 수정해 DB 조회를 `force-dynamic + noStore`로 전환하고, `report_date`를 문자열로 정규화해 실시간 공개 브리핑 적재분을 바로 노출하도록 보강 | Change Log, Context, README, Code, Tests | yes |
 | CHG-0114 | 2026-03-22 | UPDATE | 일 브리핑 prompt 계약을 `telegram_personalized`와 `public_web` audience로 분리하고, 개인화 리밸런싱 해석 우선순위와 공개 웹의 비개인화 guardrail을 코드·문서 기준선으로 고정 | Change Log, Context, LLM Plan, Docs, Code, Tests | yes |
 | CHG-0115 | 2026-03-22 | UPDATE | Telegram `/report` fast path에 보유 종목 일별 종가 스냅샷을 연결하고, 퀀트 섹션 시작부에 `비중 확대 검토 / 유지 우세 / 비중 조절 필요 / 우선 관찰 대상` 리밸런싱 요약을 추가했으며, E2E `report_with_holdings`가 스냅샷 placeholder 부재와 리밸런싱 문구를 함께 검증하도록 강화 | PRD, Change Log, Context, Telegram E2E Docs, Code, Tests | yes |
+| CHG-0116 | 2026-03-22 | UPDATE | Telegram `/report`와 공개 웹 브리핑 템플릿을 todo_260322 기준의 `개인화 리밸런싱 브리핑 / 공개 시장 브리핑` 구조로 재편하고, renderer·public builder·prompt contract·query model·mock preview를 새 섹션 계약에 맞춰 동기화 | PRD, Change Log, Context, Docs, Code, Tests | yes |
+| CHG-0117 | 2026-03-22 | UPDATE | Telegram DM에 홈 reply keyboard와 설정 inline keyboard를 추가해 `/start`, `/help`, `/register`, `/report_settings` 이후 버튼 기반 탐색을 지원하고, 기존 slash command semantics는 그대로 유지 | PRD, Change Log, Context, Docs, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

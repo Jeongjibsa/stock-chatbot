@@ -158,6 +158,20 @@ export {
   type TelegramReportRenderInput
 } from "./telegram-report-renderer.js";
 export {
+  formatMarketRegimeLabel,
+  formatPortfolioFitLabel,
+  formatStockViewLabel,
+  formatStructureRiskLabel,
+  type HoldingHardRuleSnapshot,
+  type HoldingRebalancingSnapshot,
+  type MarketOverlaySnapshot,
+  type PersonalizedPortfolioRebalancingData,
+  type PortfolioSummarySnapshot,
+  type ProfileType,
+  type RebalancingSummarySnapshot,
+  type ReferenceMarketBriefSnapshot
+} from "./rebalancing-contract.js";
+export {
   RankedTickerSearchService,
   formatTickerDisplayName,
   normalizeTickerNameEn,

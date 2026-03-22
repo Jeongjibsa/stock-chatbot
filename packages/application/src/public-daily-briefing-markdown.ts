@@ -4,67 +4,55 @@ export function renderPublicDailyBriefingMarkdown(
   briefing: PublicDailyBriefing
 ): string {
   const sections = [
-    `# ${briefing.title}`,
+    `1. # 🗞️ 오늘의 시장 브리핑 (${briefing.runDate})`,
     "",
-    "## 한 줄 요약",
-    briefing.summaryLine,
+    "2. 오늘 한 줄 요약",
+    `- ${briefing.summaryLine}`,
     "",
-    "## 거시 시장 스냅샷",
-    ...renderMarketSnapshot(briefing),
+    "3. 시장 종합 해석",
+    `- 시장 종합: ${briefing.marketSummary.overall}`,
+    `- 심리/강도: ${briefing.marketSummary.sentimentStrength}`,
+    `- 밸류/펀더멘털: ${briefing.marketSummary.valuationFundamentals}`,
+    `- 구조 리스크: ${briefing.marketSummary.structureRisk}`,
+    `- 한줄 해석: ${briefing.marketSummary.interpretation}`,
     "",
-    "## 주요 지표 변동 요약",
+    "4. 글로벌/국내 시장 스냅샷",
+    `- 주요 지수: ${briefing.globalSnapshot.majorIndices}`,
+    `- 금리/환율/원자재: ${briefing.globalSnapshot.ratesFxCommodities}`,
+    `- 위험 선호 심리: ${briefing.globalSnapshot.riskAppetite}`,
+    "",
+    "5. 주요 지표 변화 요약",
     ...renderBullets(briefing.keyIndicatorBullets),
     "",
-    "## 시장 브리핑",
-    ...renderBullets(briefing.marketBullets),
+    "6. 오늘 강한 섹터 / 약한 섹터",
+    `- 강한 섹터: ${briefing.sectorSummary.strong}`,
+    `- 약한 섹터: ${briefing.sectorSummary.weak}`,
     "",
-    "## 매크로 브리핑",
-    ...renderBullets(briefing.macroBullets),
+    "7. 시장 해석",
+    `- 1. 거시 관점: ${briefing.marketInterpretation.macro}`,
+    `- 2. 자금 흐름 관점: ${briefing.marketInterpretation.fundFlow}`,
+    `- 3. 스타일/테마 관점: ${briefing.marketInterpretation.styleTheme}`,
     "",
-    "## 자금 브리핑",
-    ...renderBullets(briefing.fundFlowBullets),
-    "",
-    "## 주요 일정 및 이벤트 브리핑",
+    "8. 오늘의 핵심 뉴스/이벤트",
     ...renderBullets(briefing.eventBullets),
     "",
-    "## 리스크 체크리스트",
+    "9. 체크할 주요 일정",
+    ...renderBullets(briefing.scheduleBullets),
+    "",
+    "10. 오늘의 리스크 포인트",
     ...renderBullets(briefing.riskBullets),
     "",
-    `> ${briefing.disclaimer}`
+    "11. 오늘 시장에서 읽어야 할 포인트",
+    briefing.closingParagraph,
+    "",
+    `12. ❗ ${briefing.disclaimer}`
   ];
 
   return `${sections.join("\n")}\n`;
 }
 
-function renderMarketSnapshot(briefing: PublicDailyBriefing): string[] {
-  if (briefing.marketSnapshot.length === 0) {
-    return ["- 공개 가능한 시장 지표가 아직 준비되지 않았습니다."];
-  }
-
-  return briefing.marketSnapshot.map((item) => {
-    const previous = item.previousValue;
-    const change = item.changePercent;
-    const valueText =
-      previous === undefined
-        ? formatNumber(item.value)
-        : `${formatNumber(previous)} → ${formatNumber(item.value)}`;
-    const changeText =
-      change === undefined
-        ? "변동률 데이터 없음"
-        : `${change > 0 ? "▲" : change < 0 ? "▼" : "■"} ${Math.abs(change).toFixed(2)}%`;
-
-    return `- ${item.itemName}: ${valueText} (${changeText}, ${item.asOfDate} 기준)`;
-  });
-}
-
 function renderBullets(lines: string[]): string[] {
-  const safeLines = lines.length > 0 ? lines : ["데이터가 아직 충분하지 않습니다."];
+  const safeLines = lines.length > 0 ? lines : ["추가 확인이 필요한 구간입니다."];
 
   return safeLines.map((line) => `- ${line}`);
-}
-
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("ko-KR", {
-    maximumFractionDigits: 2
-  }).format(value);
 }

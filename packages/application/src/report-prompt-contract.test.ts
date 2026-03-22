@@ -34,7 +34,13 @@ describe("report prompt contract", () => {
       ],
       quantScenarios: ["분할 매수 관찰"],
       riskCheckpoints: ["손절 기준 재점검"],
-      runDate: "2026-03-20"
+      runDate: "2026-03-20",
+      portfolioRebalancing: {
+        selectedProfile: "balanced",
+        rebalancingSummary: {
+          increaseCandidates: ["Apple Inc."]
+        }
+      }
     });
 
     expect(prompt.instructions).toContain(
@@ -48,6 +54,9 @@ describe("report prompt contract", () => {
     );
     expect(prompt.instructions).toContain(
       "입력에 종목별 가격/추세 사실이 없으면 holdingTrendBullets는 반드시 빈 배열로 반환하고 업종 일반론으로 종목 동향을 추정하지 않는다."
+    );
+    expect(prompt.instructions).toContain(
+      "portfolioRebalancing가 있으면 내재 가치, 가격/추세, 미래 기대치, 포트 적합성, 시장 레짐 오버레이, 하드룰을 먼저 반영한다."
     );
     expect(prompt.metadata).toEqual({
       promptAudience: "telegram_personalized",
@@ -74,7 +83,10 @@ describe("report prompt contract", () => {
             symbol: "AAPL"
           })
         ],
-        quantScenarios: ["분할 매수 관찰"]
+        quantScenarios: ["분할 매수 관찰"],
+        portfolioRebalancing: expect.objectContaining({
+          selectedProfile: "balanced"
+        })
       })
     );
   });

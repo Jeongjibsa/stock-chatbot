@@ -3,340 +3,199 @@ import { describe, expect, it } from "vitest";
 import { renderTelegramDailyReport } from "./telegram-report-renderer.js";
 
 describe("renderTelegramDailyReport", () => {
-  it("renders successful market items and holdings", () => {
+  it("renders the personalized rebalancing template with holding guides", () => {
     const report = renderTelegramDailyReport({
       displayName: "Jisung",
       runDate: "2026-03-20",
-      summaryLine: "오늘은 시장 지표와 보유 종목 기준으로 핵심 흐름만 간단히 정리했습니다.",
+      summaryLine:
+        "종목별 흐름은 일부 버티고 있지만, 시장 valuation 부담과 구조 리스크가 높아 오늘은 신규 확대보다 유지와 선별 조정 중심 접근이 더 적절합니다.",
       holdings: [
         {
-          companyName: "Apple Inc.",
-          currentPrice: 247.99,
-          changePercent: -0.39,
-          symbol: "AAPL",
-          exchange: "US",
-          previousClose: 248.96
-        }
-      ],
-      marketResults: [
-        {
-          status: "ok",
-          data: {
-            itemCode: "NASDAQ",
-            itemName: "나스닥 종합",
-            source: "fred",
-            sourceKey: "index:NASDAQ:IXIC",
-            asOfDate: "2026-03-20",
-            previousValue: 17777.78,
-            value: 18000,
-            changePercent: 1.25
-          }
-        }
-      ]
-    });
-
-    expect(report).toContain("🗞️ 오늘의 브리핑 (2026-03-20 기준)");
-    expect(report).toContain("📌 한 줄 요약");
-    expect(report).toContain("━━━━━━━━━━━━━━━");
-    expect(report).toContain("📍 주요 지표 변동 요약");
-    expect(report).toContain("🧭 시장, 매크로, 자금 브리핑");
-    expect(report).toContain("🗓️ 주요 일정 및 이벤트 브리핑");
-    expect(report).toContain("→ 오늘은 시장 지표와 보유 종목 기준으로 핵심 흐름만 간단히 정리했습니다.");
-    expect(report).toContain("나스닥 종합: 17,777.78 → 18,000  🔴▲ 1.25%");
-    expect(report).toContain("• Apple Inc.: 248.96 → 247.99  🔵▼ 0.39%");
-    expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
-  });
-
-  it("places market snapshot items in grouped order and adds the fx insight after fx lines", () => {
-    const report = renderTelegramDailyReport({
-      displayName: "Jisung",
-      runDate: "2026-03-20",
-      holdings: [],
-      marketResults: [
-        {
-          status: "ok",
-          data: {
-            itemCode: "HENRY_HUB_NATURAL_GAS",
-            itemName: "천연가스 (Henry Hub)",
-            source: "fred",
-            sourceKey: "commodity:HENRY_HUB_NATURAL_GAS",
-            asOfDate: "2026-03-20",
-            previousValue: 3.2,
-            value: 3.03,
-            changePercent: -5.31
-          }
+          companyName: "삼성전자",
+          currentPrice: 182000,
+          changePercent: -1.09,
+          exchange: "KR",
+          previousClose: 184000,
+          symbol: "005930"
         },
         {
-          status: "ok",
-          data: {
-            itemCode: "WTI",
-            itemName: "국제 유가(WTI)",
-            source: "fred",
-            sourceKey: "commodity:WTI",
-            asOfDate: "2026-03-20",
-            previousValue: 98.48,
-            value: 93.39,
-            changePercent: -5.17
-          }
-        },
-        {
-          status: "ok",
-          data: {
-            itemCode: "USD_KRW",
-            itemName: "USD/KRW 환율",
-            source: "fred",
-            sourceKey: "fx:USDKRW",
-            asOfDate: "2026-03-20",
-            previousValue: 1470.2,
-            value: 1480.85,
-            changePercent: 0.7244
-          }
-        },
-        {
-          status: "ok",
-          data: {
-            itemCode: "NASDAQ",
-            itemName: "NASDAQ",
-            source: "fred",
-            sourceKey: "index:NASDAQ:IXIC",
-            asOfDate: "2026-03-20",
-            previousValue: 17777.78,
-            value: 18000,
-            changePercent: 1.25
-          }
-        },
-        {
-          status: "ok",
-          data: {
-            itemCode: "SP500",
-            itemName: "S&P 500",
-            source: "fred",
-            sourceKey: "index:SP:SPX",
-            asOfDate: "2026-03-20",
-            previousValue: 5711.2,
-            value: 5662.4,
-            changePercent: -0.8544
-          }
-        },
-        {
-          status: "ok",
-          data: {
-            itemCode: "DXY",
-            itemName: "달러인덱스",
-            source: "fred",
-            sourceKey: "index:DXY",
-            asOfDate: "2026-03-20",
-            previousValue: 120.1,
-            value: 121.5,
-            changePercent: 1.1657
-          }
-        }
-      ]
-    });
-
-    const nasdaqIndex = report.indexOf("• NASDAQ:");
-    const sp500Index = report.indexOf("• S&P 500:");
-    const wtiIndex = report.indexOf("• 국제 유가(WTI):");
-    const naturalGasIndex = report.indexOf("• 천연가스 (Henry Hub):");
-    const usdKrwIndex = report.indexOf("• USD/KRW 환율:");
-    const dxyIndex = report.indexOf("• 달러인덱스:");
-    const insightIndex = report.indexOf(
-      "↳ 달러인덱스와 USD/KRW가 함께 올라 전반적인 달러 강세 영향이 같이 반영된 흐름으로 보입니다."
-    );
-
-    expect(nasdaqIndex).toBeGreaterThan(-1);
-    expect(sp500Index).toBeGreaterThan(nasdaqIndex);
-    expect(wtiIndex).toBeGreaterThan(sp500Index);
-    expect(naturalGasIndex).toBeGreaterThan(wtiIndex);
-    expect(usdKrwIndex).toBeGreaterThan(nasdaqIndex);
-    expect(usdKrwIndex).toBeGreaterThan(naturalGasIndex);
-    expect(dxyIndex).toBeGreaterThan(usdKrwIndex);
-    expect(insightIndex).toBeGreaterThan(dxyIndex);
-  });
-
-  it("renders missing source section when failures exist", () => {
-    const report = renderTelegramDailyReport({
-      displayName: "Jisung",
-      runDate: "2026-03-20",
-      holdings: [],
-      marketResults: [
-        {
-          status: "error",
-          errorCode: "unsupported_source",
-          sourceKey: "index:KRX:KOSPI",
-          message: "unsupported"
-        }
-      ]
-    });
-
-    expect(report).toContain("🧩 누락 또는 지연 항목");
-    expect(report).toContain("index:KRX:KOSPI: unsupported");
-    expect(report).toContain("(보유 종목 없음)");
-    expect(report).toContain("시장, 매크로, 자금 브리핑 데이터가 아직 충분하지 않습니다.");
-    expect(report).toContain("(보유 종목 입력 시 자동 생성)");
-    expect(report).toContain("규칙 기반 점수 산출 전입니다.");
-    expect(report).toContain("❗ 이 리포트는 정보 제공용이며");
-  });
-
-  it("omits lower-detail briefing sections in compact mode", () => {
-    const report = renderTelegramDailyReport({
-      displayName: "Jisung",
-      runDate: "2026-03-20",
-      reportDetailLevel: "compact",
-      holdings: [],
-      marketResults: []
-    });
-
-    expect(report).not.toContain("🧭 시장, 매크로, 자금 브리핑");
-    expect(report).not.toContain("🗓️ 주요 일정 및 이벤트 브리핑");
-    expect(report).toContain("⚠️ 리스크 체크리스트");
-  });
-
-  it("renders news, strategy and risk sections when enrichment exists", () => {
-    const report = renderTelegramDailyReport({
-      displayName: "Jisung",
-      runDate: "2026-03-20",
-      summaryLine: "오늘은 변동성이 큰 항목과 보유 종목 핵심 흐름만 추려서 정리했습니다.",
-      holdings: [
-        {
-          companyName: "Apple Inc.",
-          currentPrice: 247.99,
-          changePercent: -0.39,
-          symbol: "AAPL",
-          exchange: "US",
-          previousClose: 248.96,
-          trendSummary: "대형 기술주 약세 영향으로 하루 조정을 받았습니다."
+          companyName: "에코프로",
+          currentPrice: 149000,
+          changePercent: -2.61,
+          exchange: "KR",
+          previousClose: 153000,
+          symbol: "086520"
         }
       ],
-      holdingTrendBullets: [
-        "Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."
-      ],
-      marketBullets: [
-        "미국 지수와 변동성 지표를 함께 보면 위험 선호가 약해졌습니다."
-      ],
-      macroBullets: [
-        "중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있습니다."
-      ],
-      fundFlowBullets: [
-        "외국인·기관 수급과 ETF flow는 아직 별도 데이터 소스 연결 전입니다."
-      ],
-      eventBullets: [
-        "주요 뉴스는 지정학 리스크와 AI 반도체 수요 기대를 중심으로 움직이고 있습니다.",
-        "예정 실적 발표 일정 데이터는 아직 연결되지 않았습니다."
-      ],
-      marketResults: [
-        {
-          status: "ok",
-          data: {
-            itemCode: "USD_KRW",
-            itemName: "USD/KRW 환율",
-            source: "fred",
-            sourceKey: "fx:USDKRW",
-            asOfDate: "2026-03-20",
-            previousValue: 1470.2,
-            value: 1480.85,
-            changePercent: 0.7244
-          }
+      marketResults: [],
+      publicBriefingUrl: "https://example.com/reports/1",
+      portfolioRebalancing: {
+        selectedProfile: "balanced",
+        portfolioSummary: {
+          holdingCount: 2,
+          increaseCount: 1,
+          holdCount: 0,
+          watchCount: 0,
+          reduceCount: 1,
+          eventRiskCount: 1
         },
-        {
-          status: "ok",
-          data: {
-            itemCode: "DXY",
-            itemName: "달러인덱스",
-            source: "fred",
-            sourceKey: "index:DXY",
-            asOfDate: "2026-03-20",
-            previousValue: 120.1,
-            value: 121.5,
-            changePercent: 1.1657
-          }
-        }
-      ],
-      portfolioNewsBriefs: [
-        {
-          holding: {
-            companyName: "Apple Inc.",
-            exchange: "US",
-            symbol: "AAPL"
+        rebalancingSummary: {
+          increaseCandidates: ["삼성전자"],
+          reduceCandidates: ["에코프로"]
+        },
+        marketOverlay: {
+          marketCompositeLabel: "다소과열",
+          sentimentLabel: "적정",
+          marketStrengthLabel: "적정",
+          marketFundamentalLabel: "과열",
+          blackSwanLabel: "과열",
+          buffettByMarketLabel: "매우 고평가",
+          finalMarketRegimeScoreBalanced: 31
+        },
+        holdings: [
+          {
+            name: "삼성전자",
+            finalAction: "확대 검토",
+            intrinsicValueScore: 71,
+            priceTrendScore: 63,
+            futureExpectationScore: 58,
+            portfolioFitScore: 76,
+            oneLineJudgment:
+              "내재 가치는 양호하고 포트 적합성도 무난해 선별적 확대 후보로 볼 수 있지만, 시장 전체가 공격적 확대를 허용하는 환경은 아닙니다."
           },
-          articles: [],
-          events: [
-            {
-              confidence: "high",
-              eventType: "product",
-              headline: "신제품 공개",
-              sentiment: "positive",
-              summary: "수요 기대가 커지고 있습니다.",
-              supportingArticleIds: ["a1"]
-            }
-          ],
-          status: "ok"
+          {
+            name: "에코프로",
+            finalAction: "일부 축소",
+            intrinsicValueScore: 39,
+            priceTrendScore: 58,
+            futureExpectationScore: 44,
+            portfolioFitScore: 43,
+            hardRules: [
+              {
+                reason: "변동성이 높은 종목인데 포트 내 비중과 집중 리스크가 부담됩니다."
+              }
+            ]
+          }
+        ],
+        riskBullets: [
+          "시장 valuation 부담이 높아 전체 확대 신호를 보수적으로 해석할 필요가 있습니다."
+        ],
+        referenceMarketBrief: {
+          macroSummary: "금리와 환율 흐름이 증시 해석에 계속 영향을 주는 구간입니다.",
+          flowSummary: "지수는 버티지만 종목별 차별화가 이어지고 있습니다.",
+          eventSummary: "주요 실적과 거시 이벤트가 단기 변동성을 키울 수 있습니다."
         }
-      ],
-      articleSummaryBullets: [
-        "Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다."
-      ],
-      quantScorecards: [
-        {
-          companyName: "Apple Inc.",
-          symbol: "AAPL",
-          macroScore: -0.4,
-          trendScore: -0.4,
-          eventScore: 0.2,
-          flowScore: -0.1,
-          totalScore: -0.23,
-          action: "REDUCE",
-          actionSummary:
-            "Apple Inc.는 반등 시 비중 축소 또는 손절 기준 재점검이 우선입니다."
-        }
-      ],
-      quantScenarios: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
-      riskCheckpoints: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."]
+      }
     });
 
-    expect(report).toContain("📰 종목 관련 핵심 기사 및 이벤트 요약");
-    expect(report).toContain("🧠 퀀트 기반 시그널 및 매매 아이디어");
-    expect(report).toContain("⚠️ 리스크 체크리스트");
-    expect(report).toContain("📍 주요 지표 변동 요약");
-    expect(report).toContain("🧭 시장, 매크로, 자금 브리핑");
-    expect(report).toContain("🗓️ 주요 일정 및 이벤트 브리핑");
-    expect(report).toContain("• [시장] 미국 지수와 변동성 지표를 함께 보면 위험 선호가 약해졌습니다.");
-    expect(report).toContain("• [매크로] 중동 이란 전쟁 이슈로 원유 공급 차질 우려가 커지며 유가와 달러 강세 압력이 같이 반영되고 있습니다.");
-    expect(report).toContain("• [자금] 외국인·기관 수급과 ETF flow는 아직 별도 데이터 소스 연결 전입니다.");
-    expect(report).toContain("→ 오늘은 변동성이 큰 항목과 보유 종목 핵심 흐름만 추려서 정리했습니다.");
-    expect(report).toContain("• Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다.");
-    expect(report).toContain("• Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다.");
-    expect(report).toContain("• 오늘의 리밸런싱 제안");
-    expect(report).toContain("  • 비중 조절 필요: Apple Inc.");
-    expect(report).toContain("Macro: -0.40 / Trend: -0.40 / Event: +0.20 / Flow: -0.10");
-    expect(report).toContain("→ Total: -0.23 → 비중 조절 필요");
-    expect(report).toContain("• 전략");
-    expect(report).toContain("  • 추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다.");
-    expect(report).toContain("예정 실적 발표 일정 데이터는 아직 연결되지 않았습니다.");
-    expect(report).toContain(
-      "달러인덱스와 USD/KRW가 함께 올라 전반적인 달러 강세 영향이 같이 반영된 흐름으로 보입니다."
-    );
-    expect(report).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
+    expect(report).toContain("1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-20)");
+    expect(report).toContain("3. 🎯 오늘의 리밸런싱 제안");
+    expect(report).toContain("- 비중 확대 검토: 삼성전자");
+    expect(report).toContain("- 비중 조절 필요: 에코프로");
+    expect(report).toContain("4. 🧩 성향별 해석");
+    expect(report).toContain("6. 🌡️ 시장 레짐 요약");
+    expect(report).toContain("[삼성전자]");
+    expect(report).toContain("- 내재 가치: 양호");
+    expect(report).toContain("[에코프로]");
+    expect(report).toContain("- 제약 요인: 변동성이 높은 종목인데 포트 내 비중과 집중 리스크가 부담됩니다.");
+    expect(report).toContain("10. 🔎 공개 상세 브리핑");
+    expect(report).toContain("https://example.com/reports/1");
   });
 
-  it("renders a public briefing link before the disclaimer when provided", () => {
+  it("weakens expansion tone when market overlay is overvalued and structurally fragile", () => {
     const report = renderTelegramDailyReport({
       displayName: "Jisung",
       runDate: "2026-03-20",
-      holdings: [],
-      publicBriefingUrl:
-        "https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/",
-      marketResults: []
+      holdings: [
+        {
+          companyName: "삼성전자",
+          exchange: "KR",
+          symbol: "005930"
+        }
+      ],
+      marketResults: [],
+      portfolioRebalancing: {
+        selectedProfile: "balanced",
+        rebalancingSummary: {
+          increaseCandidates: ["삼성전자"]
+        },
+        marketOverlay: {
+          marketFundamentalLabel: "과열",
+          blackSwanLabel: "과열",
+          buffettByMarketLabel: "매우 고평가",
+          finalMarketRegimeScoreBalanced: 31
+        },
+        holdings: [
+          {
+            name: "삼성전자",
+            finalAction: "확대 검토",
+            oneLineJudgment: "개별 종목 매력은 남아 있지만 시장 전체가 공격적 확대를 허용하는 환경은 아닙니다."
+          }
+        ]
+      }
     });
 
-    const linkIndex = report.indexOf(
-      "🔎 상세 브리핑: https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/"
-    );
-    const disclaimerIndex = report.indexOf(
-      "❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
-    );
+    expect(report).toContain("핵심 보유 종목은 유지 가능하지만 확대는 선별적으로만 보는 편이 적절합니다.");
+    expect(report).toContain("추세가 살아 있는 종목은 볼 수 있어도 시장 전체가 추격 확대를 정당화하는 환경은 아닙니다.");
+    expect(report).not.toContain("적극 확대");
+  });
 
-    expect(linkIndex).toBeGreaterThan(-1);
-    expect(disclaimerIndex).toBeGreaterThan(linkIndex);
+  it("does not use expansion language when a holding is constrained by overweight hard rules", () => {
+    const report = renderTelegramDailyReport({
+      displayName: "Jisung",
+      runDate: "2026-03-20",
+      holdings: [
+        {
+          companyName: "SK하이닉스",
+          exchange: "KR",
+          symbol: "000660"
+        }
+      ],
+      marketResults: [],
+      portfolioRebalancing: {
+        holdings: [
+          {
+            name: "SK하이닉스",
+            finalAction: "유지 우세",
+            intrinsicValueScore: 67,
+            priceTrendScore: 74,
+            futureExpectationScore: 64,
+            portfolioFitScore: 61,
+            hardRules: [
+              {
+                reason: "반도체 비중이 이미 높아 추가 집중 리스크가 존재합니다."
+              }
+            ],
+            oneLineJudgment:
+              "가격/추세와 미래 기대치는 상대적으로 좋지만, 이미 높은 반도체 비중이 포트 차원의 제약으로 작용합니다."
+          }
+        ]
+      }
+    });
+
+    expect(report).toContain("- 최종 의견: 유지 우세");
+    expect(report).toContain("- 제약 요인: 반도체 비중이 이미 높아 추가 집중 리스크가 존재합니다.");
+    expect(report).not.toContain("- 최종 의견: 확대 검토");
+  });
+
+  it("uses natural fallback labels instead of raw zero values when data is incomplete", () => {
+    const report = renderTelegramDailyReport({
+      displayName: "Jisung",
+      runDate: "2026-03-20",
+      holdings: [
+        {
+          companyName: "Apple Inc.",
+          exchange: "US",
+          symbol: "AAPL"
+        }
+      ],
+      marketResults: [],
+      publicBriefingUrl: "https://example.com/reports/1"
+    });
+
+    expect(report).toContain("- 내재 가치: 확인 필요");
+    expect(report).toContain("- 포트 적합성: 확인 필요");
+    expect(report).not.toContain("0.00%");
+    expect(report).not.toContain("0.00");
   });
 });

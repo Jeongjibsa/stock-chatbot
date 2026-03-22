@@ -99,7 +99,7 @@ describe("run-public-briefing", () => {
       }
     });
 
-    expect(briefing.title).toBe("오늘의 브리핑 (2026-03-20 기준)");
+    expect(briefing.title).toBe("🗞️ 오늘의 시장 브리핑 (2026-03-20)");
     expect(briefing.marketSnapshot).toHaveLength(4);
     expect(briefing.keyIndicatorBullets).toEqual(
       expect.arrayContaining([
@@ -107,9 +107,7 @@ describe("run-public-briefing", () => {
         "NASDAQ 약세가 커지며 성장주 변동성이 확대됐습니다."
       ])
     );
-    expect(briefing.marketBullets).toEqual([
-      "미국 지수 약세가 위험 선호를 눌렀습니다."
-    ]);
+    expect(briefing.marketSummary.overall).toBe("미국 지수 약세가 위험 선호를 눌렀습니다.");
     expect(compose).toHaveBeenCalledWith(
       expect.objectContaining({
         audience: "public_web"
@@ -177,8 +175,8 @@ describe("run-public-briefing", () => {
     expect(briefing.summaryLine).toBe(
       "달러 강세와 환율 부담이 이어지고 있어, 비중 확대보다 관망과 리스크 관리에 집중하시는 편이 좋습니다."
     );
-    expect(briefing.marketBullets.length).toBeGreaterThan(0);
-    expect(briefing.macroBullets.length).toBeGreaterThan(0);
+    expect(briefing.marketSummary.overall.length).toBeGreaterThan(0);
+    expect(briefing.marketInterpretation.macro.length).toBeGreaterThan(0);
     expect(briefing.riskBullets.length).toBeGreaterThan(0);
     expect(warning).toHaveBeenCalledWith(
       "[public-briefing] falling back to rule-based summary",

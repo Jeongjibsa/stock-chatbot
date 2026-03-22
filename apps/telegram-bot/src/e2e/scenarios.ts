@@ -539,7 +539,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         chatId: runtime.config.primaryChatId,
         since,
         timeoutMs: REPORT_TIMEOUT_MS,
-        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 브리핑"]
+        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 리밸런싱 브리핑"]
       });
 
       const latestRun = await findLatestTelegramReportRun(runtime, runtime.config.primaryUserId);
@@ -569,11 +569,11 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         chatId: runtime.config.primaryChatId,
         since,
         timeoutMs: REPORT_TIMEOUT_MS,
-        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 브리핑"]
+        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 리밸런싱 브리핑"]
       });
 
       const reportReply = replies.find((message) =>
-        message.text.includes("🗞️ 오늘의 브리핑")
+        message.text.includes("🗞️ 오늘의 포트폴리오 리밸런싱 브리핑")
       );
 
       if (!reportReply?.text.includes("삼성전자")) {
@@ -584,7 +584,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         throw new Error("Expected personalized /report to include a rebalancing summary");
       }
 
-      if (reportReply.text.includes("시세 스냅샷 연결 전입니다")) {
+      if (!reportReply.text.includes("시세 스냅샷은")) {
         throw new Error("Expected personalized /report to include holding price snapshots");
       }
 

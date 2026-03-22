@@ -1,6 +1,7 @@
 import type { HoldingNewsBrief } from "./news.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
+import type { PersonalizedPortfolioRebalancingData } from "./rebalancing-contract.js";
 
 export type DailyReportPromptAudience =
   | "telegram_personalized"
@@ -19,6 +20,7 @@ export type DailyReportPromptInput = {
   quantScenarios: string[];
   riskCheckpoints: string[];
   runDate: string;
+  portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
 };
 
 export type DailyReportStructuredOutput = {
@@ -155,7 +157,8 @@ function buildPromptPayload(
       actionSummary: scorecard.actionSummary
     })),
     quantScenarios: input.quantScenarios,
-    riskCheckpoints: input.riskCheckpoints
+    riskCheckpoints: input.riskCheckpoints,
+    portfolioRebalancing: input.portfolioRebalancing ?? null
   };
 }
 
@@ -177,6 +180,7 @@ function buildPromptInstructions(
     "나머지 키는 문자열 배열이어야 한다.",
     "모든 문장은 한국어 존댓말로 짧고 단정하게 작성한다.",
     "날짜와 수치 블록은 renderer가 따로 보여주므로, 본문에서는 숫자 반복보다 해석과 행동 의미를 우선한다.",
+    "portfolioRebalancing 객체가 있으면 그 안의 hard rule, final action, 시장 레짐, 포트 요약을 우선 해석한다.",
     "입력에 실제 자금 데이터가 없으면 fundFlowBullets는 반드시 빈 배열로 반환하고, 환율·지수 움직임만으로 외국인/기관/ETF flow를 추정하지 않는다.",
     "입력에 명시적인 이벤트 데이터가 없으면 eventBullets는 반드시 빈 배열로 반환한다.",
     "정보가 부족한 섹션은 빈 배열로 반환한다.",
@@ -208,6 +212,7 @@ function buildPromptInstructions(
     "설명 우선순위는 `제약/하드룰 -> 최종 action 또는 actionSummary -> 점수/시장 레짐 -> 기타 사실` 순서를 따른다.",
     "종목이 좋아 보여도 과비중, 집중도, 상관관계, 이벤트 임박, 방어적 시장 레짐이 있으면 먼저 제약을 설명한다.",
     "입력의 quantScorecards.action과 actionSummary, quantScenarios, riskCheckpoints를 upstream 최종 판단으로 존중하고 방향을 뒤집지 않는다.",
+    "portfolioRebalancing가 있으면 내재 가치, 가격/추세, 미래 기대치, 포트 적합성, 시장 레짐 오버레이, 하드룰을 먼저 반영한다.",
     "oneLineSummary는 `오늘 한 줄 결론`에 들어갈 문장으로 작성하고, 포트 대응 스탠스와 시장 레짐 톤을 함께 담는다.",
     "strategyBullets는 `오늘의 리밸런싱 제안`에 바로 쓸 수 있게 작성하고, 확대/유지/축소/관찰 방향이 드러나야 한다.",
     "holdingTrendBullets는 종목별 `한줄 판단` 또는 보유 종목 가이드로 재사용될 수 있게 작성한다.",

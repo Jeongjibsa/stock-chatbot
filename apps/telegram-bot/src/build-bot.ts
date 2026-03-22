@@ -1,4 +1,4 @@
-import { Bot } from "grammy";
+import { Bot, InlineKeyboard, Keyboard } from "grammy";
 import {
   buildMockTelegramReportPreview,
   RankedTickerSearchService,
@@ -60,6 +60,12 @@ type TelegramBotAppOptions = {
 };
 
 const DEFAULT_DATABASE_URL = "postgresql://stockbot:stockbot@localhost:5432/stockbot";
+const HOME_REPORT_BUTTON = "📊 브리핑 보기";
+const HOME_PORTFOLIO_ADD_BUTTON = "➕ 종목 추가";
+const HOME_PORTFOLIO_LIST_BUTTON = "📁 내 종목";
+const HOME_SETTINGS_BUTTON = "⚙️ 설정";
+const HOME_MARKET_ITEMS_BUTTON = "📈 관심 지표";
+const HOME_MOCK_REPORT_BUTTON = "🧪 예시 리포트";
 
 export const TELEGRAM_ALLOWED_UPDATES = [
   "message",
@@ -159,98 +165,26 @@ export function buildTelegramBotApp(
     return reportRuntime;
   };
 
-  bot.command("start", async (context) => {
-    await context.reply(buildStartMessage());
-  });
-
-  bot.command("help", async (context) => {
-    await context.reply(buildHelpMessage());
-  });
-
-  bot.command("register", async (context) => {
-    if (!context.from || !context.chat) {
-      await context.reply("사용자 또는 채팅 정보를 확인하지 못했습니다.");
-      return;
-    }
-
-    const displayName = [context.from.first_name, context.from.last_name]
-      .filter(Boolean)
-      .join(" ")
-      .trim() || context.from.username || "Telegram User";
-    const registerInput: {
-      chatId: string;
-      chatType: string;
-      displayName: string;
-      languageCode?: string;
-      telegramUserId: string;
-    } = {
-      telegramUserId: String(context.from.id),
-      displayName,
-      chatId: String(context.chat.id),
-      chatType: context.chat.type
-    };
-
-    if (context.from.language_code) {
-      registerInput.languageCode = context.from.language_code;
-    }
-
-    const existingUser = await userPortfolioService.findRegisteredUser(
-      registerInput.telegramUserId
-    );
-
-    if (
-      context.chat.type === "private" &&
-      existingUser?.preferredDeliveryChatId === registerInput.chatId &&
-      existingUser.preferredDeliveryChatType === context.chat.type
-    ) {
-      await context.reply(buildAlreadyRegisteredMessage());
-      return;
-    }
-
-    const result = await userPortfolioService.registerTelegramUser(registerInput);
-
-    if (result.alreadyRegistered) {
-      await context.reply(buildAlreadyRegisteredMessage());
-      return;
-    }
-
-    if (result.deliveryMode === "private_ready") {
-      await context.reply(buildPrivateRegisterSuccessMessage());
-      return;
-    }
-
-    await context.reply(buildGroupRegisterSuccessMessage());
-  });
-
-  bot.command("unregister", async (context) => {
+  const replyWithHomeMenu = async (context: any, text: string) => {
     if (!context.chat || context.chat.type !== "private") {
-      await context.reply(
-        "등록 초기화는 봇과의 1:1 대화에서만 가능합니다. DM에서 /unregister 를 실행해 주세요."
-      );
+      await context.reply(text);
       return;
     }
 
-    const userKey = getUserKey(context.from?.id);
+    await context.reply(text, {
+      reply_markup: buildHomeReplyKeyboard()
+    });
+  };
 
-    if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
-      return;
-    }
+  const handleStart = async (context: any) => {
+    await replyWithHomeMenu(context, buildStartMessage());
+  };
 
-    try {
-      const removed = await userPortfolioService.unregisterTelegramUser(userKey);
-      await conversationStateStore.clear(userKey);
-      await context.reply(
-        removed
-          ? buildUnregisterSuccessMessage()
-          : buildUnregisterMissingMessage()
-      );
-    } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
-    }
-  });
+  const handleHelp = async (context: any) => {
+    await replyWithHomeMenu(context, buildHelpMessage());
+  };
 
-  bot.command("report", async (context) => {
+  const handleReport = async (context: any) => {
     if (!context.chat || context.chat.type !== "private") {
       await context.reply(
         "개인화 브리핑은 봇과의 1:1 대화에서만 제공됩니다. DM에서 /register 후 /report 를 실행해 주세요."
@@ -295,13 +229,15 @@ export function buildTelegramBotApp(
         return;
       }
 
-      await context.reply(result.reportText);
+      await context.reply(result.reportText, {
+        reply_markup: buildHomeReplyKeyboard()
+      });
     } catch (error) {
       await context.reply(resolveTelegramCommandError(error));
     }
-  });
+  };
 
-  bot.command("report_settings", async (context) => {
+  const handleReportSettings = async (context: any) => {
     const userKey = getUserKey(context.from?.id);
 
     if (!userKey) {
@@ -317,11 +253,166 @@ export function buildTelegramBotApp(
         return;
       }
 
-      await context.reply(formatReportSettings(user));
+      await context.reply(formatReportSettings(user), {
+        reply_markup: buildSettingsInlineKeyboard()
+      });
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  };
+
+  const handlePortfolioList = async (context: any) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const holdings = await userPortfolioService.listPortfolioHoldings(userKey);
+
+      if (holdings.length === 0) {
+        await context.reply("현재 등록된 보유 종목이 없습니다. /portfolio_add 로 추가해 주세요.");
+        return;
+      }
+
+      await context.reply(
+        [
+          "현재 등록된 보유 종목입니다.",
+          ...holdings.map((holding) => {
+            const details = [
+              holding.quantity ? `수량 ${holding.quantity}` : null,
+              holding.avgPrice ? `평단 ${holding.avgPrice}` : null
+            ].filter(Boolean);
+
+            return `- ${holding.companyName} (${holding.symbol}, ${holding.exchange})${details.length > 0 ? ` · ${details.join(" / ")}` : ""}`;
+          })
+        ].join("\n"),
+        {
+          reply_markup: buildHomeReplyKeyboard()
+        }
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  };
+
+  const handleMarketItems = async (context: any) => {
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const items = await userPortfolioService.listMarketIndicators(userKey);
+
+      await context.reply(
+        [
+          "현재 추적 중인 시장 지표입니다.",
+          ...items.map((item) => `- ${item.itemName} (${item.itemCode})${item.isDefault ? "" : " · custom"}`)
+        ].join("\n"),
+        {
+          reply_markup: buildHomeReplyKeyboard()
+        }
+      );
+    } catch (error) {
+      await context.reply(resolveTelegramCommandError(error));
+    }
+  };
+
+  bot.command("start", handleStart);
+
+  bot.command("help", handleHelp);
+
+  bot.command("register", async (context) => {
+    if (!context.from || !context.chat) {
+      await context.reply("사용자 또는 채팅 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    const displayName = [context.from.first_name, context.from.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim() || context.from.username || "Telegram User";
+    const registerInput: {
+      chatId: string;
+      chatType: string;
+      displayName: string;
+      languageCode?: string;
+      telegramUserId: string;
+    } = {
+      telegramUserId: String(context.from.id),
+      displayName,
+      chatId: String(context.chat.id),
+      chatType: context.chat.type
+    };
+
+    if (context.from.language_code) {
+      registerInput.languageCode = context.from.language_code;
+    }
+
+    const existingUser = await userPortfolioService.findRegisteredUser(
+      registerInput.telegramUserId
+    );
+
+    if (
+      context.chat.type === "private" &&
+      existingUser?.preferredDeliveryChatId === registerInput.chatId &&
+      existingUser.preferredDeliveryChatType === context.chat.type
+    ) {
+      await replyWithHomeMenu(context, buildAlreadyRegisteredMessage());
+      return;
+    }
+
+    const result = await userPortfolioService.registerTelegramUser(registerInput);
+
+    if (result.alreadyRegistered) {
+      await replyWithHomeMenu(context, buildAlreadyRegisteredMessage());
+      return;
+    }
+
+    if (result.deliveryMode === "private_ready") {
+      await replyWithHomeMenu(context, buildPrivateRegisterSuccessMessage());
+      return;
+    }
+
+    await context.reply(buildGroupRegisterSuccessMessage());
+  });
+
+  bot.command("unregister", async (context) => {
+    if (!context.chat || context.chat.type !== "private") {
+      await context.reply(
+        "등록 초기화는 봇과의 1:1 대화에서만 가능합니다. DM에서 /unregister 를 실행해 주세요."
+      );
+      return;
+    }
+
+    const userKey = getUserKey(context.from?.id);
+
+    if (!userKey) {
+      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      return;
+    }
+
+    try {
+      const removed = await userPortfolioService.unregisterTelegramUser(userKey);
+      await conversationStateStore.clear(userKey);
+      await context.reply(
+        removed
+          ? buildUnregisterSuccessMessage()
+          : buildUnregisterMissingMessage()
+      );
     } catch (error) {
       await context.reply(resolveTelegramCommandError(error));
     }
   });
+
+  bot.command("report", handleReport);
+
+  bot.command("report_settings", handleReportSettings);
 
   bot.command("report_on", async (context) => {
     const userKey = getUserKey(context.from?.id);
@@ -632,39 +723,7 @@ export function buildTelegramBotApp(
     }
   });
 
-  bot.command("portfolio_list", async (context) => {
-    const userKey = getUserKey(context.from?.id);
-
-    if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
-      return;
-    }
-
-    try {
-      const holdings = await userPortfolioService.listPortfolioHoldings(userKey);
-
-      if (holdings.length === 0) {
-        await context.reply("현재 등록된 보유 종목이 없습니다. /portfolio_add 로 추가해 주세요.");
-        return;
-      }
-
-      await context.reply(
-        [
-          "현재 등록된 보유 종목입니다.",
-          ...holdings.map((holding) => {
-            const details = [
-              holding.quantity ? `수량 ${holding.quantity}` : null,
-              holding.avgPrice ? `평단 ${holding.avgPrice}` : null
-            ].filter(Boolean);
-
-            return `- ${holding.companyName} (${holding.symbol}, ${holding.exchange})${details.length > 0 ? ` · ${details.join(" / ")}` : ""}`;
-          })
-        ].join("\n")
-      );
-    } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
-    }
-  });
+  bot.command("portfolio_list", handlePortfolioList);
 
   bot.command("portfolio_remove", async (context) =>
     startConversation(context.from?.id, "portfolio_remove", (text) =>
@@ -676,30 +735,80 @@ export function buildTelegramBotApp(
     startConversation(context.from?.id, "market_add", (text) => context.reply(text))
   );
 
-  bot.command("market_items", async (context) => {
+  bot.command("market_items", handleMarketItems);
+
+  bot.command("mock_report", async (context) => {
+    await context.reply(buildMockTelegramReportPreview().renderedText, {
+      reply_markup: buildHomeReplyKeyboard()
+    });
+  });
+
+  bot.callbackQuery(/^settings:/, async (context) => {
     const userKey = getUserKey(context.from?.id);
 
     if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
+      await context.answerCallbackQuery({
+        text: "사용자 식별 정보를 확인하지 못했습니다."
+      });
       return;
     }
 
+    const action = context.callbackQuery.data.replace(/^settings:/, "");
+
     try {
-      const items = await userPortfolioService.listMarketIndicators(userKey);
+      if (action === "time_help") {
+        await context.answerCallbackQuery({
+          text: "시간 변경은 /report_time 09:00 형식으로 입력해 주세요."
+        });
+        await context.reply("브리핑 시간은 /report_time 09:00 형식으로 변경할 수 있습니다.");
+        return;
+      }
 
-      await context.reply(
-        [
-          "현재 추적 중인 시장 지표입니다.",
-          ...items.map((item) => `- ${item.itemName} (${item.itemCode})${item.isDefault ? "" : " · custom"}`)
-        ].join("\n")
-      );
+      const updated =
+        action === "report_on"
+          ? await userPortfolioService.updateDailyReportSettings(userKey, {
+              dailyReportEnabled: true
+            })
+          : action === "report_off"
+            ? await userPortfolioService.updateDailyReportSettings(userKey, {
+                dailyReportEnabled: false
+              })
+            : action === "mode_compact"
+              ? await userPortfolioService.updateDailyReportSettings(userKey, {
+                  reportDetailLevel: "compact"
+                })
+              : action === "mode_standard"
+                ? await userPortfolioService.updateDailyReportSettings(userKey, {
+                    reportDetailLevel: "standard"
+                  })
+                : action === "link_on"
+                  ? await userPortfolioService.updateDailyReportSettings(userKey, {
+                      includePublicBriefingLink: true
+                    })
+                  : action === "link_off"
+                    ? await userPortfolioService.updateDailyReportSettings(userKey, {
+                        includePublicBriefingLink: false
+                      })
+                    : null;
+
+      if (!updated) {
+        await context.answerCallbackQuery({
+          text: "지원하지 않는 설정입니다."
+        });
+        return;
+      }
+
+      await context.answerCallbackQuery({
+        text: "설정을 반영했습니다."
+      });
+      await context.editMessageText(formatReportSettings(updated), {
+        reply_markup: buildSettingsInlineKeyboard()
+      });
     } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
+      await context.answerCallbackQuery({
+        text: resolveTelegramCommandError(error)
+      });
     }
-  });
-
-  bot.command("mock_report", async (context) => {
-    await context.reply(buildMockTelegramReportPreview().renderedText);
   });
 
   bot.on("message:new_chat_members", async (context) => {
@@ -783,6 +892,42 @@ export function buildTelegramBotApp(
     const state = await conversationStateStore.get(userKey);
 
     if (!state) {
+      if (!isGroupChat(context.chat.type)) {
+        if (text === HOME_REPORT_BUTTON) {
+          await handleReport(context);
+          return;
+        }
+
+        if (text === HOME_PORTFOLIO_ADD_BUTTON) {
+          await startConversation(context.from?.id, "portfolio_add", (message) =>
+            context.reply(message)
+          );
+          return;
+        }
+
+        if (text === HOME_PORTFOLIO_LIST_BUTTON) {
+          await handlePortfolioList(context);
+          return;
+        }
+
+        if (text === HOME_SETTINGS_BUTTON) {
+          await handleReportSettings(context);
+          return;
+        }
+
+        if (text === HOME_MARKET_ITEMS_BUTTON) {
+          await handleMarketItems(context);
+          return;
+        }
+
+        if (text === HOME_MOCK_REPORT_BUTTON) {
+          await context.reply(buildMockTelegramReportPreview().renderedText, {
+            reply_markup: buildHomeReplyKeyboard()
+          });
+          return;
+        }
+      }
+
       if (isGroupChat(context.chat.type)) {
         const registeredUser = await userPortfolioService.findRegisteredUser(userKey);
 
@@ -865,6 +1010,28 @@ export function buildTelegramBotApp(
       await pool.end();
     }
   };
+}
+
+export function buildHomeReplyKeyboard(): Keyboard {
+  return new Keyboard([
+    [HOME_REPORT_BUTTON, HOME_PORTFOLIO_ADD_BUTTON],
+    [HOME_PORTFOLIO_LIST_BUTTON, HOME_SETTINGS_BUTTON],
+    [HOME_MARKET_ITEMS_BUTTON, HOME_MOCK_REPORT_BUTTON]
+  ]).resized();
+}
+
+export function buildSettingsInlineKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("브리핑 켜기", "settings:report_on")
+    .text("브리핑 끄기", "settings:report_off")
+    .row()
+    .text("간단 모드", "settings:mode_compact")
+    .text("표준 모드", "settings:mode_standard")
+    .row()
+    .text("링크 표시", "settings:link_on")
+    .text("링크 숨김", "settings:link_off")
+    .row()
+    .text("시간 변경 안내", "settings:time_help");
 }
 
 function extractTelegramOutboundMessage(

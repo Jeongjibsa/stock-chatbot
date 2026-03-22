@@ -2,6 +2,7 @@ import type { LlmClient } from "./llm-client.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
+import type { PersonalizedPortfolioRebalancingData } from "./rebalancing-contract.js";
 import {
   buildDailyReportPromptContract,
   parseDailyReportStructuredOutput,
@@ -41,8 +42,9 @@ export class DailyReportCompositionService {
     quantScenarios: string[];
     riskCheckpoints: string[];
     runDate: string;
+    portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
   }): Promise<DailyReportComposition> {
-    const prompt = buildDailyReportPromptContract({
+    const promptInput: Parameters<typeof buildDailyReportPromptContract>[0] = {
       ...(input.audience ? { audience: input.audience } : {}),
       holdings: input.holdings,
       marketResults: input.marketResults,
@@ -51,7 +53,13 @@ export class DailyReportCompositionService {
       quantScenarios: input.quantScenarios,
       riskCheckpoints: input.riskCheckpoints,
       runDate: input.runDate
-    });
+    };
+
+    if (input.portfolioRebalancing) {
+      promptInput.portfolioRebalancing = input.portfolioRebalancing;
+    }
+
+    const prompt = buildDailyReportPromptContract(promptInput);
     const llmResponse = await this.dependencies.llmClient.generate({
       task: "market-report-composition",
       input: prompt.input,

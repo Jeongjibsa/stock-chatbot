@@ -183,6 +183,10 @@
 - 하네스 세부 운영 기준은 `docs/harness-engineering.md`를 기준으로 삼는다.
 - `Phase 7`의 계획 항목과 production deployment smoke는 모두 완료 상태다. 다음 우선순위는 실제 Telegram E2E 운영 점검, 첫 공개 브리핑 저장 확인, 전략 스코어 튜닝이다.
 - live Telegram E2E의 `report_with_holdings`는 이제 보유 종목명 노출 여부뿐 아니라 `오늘의 리밸런싱 제안` 문구와 `시세 스냅샷 연결 전입니다` placeholder 부재까지 함께 검증한다.
+- Telegram `/report` 최종 템플릿은 이제 `오늘의 포트폴리오 리밸런싱 브리핑 -> 오늘 한 줄 결론 -> 오늘의 리밸런싱 제안 -> 성향별 해석 -> 시장 레짐 요약 -> 종목별 리밸런싱 가이드` 구조를 사용한다.
+- `packages/application/src/rebalancing-contract.ts`가 개인화 리밸런싱 payload의 현재 source-of-truth contract다. runtime payload에 rich score가 없으면 renderer는 `확인 필요 / 점검 필요 / 데이터 보강 필요` fallback을 사용한다.
+- 공개 웹 브리핑은 `오늘의 시장 브리핑` 구조로 분리됐고, 개인 포트 용어와 action language는 renderer 단계에서 제외된다.
+- Telegram DM에는 홈 reply keyboard(`📊 브리핑 보기`, `➕ 종목 추가`, `📁 내 종목`, `⚙️ 설정`)와 설정 inline keyboard가 추가됐다. 기존 slash command semantics는 유지한다.
 - Telegram DM `/register`는 같은 private chat에 이미 등록된 사용자를 감지하면 중복 등록 대신 `/report`, `/portfolio_list`, `/unregister` 다음 단계를 안내한다.
 - Telegram DM에는 `/unregister`와 `/portfolio_bulk`가 추가됐다. `/portfolio_bulk`는 여러 종목을 comma, semicolon, newline 기준으로 받아 평균단가/수량/메모 없이 기본 보유 종목을 벌크 추가한다.
 - 정적 종목 resolver는 이제 현대차(005380), 에코프로(086520), 현대글로비스(086280), HMM(011200)까지 지원한다.

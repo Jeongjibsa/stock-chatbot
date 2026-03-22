@@ -220,7 +220,135 @@ export function buildMockTelegramReportPreview(input?: {
       riskCheckpoints: [
         "중동 지정학 리스크가 원자재와 해운 변동성을 동시에 자극할 수 있습니다.",
         "반도체주 비중이 높아 미국 기술주 조정이 국내 대형주로 전이되는지 확인하시는 편이 좋습니다."
-      ]
+      ],
+      portfolioRebalancing: {
+        selectedProfile: "balanced",
+        portfolioSummary: {
+          holdingCount: 6,
+          increaseCount: 1,
+          holdCount: 3,
+          watchCount: 1,
+          reduceCount: 1,
+          eventRiskCount: 2
+        },
+        rebalancingSummary: {
+          increaseCandidates: ["삼성전자"],
+          holdCandidates: ["SK하이닉스", "현대차", "현대글로비스"],
+          watchCandidates: ["HMM"],
+          reduceCandidates: ["에코프로"]
+        },
+        marketOverlay: {
+          market: "KOSPI",
+          marketCompositeLabel: "다소과열",
+          sentimentLabel: "적정",
+          marketStrengthLabel: "적정",
+          marketFundamentalLabel: "과열",
+          blackSwanLabel: "과열",
+          buffettByMarketLabel: "매우 고평가",
+          finalMarketRegimeScoreBalanced: 31,
+          finalMarketRegimeScoreConservative: 24,
+          finalMarketRegimeScoreAggressive: 39
+        },
+        holdings: [
+          {
+            name: "삼성전자",
+            finalAction: "확대 검토",
+            intrinsicValueScore: 71,
+            priceTrendScore: 63,
+            futureExpectationScore: 58,
+            portfolioFitScore: 76,
+            oneLineJudgment:
+              "내재 가치는 양호하고 포트 적합성도 무난해 선별적 확대 후보로 볼 수 있지만, 시장 전체가 공격적 확대를 허용하는 환경은 아닙니다.",
+            guide:
+              "추격 매수보다는 기존 비중 대비 부족한 구간에서 분할 접근을 검토하는 편이 자연스럽습니다."
+          },
+          {
+            name: "SK하이닉스",
+            finalAction: "유지 우세",
+            intrinsicValueScore: 67,
+            priceTrendScore: 74,
+            futureExpectationScore: 64,
+            portfolioFitScore: 61,
+            hardRules: [
+              {
+                code: "SECTOR_CONCENTRATION",
+                reason: "반도체 비중이 이미 높아 추가 집중 리스크가 존재합니다.",
+                effect: "비중 제한"
+              }
+            ],
+            oneLineJudgment:
+              "가격/추세와 미래 기대치는 상대적으로 좋지만, 이미 높은 반도체 비중이 포트 차원의 제약으로 작용합니다.",
+            guide:
+              "종목 자체는 견조하지만, 지금은 추가 확대보다 기존 보유 유지와 비중 관리 쪽에 무게가 실립니다."
+          },
+          {
+            name: "현대차",
+            finalAction: "유지 우세",
+            intrinsicValueScore: 73,
+            priceTrendScore: 56,
+            futureExpectationScore: 52,
+            portfolioFitScore: 72,
+            oneLineJudgment:
+              "내재 가치 관점은 괜찮지만 흐름과 기대치가 강하게 확장되는 구간은 아니어서 포트 내 안정적 보유 관점이 더 적절합니다."
+          },
+          {
+            name: "현대글로비스",
+            finalAction: "유지 우세",
+            intrinsicValueScore: 64,
+            priceTrendScore: 54,
+            futureExpectationScore: 49,
+            portfolioFitScore: 69,
+            oneLineJudgment:
+              "전반적으로 극단적 강점은 아니지만 포트 내 역할은 무난하며, 지금은 과도한 액션보다 유지 관점이 자연스럽습니다."
+          },
+          {
+            name: "HMM",
+            finalAction: "관찰 필요",
+            intrinsicValueScore: 52,
+            priceTrendScore: 46,
+            futureExpectationScore: 51,
+            portfolioFitScore: 58,
+            hardRules: [
+              {
+                code: "HIGH_EVENT_UNCERTAINTY",
+                reason: "업황과 이벤트 민감도가 높아 관찰 우선 해석이 적절합니다.",
+                effect: "관찰 우선"
+              }
+            ],
+            oneLineJudgment:
+              "가격/추세와 미래 기대치 모두 강하다고 보기 어렵고, 이벤트 민감도까지 높아 방향성 확인이 더 필요한 상태입니다."
+          },
+          {
+            name: "에코프로",
+            finalAction: "일부 축소",
+            intrinsicValueScore: 39,
+            priceTrendScore: 58,
+            futureExpectationScore: 44,
+            portfolioFitScore: 43,
+            hardRules: [
+              {
+                code: "OVERWEIGHT_HIGH_VOLATILITY",
+                reason: "변동성이 높은 종목인데 포트 내 비중과 집중 리스크가 부담됩니다.",
+                effect: "축소 우선"
+              }
+            ],
+            oneLineJudgment:
+              "가격/추세가 아주 무너지진 않았지만, 내재 가치와 포트 적합성 부담이 크고 변동성까지 높아 포트 차원의 조정 논리가 우세합니다.",
+            guide:
+              "전면 이탈보다도 먼저 비중을 낮춰 포트 변동성을 완화하는 접근이 더 적절합니다."
+          }
+        ],
+        riskBullets: [
+          "시장 valuation 부담이 높아 전체 확대 신호를 보수적으로 해석할 필요가 있습니다.",
+          "블랙스완 지수가 높아 종목 간 동조화 리스크를 점검해야 합니다.",
+          "반도체와 고변동 성장주 비중이 동시에 높아 포트 집중 관리가 중요합니다."
+        ],
+        referenceMarketBrief: {
+          macroSummary: "금리와 환율 흐름이 증시 해석에 계속 영향을 주는 구간입니다.",
+          flowSummary: "지수는 버티지만 종목별 차별화와 섹터별 편차가 이어지고 있습니다.",
+          eventSummary: "주요 실적과 거시 이벤트가 단기 변동성을 키울 수 있습니다."
+        }
+      }
     })
   };
 }
