@@ -40,6 +40,7 @@
 ### 3. Telegram 개인화 delivery
 
 - `/register`, `/unregister`, `/portfolio_add`, `/portfolio_bulk`, `/report` 흐름으로 사용자별 입력을 받습니다.
+- Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast rule-based 경로를 기본값으로 사용합니다. 보유 종목별 뉴스 수집과 LLM 조합은 기본적으로 끄고, 시장 데이터와 규칙 기반 렌더러로 먼저 빠르게 응답합니다.
 - `/portfolio_add`는 CSV 기반 ticker master 검색 결과를 보여주고, 상위 5개 후보 중 번호 선택으로 종목을 추가합니다.
 - `삼전`, `현대차`, `app`, `tesl` 같은 짧은 alias는 curated fallback으로 보강하되, 최종 저장과 표시는 PostgreSQL ticker master를 기준으로 합니다.
 - `/portfolio_bulk`는 comma/newline/semicolon으로 여러 키워드를 받아 각 항목을 독립 검색한 뒤 `추가 성공 / 이미 등록 / 실패` 요약을 돌려줍니다.

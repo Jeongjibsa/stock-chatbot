@@ -86,4 +86,37 @@ describeIntegration("ReportRunRepository integration", () => {
     expect(completed.errorMessage).toBe("one item unsupported");
     expect(completed.completedAt).not.toBeNull();
   });
+
+  it("restarts a stale running report instead of blocking the day", async () => {
+    const user = await userRepository.upsert({
+      telegramUserId: "4003",
+      displayName: "Stale Report User"
+    });
+    const first = await repository.startRun({
+      userId: user.id,
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+    const db = createDatabase(pool);
+
+    await db.execute(
+      sql.raw(
+        `update "report_runs"
+         set "started_at" = now() - interval '10 minutes'
+         where "id" = '${first.run.id}'`
+      )
+    );
+
+    const restarted = await repository.startRun({
+      userId: user.id,
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+
+    expect(restarted.created).toBe(true);
+    expect(restarted.run.id).toBe(first.run.id);
+    expect(restarted.run.status).toBe("running");
+    expect(restarted.run.completedAt).toBeNull();
+    expect(restarted.run.errorMessage).toBeNull();
+  });
 });

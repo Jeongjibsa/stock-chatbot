@@ -24,6 +24,8 @@ export type CompleteReportRunInput = {
   status: Exclude<ReportRunStatus, "running">;
 };
 
+const STALE_RUNNING_RUN_MINUTES = 3;
+
 export class ReportRunRepository {
   constructor(private readonly db: DatabaseClient) {}
 
@@ -58,6 +60,15 @@ export class ReportRunRepository {
 
     if (!existing) {
       throw new Error("Failed to resolve existing report run after conflict");
+    }
+
+    if (this.isStaleRunningRun(existing)) {
+      const restarted = await this.restartStaleRun(existing.id, input);
+
+      return {
+        created: true,
+        run: restarted
+      };
     }
 
     return {
@@ -111,5 +122,48 @@ export class ReportRunRepository {
       .limit(1);
 
     return result[0] ?? null;
+  }
+
+  private isStaleRunningRun(run: ReportRunRecord): boolean {
+    if (run.status !== "running") {
+      return false;
+    }
+
+    if (!run.startedAt) {
+      return false;
+    }
+
+    const startedAtTime = new Date(run.startedAt).valueOf();
+
+    if (!Number.isFinite(startedAtTime)) {
+      return false;
+    }
+
+    return Date.now() - startedAtTime >= STALE_RUNNING_RUN_MINUTES * 60_000;
+  }
+
+  private async restartStaleRun(
+    runId: string,
+    input: StartReportRunInput
+  ): Promise<ReportRunRecord> {
+    const [updated] = await this.db
+      .update(reportRuns)
+      .set({
+        status: "running",
+        reportText: null,
+        errorMessage: null,
+        promptVersion: input.promptVersion,
+        skillVersion: input.skillVersion,
+        startedAt: sql`now()`,
+        completedAt: null
+      })
+      .where(eq(reportRuns.id, runId))
+      .returning();
+
+    if (!updated) {
+      throw new Error("Failed to restart stale report run");
+    }
+
+    return updated;
   }
 }

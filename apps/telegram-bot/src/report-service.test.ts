@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   getRunDateForTimezone,
+  isTelegramReportEnrichmentEnabled,
   resolveTelegramReportFollowUpMessage,
   TelegramReportService
 } from "./report-service.js";
@@ -74,6 +75,20 @@ describe("getRunDateForTimezone", () => {
     expect(
       getRunDateForTimezone("Asia/Seoul", new Date("2026-03-20T16:00:00.000Z"))
     ).toBe("2026-03-21");
+  });
+});
+
+describe("isTelegramReportEnrichmentEnabled", () => {
+  it("defaults to disabled for fast on-demand reports", () => {
+    expect(isTelegramReportEnrichmentEnabled({})).toBe(false);
+  });
+
+  it("enables enrichment when the explicit flag is true", () => {
+    expect(
+      isTelegramReportEnrichmentEnabled({
+        TELEGRAM_REPORT_ENABLE_ENRICHMENT: "true"
+      })
+    ).toBe(true);
   });
 });
 

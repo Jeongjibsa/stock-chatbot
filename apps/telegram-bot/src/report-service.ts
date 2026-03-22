@@ -24,6 +24,8 @@ import {
 
 type Environment = Record<string, string | undefined>;
 
+const DEFAULT_TELEGRAM_REPORT_ENRICHMENT = false;
+
 type UserRepositoryPort = {
   getByTelegramUserId(telegramUserId: string): Promise<
     | {
@@ -119,7 +121,7 @@ export function buildTelegramReportRuntime(env: Environment = process.env): {
 
   const llmClient = buildLlmClient(env);
 
-  if (llmClient) {
+  if (llmClient && isTelegramReportEnrichmentEnabled(env)) {
     orchestratorDependencies.portfolioNewsBriefService =
       new PortfolioNewsBriefService({
         llmClient,
@@ -140,6 +142,18 @@ export function buildTelegramReportRuntime(env: Environment = process.env): {
       await pool.end();
     }
   };
+}
+
+export function isTelegramReportEnrichmentEnabled(
+  env: Environment = process.env
+): boolean {
+  const rawValue = env.TELEGRAM_REPORT_ENABLE_ENRICHMENT?.trim().toLowerCase();
+
+  if (!rawValue) {
+    return DEFAULT_TELEGRAM_REPORT_ENRICHMENT;
+  }
+
+  return rawValue === "1" || rawValue === "true" || rawValue === "yes";
 }
 
 export function getRunDateForTimezone(
