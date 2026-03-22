@@ -201,6 +201,24 @@ export const telegramProcessedUpdates = pgTable("telegram_processed_updates", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 });
 
+export const telegramOutboundMessages = pgTable(
+  "telegram_outbound_messages",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    chatId: text("chat_id").notNull(),
+    method: text("method").notNull().default("sendMessage"),
+    text: text("text").notNull(),
+    telegramMessageId: text("telegram_message_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    chatIdCreatedAtIndex: index("telegram_outbound_messages_chat_id_created_at_idx").on(
+      table.chatId,
+      table.createdAt
+    )
+  })
+);
+
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
@@ -225,3 +243,7 @@ export type TelegramProcessedUpdateRecord =
   typeof telegramProcessedUpdates.$inferSelect;
 export type NewTelegramProcessedUpdateRecord =
   typeof telegramProcessedUpdates.$inferInsert;
+export type TelegramOutboundMessageRecord =
+  typeof telegramOutboundMessages.$inferSelect;
+export type NewTelegramOutboundMessageRecord =
+  typeof telegramOutboundMessages.$inferInsert;

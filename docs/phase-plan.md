@@ -236,4 +236,5 @@
 - 2026-03-22: Telegram DM `/register` 중복 등록 감지와 `/unregister` 초기화 안내를 추가하고, `/portfolio_bulk`로 다종목 벌크 입력을 지원했으며, 정적 종목 resolver에 현대차/에코프로/현대글로비스/HMM을 보강
 - 2026-03-22: CSV 기반 ticker master와 ranked search를 도입하고, `/portfolio_add`를 검색/선택/확정 플로우로, `/portfolio_bulk`를 다건 검색 요약 플로우로 확장 완료
 - 2026-03-22: Telegram webhook secret header 검증을 production 필수 조건으로 되돌리고, `pnpm telegram:webhook:register`가 secret 없이 실행되지 않도록 운영 기준을 강화
+- 2026-03-22: 실제 production webhook + DB side effect를 대상으로 하는 Telegram E2E harness와 outbound reply audit 로그를 추가하고, 최소 회귀 세트 8개와 full suite 실행 경로를 문서화
 - 2026-03-21: 실제 Telegram 운영 검증용 `docs/telegram-production-test-scenarios.md`를 추가해 DM/그룹/공개 웹/개인정보 경계/E2E 기대 결과를 운영 체크리스트로 정리

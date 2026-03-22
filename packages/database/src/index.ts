@@ -12,6 +12,7 @@ export {
   strategySnapshots,
   tickerMasters,
   telegramConversationStates,
+  telegramOutboundMessages,
   userMarketWatchItems,
   users,
   type MarketWatchCatalogItemRecord,
@@ -29,6 +30,7 @@ export {
   type StrategySnapshotRecord,
   type TickerMasterRecord,
   type TelegramConversationStateRecord,
+  type TelegramOutboundMessageRecord,
   type UserMarketWatchItemRecord,
   type UserRecord
 } from "./schema.js";
@@ -58,6 +60,7 @@ export {
   type StartReportRunInput
 } from "./report-run-repository.js";
 export { TelegramProcessedUpdateRepository } from "./telegram-processed-update-repository.js";
+export { TelegramOutboundMessageRepository } from "./telegram-outbound-message-repository.js";
 export {
   UserRepository,
   type UpdateUserReportSettingsInput,

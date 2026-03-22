@@ -147,7 +147,7 @@ export class ReportRunRepository {
       return true;
     }
 
-    return run.status !== "completed" && !run.reportText;
+    return run.status !== "running" && run.status !== "completed" && !run.reportText;
   }
 
   private async restartStaleRun(

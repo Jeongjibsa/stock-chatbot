@@ -170,8 +170,21 @@ export class TelegramUserPortfolioService {
       note?: string;
       quantity?: string;
     }
-  ): Promise<void> {
+  ): Promise<{ created: boolean }> {
     const user = await this.requireUser(telegramUserId);
+    const existing =
+      await this.dependencies.portfolioHoldingRepository.getByUserAndSymbol(
+        user.id,
+        holding.symbol,
+        holding.exchange
+      );
+
+    if (existing) {
+      return {
+        created: false
+      };
+    }
+
     const upsertInput: {
       avgPrice?: string;
       companyName: string;
@@ -200,6 +213,10 @@ export class TelegramUserPortfolioService {
     }
 
     await this.dependencies.portfolioHoldingRepository.upsert(upsertInput);
+
+    return {
+      created: true
+    };
   }
 
   async addPortfolioHoldingsBulk(

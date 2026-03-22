@@ -147,15 +147,20 @@ describe("TelegramUserPortfolioService", () => {
       telegramUserId: "1001",
       displayName: "Jisung"
     });
+    portfolioHoldingRepository.getByUserAndSymbol.mockResolvedValue(null);
 
-    await service.addPortfolioHolding("1001", {
-      companyName: "Samsung Electronics",
-      exchange: "KR",
-      symbol: "005930",
-      confidence: "high",
-      matchedBy: "symbol",
-      avgPrice: "188129",
-      quantity: "27"
+    await expect(
+      service.addPortfolioHolding("1001", {
+        companyName: "Samsung Electronics",
+        exchange: "KR",
+        symbol: "005930",
+        confidence: "high",
+        matchedBy: "symbol",
+        avgPrice: "188129",
+        quantity: "27"
+      })
+    ).resolves.toEqual({
+      created: true
     });
 
     expect(portfolioHoldingRepository.upsert).toHaveBeenCalledWith(
@@ -165,6 +170,35 @@ describe("TelegramUserPortfolioService", () => {
         quantity: "27"
       })
     );
+  });
+
+  it("skips duplicate holdings for the same user and symbol", async () => {
+    const { service, userRepository, portfolioHoldingRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung"
+    });
+    portfolioHoldingRepository.getByUserAndSymbol.mockResolvedValue({
+      companyName: "Samsung Electronics",
+      exchange: "KR",
+      symbol: "005930"
+    });
+
+    await expect(
+      service.addPortfolioHolding("1001", {
+        companyName: "Samsung Electronics",
+        exchange: "KR",
+        symbol: "005930",
+        confidence: "high",
+        matchedBy: "symbol"
+      })
+    ).resolves.toEqual({
+      created: false
+    });
+
+    expect(portfolioHoldingRepository.upsert).not.toHaveBeenCalled();
   });
 
   it("adds multiple holdings in bulk and skips existing ones", async () => {

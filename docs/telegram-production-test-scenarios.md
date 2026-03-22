@@ -192,3 +192,18 @@
 - 공개 feed가 empty state인 것은 정상일 수 있다. 아직 `reports`에 공개 브리핑이 저장되지 않았다는 뜻일 뿐이다.
 - 첫 실운영 브리핑이 생성되면 `/`와 `/reports/[id]`를 다시 확인한다.
 - Telegram 실운영 점검은 반드시 DM, 그룹, 공개 웹을 분리해 확인한다.
+
+## 최소 회귀 세트
+
+실제 운영 배포 후 빠르게 회귀를 확인할 때는 아래 8개를 우선 실행한다.
+
+1. `smoke_connectivity`
+2. `dm_onboarding`
+3. `register_basic`
+4. `unregister_reregister`
+5. `portfolio_add_exact_symbol`
+6. `portfolio_bulk_mixed`
+7. `report_without_holdings`
+8. `report_with_holdings`
+
+자동화 실행 경로와 env는 [docs/telegram-e2e-harness.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-e2e-harness.md)를 따른다.

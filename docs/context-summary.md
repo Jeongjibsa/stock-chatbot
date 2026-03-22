@@ -139,11 +139,13 @@
 - Telegram webhook은 이미 `https://web-three-tau-58.vercel.app/api/telegram/webhook`로 등록됐다.
 - 2026-03-22 기준 Telegram webhook command runtime은 production alias에서 정상 동작하며, production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN` header 검증을 필수로 사용한다. Vercel production에서 secret env가 빠지면 webhook route는 fail-closed(500)로 동작해야 한다.
 - 실제 Telegram 운영 점검은 `docs/telegram-production-test-scenarios.md`를 기준으로 진행한다.
+- 실제 Telegram E2E 자동화는 `docs/telegram-e2e-harness.md`를 기준으로 진행한다. 현재 harness는 inbound는 synthetic webhook update, outbound는 실제 Telegram Bot API `sendMessage`, assertion은 DB side effect + `telegram_outbound_messages` audit log 조합을 사용한다.
 - root `AGENTS.md`가 추가됐고, 이 파일은 source-of-truth 문서, 런타임 역할, 검증 규칙, git 마감 단계를 빠르게 찾는 저장소 운영 맵 역할을 한다.
 - Telegram command runtime은 webhook으로 전환 가능한 상태이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 구현됐다.
 - `apps/telegram-bot/src/build-bot.ts`는 polling과 webhook 양쪽에서 공통으로 쓰는 command runtime entrypoint로 정리됐다.
 - Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화한다. webhook 등록 스크립트는 secret 없이 실행되면 실패해야 한다.
 - Telegram webhook 경로는 이제 `telegram_processed_updates` 저장 모델로 `update_id`를 dedupe한다. 같은 Telegram update가 재전송돼도 command handler는 한 번만 실행돼야 한다.
+- Telegram bot runtime은 이제 outbound reply를 `telegram_outbound_messages`에 기록한다. 이 로그는 production-like E2E harness가 Telegram-visible 응답 문구를 검증하는 read model 역할을 하며, 운영 장애 분석에도 활용할 수 있다.
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
 - GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
 - `apps/web`에는 Basic Auth 기반 read-only 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
@@ -181,6 +183,7 @@
 - `ticker_masters` 저장 모델이 추가됐고, CSV 기반 종목 마스터를 PostgreSQL에 적재한 뒤 `exact symbol -> exact name -> prefix -> partial -> fuzzy` ranked search로 종목을 찾는다.
 - `삼전`, `현대차`, `app`, `tesl` 같은 colloquial 입력은 curated alias fallback으로 canonical symbol을 먼저 찾고, 최종 표시/저장은 PostgreSQL ticker master 기준으로 처리한다.
 - Telegram `/portfolio_add`는 이제 `종목명을 입력해주세요 -> 단건 확인 또는 상위 5개 번호 선택 -> 평균단가/수량/메모` 흐름으로 동작한다.
+- Telegram `/portfolio_add`는 동일 사용자·종목 조합이 이미 있으면 중복 row를 만들지 않고 `이미 등록되어 있습니다`로 안내한다.
 - Telegram `/portfolio_bulk`는 각 입력을 독립적으로 검색하고 `추가 성공 / 이미 등록 / 실패(후보 없음 또는 후보 다수)` 요약을 반환한다.
 - 공개 웹은 Pretendard + shadcn/ui 스타일 컴포넌트를 유지하되, 현재 기본 배경은 완전한 화이트와 블랙 텍스트 기준으로 고정됐다.
 - 공개 웹 디자인 시스템은 이후 soft white/gray 기반의 premium fintech 톤으로 다시 정리됐다. 배경은 `#F8FAFC`, surface는 white, border는 slate gray, accent는 단일 blue를 기준으로 feed/detail/admin 전반의 시각 계층을 맞춘다.

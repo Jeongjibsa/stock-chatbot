@@ -18,6 +18,7 @@
 - [docs/context-summary.md](/Users/jisung/Projects/stock-chatbot/docs/context-summary.md)
 - [docs/llm-integration-plan.md](/Users/jisung/Projects/stock-chatbot/docs/llm-integration-plan.md)
 - [docs/harness-engineering.md](/Users/jisung/Projects/stock-chatbot/docs/harness-engineering.md)
+- [docs/telegram-e2e-harness.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-e2e-harness.md)
 
 우선순위는 아래다.
 
@@ -72,6 +73,7 @@
 - scheduled daily delivery와 on-demand `/report`는 둘 다 유지돼야 한다.
 - Telegram production primary runtime은 polling이 아니라 webhook이다.
 - `apps/web`의 public feed/detail과 `/admin`은 현재 MVP에 포함된 기능이다.
+- Telegram E2E는 synthetic webhook inbound + 실제 Telegram Bot API outbound + DB assertion 조합으로 운영 경로를 검증한다.
 
 ## Repository Working Rules
 
@@ -117,6 +119,13 @@ web 변경 시 추가:
 
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm --filter @stock-chatbot/web build
+```
+
+Telegram E2E harness 변경 시 추가:
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm test -- apps/telegram-bot/src/e2e/env.test.ts apps/telegram-bot/src/e2e/webhook-driver.test.ts
+make test-integration
 ```
 
 검증을 못 돌리면 다음을 반드시 결과에 적는다.

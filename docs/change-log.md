@@ -132,6 +132,9 @@
 | CHG-0104 | 2026-03-22 | UPDATE | 공개 웹 frontend를 soft white/gray 기반의 premium fintech UI로 재정비하고, Pretendard + custom shadcn/ui 디자인 시스템으로 feed/detail/admin 전체의 시각 계층과 카드/배지/버튼 톤을 통일 | PRD, Change Log, Context, README, Code | yes |
 | CHG-0105 | 2026-03-22 | FIX | Telegram webhook 보안을 다시 강화해 Vercel production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN`이 없으면 webhook route가 fail-closed로 동작하도록 바꾸고, webhook 등록 스크립트도 secret 없이 실행되지 않게 고정 | PRD, Change Log, Context, README, Deployment, Code, Tests, Ops | yes |
 | CHG-0106 | 2026-03-22 | UPDATE | 포트폴리오 종목 입력을 CSV 기반 PostgreSQL ticker master + ranked search 방식으로 전환하고, Telegram `/portfolio_add`를 검색/선택/확정 UX로, `/portfolio_bulk`를 다건 검색 요약 UX로 확장 | PRD, Plan, Change Log, Context, README, Code, Tests | yes |
+| CHG-0108 | 2026-03-22 | ADD | 실제 Telegram 운영 경로를 대상으로 하는 production-like E2E harness를 추가하고, synthetic webhook update + 실제 Bot API outbound + DB side effect 검증 조합으로 `/start`, `/register`, `/portfolio_add`, `/portfolio_bulk`, `/report`, 멀티유저 격리, 그룹 온보딩 시나리오를 자동화 가능한 범위까지 실행하도록 확장 | PRD, Plan, Change Log, Context, README, Docs, Code, Tests | yes |
+| CHG-0109 | 2026-03-22 | ADD | Telegram-visible reply text를 E2E에서 검증할 수 있도록 outbound `sendMessage` audit 로그 저장 모델과 repository를 추가하고, webhook/polling 공용 bot runtime이 전송한 메시지를 chat 기준으로 조회 가능하게 보강 | Change Log, Context, Code, Tests | yes |
+| CHG-0110 | 2026-03-22 | FIX | Telegram `/portfolio_add`가 동일 사용자·종목 조합을 upsert로 덮어쓰며 항상 `추가되었습니다`로 응답하던 문제를 수정해, 이미 등록된 종목은 중복 추가하지 않고 `이미 등록되어 있습니다`로 안내하도록 실제 저장/응답 semantics를 PRD 기준으로 정렬 | Change Log, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

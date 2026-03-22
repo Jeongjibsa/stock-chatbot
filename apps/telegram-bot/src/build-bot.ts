@@ -8,6 +8,7 @@ import {
   createDatabase,
   createPool,
   PortfolioHoldingRepository,
+  TelegramOutboundMessageRepository,
   TickerMasterRepository,
   TelegramConversationStateRepository,
   UserMarketWatchItemRepository,
@@ -91,6 +92,7 @@ export function buildTelegramBotApp(
       aliasResolver: instrumentResolver
     }
   );
+  const telegramOutboundMessageRepository = new TelegramOutboundMessageRepository(db);
   const userPortfolioService = new TelegramUserPortfolioService({
     userRepository: new UserRepository(db),
     portfolioHoldingRepository: new PortfolioHoldingRepository(db),
@@ -99,6 +101,27 @@ export function buildTelegramBotApp(
   let reportRuntime:
     | ReturnType<typeof buildTelegramReportRuntime>
     | undefined;
+
+  bot.api.config.use(async (prev, method, payload, signal) => {
+    const result = await prev(method, payload, signal);
+
+    if (method === "sendMessage") {
+      const outboundMessage = extractTelegramOutboundMessage(payload, result);
+
+      if (outboundMessage) {
+        try {
+          await telegramOutboundMessageRepository.insert(outboundMessage);
+        } catch (error) {
+          console.warn("telegram-outbound-audit-failed", {
+            chatId: outboundMessage.chatId,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      }
+    }
+
+    return result;
+  });
 
   const getUserKey = (userId?: number): string | null => {
     if (!userId) {
@@ -787,15 +810,18 @@ export function buildTelegramBotApp(
 
       try {
         switch (transition.completion.command) {
-          case "portfolio_add":
-            await userPortfolioService.addPortfolioHolding(
+          case "portfolio_add": {
+            const result = await userPortfolioService.addPortfolioHolding(
               userKey,
               transition.completion.draft
             );
             await context.reply(
-              `${transition.completion.draft.companyName}(${transition.completion.draft.symbol})가 추가되었습니다.`
+              result.created
+                ? `${transition.completion.draft.companyName}(${transition.completion.draft.symbol})가 추가되었습니다.`
+                : `${transition.completion.draft.companyName}(${transition.completion.draft.symbol})는 이미 등록되어 있습니다.`
             );
             break;
+          }
           case "portfolio_remove": {
             const removed = await userPortfolioService.removePortfolioHolding(
               userKey,
@@ -839,6 +865,62 @@ export function buildTelegramBotApp(
       await pool.end();
     }
   };
+}
+
+function extractTelegramOutboundMessage(
+  payload: unknown,
+  result: unknown
+):
+  | {
+      chatId: string;
+      method: string;
+      telegramMessageId?: string;
+      text: string;
+    }
+  | null {
+  if (!payload || typeof payload !== "object") {
+    return null;
+  }
+
+  const chatId =
+    "chat_id" in payload && payload.chat_id !== undefined && payload.chat_id !== null
+      ? String(payload.chat_id)
+      : null;
+  const text =
+    "text" in payload && typeof payload.text === "string" ? payload.text : null;
+
+  if (!chatId || !text) {
+    return null;
+  }
+
+  let telegramMessageId: string | undefined;
+
+  if (
+    result &&
+    typeof result === "object" &&
+    "message_id" in result &&
+    result.message_id !== undefined &&
+    result.message_id !== null
+  ) {
+    telegramMessageId = String(result.message_id);
+  }
+
+  const outboundMessage: {
+    chatId: string;
+    method: string;
+    telegramMessageId?: string;
+    text: string;
+  } = {
+    chatId,
+    method: "sendMessage",
+    text
+  };
+
+  if (telegramMessageId) {
+    outboundMessage.telegramMessageId = telegramMessageId;
+  }
+
+  return outboundMessage;
 }
 
 function buildConversationStateStore(

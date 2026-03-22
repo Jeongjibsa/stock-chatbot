@@ -299,6 +299,32 @@ COREPACK_HOME=/tmp/corepack pnpm test -- scripts/harness/fixture-utils.test.js
 - [docs/harness-engineering.md](/Users/jisung/Projects/stock-chatbot/docs/harness-engineering.md)
 - [harness/suite-contracts.json](/Users/jisung/Projects/stock-chatbot/harness/suite-contracts.json)
 
+### 8. 실제 Telegram E2E 하네스
+
+production-like Telegram E2E는 UI 자동화 없이 아래 조합으로 검증합니다.
+
+- inbound: production webhook route에 synthetic Telegram update POST
+- outbound: bot runtime의 실제 Telegram Bot API `sendMessage`
+- assertion: DB side effect + `telegram_outbound_messages` audit log
+
+최소 회귀 세트:
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=minimum --allow-production
+```
+
+전체 세트:
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=full --allow-production
+```
+
+관련 문서:
+
+- [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)
+- [docs/telegram-e2e-harness.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-e2e-harness.md)
+- [apps/telegram-bot/.env.e2e.example](/Users/jisung/Projects/stock-chatbot/apps/telegram-bot/.env.e2e.example)
+
 ## 환경 변수 설정
 
 ```bash
@@ -313,6 +339,13 @@ TELEGRAM_BOT_TOKEN=123456:telegram-bot-token
 TELEGRAM_TEST_CHAT_ID=123456789
 TELEGRAM_WEBHOOK_URL=https://your-vercel-domain.vercel.app/api/telegram/webhook
 TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token
+TELEGRAM_E2E_PRIMARY_CHAT_ID=123456789
+TELEGRAM_E2E_PRIMARY_USER_ID=123456789
+TELEGRAM_E2E_SECONDARY_CHAT_ID=
+TELEGRAM_E2E_SECONDARY_USER_ID=
+TELEGRAM_E2E_GROUP_CHAT_ID=
+TELEGRAM_E2E_ALLOW_PRODUCTION=0
+TELEGRAM_E2E_CLEANUP=1
 
 FRED_API_KEY=fred_api_key
 

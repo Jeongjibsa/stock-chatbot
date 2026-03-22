@@ -139,6 +139,15 @@ CREATE TABLE IF NOT EXISTS "telegram_processed_updates" (
   "created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS "telegram_outbound_messages" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "chat_id" text NOT NULL,
+  "method" text DEFAULT 'sendMessage' NOT NULL,
+  "text" text NOT NULL,
+  "telegram_message_id" text,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_symbol_idx"
   ON "ticker_masters" ("normalized_symbol");
 CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_name_en_idx"
@@ -151,3 +160,5 @@ CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_name_kr_trgm_idx"
   ON "ticker_masters" USING gin ("normalized_name_kr" gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_symbol_trgm_idx"
   ON "ticker_masters" USING gin ("normalized_symbol" gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS "telegram_outbound_messages_chat_id_created_at_idx"
+  ON "telegram_outbound_messages" ("chat_id", "created_at");
