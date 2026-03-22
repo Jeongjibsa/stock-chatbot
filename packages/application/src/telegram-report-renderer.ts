@@ -472,7 +472,7 @@ function buildGuide(
   const snapshotSuffix =
     holding.currentPrice !== undefined
       ? ` 시세 스냅샷은 ${formatValueTransition(holding.previousClose, holding.currentPrice)}${formatChangeSuffix(holding.changePercent)} 기준입니다.`
-      : "";
+      : " 시세 스냅샷은 확인 필요합니다.";
 
   switch (finalAction) {
     case "확대 검토":

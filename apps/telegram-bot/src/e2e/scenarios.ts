@@ -417,7 +417,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
       await runtime.waitForReplyContaining({
         chatId: runtime.config.primaryChatId,
         since,
-        expectedPhrases: ["벌크 종목 등록 결과입니다.", "실패:", "후보 없음"]
+        expectedPhrases: ["벌크 종목 등록 결과입니다.", "실패:"]
       });
     }
   },

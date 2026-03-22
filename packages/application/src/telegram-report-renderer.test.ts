@@ -198,4 +198,29 @@ describe("renderTelegramDailyReport", () => {
     expect(report).not.toContain("0.00%");
     expect(report).not.toContain("0.00");
   });
+
+  it("keeps a readable holding snapshot fallback when price data is unavailable", () => {
+    const report = renderTelegramDailyReport({
+      displayName: "Jisung",
+      runDate: "2026-03-20",
+      holdings: [
+        {
+          companyName: "삼성전자",
+          exchange: "KR",
+          symbol: "005930"
+        }
+      ],
+      marketResults: [],
+      portfolioRebalancing: {
+        holdings: [
+          {
+            name: "삼성전자",
+            finalAction: "유지 우세"
+          }
+        ]
+      }
+    });
+
+    expect(report).toContain("시세 스냅샷은 확인 필요합니다.");
+  });
 });
