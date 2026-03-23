@@ -1,90 +1,126 @@
-# Stock Briefing Bot
+# Stock Chatbot
 
-거시 지표, 시장 이벤트, 퀀트 시그널을 종합해 텔레그램으로 자동 발송하고, 공개 브리핑은 웹 아카이브로 제공하는 시장 브리핑 자동화 시스템
+거시 지표, 시장 이벤트, 퀀트 시그널을 종합해 Telegram DM으로 개인화 브리핑을 보내고, 공개 가능한 브리핑은 웹 아카이브로 제공하는 시장 브리핑 시스템입니다.
 
-## 문제 정의
+| Entry | URL / Note |
+| --- | --- |
+| Public briefing web | [https://web-three-tau-58.vercel.app](https://web-three-tau-58.vercel.app) |
+| Public feed | [https://web-three-tau-58.vercel.app/](https://web-three-tau-58.vercel.app/) |
+| Admin console | `/admin` (`Basic Auth` when enabled) |
+| Telegram runtime | production primary mode is `webhook` |
 
-매일 시장을 확인하는 일의 핵심 비용은 조회보다 해석에 있습니다.  
+## 프로젝트 한눈에 보기
+
+이 프로젝트는 “뉴스 요약 봇”보다 “시장 브리핑 자동화 시스템”에 가깝습니다.
+시장 데이터와 규칙 기반 점수 계산은 코드가 담당하고, 자연어는 마지막 전달 레이어에서만 사용합니다.
+
+```text
+입력: /report
+해석: 사용자 + 보유 종목 + 오늘 시장 상태 + 전략 스냅샷
+출력: Telegram 개인화 브리핑 + 공개 브리핑 상세 링크
+```
+
+## 왜 이 프로젝트를 만들었는가
+
+매일 시장을 보는 비용은 조회보다 해석에 있습니다.
 미국/한국 지수, 금리, 환율, 원자재, 뉴스, 이벤트, 보유 종목을 따로 보고 다시 연결해야 하기 때문입니다.
 
-이 프로젝트는 그 해석 비용을 줄이기 위해 만들어졌습니다.
+이 저장소는 그 해석 비용을 줄이기 위해 아래를 자동화합니다.
 
 - 시장 데이터를 수집합니다.
 - 거시/추세/이벤트/자금 신호를 계산합니다.
-- LLM은 마지막 브리핑 생성 레이어로만 사용합니다.
-- 개인화 결과는 Telegram DM으로, 공개 가능한 결과는 웹 archive로 전달합니다.
+- 개인화 브리핑은 Telegram DM으로 보냅니다.
+- 공개 가능한 브리핑은 웹 feed/detail로 남깁니다.
 
-핵심은 “뉴스 요약 봇”이 아니라 **시장 브리핑 자동화 시스템**이라는 점입니다.
+## 채널 역할
 
-## 왜 필요한가
+| Channel | Role | 포함 내용 |
+| --- | --- | --- |
+| Telegram DM | 개인화 입력 + 개인화 리포트 delivery | 보유 종목, 리밸런싱 해석, 개인 링크 |
+| Telegram Group | 온보딩 + `/register` 유도 | 안내, 중복 없는 등록 유도 |
+| Telegram Channel | 공개 브리핑 broadcast | 공개 링크, 공용 브리핑 |
+| Public Web | 공개 브리핑 archive | 시장/매크로/자금/이벤트 |
+| `/admin` | 운영 확인 | 최근 공개 브리핑, 실행 로그, 전략 회고 |
 
-- 매일 반복되는 시장 점검과 요약 작업을 자동화합니다.
-- 같은 입력에서 같은 구조의 브리핑을 일관되게 생성합니다.
-- 미국/한국 시장을 함께 보는 투자자 관점의 입력과 출력 구조를 가집니다.
-- 공개 브리핑과 개인화 브리핑을 분리해 개인정보 노출 없이 운영할 수 있습니다.
+공개 웹에는 개인 포트폴리오 데이터, 개인 기사 요약, 개인 점수카드를 저장하거나 노출하지 않습니다.
 
-## 핵심 기능
+## 핵심 기능 우선순위
 
 ### 1. 시장 상태를 구조화해 전달
 
-- 미국 지수와 한국 지수를 함께 봅니다.
-- 금리, 환율, 달러 인덱스, 원자재를 같은 브리핑 안에서 해석합니다.
-- `전일값 → 현재값`, 등락률, 리스크 온/오프 시그널을 함께 보여줍니다.
+- 미국/한국 지수를 함께 봅니다.
+- 금리, 환율, 달러 강도, 원자재를 같은 브리핑 안에서 해석합니다.
+- `전일값 -> 현재값`, 등락률, 리스크 온/오프를 함께 보여줍니다.
 
-### 2. 코드 기반 분석 + LLM 기반 해석
+### 2. Telegram 개인화 delivery
 
-- 데이터 수집과 점수 계산은 코드가 담당합니다.
-- LLM은 이미 계산된 입력을 바탕으로 최종 브리핑을 문장화합니다.
-- LLM이 실패해도 공개 브리핑은 규칙 기반 fallback으로 계속 생성됩니다.
+- `/register`, `/report`, `/portfolio_add`, `/portfolio_bulk`, `/portfolio_list` 흐름을 유지합니다.
+- `/report`는 DM에서 빠르게 응답하도록 fast rule-based 경로를 기본값으로 사용합니다.
+- LLM이 꺼지거나 실패해도 `시장 / 매크로 / 자금 / 이벤트 / 리스크` 섹션은 비어 있지 않게 유지합니다.
 
-### 3. Telegram 개인화 delivery
+### 3. 공개 웹 브리핑 archive
 
-- `/register`, `/unregister`, `/portfolio_add`, `/portfolio_bulk`, `/report` 흐름으로 사용자별 입력을 받습니다.
-- Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast rule-based 경로를 기본값으로 사용합니다. 보유 종목별 뉴스 수집과 LLM 조합은 기본적으로 끄고, 시장 데이터와 규칙 기반 렌더러로 먼저 빠르게 응답합니다. 이 경로에서도 시장/매크로/자금/이벤트/리스크 섹션과 공개 상세 링크는 rule-based fallback으로 비어 있지 않게 유지합니다.
-- 3대 관점 기반 리밸런싱 해석은 optional `portfolioRebalancing` payload가 실제 runtime에 연결될 때 fully surface됩니다. payload가 없으면 템플릿 구조는 유지하되 `확인 필요 / 점검 필요 / 데이터 보강 필요` fallback label을 사용합니다.
-- 운영이나 수동 검증에서 특정 거래일 데이터를 재현해야 할 때는 worker/manual backfill 경로에서 `REPORT_RUN_DATE=YYYY-MM-DD` override를 사용할 수 있습니다. Telegram `/report`는 항상 요청 시점의 서울 날짜를 사용합니다.
-- `/portfolio_add`는 CSV 기반 ticker master 검색 결과를 보여주고, 상위 5개 후보 중 번호 선택으로 종목을 추가합니다.
-- `삼전`, `현대차`, `app`, `tesl` 같은 짧은 alias는 curated fallback으로 보강하되, 최종 저장과 표시는 PostgreSQL ticker master를 기준으로 합니다.
-- `/portfolio_bulk`는 comma/newline/semicolon으로 여러 키워드를 받아 각 항목을 독립 검색한 뒤 `추가 성공 / 이미 등록 / 실패` 요약을 돌려줍니다.
-- 개인화 리포트는 Telegram DM으로만 전송합니다.
-- 그룹은 온보딩, DM은 개인화 delivery, 웹은 공개 archive 역할로 분리됩니다.
+- 공개 가능한 시장/매크로/자금/이벤트 브리핑을 최신순 feed와 detail 화면으로 제공합니다.
+- Telegram 하단 상세 링크는 `reports` read model을 우선 사용합니다.
+- feed/detail은 정적 스냅샷이 아니라 DB 기반 동적 조회를 사용합니다.
 
-### 4. 공개 웹 브리핑 archive
+### 4. 운영 콘솔과 전략 회고
 
-- 공개 가능한 시장/매크로/자금/이벤트 브리핑을 web feed로 제공합니다.
-- 날짜별 최신순 top-down feed와 단건 detail 화면을 제공합니다.
-- 보유 종목 정보와 개인 기사 요약은 공개 웹에 저장하지 않습니다.
+- `/admin`에서 최근 공개 브리핑, 최근 리포트 실행 로그, 전략 스냅샷 회고를 확인할 수 있습니다.
+- 전략 스냅샷은 `strategy_snapshots` 읽기 모델에 저장합니다.
+- 이 데이터는 프롬프트와 점수 규칙 튜닝용 운영 지표로 사용합니다.
 
-### 5. 운영 콘솔
-
-- `/admin`에서 최근 공개 브리핑, 최근 리포트 실행 로그, 최근 전략 스냅샷 회고를 확인할 수 있습니다.
-- production에서는 Basic Auth로 보호할 수 있습니다.
-- 운영 콘솔도 개인 포트폴리오 상세 정보는 노출하지 않습니다.
-- 공개 웹 feed/detail에는 운영 콘솔 링크를 노출하지 않으며, 운영자는 `/admin` URL에 직접 접근합니다.
-
-### 6. 전략 성과 추적
-
-- 생성된 퀀트 점수카드는 `strategy_snapshots` 읽기 모델에 저장합니다.
-- 운영 콘솔은 최근 시그널의 이후 수익률과 액션 적합도를 간단한 heuristic 기준으로 회고합니다.
-- 이 결과는 프롬프트와 점수 규칙을 튜닝하기 위한 운영 지표로 사용합니다.
-
-### 7. 스케줄 기반 무인 운영
+### 5. 스케줄 기반 무인 운영
 
 - Vercel이 공개 웹, Telegram webhook, primary cron 진입점을 담당합니다.
-- GitHub Actions는 CI와 backup/reconcile/manual rerun 역할을 담당합니다.
+- GitHub Actions는 CI + backup/reconcile + manual rerun 역할을 담당합니다.
 - worker와 shared application 계층이 공개 브리핑 생성, Telegram delivery, 실행 로그 기록을 수행합니다.
-- 개발과 테스트는 로컬 Docker PostgreSQL 기준으로 진행하고, production은 Neon을 사용합니다.
-- 시장 데이터는 `runDate` 기준 최근 가용일 스냅샷을 조회하므로 과거 날짜 backfill과 manual rerun도 같은 로직으로 처리합니다.
 
-## 주요 시그널 및 분석 항목
+## 주요 시그널
 
 | 구분 | 주요 항목 | 목적 |
 | --- | --- | --- |
 | 미국 시장 | `S&P 500`, `NASDAQ`, `DOW`, `VIX`, `미국 10년물 금리` | 위험 선호, 성장주 압력, 변동성 레짐 |
 | 한국 시장 | `KOSPI`, `KOSDAQ`, `USD/KRW` | 국내 리스크 프리미엄, 환율 부담 |
-| 매크로/원자재 | `WTI`, `천연가스`, `구리`, `달러 인덱스`, `CPI/Fed 일정` | 인플레이션, 달러 강세, 경기 민감도 |
-| 이벤트 | 지정학 리스크, 실적 일정, AI/반도체/원자재 이슈 | 단기 변동성, 섹터 촉매 |
-| 퀀트 신호 | `Macro`, `Trend`, `Event`, `Flow`, `Total` | `BUY / HOLD / REDUCE` 대신 시나리오 제안 |
+| 매크로/원자재 | `WTI`, `천연가스`, `구리`, `달러 인덱스` | 인플레이션, 달러 강세, 경기 민감도 |
+| 이벤트 | 지정학 리스크, 실적 일정, AI/반도체 이슈 | 단기 변동성, 섹터 촉매 |
+| 퀀트 신호 | `Macro`, `Trend`, `Event`, `Flow`, `Total` | 고정된 매매 지시 대신 시나리오 제안 |
+
+## Telegram 흐름 예시
+
+| Input | Parsed | Output |
+| --- | --- | --- |
+| `/register` in DM | `register + private_delivery_chat` | 개인 발송 대상 등록 |
+| `/register` in group | `register + onboarding_only` | DM에서 다시 등록하라는 안내 |
+| `/portfolio_add 삼전` | `portfolio_add + alias_resolved:005930` | 후보 확인 또는 상위 5개 선택 |
+| `/portfolio_bulk AAPL, MSFT` | `portfolio_bulk + multi_search` | 성공 / 이미 등록 / 실패 요약 |
+| `/report` | `personal_rebalancing_briefing` | 개인화 브리핑 + 공개 상세 링크 |
+
+짧은 alias 예시:
+
+- `삼전` -> `삼성전자(005930)`
+- `현대차` -> `현대자동차(005380)`
+- `tesl` -> `TSLA`
+- `app` -> curated alias fallback 후 canonical ticker 탐색
+
+## 리포트 구조 예시
+
+Telegram DM 요약본은 아래 흐름을 기본으로 사용합니다.
+
+```text
+오늘의 포트폴리오 리밸런싱 브리핑
+-> 오늘 한 줄 결론
+-> 오늘의 리밸런싱 제안
+-> 성향별 해석
+-> 내 포트폴리오 요약
+-> 시장 레짐 요약
+-> 종목별 리밸런싱 가이드
+-> 오늘의 포트 리스크 체크
+-> 참고용 시장 브리핑
+-> 공개 상세 브리핑 링크
+```
+
+공개 웹 브리핑은 개인화 용어를 제거한 `시장 / 매크로 / 자금 / 이벤트` 중심 구조를 사용합니다.
 
 ## 시스템 아키텍처
 
@@ -124,65 +160,19 @@ GitHub Actions
   -> manual rerun / smoke test
 ```
 
-## 기술 스택
+## 런타임과 스택
 
-### Core / Application
+| Layer | Choice |
+| --- | --- |
+| Core | `Node.js 24`, `TypeScript 5.9`, `pnpm workspace` |
+| Data | `FRED`, `Yahoo Finance scraping` |
+| LLM | `OpenAI`, `Google Gemini`, provider-agnostic interface |
+| Telegram | `Telegram Bot API`, `grammY` |
+| Web | `Next.js App Router`, `Tailwind CSS`, `React Markdown` |
+| Infra | `Vercel`, `Neon`, `Docker Compose`, `GitHub Actions`, `Redis` |
 
-- `Node.js 24`
-- `TypeScript 5.9`
-- `pnpm workspace`
-
-선택 이유:
-- bot, worker, web, shared packages를 한 저장소에서 일관되게 운영하기 쉽습니다.
-
-### Data
-
-- `FRED`
-- `Yahoo Finance scraping`
-- 향후 `ECOS`, 수급/실적 캘린더 확장 예정
-
-선택 이유:
-- 초기 비용을 낮추면서 미국/매크로 지표와 주요 지수를 빠르게 커버할 수 있습니다.
-
-### LLM
-
-- `OpenAI`
-- `Google Gemini`
-- provider-agnostic client interface
-
-선택 이유:
-- 모델 교체와 fallback 전략을 최소 코드 변경으로 유지할 수 있습니다.
-
-### Bot / Delivery
-
-- `Telegram Bot API`
-- `grammY`
-
-선택 이유:
-- 명령 기반 UX와 DM delivery 분리가 명확합니다.
-
-### Web / Public Archive
-
-- `Next.js App Router`
-- `Tailwind CSS`
-- `Pretendard`
-- `shadcn/ui` 스타일 컴포넌트
-- `React Markdown`
-
-선택 이유:
-- feed/detail 중심 공개 웹을 빠르게 만들 수 있고 Vercel 배포와 잘 맞습니다. Pretendard와 custom shadcn/ui 컴포넌트, soft white/gray + single blue accent 팔레트로 금융 리포트 톤의 밀도 높은 화면을 일관되게 유지합니다.
-
-### Infra / Ops
-
-- `GitHub Actions`
-- `Docker Compose`
-- `PostgreSQL`
-- `Redis`
-- `Neon` (production DB target)
-- `Vercel` (public web target)
-
-선택 이유:
-- 로컬 검증 루프와 production 배포 경로를 분리하면서도 구조를 단순하게 유지할 수 있습니다.
+현재 production primary runtime은 `apps/web`입니다.
+`apps/api`는 MVP production 필수 런타임이 아니라 draft 성격을 유지합니다.
 
 ## 디렉토리 구조
 
@@ -209,20 +199,22 @@ GitHub Actions
 └── README.md
 ```
 
-- `apps/telegram-bot`: Telegram 명령 처리와 사용자 입력 UX
-- `apps/worker`: daily report 실행, 공개 브리핑 생성, Telegram delivery
-- `apps/web`: 공개 브리핑 feed/detail 웹 앱
-- `packages/application`: 시장 데이터, 퀀트, LLM, 렌더링, orchestration
-- `packages/database`: schema, repository, persistence logic
-- `apps/worker/src/import-ticker-master.ts`: CSV 종목 마스터를 PostgreSQL `ticker_masters`로 적재
-- `scripts/pages`: deprecated fallback Pages build 경로
+| Path | Role |
+| --- | --- |
+| `apps/web` | public feed/detail, `/admin`, `/api/telegram/webhook`, `/api/cron/*` |
+| `apps/telegram-bot` | Telegram command/runtime logic, local polling fallback |
+| `apps/worker` | daily report orchestration, public briefing generation, delivery write path |
+| `packages/application` | 시장 데이터, 뉴스, quant, LLM composition, renderer |
+| `packages/database` | schema, migration SQL, repositories |
+| `harness` | fixture, grader, snapshot 기준선 |
 
-## 실행 방법
+## 로컬 실행
 
 ### 1. 의존성 설치
 
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm install
+cp .env.example .env
 ```
 
 ### 2. 로컬 인프라 실행
@@ -234,13 +226,19 @@ make up
 ### 3. 개발 서버 실행
 
 ```bash
-make dev-api
 make dev-bot
 make dev-worker
 COREPACK_HOME=/tmp/corepack pnpm dev:web
 ```
 
-### 4. 주요 Telegram 명령
+필요 시:
+
+```bash
+make dev-api
+COREPACK_HOME=/tmp/corepack pnpm tickers:import
+```
+
+## 주요 명령
 
 ```text
 /register         개인화 리포트 등록
@@ -254,314 +252,85 @@ COREPACK_HOME=/tmp/corepack pnpm dev:web
 /portfolio_bulk   여러 종목 빠르게 추가
 /portfolio_list   보유 종목 확인
 /portfolio_remove 보유 종목 삭제
-/mock_report      예시 리포트 보기
+/help             명령 안내
 ```
 
-`/report`와 공개 브리핑 날짜는 항상 서울 기준 요청일을 사용합니다. 시장 데이터는 해당 날짜 이전 마지막 가용 거래일 스냅샷으로 조회하고, 관심 지표 개인 설정은 현재 개인화 입력 대상에서 제외했으며, `/report`와 공개 브리핑은 시스템 기본 시장 지표 세트를 공통으로 사용합니다.
+`/report`와 공개 브리핑 날짜는 항상 서울 기준 요청일을 사용합니다.
+시장 데이터는 해당 날짜 이전 마지막 가용 거래일 스냅샷으로 조회합니다.
 
-### 5. 종목 마스터 CSV 적재
+## 검증
 
-로컬 Docker PostgreSQL에서 구현과 검증을 끝낸 뒤 ticker master를 적재합니다.
-
-```bash
-COREPACK_HOME=/tmp/corepack pnpm tickers:import -- --file="/Users/jisung/Downloads/주식종목데이터/통합_국영문_UTF-8-SIG.csv"
-```
-
-지원 컬럼:
-
-```text
-symbol | name_en | name_kr | market
-종목코드 | 종목명(영문) | 종목명(한글) | 시장구분
-```
-
-### 6. 전체 검증
+기본 검증:
 
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm verify
 ```
 
-### 7. 웹 앱 빌드 확인
-
-```bash
-COREPACK_HOME=/tmp/corepack pnpm --filter @stock-chatbot/web build
-```
-
-### 6. 통합 테스트
-
-```bash
-make test-integration
-```
-
-### 7. 하네스 검증
+하네스 변경 시:
 
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm harness:check
 COREPACK_HOME=/tmp/corepack pnpm test -- scripts/harness/fixture-utils.test.js
 ```
 
-관련 기준 문서:
-
-- [AGENTS.md](/Users/jisung/Projects/stock-chatbot/AGENTS.md)
-- [docs/harness-engineering.md](/Users/jisung/Projects/stock-chatbot/docs/harness-engineering.md)
-- [harness/suite-contracts.json](/Users/jisung/Projects/stock-chatbot/harness/suite-contracts.json)
-
-### 8. 실제 Telegram E2E 하네스
-
-production-like Telegram E2E는 UI 자동화 없이 아래 조합으로 검증합니다.
-
-- inbound: production webhook route에 synthetic Telegram update POST
-- outbound: bot runtime의 실제 Telegram Bot API `sendMessage`
-- assertion: DB side effect + `telegram_outbound_messages` audit log
-
-최소 회귀 세트:
+DB schema/repository 변경 시:
 
 ```bash
-COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=minimum --allow-production
+make test-integration
 ```
 
-전체 세트:
+웹 변경 시:
 
 ```bash
-COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=full --allow-production
+COREPACK_HOME=/tmp/corepack pnpm --filter @stock-chatbot/web build
 ```
 
-관련 문서:
-
-- [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)
-- [docs/telegram-e2e-harness.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-e2e-harness.md)
-- [apps/telegram-bot/.env.e2e.example](/Users/jisung/Projects/stock-chatbot/apps/telegram-bot/.env.e2e.example)
-
-## 환경 변수 설정
+Telegram E2E harness 변경 시:
 
 ```bash
-DATABASE_URL=postgresql://stockbot:stockbot@localhost:5432/stockbot
-REDIS_URL=redis://localhost:6379
-
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AIza...
-LLM_PROVIDER=google
-
-TELEGRAM_BOT_TOKEN=123456:telegram-bot-token
-TELEGRAM_TEST_CHAT_ID=123456789
-TELEGRAM_WEBHOOK_URL=https://your-vercel-domain.vercel.app/api/telegram/webhook
-TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token
-TELEGRAM_E2E_PRIMARY_CHAT_ID=123456789
-TELEGRAM_E2E_PRIMARY_USER_ID=123456789
-TELEGRAM_E2E_SECONDARY_CHAT_ID=
-TELEGRAM_E2E_SECONDARY_USER_ID=
-TELEGRAM_E2E_GROUP_CHAT_ID=
-TELEGRAM_E2E_ALLOW_PRODUCTION=0
-TELEGRAM_E2E_CLEANUP=1
-
-FRED_API_KEY=fred_api_key
-
-PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
-CRON_SECRET=vercel-cron-shared-secret
-ADMIN_DASHBOARD_USERNAME=operator
-ADMIN_DASHBOARD_PASSWORD=strong-password
-REPORT_TIMEZONE=Asia/Seoul
-DAILY_REPORT_PATTERN="0 0 9 * * *"
-DAILY_REPORT_WINDOW_MINUTES=15
+COREPACK_HOME=/tmp/corepack pnpm test -- apps/telegram-bot/src/e2e/env.test.ts apps/telegram-bot/src/e2e/webhook-driver.test.ts
+make test-integration
 ```
 
-운영 원칙:
+## 배포 메모
 
-- **개발/테스트**: 로컬 Docker PostgreSQL 사용
-- **배포**: Vercel env의 `DATABASE_URL`을 Neon connection string으로 설정
-- `.env`, `.env.*`, 키 파일은 git ignore 대상
+- local dev/test DB는 Docker PostgreSQL을 사용합니다.
+- production DB target은 Neon입니다.
+- Vercel은 public web, Telegram webhook, primary cron entrypoint를 담당합니다.
+- `PUBLIC_BRIEFING_BASE_URL`은 실제 공개 웹 URL을 가리켜야 합니다.
+- production Telegram runtime은 polling이 아니라 webhook입니다.
 
-## 스케줄링 / 자동화 방식
-
-현재 운영 기준은 `Vercel primary + GitHub Actions backup`입니다.
-
-- `Vercel webhook`
-  - `/api/telegram/webhook`
-  - `/start`, `/register`, `/report`, `/portfolio_*`, `/market_*`, `/report_*` 처리
-- `Vercel Cron`
-  - `/api/cron/daily-report`
-  - 공개 브리핑 생성
-  - `reports` read model 저장
-  - 사용자별 daily report 생성 및 Telegram DM 발송
-- `GitHub Actions Daily Report`
-  - backup/reconcile/manual rerun
-  - `VERCEL_RECONCILE_URL + CRON_SECRET`가 있으면 Vercel reconcile route 호출
-  - 불가능할 때만 local worker 또는 external trigger fallback
-- `CI`
-  - `push`, `pull_request` 시 `pnpm verify`
-- `Daily Report Smoke`
-  - seeded mock portfolio 기준 worker 경로 검증
-- `Telegram Smoke Test`
-  - 실제 Bot API로 `getMe` / `sendMessage` 검증
-
-중요한 운영 규칙:
-
-- `PUBLIC_BRIEFING_BASE_URL`은 Vercel 공개 웹 URL을 기준으로 설정
-- 공개 feed/detail은 정적 build snapshot이 아니라 dynamic DB 조회로 동작하므로, `reports` 적재 후 redeploy 없이 바로 반영되어야 합니다.
-- Vercel cron 보안을 위해 production에서는 `CRON_SECRET`을 설정
-- production webhook 보안을 위해 `TELEGRAM_WEBHOOK_SECRET_TOKEN`을 반드시 설정
-- `DATABASE_URL`이 없으면 local worker fallback 단계는 skip
-- 공개 웹은 개인화 데이터를 저장하거나 노출하지 않음
-- Telegram polling runtime은 local development나 비상 fallback용으로만 사용하고, production primary runtime은 webhook 기준
-
-## 하네스 엔지니어링
-
-이 저장소의 하네스는 snapshot 비교만으로 끝나지 않습니다.
-
-- suite 기준선은 [harness/suite-contracts.json](/Users/jisung/Projects/stock-chatbot/harness/suite-contracts.json)에 둡니다.
-- `active` suite는 fixture, grader, snapshot 요구사항을 모두 만족해야 합니다.
-- `report_render_cases`처럼 렌더링 품질이 중요한 suite는 `snapshotFile`, `renderedText`, grader 연결을 함께 검증합니다.
-- 하네스 세부 운영 기준은 [docs/harness-engineering.md](/Users/jisung/Projects/stock-chatbot/docs/harness-engineering.md)에 정리합니다.
-
-## Telegram 브리핑 예시
-
-```text
-1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-20)
-
-2. 📌 오늘 한 줄 결론
-- 종목별 흐름은 일부 버티고 있지만, 시장 valuation 부담과 구조 리스크가 높아 오늘은 신규 확대보다 유지와 선별 조정 중심 접근이 더 적절합니다.
-
-3. 🎯 오늘의 리밸런싱 제안
-- 비중 확대 검토: 삼성전자
-- 유지 우세: SK하이닉스, 현대자동차, 현대글로비스
-- 비중 조절 필요: 에코프로
-- 우선 관찰 대상: HMM
-
-6. 🌡️ 시장 레짐 요약
-- 시장 종합: 매우 방어적 구간으로 해석하는 편이 적절합니다.
-- 심리/강도: 적정 / 적정
-- 밸류/펀더멘털: 과열 / 매우 고평가
-- 구조 리스크: 과열
-- 한줄 해석: 표면 모멘텀은 유지되더라도 내부 밸류 부담과 구조적 취약성 때문에 방어적으로 읽는 편이 적절합니다.
-
-7. 📈 종목별 리밸런싱 가이드
-[삼성전자]
-- 최종 의견: 확대 검토
-- 한줄 판단: 내재 가치는 양호하고 포트 적합성도 무난해 선별적 확대 후보로 볼 수 있지만, 시장 전체가 공격적 확대를 허용하는 환경은 아닙니다.
-- 내재 가치: 양호
-- 가격/추세: 중립
-- 미래 기대치: 중립
-- 포트 적합성: 보통
-
-10. 🔎 공개 상세 브리핑
-https://your-vercel-domain.vercel.app/reports/report-2026-03-20
-
-11. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.
-```
-
-## 퀀트 스코어링 아이디어
-
-현재 점수카드는 설명 가능한 규칙 기반입니다.
-
-- `Macro`: 금리, 환율, 달러 강세, 레짐
-- `Trend`: 가격 추세, 이동평균, 모멘텀
-- `Event`: 뉴스/이벤트 방향성
-- `Flow`: 자금 흐름 또는 대용 지표
-- `Total`: 종합 점수
-- `Action`: `BUY / HOLD / REDUCE` 대신 시나리오 제안
-
-예시:
-
-```text
-Macro: -0.60 / Trend: -0.40 / Event: +0.20 / Flow: -0.30
-→ Total: -0.42 → REDUCE
-```
-
-## 운영 시 고려사항 / 리스크
-
-### 비용
-
-- LLM 호출은 가장 비싼 단계입니다.
-- 공개 브리핑과 개인화 브리핑을 분리해 호출 수를 줄이는 구조가 유리합니다.
-- production DB는 Neon을 사용하되, 개발 단계에서는 비용 없는 로컬 Docker 경로를 유지합니다.
-
-### 데이터 품질
-
-- FRED와 Yahoo Finance의 기준 시점이 다를 수 있습니다.
-- 일부 지표는 `asOfDate`가 다르므로 같은 시점 데이터처럼 과장하면 안 됩니다.
-- 기사 품질이 낮거나 데이터가 누락돼도 전체 브리핑은 계속 생성되도록 설계합니다.
-
-### 장애 대응
-
-- Telegram delivery 실패와 report generation 실패를 분리 기록합니다.
-- LLM composition 실패 시 fallback renderer로 계속 진행합니다.
-- GitHub Actions schedule은 지연될 수 있으므로 idempotency가 필요합니다.
-
-### 개인정보
-
-- 공개 웹에는 개인화 포트폴리오 데이터가 포함되지 않습니다.
-- 보유 종목, 개인 기사 요약, 개인 점수카드는 Telegram DM 전용입니다.
-
-## 향후 개선 계획
-
-- `reports` read model을 기반으로 공개 웹 feed/detail 고도화
-- 공개 웹을 Vercel 기준으로 안정화한 뒤 GitHub Pages fallback 축소
-- 인증된 웹 관리 콘솔 추가
-- 전략 성과 추적 및 백테스트
-- 자금 흐름/실적 캘린더 데이터 소스 확장
-- LLM fallback 정책 고도화
-
-현재 범위에서 제외:
-
-- 모바일 앱
-- 자동 매매
-- 인증 기반 개인 웹 대시보드
-
-## Vercel 배포 메모
-
-이 프로젝트의 공개 웹은 `apps/web`를 root directory로 두고 배포하는 것을 기준으로 합니다.
-
-1. Vercel에서 repo import
-2. Root Directory를 `apps/web`로 설정
-3. Node.js Version은 `24.x`로 설정
-4. Environment Variables에 최소 아래를 설정
-
-```bash
-DATABASE_URL=postgresql://neondb_owner:***@ep-***.neon.tech/neondb?sslmode=require
-```
-
-5. build는 기본 `pnpm build`
-6. 공개 웹은 `reports` 테이블만 읽고, 개인화 Telegram 기능은 계속 worker가 담당
-7. GitHub repository variable `PUBLIC_BRIEFING_BASE_URL`을 배포된 Vercel URL로 설정
-
-```bash
-PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
-```
-
-8. Telegram webhook 등록
+Webhook 등록 예시:
 
 ```bash
 TELEGRAM_BOT_TOKEN=123456:telegram-bot-token \
-TELEGRAM_WEBHOOK_URL=https://your-vercel-domain.vercel.app/api/telegram/webhook \
+TELEGRAM_WEBHOOK_URL=https://web-three-tau-58.vercel.app/api/telegram/webhook \
 TELEGRAM_WEBHOOK_SECRET_TOKEN=webhook-secret-token \
 COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 ```
 
-9. GitHub Actions backup/reconcile용 variable과 secret 설정
+## 운영 노트
 
-```bash
-PUBLIC_BRIEFING_BASE_URL=https://your-vercel-domain.vercel.app
-VERCEL_RECONCILE_URL=https://your-vercel-domain.vercel.app/api/cron/reconcile
-CRON_SECRET=vercel-cron-shared-secret
-```
+- 개인화 리포트는 Telegram DM 전용입니다.
+- 공개 웹은 market-only boundary를 유지해야 합니다.
+- 과거 날짜 재현은 worker/manual backfill 경로의 `REPORT_RUN_DATE=YYYY-MM-DD` override를 사용합니다.
+- 현재 다음 우선순위는 production webhook/cron smoke, Neon read/write smoke, 전략 스코어 튜닝입니다.
 
-10. 운영 콘솔 Basic Auth 설정
+## 문서 기준선
 
-```bash
-ADMIN_DASHBOARD_USERNAME=operator
-ADMIN_DASHBOARD_PASSWORD=strong-password
-```
+아래 문서를 source of truth로 사용합니다.
 
-추가 메모:
+- `docs/initial-prd.md`
+- `docs/phase-plan.md`
+- `docs/change-log.md`
+- `docs/context-summary.md`
+- `docs/harness-engineering.md`
+- `docs/telegram-e2e-harness.md`
 
-- `apps/web/vercel.json`에 install/build 명령이 고정돼 있습니다.
-- `apps/web/.env.local.example`는 로컬 웹 실행용 최소 env 예시입니다.
-- production에서는 Neon connection string을 Vercel의 `DATABASE_URL`에 넣고, 개발과 테스트는 계속 로컬 Docker PostgreSQL을 사용합니다.
-- 현재 public alias 기준 운영 URL은 `https://web-three-tau-58.vercel.app`입니다.
-- `pnpm telegram:webhook:register`는 `setWebhook`과 `getWebhookInfo`를 연속 호출해 현재 webhook 설정을 바로 확인합니다. `TELEGRAM_WEBHOOK_SECRET_TOKEN`이 없으면 스크립트가 실패하며, production에서는 secret header 검증을 필수로 사용합니다.
-- Telegram webhook route는 `telegram_processed_updates` read model로 같은 `update_id`를 dedupe하므로, webhook 재시도로 같은 command가 두 번 실행되지 않아야 합니다.
-- 운영 콘솔은 `https://your-vercel-domain.vercel.app/admin` 경로입니다.
-- 실제 Telegram 운영 검증 순서는 [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)를 기준으로 진행합니다.
+## 추가 구현 참고
 
-## 라이선스
+README에서 분리한 구현 메모는 아래 문서를 참고합니다.
 
-별도 라이선스를 아직 지정하지 않았습니다. 필요 시 프로젝트 성격에 맞춰 추가합니다.
+- [docs/implementation-reference.md](/Users/jisung/Projects/stock-chatbot/docs/implementation-reference.md)
+- [docs/vercel-deployment.md](/Users/jisung/Projects/stock-chatbot/docs/vercel-deployment.md)
+- [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)
