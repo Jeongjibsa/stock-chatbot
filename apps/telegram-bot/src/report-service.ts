@@ -100,10 +100,7 @@ export class TelegramReportService {
     } = {
       user: orchestratorUser,
       runDate: input.runDate,
-      scheduleType:
-        (input.briefingSession ?? "pre_market") === "pre_market"
-          ? "manual-pre-market"
-          : "manual-post-market"
+      scheduleType: "telegram-report"
     };
 
     if (input.briefingSession) {
