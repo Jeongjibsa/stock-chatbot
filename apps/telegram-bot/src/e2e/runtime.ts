@@ -74,6 +74,10 @@ export class TelegramE2ERuntime {
 
     if (identity?.id) {
       await this.portfolioHoldingRepository.clearByUserId(identity.id);
+      await this.reportRunRepository.deleteByUserIdsSince(
+        [identity.id],
+        new Date("2000-01-01T00:00:00.000Z")
+      );
     }
 
     await this.requestEventRepository.clearByTelegramUserIdsSince(

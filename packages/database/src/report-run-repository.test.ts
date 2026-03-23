@@ -23,6 +23,11 @@ function createDbDouble() {
         })
       })
     }),
+    delete: () => ({
+      where: () => ({
+        returning: async () => state.result
+      })
+    }),
     select: () => ({
       from: () => ({
         where: () => ({
@@ -114,5 +119,15 @@ describe("ReportRunRepository", () => {
       id: "run-1",
       status: "partial_success"
     });
+  });
+
+  it("deletes runs for target users since a timestamp", async () => {
+    const { db, state } = createDbDouble();
+    state.result = [{ id: "run-1" }];
+    const repository = new ReportRunRepository(db);
+
+    await expect(
+      repository.deleteByUserIdsSince(["user-1"], new Date("2026-03-24T00:00:00.000Z"))
+    ).resolves.toBe(1);
   });
 });

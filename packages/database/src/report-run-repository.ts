@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 
 import type { DatabaseClient } from "./client.js";
 import { reportRuns, type ReportRunRecord } from "./schema.js";
@@ -102,6 +102,21 @@ export class ReportRunRepository {
       .from(reportRuns)
       .where(eq(reportRuns.userId, userId))
       .orderBy(desc(reportRuns.startedAt));
+  }
+
+  async deleteByUserIdsSince(userIds: string[], since: Date): Promise<number> {
+    if (userIds.length === 0) {
+      return 0;
+    }
+
+    const deleted = await this.db
+      .delete(reportRuns)
+      .where(
+        and(inArray(reportRuns.userId, userIds), gt(reportRuns.startedAt, since))
+      )
+      .returning({ id: reportRuns.id });
+
+    return deleted.length;
   }
 
   async findByUserAndRunDate(

@@ -149,4 +149,26 @@ describeIntegration("ReportRunRepository integration", () => {
     expect(restarted.run.reportText).toBeNull();
     expect(restarted.run.errorMessage).toBeNull();
   });
+
+  it("deletes runs for selected users after a timestamp", async () => {
+    const user = await userRepository.upsert({
+      telegramUserId: "4005",
+      displayName: "Cleanup Report User"
+    });
+
+    await repository.startRun({
+      userId: user.id,
+      runDate: "2026-03-20",
+      scheduleType: "telegram-report"
+    });
+
+    const deleted = await repository.deleteByUserIdsSince(
+      [user.id],
+      new Date("2000-01-01T00:00:00.000Z")
+    );
+    const remaining = await repository.listRecentByUserId(user.id);
+
+    expect(deleted).toBe(1);
+    expect(remaining).toHaveLength(0);
+  });
 });
