@@ -27,6 +27,8 @@
 - 코드 변경 후에는 최소한 대상 범위 테스트와 기본 검증 결과를 남긴다.
 - 검증이 끝난 작업 단위는 commit하고, 원격이 준비되어 있으면 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 별도 확인 없이 수행하는 기본 단계다.
+- Telegram/webhook/cron/public feed/production Neon에 영향을 주는 작업은 `로컬 검증 -> commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E` 순서를 기본 마감 사이클로 사용한다.
+- 위 사이클 중 하나라도 남아 있으면 해당 작업은 완료가 아니다.
 
 ## 3. Phase Overview
 
@@ -174,6 +176,16 @@
 2. 첫 공개 브리핑 저장 확인 및 feed/detail 실데이터 점검
 3. 전략 스코어 튜닝과 운영 지표 보강
 4. active harness suite 확장과 grader 정밀도 개선
+
+운영 영향 변경의 표준 마감 사이클:
+
+1. 로컬 코드/문서 변경과 source-of-truth 동기화
+2. `pnpm verify` + 필요한 범위별 추가 검증 실행
+3. commit/push
+4. production deploy 반영 확인
+5. Neon production DB schema/data 정합성 반영
+6. 공개 웹/cron/webhook smoke
+7. Telegram production E2E 또는 동등한 live verification
 
 ## 6. Completion Log
 

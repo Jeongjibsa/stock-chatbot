@@ -22,8 +22,8 @@
 
 ## 3. Rollup Status
 
-- last_rollup_date: 2026-03-22
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083, CHG-0084, CHG-0085, CHG-0086, CHG-0087, CHG-0088, CHG-0089, CHG-0090, CHG-0091, CHG-0092, CHG-0093, CHG-0094, CHG-0095, CHG-0096, CHG-0097, CHG-0098, CHG-0099, CHG-0100, CHG-0101, CHG-0102, CHG-0103, CHG-0104, CHG-0105, CHG-0106, CHG-0107, CHG-0108, CHG-0109, CHG-0110, CHG-0111, CHG-0112, CHG-0113, CHG-0114
+- last_rollup_date: 2026-03-23
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083, CHG-0084, CHG-0085, CHG-0086, CHG-0087, CHG-0088, CHG-0089, CHG-0090, CHG-0091, CHG-0092, CHG-0093, CHG-0094, CHG-0095, CHG-0096, CHG-0097, CHG-0098, CHG-0099, CHG-0100, CHG-0101, CHG-0102, CHG-0103, CHG-0104, CHG-0105, CHG-0106, CHG-0107, CHG-0108, CHG-0109, CHG-0110, CHG-0111, CHG-0112, CHG-0113, CHG-0114, CHG-0115, CHG-0116, CHG-0117, CHG-0118, CHG-0119, CHG-0120, CHG-0121, CHG-0122
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
@@ -46,6 +46,7 @@
 - 코드 변경의 기본 검증 명령은 `make verify`다.
 - 현재 기본 검증 루프는 실제로 `pnpm verify` 통과 상태다.
 - DB/저장 계층 변경 시 `make test-integration`까지 수행한다.
+- Telegram/webhook/cron/public web/Neon production에 영향을 주는 변경은 로컬 검증으로 끝내지 않고 `commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E`까지 끝나야 완료로 본다.
 - GitHub public repository와 `origin/main` push 기준선이 준비됐다.
 - 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
 - 초기 운영은 GitHub Actions CI + scheduled workflow + workflow_dispatch를 우선 사용하고, 정확한 정시성이나 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
@@ -142,6 +143,7 @@
 - 2026-03-22 기준 Telegram webhook command runtime은 production alias에서 정상 동작하며, production에서는 `TELEGRAM_WEBHOOK_SECRET_TOKEN` header 검증을 필수로 사용한다. Vercel production에서 secret env가 빠지면 webhook route는 fail-closed(500)로 동작해야 한다.
 - 실제 Telegram 운영 점검은 `docs/telegram-production-test-scenarios.md`를 기준으로 진행한다.
 - 실제 Telegram E2E 자동화는 `docs/telegram-e2e-harness.md`를 기준으로 진행한다. 현재 harness는 inbound는 synthetic webhook update, outbound는 실제 Telegram Bot API `sendMessage`, assertion은 DB side effect + `telegram_outbound_messages` audit log 조합을 사용한다.
+- 운영성 변경의 기본 closeout은 `pnpm verify`, 필요한 범위별 추가 검증, push, production 반영, Telegram minimum E2E와 공개 웹/DB smoke까지 포함한다.
 - root `AGENTS.md`가 추가됐고, 이 파일은 source-of-truth 문서, 런타임 역할, 검증 규칙, git 마감 단계를 빠르게 찾는 저장소 운영 맵 역할을 한다.
 - Telegram command runtime은 webhook으로 전환 가능한 상태이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 구현됐다.
 - `apps/telegram-bot/src/build-bot.ts`는 polling과 webhook 양쪽에서 공통으로 쓰는 command runtime entrypoint로 정리됐다.

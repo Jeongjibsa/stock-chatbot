@@ -290,6 +290,16 @@ Telegram E2E harness 변경 시:
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm test -- apps/telegram-bot/src/e2e/env.test.ts apps/telegram-bot/src/e2e/webhook-driver.test.ts
 make test-integration
+
+운영 영향 변경의 표준 마감 사이클:
+
+1. 로컬 코드/문서 수정과 source-of-truth 동기화
+2. `pnpm verify`와 필요한 범위별 추가 검증 실행
+3. commit/push
+4. production deploy 확인
+5. Neon production DB schema/data 반영
+6. 공개 웹, webhook, cron smoke
+7. Telegram production E2E 또는 동등한 live verification
 ```
 
 ## 배포 메모

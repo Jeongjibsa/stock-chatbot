@@ -125,3 +125,8 @@ COREPACK_HOME=/tmp/corepack pnpm verify
 7. `pnpm verify`
 
 하네스를 건드렸는데 계약/문서/검증이 빠져 있으면 완료가 아닙니다.
+
+운영 영향 변경의 마감 규칙:
+
+- Telegram webhook, cron, 공개 웹, Neon production schema/data를 건드린 변경은 하네스나 로컬 테스트만 통과했다고 완료로 보지 않는다.
+- 이런 변경은 배포 후 production smoke와 Telegram live E2E까지 수행해야 한다.

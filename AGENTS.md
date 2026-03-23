@@ -128,6 +128,18 @@ COREPACK_HOME=/tmp/corepack pnpm test -- apps/telegram-bot/src/e2e/env.test.ts a
 make test-integration
 ```
 
+운영 영향 변경의 표준 마감 사이클:
+
+1. 로컬 코드/문서 변경과 source-of-truth 동기화
+2. `COREPACK_HOME=/tmp/corepack pnpm verify`와 필요한 범위별 추가 검증 수행
+3. commit/push
+4. production deploy 확인
+5. Neon production DB schema/data 반영
+6. public web/webhook/cron smoke
+7. Telegram production E2E 또는 동등한 live verification
+
+Telegram webhook, cron, public web feed/detail, production Neon schema/data를 건드린 작업은 이 사이클이 끝나기 전에는 완료가 아니다.
+
 검증을 못 돌리면 다음을 반드시 결과에 적는다.
 
 - 무엇을 못 돌렸는지
