@@ -2,12 +2,12 @@
 
 거시 지표, 시장 이벤트, 퀀트 시그널을 종합해 Telegram DM으로 개인화 브리핑을 보내고, 공개 가능한 브리핑은 웹 아카이브로 제공하는 시장 브리핑 시스템입니다.
 
-| Entry | URL / Note |
-| --- | --- |
-| Public briefing web | [https://web-three-tau-58.vercel.app](https://web-three-tau-58.vercel.app) |
-| Public feed | [https://web-three-tau-58.vercel.app/](https://web-three-tau-58.vercel.app/) |
-| Admin console | `/admin` (`Basic Auth` when enabled) |
-| Telegram runtime | production primary mode is `webhook` |
+| Entry               | URL / Note                                                                   |
+| ------------------- | ---------------------------------------------------------------------------- |
+| Public briefing web | [https://web-three-tau-58.vercel.app](https://web-three-tau-58.vercel.app)   |
+| Public feed         | [https://web-three-tau-58.vercel.app/](https://web-three-tau-58.vercel.app/) |
+| Admin console       | `/admin` (`Basic Auth` when enabled)                                         |
+| Telegram runtime    | production primary mode is `webhook`                                         |
 
 ## 프로젝트 한눈에 보기
 
@@ -34,13 +34,13 @@
 
 ## 채널 역할
 
-| Channel | Role | 포함 내용 |
-| --- | --- | --- |
-| Telegram DM | 개인화 입력 + 개인화 리포트 delivery | 보유 종목, 리밸런싱 해석, 개인 링크 |
-| Telegram Group | 온보딩 + `/register` 유도 | 안내, 중복 없는 등록 유도 |
-| Telegram Channel | 공개 브리핑 broadcast | 공개 링크, 공용 브리핑 |
-| Public Web | 공개 브리핑 archive | 시장/매크로/자금/이벤트 |
-| `/admin` | 운영 확인 | 최근 공개 브리핑, 실행 로그, 전략 회고 |
+| Channel          | Role                                 | 포함 내용                              |
+| ---------------- | ------------------------------------ | -------------------------------------- |
+| Telegram DM      | 개인화 입력 + 개인화 리포트 delivery | 보유 종목, 리밸런싱 해석, 개인 링크    |
+| Telegram Group   | 온보딩 + `/register` 유도            | 안내, 중복 없는 등록 유도              |
+| Telegram Channel | 공개 브리핑 broadcast                | 공개 링크, 공용 브리핑                 |
+| Public Web       | 공개 브리핑 archive                  | 시장/매크로/자금/이벤트                |
+| `/admin`         | 운영 확인                            | 최근 공개 브리핑, 실행 로그, 전략 회고 |
 
 공개 웹에는 개인 포트폴리오 데이터, 개인 기사 요약, 개인 점수카드를 저장하거나 노출하지 않습니다.
 
@@ -78,23 +78,23 @@
 
 ## 주요 시그널
 
-| 구분 | 주요 항목 | 목적 |
-| --- | --- | --- |
-| 미국 시장 | `S&P 500`, `NASDAQ`, `DOW`, `VIX`, `미국 10년물 금리` | 위험 선호, 성장주 압력, 변동성 레짐 |
-| 한국 시장 | `KOSPI`, `KOSDAQ`, `USD/KRW` | 국내 리스크 프리미엄, 환율 부담 |
-| 매크로/원자재 | `WTI`, `천연가스`, `구리`, `달러 인덱스` | 인플레이션, 달러 강세, 경기 민감도 |
-| 이벤트 | 지정학 리스크, 실적 일정, AI/반도체 이슈 | 단기 변동성, 섹터 촉매 |
-| 퀀트 신호 | `Macro`, `Trend`, `Event`, `Flow`, `Total` | 고정된 매매 지시 대신 시나리오 제안 |
+| 구분          | 주요 항목                                             | 목적                                |
+| ------------- | ----------------------------------------------------- | ----------------------------------- |
+| 미국 시장     | `S&P 500`, `NASDAQ`, `DOW`, `VIX`, `미국 10년물 금리` | 위험 선호, 성장주 압력, 변동성 레짐 |
+| 한국 시장     | `KOSPI`, `KOSDAQ`, `USD/KRW`                          | 국내 리스크 프리미엄, 환율 부담     |
+| 매크로/원자재 | `WTI`, `천연가스`, `구리`, `달러 인덱스`              | 인플레이션, 달러 강세, 경기 민감도  |
+| 이벤트        | 지정학 리스크, 실적 일정, AI/반도체 이슈              | 단기 변동성, 섹터 촉매              |
+| 퀀트 신호     | `Macro`, `Trend`, `Event`, `Flow`, `Total`            | 고정된 매매 지시 대신 시나리오 제안 |
 
 ## Telegram 흐름 예시
 
-| Input | Parsed | Output |
-| --- | --- | --- |
-| `/register` in DM | `register + private_delivery_chat` | 개인 발송 대상 등록 |
-| `/register` in group | `register + onboarding_only` | DM에서 다시 등록하라는 안내 |
-| `/portfolio_add 삼전` | `portfolio_add + alias_resolved:005930` | 후보 확인 또는 상위 5개 선택 |
-| `/portfolio_bulk AAPL, MSFT` | `portfolio_bulk + multi_search` | 성공 / 이미 등록 / 실패 요약 |
-| `/report` | `personal_rebalancing_briefing` | 개인화 브리핑 + 공개 상세 링크 |
+| Input                        | Parsed                                  | Output                         |
+| ---------------------------- | --------------------------------------- | ------------------------------ |
+| `/register` in DM            | `register + private_delivery_chat`      | 개인 발송 대상 등록            |
+| `/register` in group         | `register + onboarding_only`            | DM에서 다시 등록하라는 안내    |
+| `/portfolio_add 삼전`        | `portfolio_add + alias_resolved:005930` | 후보 확인 또는 상위 5개 선택   |
+| `/portfolio_bulk AAPL, MSFT` | `portfolio_bulk + multi_search`         | 성공 / 이미 등록 / 실패 요약   |
+| `/report`                    | `personal_rebalancing_briefing`         | 개인화 브리핑 + 공개 상세 링크 |
 
 짧은 alias 예시:
 
@@ -162,14 +162,14 @@ GitHub Actions
 
 ## 런타임과 스택
 
-| Layer | Choice |
-| --- | --- |
-| Core | `Node.js 24`, `TypeScript 5.9`, `pnpm workspace` |
-| Data | `FRED`, `Yahoo Finance scraping` |
-| LLM | `OpenAI`, `Google Gemini`, provider-agnostic interface |
-| Telegram | `Telegram Bot API`, `grammY` |
-| Web | `Next.js App Router`, `Tailwind CSS`, `React Markdown` |
-| Infra | `Vercel`, `Neon`, `Docker Compose`, `GitHub Actions`, `Redis` |
+| Layer    | Choice                                                        |
+| -------- | ------------------------------------------------------------- |
+| Core     | `Node.js 24`, `TypeScript 5.9`, `pnpm workspace`              |
+| Data     | `FRED`, `Yahoo Finance scraping`                              |
+| LLM      | `OpenAI`, `Google Gemini`, provider-agnostic interface        |
+| Telegram | `Telegram Bot API`, `grammY`                                  |
+| Web      | `Next.js App Router`, `Tailwind CSS`, `React Markdown`        |
+| Infra    | `Vercel`, `Neon`, `Docker Compose`, `GitHub Actions`, `Redis` |
 
 현재 production primary runtime은 `apps/web`입니다.
 `apps/api`는 MVP production 필수 런타임이 아니라 draft 성격을 유지합니다.
@@ -199,14 +199,14 @@ GitHub Actions
 └── README.md
 ```
 
-| Path | Role |
-| --- | --- |
-| `apps/web` | public feed/detail, `/admin`, `/api/telegram/webhook`, `/api/cron/*` |
-| `apps/telegram-bot` | Telegram command/runtime logic, local polling fallback |
-| `apps/worker` | daily report orchestration, public briefing generation, delivery write path |
-| `packages/application` | 시장 데이터, 뉴스, quant, LLM composition, renderer |
-| `packages/database` | schema, migration SQL, repositories |
-| `harness` | fixture, grader, snapshot 기준선 |
+| Path                   | Role                                                                        |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `apps/web`             | public feed/detail, `/admin`, `/api/telegram/webhook`, `/api/cron/*`        |
+| `apps/telegram-bot`    | Telegram command/runtime logic, local polling fallback                      |
+| `apps/worker`          | daily report orchestration, public briefing generation, delivery write path |
+| `packages/application` | 시장 데이터, 뉴스, quant, LLM composition, renderer                         |
+| `packages/database`    | schema, migration SQL, repositories                                         |
+| `harness`              | fixture, grader, snapshot 기준선                                            |
 
 ## 로컬 실행
 
@@ -341,6 +341,6 @@ COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 
 README에서 분리한 구현 메모는 아래 문서를 참고합니다.
 
-- [docs/implementation-reference.md](/Users/jisung/Projects/stock-chatbot/docs/implementation-reference.md)
-- [docs/vercel-deployment.md](/Users/jisung/Projects/stock-chatbot/docs/vercel-deployment.md)
-- [docs/telegram-production-test-scenarios.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-production-test-scenarios.md)
+- [docs/implementation-reference.md](docs/implementation-reference.md)
+- [docs/vercel-deployment.md](docs/vercel-deployment.md)
+- [docs/telegram-production-test-scenarios.md](docs/telegram-production-test-scenarios.md)
