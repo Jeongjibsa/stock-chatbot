@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+import {
+  buildAdminUserActionRedirectUrl,
+  isProtectedAdminUser
+} from "../../../../../../lib/admin-user-actions";
 import { getWebPool } from "../../../../../../lib/db";
 import { isAuthorizedAdminRequest } from "../../../../../../lib/admin-auth";
 
@@ -17,6 +21,18 @@ export async function POST(
   }
 
   const { telegramUserId } = await context.params;
+
+  if (isProtectedAdminUser(telegramUserId)) {
+    return NextResponse.redirect(
+      buildAdminUserActionRedirectUrl({
+        action: "error_admin_protected",
+        requestUrl: request.url,
+        telegramUserId
+      }),
+      303
+    );
+  }
+
   const pool = getWebPool();
   const result = await pool.query(
     [
@@ -32,10 +48,22 @@ export async function POST(
   );
 
   if (result.rowCount === 0) {
-    return new NextResponse("Not Found", {
-      status: 404
-    });
+    return NextResponse.redirect(
+      buildAdminUserActionRedirectUrl({
+        action: "error_not_found",
+        requestUrl: request.url,
+        telegramUserId
+      }),
+      303
+    );
   }
 
-  return NextResponse.redirect(new URL("/admin", request.url), 303);
+  return NextResponse.redirect(
+    buildAdminUserActionRedirectUrl({
+      action: "blocked",
+      requestUrl: request.url,
+      telegramUserId
+    }),
+    303
+  );
 }

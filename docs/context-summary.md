@@ -154,6 +154,7 @@
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
 - GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
 - `apps/web`에는 Basic Auth 기반 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, Telegram user별 등록 상태/차단 상태/오늘 사용량을 조회하며 block/unblock 제어를 제공한다. `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
+- `/admin`의 사용자 차단 제어는 POST 후 같은 화면으로 redirect되며 결과 배너를 표시한다. 운영자 `telegram_user_id=8606362482`는 Telegram runtime뿐 아니라 admin route/UI에서도 보호되어 수동 block 대상에서 제외된다.
 - 공개 웹 feed/detail에는 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 들어간다.
 - `/admin`은 Postgres `date` 컬럼을 문자열로 정규화해 렌더링하며, 공개 웹 전체 톤은 Pretendard + shadcn/ui 스타일의 흑백 팔레트로 정리됐다.
 - GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.

@@ -9,6 +9,10 @@ export type DailyReportPayload = {
 };
 
 export {
+  ADMIN_TELEGRAM_USER_ID,
+  isAdminTelegramUserId
+} from "./admin-operator.js";
+export {
   formatBriefingSessionLabel,
   formatBriefingSessionRole,
   formatBriefingSessionSlug,

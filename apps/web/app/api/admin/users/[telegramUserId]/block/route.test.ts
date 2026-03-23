@@ -46,6 +46,47 @@ describe("admin user block route", () => {
       "1001"
     ]);
     expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe("https://example.com/admin");
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/admin?userAction=blocked&telegramUserId=1001"
+    );
+  });
+
+  it("does not allow blocking the protected admin user", async () => {
+    const request = new Request("https://example.com/api/admin/users/8606362482/block", {
+      method: "POST",
+      headers: {
+        authorization: `Basic ${Buffer.from("operator:secret").toString("base64")}`
+      }
+    });
+    const response = await POST(request, {
+      params: Promise.resolve({ telegramUserId: "8606362482" })
+    });
+
+    expect(query).not.toHaveBeenCalled();
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/admin?userAction=error_admin_protected&telegramUserId=8606362482"
+    );
+  });
+
+  it("redirects with not found state when the user is missing", async () => {
+    query.mockResolvedValue({
+      rowCount: 0
+    });
+
+    const request = new Request("https://example.com/api/admin/users/9999/block", {
+      method: "POST",
+      headers: {
+        authorization: `Basic ${Buffer.from("operator:secret").toString("base64")}`
+      }
+    });
+    const response = await POST(request, {
+      params: Promise.resolve({ telegramUserId: "9999" })
+    });
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/admin?userAction=error_not_found&telegramUserId=9999"
+    );
   });
 });

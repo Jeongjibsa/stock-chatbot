@@ -1,8 +1,10 @@
+import { isAdminTelegramUserId } from "@stock-chatbot/application";
 import type { TelegramRequestEventKind } from "@stock-chatbot/database";
 
-const ADMIN_TELEGRAM_USER_ID = "8606362482";
 const FLOOD_LIMIT_PER_SECOND = 3;
 const FLOOD_LIMIT_PER_TEN_SECONDS = 10;
+
+export { isAdminTelegramUserId };
 
 type RequestEventRepositoryPort = {
   countByTelegramUserIdSince(
@@ -38,10 +40,6 @@ type LimitDecision = {
   allowed: boolean;
   message?: string;
 };
-
-export function isAdminTelegramUserId(telegramUserId: string | undefined): boolean {
-  return telegramUserId === ADMIN_TELEGRAM_USER_ID;
-}
 
 export function getKstDayStart(now: Date = new Date()): Date {
   const kstFormatter = new Intl.DateTimeFormat("en-CA", {
