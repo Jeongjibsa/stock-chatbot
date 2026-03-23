@@ -102,6 +102,10 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
 
       await runtime.cleanupSuiteArtifacts({
         chatIds: configuredChatIds,
+        telegramUserIds: [
+          config.primaryUserId,
+          config.secondaryUserId
+        ].filter(Boolean) as string[],
         since: suiteStartedAt
       });
     }

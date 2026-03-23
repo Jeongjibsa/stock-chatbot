@@ -187,6 +187,8 @@
 - 공개 feed가 empty state인 것은 정상일 수 있다. 아직 `reports`에 공개 브리핑이 저장되지 않았다는 뜻일 뿐이다.
 - 첫 실운영 브리핑이 생성되면 `/`와 `/reports/[id]`를 다시 확인한다.
 - Telegram 실운영 점검은 반드시 DM, 그룹, 공개 웹을 분리해 확인한다.
+- `/unregister`는 이제 user row 삭제가 아니라 soft reset이므로, 운영 DB 확인 시 `is_registered=false`와 holdings/conversation cleanup을 기준으로 본다.
+- 필요 시 `/admin`에서 test user를 block/unblock 하며 수동 제어 smoke를 추가할 수 있다.
 
 ## 최소 회귀 세트
 

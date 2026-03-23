@@ -4,12 +4,15 @@ import type {
 } from "@stock-chatbot/application";
 
 type UserRecord = {
+  blockedReason?: string | null;
   dailyReportEnabled?: boolean;
   dailyReportHour?: number;
   dailyReportMinute?: number;
   displayName: string;
   id: string;
   includePublicBriefingLink?: boolean;
+  isBlocked?: boolean;
+  isRegistered?: boolean;
   preferredDeliveryChatId?: string | null;
   preferredDeliveryChatType?: string | null;
   reportDetailLevel?: string | null;
@@ -18,8 +21,14 @@ type UserRecord = {
 };
 
 type UserRepositoryPort = {
-  deleteByTelegramUserId(telegramUserId: string): Promise<boolean>;
   getByTelegramUserId(telegramUserId: string): Promise<UserRecord | null>;
+  setBlockedState(input: {
+    blockedReason?: "flood" | "manual" | null;
+    displayName?: string;
+    isBlocked: boolean;
+    telegramUserId: string;
+  }): Promise<UserRecord | null>;
+  softUnregisterByTelegramUserId(telegramUserId: string): Promise<UserRecord | null>;
   updateReportSettings(input: {
     dailyReportEnabled?: boolean;
     dailyReportHour?: number;
@@ -45,6 +54,7 @@ type UserRepositoryPort = {
 };
 
 type PortfolioHoldingRepositoryPort = {
+  clearByUserId(userId: string): Promise<number>;
   getByUserAndSymbol(
     userId: string,
     symbol: string,
@@ -113,6 +123,16 @@ export class TelegramUserPortfolioService {
   ) {}
 
   async findRegisteredUser(telegramUserId: string): Promise<UserRecord | null> {
+    const user = await this.dependencies.userRepository.getByTelegramUserId(telegramUserId);
+
+    if (!user?.isRegistered) {
+      return null;
+    }
+
+    return user;
+  }
+
+  async findUserIdentity(telegramUserId: string): Promise<UserRecord | null> {
     return this.dependencies.userRepository.getByTelegramUserId(telegramUserId);
   }
 
@@ -160,7 +180,25 @@ export class TelegramUserPortfolioService {
   }
 
   async unregisterTelegramUser(telegramUserId: string): Promise<boolean> {
-    return this.dependencies.userRepository.deleteByTelegramUserId(telegramUserId);
+    const user = await this.dependencies.userRepository.getByTelegramUserId(telegramUserId);
+
+    if (!user?.isRegistered) {
+      return false;
+    }
+
+    await this.dependencies.portfolioHoldingRepository.clearByUserId(user.id);
+    await this.dependencies.userRepository.softUnregisterByTelegramUserId(telegramUserId);
+
+    return true;
+  }
+
+  async setBlockedState(input: {
+    blockedReason?: "flood" | "manual" | null;
+    displayName?: string;
+    isBlocked: boolean;
+    telegramUserId: string;
+  }): Promise<UserRecord | null> {
+    return this.dependencies.userRepository.setBlockedState(input);
   }
 
   async addPortfolioHolding(
@@ -317,7 +355,7 @@ export class TelegramUserPortfolioService {
   private async requireUser(telegramUserId: string): Promise<UserRecord> {
     const user = await this.dependencies.userRepository.getByTelegramUserId(telegramUserId);
 
-    if (!user) {
+    if (!user?.isRegistered) {
       throw new Error("USER_NOT_REGISTERED");
     }
 

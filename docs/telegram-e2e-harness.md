@@ -115,6 +115,7 @@ COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=minimum --allow-pr
 - `포트폴리오 리밸런싱 제안` 묶음이 보이는지
 - `시세 스냅샷 연결 전입니다` placeholder가 남지 않는지
 - `/report`가 실행 시점에 맞는 세션 제목(`프리마켓` 또는 `포스트마켓`)을 선택하는지
+- `/unregister` 후에도 user row가 남고 `is_registered=false`로 soft reset 되는지
 
 정기 발송과 공개 브리핑의 운영 캘린더는 별도로 아래를 따른다.
 
@@ -123,6 +124,7 @@ COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=minimum --allow-pr
 - `일`: 정기/public 브리핑 없음
 
 `/report_time`과 settings의 `시간 변경` 버튼은 더 이상 개별 시각 변경이 아니라 위 고정 정책 안내를 검증 대상으로 본다.
+Telegram rate-limit은 production minimum suite에서 직접 소진하지 않는다. 다만 test runtime의 `resetUser()`는 scenario 독립성을 위해 request history와 block 상태까지 정리하고, 실제 `/unregister` 시나리오는 soft reset semantics를 별도로 검증한다.
 
 ## 자동화 범위
 
@@ -138,6 +140,7 @@ COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=minimum --allow-pr
 - `/portfolio_list`
 - `/portfolio_remove`
 - `/report`
+- `/admin` block/unblock route unit test
 
 조건부 자동화:
 

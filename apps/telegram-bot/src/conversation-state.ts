@@ -9,6 +9,7 @@ import { parseReportTimeArgument } from "./report-settings.js";
 export type ConversationCommand =
   | "market_add"
   | "portfolio_add"
+  | "portfolio_bulk"
   | "portfolio_remove"
   | "report_time";
 
@@ -29,7 +30,6 @@ export type PortfolioAddState = {
   command: "portfolio_add";
   draft: {
     avgPrice?: string;
-    note?: string;
     quantity?: string;
     resolution?: PortfolioTickerResolution;
     searchResults?: RankedTickerSearchResult[];
@@ -37,13 +37,17 @@ export type PortfolioAddState = {
   step:
     | "awaiting_avg_price"
     | "awaiting_avg_price_choice"
-    | "awaiting_note"
-    | "awaiting_note_choice"
     | "awaiting_quantity"
     | "awaiting_quantity_choice"
     | "awaiting_ticker_confirmation"
     | "awaiting_ticker_query"
     | "awaiting_ticker_selection";
+};
+
+export type PortfolioBulkState = {
+  command: "portfolio_bulk";
+  draft: {};
+  step: "awaiting_portfolio_bulk_input";
 };
 
 export type PortfolioRemoveState = {
@@ -71,6 +75,7 @@ export type ReportTimeState = {
 export type ConversationState =
   | MarketAddState
   | PortfolioAddState
+  | PortfolioBulkState
   | PortfolioRemoveState
   | ReportTimeState;
 
@@ -83,9 +88,12 @@ export type ConversationCompletion =
       command: "portfolio_add";
       draft: NonNullable<PortfolioAddState["draft"]["resolution"]> & {
         avgPrice?: string;
-        note?: string;
         quantity?: string;
       };
+    }
+  | {
+      command: "portfolio_bulk";
+      tokens: string[];
     }
   | {
       command: "portfolio_remove";
@@ -139,6 +147,12 @@ export function createInitialConversationState(command: ConversationCommand): Co
         step: "awaiting_ticker_query",
         draft: {}
       };
+    case "portfolio_bulk":
+      return {
+        command,
+        step: "awaiting_portfolio_bulk_input",
+        draft: {}
+      };
     case "portfolio_remove":
       return {
         command,
@@ -164,6 +178,8 @@ export function getConversationStartMessage(command: ConversationCommand): strin
   switch (command) {
     case "portfolio_add":
       return "종목명을 입력해주세요.";
+    case "portfolio_bulk":
+      return "여러 종목을 쉼표, 줄바꿈, 세미콜론으로 구분해서 입력해 주세요.";
     case "portfolio_remove":
       return "삭제할 종목명 또는 종목 코드를 입력해 주세요.";
     case "market_add":
@@ -181,6 +197,8 @@ export async function advanceConversation(
   switch (state.command) {
     case "portfolio_add":
       return advancePortfolioAddConversation(state, input, dependencies);
+    case "portfolio_bulk":
+      return advancePortfolioBulkConversation(state, input);
     case "portfolio_remove":
       return advancePortfolioRemoveConversation(state, input, dependencies);
     case "market_add":
@@ -212,6 +230,33 @@ async function advanceReportTimeConversation(
       minute: parsed.minute
     },
     message: `정기 브리핑 시간을 ${input.trim()}로 변경합니다.`
+  };
+}
+
+async function advancePortfolioBulkConversation(
+  state: PortfolioBulkState,
+  input: string
+): Promise<ConversationTransitionResult> {
+  const tokens = input
+    .split(/[\n,;]+/g)
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (tokens.length === 0) {
+    return {
+      status: "invalid",
+      nextState: state,
+      message: "등록할 종목을 한 개 이상 입력해 주세요."
+    };
+  }
+
+  return {
+    status: "completed",
+    completion: {
+      command: "portfolio_bulk",
+      tokens
+    },
+    message: `${tokens.length}개 종목의 벌크 추가 요청을 기록했어.`
   };
 }
 
@@ -350,7 +395,7 @@ async function advancePortfolioAddConversation(
         return {
           status: "invalid",
           nextState: state,
-          message: "yes 또는 no로 답해줘."
+          message: "yes/no 또는 예/아니오로 답해주세요."
         };
       }
 
@@ -403,19 +448,12 @@ async function advancePortfolioAddConversation(
         return {
           status: "invalid",
           nextState: state,
-          message: "yes 또는 no로 답해줘."
+          message: "yes/no 또는 예/아니오로 답해주세요."
         };
       }
 
       if (!choice) {
-        return {
-          status: "waiting",
-          nextState: {
-            ...state,
-            step: "awaiting_note_choice"
-          },
-          message: "메모를 남길까? (yes/no)"
-        };
+        return completePortfolioAddConversation(state);
       }
 
       return {
@@ -436,51 +474,14 @@ async function advancePortfolioAddConversation(
         };
       }
 
-      return {
-        status: "waiting",
-        nextState: {
-          ...state,
-          step: "awaiting_note_choice",
-          draft: {
-            ...state.draft,
-            quantity: normalizedInput
-          }
-        },
-        message: "메모를 남길까? (yes/no)"
-      };
-    }
-    case "awaiting_note_choice": {
-      const choice = parseYesNo(normalizedInput);
-
-      if (choice === null) {
-        return {
-          status: "invalid",
-          nextState: state,
-          message: "yes 또는 no로 답해줘."
-        };
-      }
-
-      if (!choice) {
-        return completePortfolioAddConversation(state);
-      }
-
-      return {
-        status: "waiting",
-        nextState: {
-          ...state,
-          step: "awaiting_note"
-        },
-        message: "메모를 입력해줘."
-      };
-    }
-    case "awaiting_note":
       return completePortfolioAddConversation({
         ...state,
         draft: {
           ...state.draft,
-          note: normalizedInput
+          quantity: normalizedInput
         }
       });
+    }
   }
 }
 
@@ -559,10 +560,6 @@ function completePortfolioAddConversation(
 
   if (state.draft.quantity) {
     completionDraft.draft.quantity = state.draft.quantity;
-  }
-
-  if (state.draft.note) {
-    completionDraft.draft.note = state.draft.note;
   }
 
   return {

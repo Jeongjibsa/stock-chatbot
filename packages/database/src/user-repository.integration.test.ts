@@ -106,4 +106,48 @@ describeIntegration("UserRepository integration", () => {
       timezone: "America/New_York"
     });
   });
+
+  it("soft-unregisters a user without deleting the row", async () => {
+    await repository.upsert({
+      telegramUserId: "1001",
+      displayName: "Old Name",
+      preferredDeliveryChatId: "chat-1001",
+      preferredDeliveryChatType: "private"
+    });
+
+    const unregistered = await repository.softUnregisterByTelegramUserId("1001");
+    const user = await repository.getByTelegramUserId("1001");
+
+    expect(unregistered).toMatchObject({
+      telegramUserId: "1001",
+      isRegistered: false,
+      dailyReportEnabled: false,
+      preferredDeliveryChatId: null
+    });
+    expect(user).toMatchObject({
+      telegramUserId: "1001",
+      isRegistered: false
+    });
+  });
+
+  it("stores blocked state for existing users", async () => {
+    await repository.upsert({
+      telegramUserId: "1001",
+      displayName: "Old Name"
+    });
+
+    const blocked = await repository.setBlockedState({
+      telegramUserId: "1001",
+      isBlocked: true,
+      blockedReason: "manual"
+    });
+    const user = await repository.getByTelegramUserId("1001");
+
+    expect(blocked).toMatchObject({
+      telegramUserId: "1001",
+      isBlocked: true,
+      blockedReason: "manual"
+    });
+    expect(user?.isBlocked).toBe(true);
+  });
 });

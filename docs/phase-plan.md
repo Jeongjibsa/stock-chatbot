@@ -265,6 +265,7 @@
 - 2026-03-22: `personal_rebalancing_snapshots` JSONB cache를 추가해 개인화 리밸런싱 payload를 날짜별로 재사용하도록 구현
 - 2026-03-23: 정기 실행 시각을 `07:30 pre_market / 20:30 post_market`로 재편하고, Telegram `/report`와 공개 브리핑 날짜를 `요청일(KST)` 기준으로 유지한 채 Vercel cron/reconcile이 세션별 공개 브리핑 생성까지 함께 수행하도록 보강
 - 2026-03-23: 정기 브리핑을 `07:30 pre_market / 20:30 post_market` 이중 세션으로 전환하고, 공개 브리핑 read model, Telegram `/report`, `/report_time`, cron/reconcile, public fallback path, admin, worker scheduler를 세션 인지형으로 재편했으며 `토요일 오후/일요일 전체 skip` 주말 게이트를 운영 기준으로 고정
+- 2026-03-24: Telegram 홈 `종목 추가`를 bulk-first 2-depth chooser로 전환하고, `/portfolio_bulk` 대화형 입력, `/portfolio_add` note 제거 및 yes/no 입력 단순화, 사용자별 KST 일일 한도(`/report` 1회, portfolio 시작 3회), flood auto-block, `/unregister` soft reset, admin exempt, `/admin` user block/unblock 제어까지 구현 완료
 - 2026-03-22: Telegram 설정 UI를 `브리핑 켜기 / 브리핑 끄기 / 시간 변경`만 남기도록 단순화하고, webhook/register 경로의 `allowed_updates`에 `callback_query`를 추가해 inline button이 실제로 동작하도록 복구
 - 2026-03-22: 관심 지표 개인화는 deprecated 처리하고 `/report`와 공개 브리핑을 시스템 기본 시장 지표 세트 기준으로 통일했으며, 홈 keyboard에서 `📈 관심 지표`를 제거하고 `/market_add`, `/market_items`, `/report_mode`, `/report_link_*`는 deprecation 응답으로 정리
 - 2026-03-22: 공개 `reports` read model에 `indicator_tags`를 추가하고, public feed/detail 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했으며, 공개 적재 경로를 `report_date` 기준 latest-upsert + feed date dedupe 구조로 조정

@@ -107,5 +107,15 @@ export class PortfolioHoldingRepository {
 
     return result.length > 0;
   }
-}
 
+  async clearByUserId(userId: string): Promise<number> {
+    const deleted = await this.db
+      .delete(portfolioHoldings)
+      .where(eq(portfolioHoldings.userId, userId))
+      .returning({
+        id: portfolioHoldings.id
+      });
+
+    return deleted.length;
+  }
+}

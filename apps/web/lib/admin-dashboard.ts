@@ -3,7 +3,8 @@ import type {
   AdminDashboardSummary,
   AdminRecentPublicReport,
   AdminRecentRun,
-  AdminRecentStrategySnapshot
+  AdminRecentStrategySnapshot,
+  AdminUserSummary
 } from "../types/admin";
 import { getWebPool } from "./db";
 import {
@@ -46,7 +47,8 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
     recentRunsResult,
     runSummaryResult,
     reportsLast7DaysResult,
-    recentStrategySnapshotsResult
+    recentStrategySnapshotsResult,
+    userSummaryResult
   ] =
     await Promise.all([
       pool.query<{
@@ -136,6 +138,37 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
           'ORDER BY ss."run_date" DESC, ss."created_at" DESC',
           "LIMIT 12"
         ].join(" ")
+      ),
+      pool.query<{
+        blocked_at: Date | null;
+        blocked_reason: "flood" | "manual" | null;
+        daily_portfolio_requests_today: string;
+        daily_report_requests_today: string;
+        display_name: string;
+        is_blocked: boolean;
+        is_registered: boolean;
+        last_request_at: Date | null;
+        telegram_user_id: string;
+        unregistered_at: Date | null;
+      }>(
+        [
+          "SELECT",
+          'u."telegram_user_id",',
+          'u."display_name",',
+          'u."is_registered",',
+          'u."is_blocked",',
+          'u."blocked_reason",',
+          'u."blocked_at",',
+          'u."unregistered_at",',
+          `COUNT(*) FILTER (WHERE tre."event_kind" = 'report_request' AND timezone('Asia/Seoul', tre."created_at")::date = timezone('Asia/Seoul', now())::date)::text AS daily_report_requests_today,`,
+          `COUNT(*) FILTER (WHERE tre."event_kind" = 'portfolio_request' AND timezone('Asia/Seoul', tre."created_at")::date = timezone('Asia/Seoul', now())::date)::text AS daily_portfolio_requests_today,`,
+          'MAX(tre."created_at") AS last_request_at',
+          'FROM "users" u',
+          'LEFT JOIN "telegram_request_events" tre ON tre."telegram_user_id" = u."telegram_user_id"',
+          'GROUP BY u."telegram_user_id", u."display_name", u."is_registered", u."is_blocked", u."blocked_reason", u."blocked_at", u."unregistered_at", u."updated_at"',
+          'ORDER BY u."is_blocked" DESC, u."is_registered" DESC, u."updated_at" DESC',
+          "LIMIT 30"
+        ].join(" ")
       )
     ]);
   const evaluatedStrategySnapshots = await evaluateStrategySnapshots({
@@ -161,6 +194,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
       reportsLast7DaysResult.rows[0]?.report_count ?? "0",
       10
     ),
+    users: userSummaryResult.rows.map(mapAdminUserSummary),
     recentStrategySnapshots: evaluatedStrategySnapshots.map(mapRecentStrategySnapshot),
     strategyBacktestSummary: summarizeStrategySnapshots(evaluatedStrategySnapshots)
   };
@@ -250,5 +284,34 @@ function mapRecentStrategySnapshot(
     displayName: snapshot.displayName,
     realizedReturnPct: snapshot.realizedReturnPct,
     outcome: snapshot.outcome
+  };
+}
+
+function mapAdminUserSummary(user: {
+  blocked_at: Date | null;
+  blocked_reason: "flood" | "manual" | null;
+  daily_portfolio_requests_today: string;
+  daily_report_requests_today: string;
+  display_name: string;
+  is_blocked: boolean;
+  is_registered: boolean;
+  last_request_at: Date | null;
+  telegram_user_id: string;
+  unregistered_at: Date | null;
+}): AdminUserSummary {
+  return {
+    telegramUserId: user.telegram_user_id,
+    displayName: user.display_name,
+    isRegistered: user.is_registered,
+    isBlocked: user.is_blocked,
+    blockedReason: user.blocked_reason,
+    blockedAt: user.blocked_at?.toISOString() ?? null,
+    unregisteredAt: user.unregistered_at?.toISOString() ?? null,
+    dailyReportRequestsToday: Number.parseInt(user.daily_report_requests_today, 10),
+    dailyPortfolioRequestsToday: Number.parseInt(
+      user.daily_portfolio_requests_today,
+      10
+    ),
+    lastRequestAt: user.last_request_at?.toISOString() ?? null
   };
 }

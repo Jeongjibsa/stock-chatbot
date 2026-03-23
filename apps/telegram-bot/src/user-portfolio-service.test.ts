@@ -4,12 +4,14 @@ import { TelegramUserPortfolioService } from "./user-portfolio-service.js";
 
 function createService() {
   const userRepository = {
-    deleteByTelegramUserId: vi.fn(async () => true),
     getByTelegramUserId: vi.fn(),
+    setBlockedState: vi.fn(),
+    softUnregisterByTelegramUserId: vi.fn(),
     updateReportSettings: vi.fn(),
     upsert: vi.fn()
   };
   const portfolioHoldingRepository = {
+    clearByUserId: vi.fn(async () => 0),
     getByUserAndSymbol: vi.fn(),
     listByUserId: vi.fn(),
     remove: vi.fn(),
@@ -44,6 +46,7 @@ describe("TelegramUserPortfolioService", () => {
       id: "user-1",
       telegramUserId: input.telegramUserId,
       displayName: input.displayName,
+      isRegistered: true,
       preferredDeliveryChatId: input.preferredDeliveryChatId ?? null,
       preferredDeliveryChatType: input.preferredDeliveryChatType ?? null,
       dailyReportEnabled: true,
@@ -79,6 +82,7 @@ describe("TelegramUserPortfolioService", () => {
       id: "user-1",
       telegramUserId: "1001",
       displayName: "Jisung",
+      isRegistered: true,
       preferredDeliveryChatId: "2001",
       preferredDeliveryChatType: "private"
     });
@@ -86,6 +90,7 @@ describe("TelegramUserPortfolioService", () => {
       id: "user-1",
       telegramUserId: input.telegramUserId,
       displayName: input.displayName,
+      isRegistered: true,
       preferredDeliveryChatId: input.preferredDeliveryChatId ?? null,
       preferredDeliveryChatType: input.preferredDeliveryChatType ?? null
     }));
@@ -109,6 +114,7 @@ describe("TelegramUserPortfolioService", () => {
       id: "user-1",
       telegramUserId: input.telegramUserId,
       displayName: input.displayName,
+      isRegistered: true,
       preferredDeliveryChatId: null,
       preferredDeliveryChatType: null,
       dailyReportEnabled: true,
@@ -133,10 +139,24 @@ describe("TelegramUserPortfolioService", () => {
   });
 
   it("unregisters an existing user", async () => {
-    const { service, userRepository } = createService();
+    const { service, userRepository, portfolioHoldingRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung",
+      isRegistered: true
+    });
+    userRepository.softUnregisterByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung",
+      isRegistered: false
+    });
 
     await expect(service.unregisterTelegramUser("1001")).resolves.toBe(true);
-    expect(userRepository.deleteByTelegramUserId).toHaveBeenCalledWith("1001");
+    expect(portfolioHoldingRepository.clearByUserId).toHaveBeenCalledWith("user-1");
+    expect(userRepository.softUnregisterByTelegramUserId).toHaveBeenCalledWith("1001");
   });
 
   it("persists holdings for a registered user", async () => {
@@ -145,7 +165,8 @@ describe("TelegramUserPortfolioService", () => {
     userRepository.getByTelegramUserId.mockResolvedValue({
       id: "user-1",
       telegramUserId: "1001",
-      displayName: "Jisung"
+      displayName: "Jisung",
+      isRegistered: true
     });
     portfolioHoldingRepository.getByUserAndSymbol.mockResolvedValue(null);
 
@@ -178,7 +199,8 @@ describe("TelegramUserPortfolioService", () => {
     userRepository.getByTelegramUserId.mockResolvedValue({
       id: "user-1",
       telegramUserId: "1001",
-      displayName: "Jisung"
+      displayName: "Jisung",
+      isRegistered: true
     });
     portfolioHoldingRepository.getByUserAndSymbol.mockResolvedValue({
       companyName: "Samsung Electronics",
@@ -207,7 +229,8 @@ describe("TelegramUserPortfolioService", () => {
     userRepository.getByTelegramUserId.mockResolvedValue({
       id: "user-1",
       telegramUserId: "1001",
-      displayName: "Jisung"
+      displayName: "Jisung",
+      isRegistered: true
     });
     portfolioHoldingRepository.getByUserAndSymbol
       .mockResolvedValueOnce(null)
@@ -261,7 +284,8 @@ describe("TelegramUserPortfolioService", () => {
     userRepository.getByTelegramUserId.mockResolvedValue({
       id: "user-1",
       telegramUserId: "1001",
-      displayName: "Jisung"
+      displayName: "Jisung",
+      isRegistered: true
     });
     userRepository.updateReportSettings.mockImplementation(async (input) => ({
       id: "user-1",
@@ -284,5 +308,18 @@ describe("TelegramUserPortfolioService", () => {
       dailyReportHour: 21,
       dailyReportMinute: 30
     });
+  });
+
+  it("treats soft-unregistered identities as unregistered users", async () => {
+    const { service, userRepository } = createService();
+
+    userRepository.getByTelegramUserId.mockResolvedValue({
+      id: "user-1",
+      telegramUserId: "1001",
+      displayName: "Jisung",
+      isRegistered: false
+    });
+
+    await expect(service.findRegisteredUser("1001")).resolves.toBeNull();
   });
 });

@@ -17,6 +17,13 @@ export type UpsertUserInput = {
   timezone?: string;
 };
 
+export type SetBlockedStateInput = {
+  blockedReason?: "flood" | "manual" | null;
+  displayName?: string;
+  isBlocked: boolean;
+  telegramUserId: string;
+};
+
 export type UpdateUserReportSettingsInput = {
   dailyReportEnabled?: boolean;
   dailyReportHour?: number;
@@ -51,6 +58,67 @@ export class UserRepository {
       .returning({ id: users.id });
 
     return result.length > 0;
+  }
+
+  async softUnregisterByTelegramUserId(
+    telegramUserId: string
+  ): Promise<UserRecord | null> {
+    const [updated] = await this.db
+      .update(users)
+      .set({
+        isRegistered: false,
+        preferredDeliveryChatId: null,
+        preferredDeliveryChatType: null,
+        dailyReportEnabled: false,
+        unregisteredAt: sql`now()`,
+        updatedAt: sql`now()`
+      })
+      .where(eq(users.telegramUserId, telegramUserId))
+      .returning();
+
+    return updated ?? null;
+  }
+
+  async setBlockedState(input: SetBlockedStateInput): Promise<UserRecord | null> {
+    const updateSet: Record<string, unknown> = {
+      isBlocked: input.isBlocked,
+      blockedReason: input.isBlocked ? (input.blockedReason ?? "manual") : null,
+      blockedAt: input.isBlocked ? sql`now()` : null,
+      updatedAt: sql`now()`
+    };
+
+    if (input.displayName) {
+      updateSet.displayName = input.displayName;
+    }
+
+    if (input.isBlocked && input.displayName) {
+      const [upserted] = await this.db
+        .insert(users)
+        .values({
+          telegramUserId: input.telegramUserId,
+          displayName: input.displayName,
+          isRegistered: false,
+          isBlocked: true,
+          blockedReason: input.blockedReason ?? "manual",
+          blockedAt: sql`now()`,
+          dailyReportEnabled: false
+        })
+        .onConflictDoUpdate({
+          target: users.telegramUserId,
+          set: updateSet
+        })
+        .returning();
+
+      return upserted ?? null;
+    }
+
+    const [updated] = await this.db
+      .update(users)
+      .set(updateSet)
+      .where(eq(users.telegramUserId, input.telegramUserId))
+      .returning();
+
+    return updated ?? null;
   }
 
   async updateReportSettings(
@@ -100,6 +168,7 @@ export class UserRepository {
   async upsert(input: UpsertUserInput): Promise<UserRecord> {
     const updateSet: Record<string, unknown> = {
       displayName: input.displayName,
+      isRegistered: true,
       locale: input.locale ?? "ko-KR",
       timezone: input.timezone ?? "Asia/Seoul",
       dailyReportEnabled: input.dailyReportEnabled ?? true,
@@ -107,6 +176,7 @@ export class UserRepository {
       dailyReportMinute: input.dailyReportMinute ?? 0,
       reportDetailLevel: input.reportDetailLevel ?? "standard",
       includePublicBriefingLink: input.includePublicBriefingLink ?? true,
+      unregisteredAt: null,
       updatedAt: sql`now()`
     };
 
@@ -125,6 +195,7 @@ export class UserRepository {
         preferredDeliveryChatId: input.preferredDeliveryChatId,
         preferredDeliveryChatType: input.preferredDeliveryChatType,
         displayName: input.displayName,
+        isRegistered: true,
         locale: input.locale ?? "ko-KR",
         timezone: input.timezone ?? "Asia/Seoul",
         dailyReportEnabled: input.dailyReportEnabled ?? true,

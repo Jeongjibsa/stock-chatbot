@@ -7,6 +7,11 @@ CREATE TABLE IF NOT EXISTS "users" (
   "preferred_delivery_chat_id" text,
   "preferred_delivery_chat_type" text,
   "display_name" text NOT NULL,
+  "is_registered" boolean DEFAULT true NOT NULL,
+  "is_blocked" boolean DEFAULT false NOT NULL,
+  "blocked_reason" text,
+  "blocked_at" timestamp with time zone,
+  "unregistered_at" timestamp with time zone,
   "locale" text DEFAULT 'ko-KR' NOT NULL,
   "timezone" text DEFAULT 'Asia/Seoul' NOT NULL,
   "daily_report_enabled" boolean DEFAULT true NOT NULL,
@@ -21,12 +26,24 @@ CREATE TABLE IF NOT EXISTS "users" (
 
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_id" text;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_type" text;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "is_registered" boolean DEFAULT true NOT NULL;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "is_blocked" boolean DEFAULT false NOT NULL;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "blocked_reason" text;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "blocked_at" timestamp with time zone;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "unregistered_at" timestamp with time zone;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_enabled" boolean DEFAULT true NOT NULL;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_hour" integer DEFAULT 8 NOT NULL;
 ALTER TABLE "users" ALTER COLUMN "daily_report_hour" SET DEFAULT 8;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_minute" integer DEFAULT 0 NOT NULL;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "report_detail_level" text DEFAULT 'standard' NOT NULL;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "include_public_briefing_link" boolean DEFAULT true NOT NULL;
+
+CREATE TABLE IF NOT EXISTS "telegram_request_events" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "telegram_user_id" text NOT NULL,
+  "event_kind" text NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS "portfolio_holdings" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -206,6 +223,10 @@ CREATE INDEX IF NOT EXISTS "ticker_masters_normalized_symbol_trgm_idx"
   ON "ticker_masters" USING gin ("normalized_symbol" gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS "telegram_outbound_messages_chat_id_created_at_idx"
   ON "telegram_outbound_messages" ("chat_id", "created_at");
+CREATE INDEX IF NOT EXISTS "telegram_request_events_user_created_at_idx"
+  ON "telegram_request_events" ("telegram_user_id", "created_at");
+CREATE INDEX IF NOT EXISTS "telegram_request_events_user_kind_created_at_idx"
+  ON "telegram_request_events" ("telegram_user_id", "event_kind", "created_at");
 CREATE INDEX IF NOT EXISTS "personal_rebalancing_snapshots_user_effective_date_idx"
   ON "personal_rebalancing_snapshots" ("user_id", "effective_report_date");
 CREATE INDEX IF NOT EXISTS "personal_rebalancing_snapshots_effective_date_idx"

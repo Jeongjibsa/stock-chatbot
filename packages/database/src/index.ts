@@ -14,6 +14,7 @@ export {
   tickerMasters,
   telegramConversationStates,
   telegramOutboundMessages,
+  telegramRequestEvents,
   userMarketWatchItems,
   users,
   type MarketWatchCatalogItemRecord,
@@ -34,6 +35,7 @@ export {
   type TickerMasterRecord,
   type TelegramConversationStateRecord,
   type TelegramOutboundMessageRecord,
+  type TelegramRequestEventRecord,
   type UserMarketWatchItemRecord,
   type UserRecord
 } from "./schema.js";
@@ -69,7 +71,13 @@ export {
 export { TelegramProcessedUpdateRepository } from "./telegram-processed-update-repository.js";
 export { TelegramOutboundMessageRepository } from "./telegram-outbound-message-repository.js";
 export {
+  TelegramRequestEventRepository,
+  type InsertTelegramRequestEventInput,
+  type TelegramRequestEventKind
+} from "./telegram-request-event-repository.js";
+export {
   UserRepository,
+  type SetBlockedStateInput,
   type UpdateUserReportSettingsInput,
   type UpsertUserInput
 } from "./user-repository.js";

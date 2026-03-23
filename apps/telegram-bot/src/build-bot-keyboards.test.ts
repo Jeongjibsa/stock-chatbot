@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildHomeReplyKeyboard,
+  buildPortfolioEntryInlineKeyboard,
   buildSettingsInlineKeyboard
 } from "./build-bot.js";
 
@@ -26,5 +27,13 @@ describe("telegram button keyboards", () => {
     expect(JSON.stringify(rows)).toContain("settings:time_change");
     expect(JSON.stringify(rows)).not.toContain("mode_compact");
     expect(JSON.stringify(rows)).not.toContain("link_on");
+  });
+
+  it("builds the portfolio entry chooser keyboard", () => {
+    const keyboard = buildPortfolioEntryInlineKeyboard();
+    const rows = (keyboard as any).inline_keyboard;
+
+    expect(JSON.stringify(rows)).toContain("portfolio-entry:bulk");
+    expect(JSON.stringify(rows)).toContain("portfolio-entry:single");
   });
 });

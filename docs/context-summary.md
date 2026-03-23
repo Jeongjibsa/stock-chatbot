@@ -153,7 +153,7 @@
 - Telegram bot runtime은 이제 outbound reply를 `telegram_outbound_messages`에 기록한다. 이 로그는 production-like E2E harness가 Telegram-visible 응답 문구를 검증하는 read model 역할을 하며, 운영 장애 분석에도 활용할 수 있다.
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
 - GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
-- `apps/web`에는 Basic Auth 기반 read-only 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
+- `apps/web`에는 Basic Auth 기반 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, Telegram user별 등록 상태/차단 상태/오늘 사용량을 조회하며 block/unblock 제어를 제공한다. `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
 - 공개 웹 feed/detail에는 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 들어간다.
 - `/admin`은 Postgres `date` 컬럼을 문자열로 정규화해 렌더링하며, 공개 웹 전체 톤은 Pretendard + shadcn/ui 스타일의 흑백 팔레트로 정리됐다.
 - GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.
@@ -164,6 +164,7 @@
 - `apps/web`는 Pretendard 기반 타이포그래피와 shadcn/ui 스타일 `ui/*` 컴포넌트(`Button`, `Badge`, `Card`, `Separator`)를 사용해 공개 feed/detail을 렌더링한다.
 - 계정 확장 전략은 현재 `telegram_user_id` 중심 MVP를 유지하되, 이후 `core user + channel identity` 구조로 확장할 수 있게 `preferred_delivery_chat_id` 같은 채널 delivery 속성을 별도 identity 성격 데이터로 취급하는 방향이다.
 - Telegram DM의 기본 UX는 한국어 온보딩 기준으로 유지한다. `/start`와 `/help`는 `등록 -> 종목 추가 -> 목록 확인 -> 브리핑 수신` 흐름과 명령별 짧은 설명을 함께 안내하고, `/register` 성공 후에도 같은 다음 단계가 이어져야 한다. 현재 설정 UX는 `브리핑 켜기`, `브리핑 끄기`, `고정 발송 시각/주말 규칙/역할 설명`을 제공하고, `/report_time`은 시간 변경이 아니라 정책 안내만 반환한다.
+- 홈 `종목 추가` 버튼은 이제 바로 `/portfolio_add`를 시작하지 않고 `여러 종목 빠르게 추가 / 한 종목 상세 추가` 2-depth chooser를 띄운다. 기본 CTA는 bulk 추가다.
 - Telegram DM에서는 `/report`를 바로 사용할 수 있다. 등록만 완료되어 있으면 보유 종목이 없어도 실행 가능하며, 이 경우 보유 종목 관련 섹션을 제외한 시장 중심 브리핑을 생성한다.
 - 현재 운영 기준으로 Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast path를 기본으로 사용한다. 즉, 장시간이 걸릴 수 있는 보유 종목 뉴스 수집과 LLM 조합은 기본적으로 비활성화돼 있고, 규칙 기반 브리핑을 먼저 빠르게 생성한다.
 - fast path에서도 `시장/매크로/자금/이벤트/리스크` 섹션과 상세 링크가 비어 있지 않도록 시장 데이터 기반 rule-based fallback 문장을 사용한다.
@@ -196,13 +197,15 @@
 - 공개 웹 브리핑은 `오늘의 시장 브리핑` 구조로 분리됐고, 개인 포트 용어와 action language는 renderer 단계에서 제외된다.
 - Telegram DM에는 홈 reply keyboard(`📊 브리핑 보기`, `➕ 종목 추가`, `📁 내 종목`, `⚙️ 설정`)와 설정 inline keyboard가 추가됐다. 기존 slash command semantics는 유지한다.
 - Telegram DM `/register`는 같은 private chat에 이미 등록된 사용자를 감지하면 중복 등록 대신 `/report`, `/portfolio_list`, `/unregister` 다음 단계를 안내한다.
-- Telegram DM에는 `/unregister`와 `/portfolio_bulk`가 추가됐다. `/portfolio_bulk`는 여러 종목을 comma, semicolon, newline 기준으로 받아 평균단가/수량/메모 없이 기본 보유 종목을 벌크 추가한다.
+- Telegram DM에는 `/unregister`와 `/portfolio_bulk`가 추가됐다. `/unregister`는 보유 종목과 대화 상태, delivery 설정을 비우는 soft reset이며 user identity, request history, block 상태는 유지한다. `/portfolio_bulk`는 여러 종목을 comma, semicolon, newline 기준으로 받아 평균단가/수량/메모 없이 기본 보유 종목을 벌크 추가하고, 인라인 argument가 없으면 대화형 입력도 지원한다.
 - 정적 종목 resolver는 이제 현대차(005380), 에코프로(086520), 현대글로비스(086280), HMM(011200)까지 지원한다.
 - `ticker_masters` 저장 모델이 추가됐고, CSV 기반 종목 마스터를 PostgreSQL에 적재한 뒤 `exact symbol -> exact name -> prefix -> partial -> fuzzy` ranked search로 종목을 찾는다.
 - `삼전`, `현대차`, `app`, `tesl` 같은 colloquial 입력은 curated alias fallback으로 canonical symbol을 먼저 찾고, 최종 표시/저장은 PostgreSQL ticker master 기준으로 처리한다.
-- Telegram `/portfolio_add`는 이제 `종목명을 입력해주세요 -> 단건 확인 또는 상위 5개 번호 선택 -> 평균단가/수량/메모` 흐름으로 동작한다.
+- Telegram `/portfolio_add`는 이제 `종목명을 입력해주세요 -> 단건 확인 또는 상위 5개 번호 선택 -> 평균단가 여부 -> 평균단가 -> 수량 여부 -> 수량` 흐름으로 동작한다. note 단계는 제거됐고 `y/n/yes/no/예/아니오`를 대소문자 구분 없이 허용한다.
 - Telegram `/portfolio_add`는 동일 사용자·종목 조합이 이미 있으면 중복 row를 만들지 않고 `이미 등록되어 있습니다`로 안내한다.
 - Telegram `/portfolio_bulk`는 각 입력을 독립적으로 검색하고 `추가 성공 / 이미 등록 / 실패(후보 없음 또는 후보 다수)` 요약을 반환한다.
+- Telegram runtime은 `telegram_request_events` append-only 로그를 기준으로 사용자별 제한을 판단한다. 온디맨드 `/report`는 KST 하루 1회, `/portfolio_add`와 `/portfolio_bulk` 시작은 합산 하루 3회까지만 허용한다.
+- 같은 `telegram_user_id`가 1초 3회 초과 또는 10초 10회 초과 요청을 보내면 자동 block 되며, 해제는 `/admin`에서만 가능하다. 운영자 `telegram_user_id=8606362482`는 모든 한도와 block 검사에서 제외된다.
 - 시장 데이터 어댑터는 이제 `runDate` 기준 최근 가용일 데이터를 조회한다. 따라서 과거 날짜 backfill이나 manual rerun에서도 항상 해당 날짜 이전 마지막 거래일 스냅샷을 사용해야 한다.
 - 공개 웹은 Pretendard + shadcn/ui 스타일 컴포넌트를 유지하되, 현재 기본 배경은 완전한 화이트와 블랙 텍스트 기준으로 고정됐다.
 - 공개 웹 디자인 시스템은 이후 soft white/gray 기반의 premium fintech 톤으로 다시 정리됐다. 배경은 `#F8FAFC`, surface는 white, border는 slate gray, accent는 단일 blue를 기준으로 feed/detail/admin 전반의 시각 계층을 맞춘다.

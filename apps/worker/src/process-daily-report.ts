@@ -69,6 +69,8 @@ type UserRepositoryPort = {
       displayName: string;
       id: string;
       includePublicBriefingLink?: boolean;
+      isBlocked?: boolean;
+      isRegistered?: boolean;
       preferredDeliveryChatId?: string | null;
       reportDetailLevel?: string | null;
       timezone?: string | null;
@@ -280,7 +282,11 @@ export async function processDailyReportJob(
     skippedDuplicateCount: 0
   };
   const usersToProcess = users.filter((user) => {
-    if (user.dailyReportEnabled === false) {
+    if (
+      user.dailyReportEnabled === false ||
+      user.isBlocked === true ||
+      user.isRegistered === false
+    ) {
       summary.notDueCount += 1;
       return false;
     }

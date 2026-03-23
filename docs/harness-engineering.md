@@ -136,3 +136,4 @@ COREPACK_HOME=/tmp/corepack pnpm verify
 
 - Telegram webhook, cron, 공개 웹, Neon production schema/data를 건드린 변경은 하네스나 로컬 테스트만 통과했다고 완료로 보지 않는다.
 - 이런 변경은 배포 후 production smoke와 Telegram live E2E까지 수행해야 한다.
+- Telegram rate-limit이나 block 정책을 추가한 경우 E2E reset helper가 request history/block 상태를 테스트용으로만 정리하는지, 실제 `/unregister` 시나리오는 soft reset semantics를 그대로 검증하는지 함께 확인한다.

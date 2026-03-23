@@ -56,7 +56,21 @@ export type AdminDashboardSnapshot = {
   recentReports: AdminRecentPublicReport[];
   recentRuns: AdminRecentRun[];
   recentStrategySnapshots: AdminRecentStrategySnapshot[];
+  users: AdminUserSummary[];
   reportsLast7Days: number;
   runSummary24h: AdminDashboardSummary;
   strategyBacktestSummary: AdminStrategyBacktestSummary;
+};
+
+export type AdminUserSummary = {
+  blockedAt: string | null;
+  blockedReason: "flood" | "manual" | null;
+  dailyPortfolioRequestsToday: number;
+  dailyReportRequestsToday: number;
+  displayName: string;
+  isBlocked: boolean;
+  isRegistered: boolean;
+  lastRequestAt: string | null;
+  telegramUserId: string;
+  unregisteredAt: string | null;
 };

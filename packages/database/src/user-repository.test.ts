@@ -23,6 +23,13 @@ function createDbDouble() {
           returning: async () => state.result
         })
       })
+    }),
+    update: () => ({
+      set: () => ({
+        where: () => ({
+          returning: async () => state.result
+        })
+      })
     })
   } as unknown as DatabaseClient;
 
@@ -73,27 +80,17 @@ describe("UserRepository", () => {
   });
 
   it("returns the updated user from report settings update", async () => {
-    const state = {
-      result: [
-        {
-          telegramUserId: "123",
-          dailyReportEnabled: false,
-          dailyReportHour: 21,
-          dailyReportMinute: 15,
-          reportDetailLevel: "compact",
-          includePublicBriefingLink: false
-        }
-      ] as unknown[]
-    };
-    const db = {
-      update: () => ({
-        set: () => ({
-          where: () => ({
-            returning: async () => state.result
-          })
-        })
-      })
-    } as unknown as DatabaseClient;
+    const { db, state } = createDbDouble();
+    state.result = [
+      {
+        telegramUserId: "123",
+        dailyReportEnabled: false,
+        dailyReportHour: 21,
+        dailyReportMinute: 15,
+        reportDetailLevel: "compact",
+        includePublicBriefingLink: false
+      }
+    ];
     const repository = new UserRepository(db);
 
     await expect(
@@ -112,6 +109,48 @@ describe("UserRepository", () => {
       dailyReportMinute: 15,
       reportDetailLevel: "compact",
       includePublicBriefingLink: false
+    });
+  });
+
+  it("soft-unregisters a user without deleting the identity", async () => {
+    const { db, state } = createDbDouble();
+    state.result = [
+      {
+        telegramUserId: "123",
+        isRegistered: false,
+        dailyReportEnabled: false
+      }
+    ];
+    const repository = new UserRepository(db);
+
+    await expect(repository.softUnregisterByTelegramUserId("123")).resolves.toMatchObject({
+      telegramUserId: "123",
+      isRegistered: false,
+      dailyReportEnabled: false
+    });
+  });
+
+  it("updates blocked state", async () => {
+    const { db, state } = createDbDouble();
+    state.result = [
+      {
+        telegramUserId: "123",
+        isBlocked: true,
+        blockedReason: "manual"
+      }
+    ];
+    const repository = new UserRepository(db);
+
+    await expect(
+      repository.setBlockedState({
+        telegramUserId: "123",
+        isBlocked: true,
+        blockedReason: "manual"
+      })
+    ).resolves.toMatchObject({
+      telegramUserId: "123",
+      isBlocked: true,
+      blockedReason: "manual"
     });
   });
 });

@@ -32,8 +32,8 @@ export default async function AdminPage() {
             운영 콘솔
           </h1>
           <p className="mt-4 max-w-3xl text-[0.98rem] leading-8 text-[color:var(--muted)]">
-            최근 공개 브리핑과 개인화 리포트 실행 상태를 확인하는 읽기 전용 운영
-            화면입니다.
+            최근 공개 브리핑, 개인화 리포트 실행 상태, Telegram 사용자 차단 상태를
+            함께 관리하는 운영 화면입니다.
           </p>
         </header>
 
@@ -215,6 +215,107 @@ export default async function AdminPage() {
                                 </p>
                               ) : null}
                             </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="mt-10">
+          <Card>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold">Telegram 사용자 관리</h2>
+                  <p className="text-sm text-[color:var(--muted)]">
+                    등록 상태, 차단 상태, 오늘 사용량을 확인하고 block/unblock 할 수
+                    있습니다.
+                  </p>
+                </div>
+              </div>
+              <Separator />
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
+                    <tr>
+                      <th className="pb-3 pr-4 font-semibold">사용자</th>
+                      <th className="pb-3 pr-4 font-semibold">상태</th>
+                      <th className="pb-3 pr-4 font-semibold">오늘 /report</th>
+                      <th className="pb-3 pr-4 font-semibold">오늘 종목 추가</th>
+                      <th className="pb-3 pr-4 font-semibold">최근 요청</th>
+                      <th className="pb-3 font-semibold">제어</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[color:var(--line)]">
+                    {snapshot.users.length === 0 ? (
+                      <tr>
+                        <td className="py-4 text-[color:var(--muted)]" colSpan={6}>
+                          아직 조회 가능한 Telegram 사용자가 없습니다.
+                        </td>
+                      </tr>
+                    ) : (
+                      snapshot.users.map((user) => (
+                        <tr key={user.telegramUserId}>
+                          <td className="py-3 pr-4 align-top">
+                            <div className="space-y-1">
+                              <p className="font-medium">{user.displayName}</p>
+                              <p className="text-xs text-[color:var(--muted)]">
+                                {user.telegramUserId}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="py-3 pr-4 align-top">
+                            <div className="flex flex-wrap gap-2">
+                              <Badge tone={user.isRegistered ? "positive" : "neutral"}>
+                                {user.isRegistered ? "registered" : "unregistered"}
+                              </Badge>
+                              <Badge tone={user.isBlocked ? "negative" : "positive"}>
+                                {user.isBlocked ? "blocked" : "active"}
+                              </Badge>
+                            </div>
+                            {user.isBlocked && user.blockedReason ? (
+                              <p className="mt-2 text-xs text-[color:var(--muted)]">
+                                reason: {user.blockedReason}
+                                {user.blockedAt
+                                  ? ` · ${formatDateTime(user.blockedAt)}`
+                                  : ""}
+                              </p>
+                            ) : user.unregisteredAt ? (
+                              <p className="mt-2 text-xs text-[color:var(--muted)]">
+                                unregistered: {formatDateTime(user.unregisteredAt)}
+                              </p>
+                            ) : null}
+                          </td>
+                          <td className="py-3 pr-4 align-top">
+                            {user.dailyReportRequestsToday} / 1
+                          </td>
+                          <td className="py-3 pr-4 align-top">
+                            {user.dailyPortfolioRequestsToday} / 3
+                          </td>
+                          <td className="py-3 pr-4 align-top text-[color:var(--muted)]">
+                            {user.lastRequestAt ? formatDateTime(user.lastRequestAt) : "-"}
+                          </td>
+                          <td className="py-3 align-top">
+                            <form
+                              action={`/api/admin/users/${encodeURIComponent(user.telegramUserId)}/${user.isBlocked ? "unblock" : "block"}`}
+                              method="post"
+                            >
+                              <button
+                                className={`inline-flex min-w-24 items-center justify-center rounded-full px-4 py-2 text-xs font-semibold transition ${
+                                  user.isBlocked
+                                    ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                                    : "bg-rose-100 text-rose-800 hover:bg-rose-200"
+                                }`}
+                                type="submit"
+                              >
+                                {user.isBlocked ? "unblock" : "block"}
+                              </button>
+                            </form>
                           </td>
                         </tr>
                       ))

@@ -30,6 +30,7 @@ describe("admin-dashboard", () => {
           {
             id: "report-1",
             report_date: new Date("2026-03-22T00:00:00.000Z"),
+            briefing_session: "pre_market",
             summary: "요약",
             market_regime: "Neutral",
             total_score: "0.00",
@@ -78,6 +79,22 @@ describe("admin-dashboard", () => {
             display_name: "Jisung Jung"
           }
         ]
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            telegram_user_id: "8606362482",
+            display_name: "Jisung Jung",
+            is_registered: true,
+            is_blocked: false,
+            blocked_reason: null,
+            blocked_at: null,
+            unregistered_at: null,
+            daily_report_requests_today: "1",
+            daily_portfolio_requests_today: "2",
+            last_request_at: new Date("2026-03-22T01:00:00.000Z")
+          }
+        ]
       });
 
     vi.spyOn(dbModule, "getWebPool").mockReturnValue({
@@ -89,5 +106,17 @@ describe("admin-dashboard", () => {
     expect(snapshot.latestReport?.reportDate).toBe("2026-03-22");
     expect(snapshot.recentRuns[0]?.runDate).toBe("2026-03-22");
     expect(snapshot.recentStrategySnapshots[0]?.runDate).toBe("2026-03-22");
+    expect(snapshot.users[0]).toEqual({
+      telegramUserId: "8606362482",
+      displayName: "Jisung Jung",
+      isRegistered: true,
+      isBlocked: false,
+      blockedReason: null,
+      blockedAt: null,
+      unregisteredAt: null,
+      dailyReportRequestsToday: 1,
+      dailyPortfolioRequestsToday: 2,
+      lastRequestAt: "2026-03-22T01:00:00.000Z"
+    });
   });
 });

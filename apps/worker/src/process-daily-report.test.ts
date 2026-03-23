@@ -168,19 +168,39 @@ describe("processDailyReportJob", () => {
             dailyReportHour: 10,
             dailyReportMinute: 0,
             timezone: "Asia/Seoul"
+          },
+          {
+            id: "user-4",
+            displayName: "D",
+            preferredDeliveryChatId: "chat-4",
+            dailyReportEnabled: true,
+            isBlocked: true,
+            dailyReportHour: 9,
+            dailyReportMinute: 0,
+            timezone: "Asia/Seoul"
+          },
+          {
+            id: "user-5",
+            displayName: "E",
+            preferredDeliveryChatId: "chat-5",
+            dailyReportEnabled: true,
+            isRegistered: false,
+            dailyReportHour: 9,
+            dailyReportMinute: 0,
+            timezone: "Asia/Seoul"
           }
         ])
       }
     });
 
     expect(summary).toEqual({
-      userCount: 3,
+      userCount: 5,
       completedCount: 2,
       deliveredCount: 2,
       deliveryFailedCount: 0,
       deliverySkippedCount: 0,
       failedCount: 0,
-      notDueCount: 1,
+      notDueCount: 3,
       partialSuccessCount: 0,
       skippedDuplicateCount: 0
     });

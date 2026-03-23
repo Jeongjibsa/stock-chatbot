@@ -9,6 +9,7 @@ import {
   TelegramConversationStateRepository,
   TelegramOutboundMessageRepository,
   TelegramProcessedUpdateRepository,
+  TelegramRequestEventRepository,
   UserMarketWatchItemRepository,
   UserRepository
 } from "@stock-chatbot/database";
@@ -35,6 +36,7 @@ export class TelegramE2ERuntime {
   readonly conversationStateRepository: TelegramConversationStateRepository;
   readonly processedUpdateRepository: TelegramProcessedUpdateRepository;
   readonly outboundMessageRepository: TelegramOutboundMessageRepository;
+  readonly requestEventRepository: TelegramRequestEventRepository;
 
   private readonly updateBase = Number(`${Date.now()}`.slice(-11)) * 100;
   private nextUpdateOffset = 1;
@@ -53,6 +55,7 @@ export class TelegramE2ERuntime {
     this.conversationStateRepository = new TelegramConversationStateRepository(this.db);
     this.processedUpdateRepository = new TelegramProcessedUpdateRepository(this.db);
     this.outboundMessageRepository = new TelegramOutboundMessageRepository(this.db);
+    this.requestEventRepository = new TelegramRequestEventRepository(this.db);
   }
 
   async close(): Promise<void> {
@@ -67,14 +70,33 @@ export class TelegramE2ERuntime {
 
   async resetUser(telegramUserId: string): Promise<void> {
     await this.conversationStateRepository.clear(telegramUserId);
-    await this.userRepository.deleteByTelegramUserId(telegramUserId);
+    const identity = await this.userRepository.getByTelegramUserId(telegramUserId);
+
+    if (identity?.id) {
+      await this.portfolioHoldingRepository.clearByUserId(identity.id);
+    }
+
+    await this.requestEventRepository.clearByTelegramUserIdsSince(
+      [telegramUserId],
+      new Date("2000-01-01T00:00:00.000Z")
+    );
+    await this.userRepository.setBlockedState({
+      telegramUserId,
+      isBlocked: false
+    });
+    await this.userRepository.softUnregisterByTelegramUserId(telegramUserId);
   }
 
   async cleanupSuiteArtifacts(input: {
     chatIds: string[];
+    telegramUserIds: string[];
     since: Date;
   }): Promise<void> {
     await this.processedUpdateRepository.deleteByIds(this.usedUpdateIds);
+    await this.requestEventRepository.clearByTelegramUserIdsSince(
+      input.telegramUserIds,
+      input.since
+    );
     await this.outboundMessageRepository.clearByChatIdsSince(
       input.chatIds,
       input.since

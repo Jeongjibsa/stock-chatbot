@@ -200,8 +200,8 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         runtime.config.primaryUserId
       );
 
-      if (removed) {
-        throw new Error("Expected /unregister to remove the registered user");
+      if (!removed || removed.isRegistered !== false) {
+        throw new Error("Expected /unregister to keep the user row but mark it unregistered");
       }
 
       const registerSince = new Date();
@@ -229,7 +229,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
 
       await completePortfolioAdd(runtime, "005930", {
         expectedSelectionPhrase: "삼성전자 (005930)를 추가할까요?",
-        finalChoiceValues: ["예", "no", "no", "no"]
+        finalChoiceValues: ["예", "no", "no"]
       });
 
       await assertHoldingExists(runtime, runtime.config.primaryUserId, "005930");
@@ -455,7 +455,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
 
       await completePortfolioAdd(runtime, "005930", {
         expectedSelectionPhrase: "삼성전자 (005930)를 추가할까요?",
-        finalChoiceValues: ["예", "no", "no", "no"]
+        finalChoiceValues: ["예", "no", "no"]
       });
 
       const replies = await runtime.outboundMessageRepository.listByChatId(

@@ -121,33 +121,18 @@ describe("conversation-state", () => {
     state = quantityChoiceStep.nextState;
 
     const quantityStep = await advanceConversation(state, "3", dependencies);
-    expect(quantityStep.status).toBe("waiting");
-    if (quantityStep.status === "completed") {
-      throw new Error("expected waiting state");
-    }
-    state = quantityStep.nextState;
-
-    const noteChoiceStep = await advanceConversation(state, "yes", dependencies);
-    expect(noteChoiceStep.status).toBe("waiting");
-    if (noteChoiceStep.status === "completed") {
-      throw new Error("expected waiting state");
-    }
-    state = noteChoiceStep.nextState;
-
-    const noteStep = await advanceConversation(state, "Long term", dependencies);
-    expect(noteStep.status).toBe("completed");
-    if (noteStep.status !== "completed") {
+    expect(quantityStep.status).toBe("completed");
+    if (quantityStep.status !== "completed") {
       throw new Error("expected completed state");
     }
 
-    expect(noteStep.completion).toMatchObject({
+    expect(quantityStep.completion).toMatchObject({
       command: "portfolio_add",
       draft: {
         symbol: "AAPL",
         exchange: "US",
         avgPrice: "210.5",
-        quantity: "3",
-        note: "Long term"
+        quantity: "3"
       }
     });
   });
@@ -190,6 +175,7 @@ describe("conversation-state", () => {
     store.set("user-1", state);
 
     expect(getConversationStartMessage("portfolio_add")).toContain("종목명을 입력");
+    expect(getConversationStartMessage("portfolio_bulk")).toContain("여러 종목");
     expect(getConversationStartMessage("portfolio_remove")).toContain("삭제할 종목");
     expect(store.get("user-1")).toMatchObject({
       command: "portfolio_remove"
@@ -198,5 +184,24 @@ describe("conversation-state", () => {
     store.clear("user-1");
 
     expect(store.get("user-1")).toBeNull();
+  });
+
+  it("completes portfolio bulk input in a single reply", async () => {
+    const state = createInitialConversationState("portfolio_bulk");
+    const result = await advanceConversation(
+      state,
+      "삼성전자, SK하이닉스\n현대차",
+      dependencies
+    );
+
+    expect(result.status).toBe("completed");
+    if (result.status !== "completed") {
+      throw new Error("expected completed state");
+    }
+
+    expect(result.completion).toEqual({
+      command: "portfolio_bulk",
+      tokens: ["삼성전자", "SK하이닉스", "현대차"]
+    });
   });
 });

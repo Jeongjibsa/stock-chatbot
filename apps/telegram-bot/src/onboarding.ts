@@ -38,7 +38,7 @@ const COMMAND_SUMMARIES = [
   "/report_settings - 브리핑 설정 확인",
   "/report_on - 정기 브리핑 켜기",
   "/report_off - 정기 브리핑 끄기",
-  "/report_time - 브리핑 시간 변경",
+  "/report_time - 고정 브리핑 정책 안내",
   "/portfolio_add - 보유 종목 추가",
   "/portfolio_bulk - 종목 여러 개 빠르게 추가",
   "/portfolio_list - 내 종목 확인",
@@ -55,7 +55,7 @@ export function buildStartMessage(): string {
     "3. /portfolio_add - 보유 종목 추가",
     "4. /portfolio_bulk - 여러 종목 한번에 추가",
     "5. /portfolio_list - 저장 결과 확인",
-    "6. 매일 오전 브리핑 수신",
+    "6. 매일 오전/오후 정기 브리핑 수신",
     "",
     "지원 명령:",
     ...COMMAND_SUMMARIES
@@ -99,7 +99,7 @@ export function buildAlreadyRegisteredMessage(): string {
 
 export function buildUnregisterSuccessMessage(): string {
   return [
-    "등록 정보와 개인 설정을 초기화했습니다.",
+    "등록 상태와 개인 설정을 초기화했습니다.",
     "다시 시작하려면 /register 를 실행해 주세요."
   ].join("\n");
 }

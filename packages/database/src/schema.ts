@@ -18,6 +18,11 @@ export const users = pgTable("users", {
   preferredDeliveryChatId: text("preferred_delivery_chat_id"),
   preferredDeliveryChatType: text("preferred_delivery_chat_type"),
   displayName: text("display_name").notNull(),
+  isRegistered: boolean("is_registered").notNull().default(true),
+  isBlocked: boolean("is_blocked").notNull().default(false),
+  blockedReason: text("blocked_reason"),
+  blockedAt: timestamp("blocked_at", { withTimezone: true }),
+  unregisteredAt: timestamp("unregistered_at", { withTimezone: true }),
   locale: text("locale").notNull().default("ko-KR"),
   timezone: text("timezone").notNull().default("Asia/Seoul"),
   dailyReportEnabled: boolean("daily_report_enabled").notNull().default(true),
@@ -30,6 +35,25 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
 });
+
+export const telegramRequestEvents = pgTable(
+  "telegram_request_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    telegramUserId: text("telegram_user_id").notNull(),
+    eventKind: text("event_kind").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    telegramUserIdCreatedAtIndex: index("telegram_request_events_user_created_at_idx").on(
+      table.telegramUserId,
+      table.createdAt
+    ),
+    telegramUserIdKindCreatedAtIndex: index(
+      "telegram_request_events_user_kind_created_at_idx"
+    ).on(table.telegramUserId, table.eventKind, table.createdAt)
+  })
+);
 
 export const portfolioHoldings = pgTable(
   "portfolio_holdings",
@@ -264,6 +288,8 @@ export const telegramOutboundMessages = pgTable(
 
 export type UserRecord = typeof users.$inferSelect;
 export type NewUserRecord = typeof users.$inferInsert;
+export type TelegramRequestEventRecord = typeof telegramRequestEvents.$inferSelect;
+export type NewTelegramRequestEventRecord = typeof telegramRequestEvents.$inferInsert;
 export type PortfolioHoldingRecord = typeof portfolioHoldings.$inferSelect;
 export type NewPortfolioHoldingRecord = typeof portfolioHoldings.$inferInsert;
 export type TickerMasterRecord = typeof tickerMasters.$inferSelect;
