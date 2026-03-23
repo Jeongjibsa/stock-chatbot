@@ -33,7 +33,8 @@ describe("report-settings helpers", () => {
         dailyReportMinute: 15,
         timezone: "Asia/Seoul"
       })
-    ).toContain("21:15");
+    ).toContain("07:30 / 20:30");
+    expect(formatReportSettings({})).toContain("토요일 오전만");
     expect(formatReportSettings({})).not.toContain("compact");
     expect(formatReportSettings({})).not.toContain("상세 링크");
     expect(formatHourMinute(8, 0)).toBe("08:00");

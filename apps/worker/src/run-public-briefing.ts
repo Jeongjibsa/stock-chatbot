@@ -3,17 +3,21 @@ import "dotenv/config";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import type { Pool } from "pg";
 
 import {
+  type BriefingSession,
   buildPublicDailyBriefing,
   buildRuleBasedBriefing,
   buildQuantScorecards,
   CompositeMarketDataAdapter,
   DailyReportCompositionService,
   FredMarketDataAdapter,
+  parseBriefingSession,
   GOOGLE_PROVIDER_PROFILE,
   createLlmClient,
   OPENAI_PROVIDER_PROFILE,
+  resolveScheduledBriefingSession,
   renderPublicDailyBriefingMarkdown,
   toQuantStrategyBullets,
   YahooFinanceScrapingMarketDataAdapter,
@@ -38,17 +42,23 @@ import {
 type Environment = Record<string, string | undefined>;
 
 type PublicBriefingBuilderDependencies = {
+  briefingSession: BriefingSession;
   marketDataAdapter: MarketDataAdapter;
   reportCompositionService?: Pick<DailyReportCompositionService, "compose">;
   runDate: string;
+  sessionComparison?: {
+    priorPublicSignals?: string[];
+    priorPublicSummary?: string | null;
+  };
 };
 
 export function readPublicBriefingOutputPath(
   env: Environment = process.env
 ): string {
+  const briefingSession = readPublicBriefingSession(env);
   return (
     env.PUBLIC_BRIEFING_OUTPUT_PATH?.trim() ||
-    "artifacts/public-briefing/public-daily-briefing.json"
+    `artifacts/public-briefing/public-daily-briefing-${briefingSession}.json`
   );
 }
 
@@ -79,13 +89,17 @@ export async function buildPublicBriefing(
     try {
       composition = await dependencies.reportCompositionService.compose({
         audience: "public_web",
+        briefingSession: dependencies.briefingSession,
         holdings: [],
         marketResults,
         newsBriefs: [],
         quantScorecards,
         quantScenarios,
         riskCheckpoints: [],
-        runDate: dependencies.runDate
+        runDate: dependencies.runDate,
+        ...(dependencies.sessionComparison
+          ? { sessionComparison: dependencies.sessionComparison }
+          : {})
       });
     } catch (error) {
       console.warn(
@@ -98,6 +112,7 @@ export async function buildPublicBriefing(
   const fallbackBriefing = buildRuleBasedBriefing(marketResults);
 
   return buildPublicDailyBriefing({
+    briefingSession: dependencies.briefingSession,
     runDate: dependencies.runDate,
     summaryLine:
       composition?.oneLineSummary ??
@@ -125,6 +140,7 @@ export async function buildPublicBriefing(
 export function buildPublicReportInsertInput(input: {
   briefing: Awaited<ReturnType<typeof buildPublicBriefing>>;
 }): {
+  briefingSession: BriefingSession;
   contentMarkdown: string;
   indicatorTags: string[];
   marketRegime: string;
@@ -138,6 +154,7 @@ export function buildPublicReportInsertInput(input: {
 
   return {
     reportDate: input.briefing.runDate,
+    briefingSession: input.briefing.briefingSession,
     summary: input.briefing.summaryLine,
     marketRegime,
     totalScore: totalScore.toFixed(2),
@@ -148,12 +165,14 @@ export function buildPublicReportInsertInput(input: {
 }
 
 export function formatPublicBriefingBuildSummary(input: {
+  briefingSession: BriefingSession;
   outputPath: string;
   runDate: string;
   snapshotCount: number;
 }): string {
   return [
     `[public-briefing] runDate=${input.runDate}`,
+    `session=${input.briefingSession}`,
     `snapshotCount=${input.snapshotCount}`,
     `outputPath=${input.outputPath}`
   ].join(" ");
@@ -162,12 +181,14 @@ export function formatPublicBriefingBuildSummary(input: {
 export async function runPublicBriefing(
   env: Environment = process.env
 ): Promise<{
+  briefingSession: BriefingSession;
   persistedReportId?: string;
   outputPath: string;
   runDate: string;
   snapshotCount: number;
 }> {
   const runDate = readRunDate(env);
+  const briefingSession = readPublicBriefingSession(env);
   const outputPath = readPublicBriefingOutputPath(env);
   const marketDataAdapter = new CompositeMarketDataAdapter({
     fredAdapter: new FredMarketDataAdapter({
@@ -177,6 +198,7 @@ export async function runPublicBriefing(
   });
   const reportCompositionService = buildReportCompositionService(env);
   const buildInput: PublicBriefingBuilderDependencies = {
+    briefingSession,
     marketDataAdapter,
     runDate
   };
@@ -185,18 +207,34 @@ export async function runPublicBriefing(
     buildInput.reportCompositionService = reportCompositionService;
   }
 
-  const briefing = await buildPublicBriefing(buildInput);
   const databaseUrl = readOptionalDatabaseUrl(env);
   let persistedReportId: string | undefined;
+  let repository: PublicReportRepository | undefined;
+  let pool: Pool | undefined;
+
+  if (databaseUrl) {
+    pool = createPool(databaseUrl);
+    repository = new PublicReportRepository(createDatabase(pool));
+  }
+
+  if (briefingSession === "post_market" && repository) {
+    const prior = await repository.findLatestByReportDateAndSession(runDate, "pre_market");
+
+    if (prior) {
+      buildInput.sessionComparison = {
+        priorPublicSummary: prior.summary ?? null,
+        priorPublicSignals: prior.signals ?? []
+      };
+    }
+  }
+
+  const briefing = await buildPublicBriefing(buildInput);
 
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${JSON.stringify(briefing, null, 2)}\n`);
 
-  if (databaseUrl) {
-    const pool = createPool(databaseUrl);
-
+  if (repository && pool) {
     try {
-      const repository = new PublicReportRepository(createDatabase(pool));
       const created = await repository.insertReport(
         buildPublicReportInsertInput({
           briefing
@@ -210,10 +248,32 @@ export async function runPublicBriefing(
 
   return {
     ...(persistedReportId ? { persistedReportId } : {}),
+    briefingSession,
     runDate: briefing.runDate,
     outputPath,
     snapshotCount: briefing.marketSnapshot.length
   };
+}
+
+export function readPublicBriefingSession(
+  env: Environment = process.env,
+  options?: {
+    now?: Date;
+    timeZone?: string;
+  }
+): BriefingSession {
+  const parsed = parseBriefingSession(env.BRIEFING_SESSION?.trim());
+
+  if (parsed) {
+    return parsed;
+  }
+
+  const resolved = resolveScheduledBriefingSession({
+    timeZone: options?.timeZone ?? env.REPORT_TIMEZONE ?? "Asia/Seoul",
+    ...(options?.now ? { now: options.now } : {})
+  });
+
+  return resolved === "none" ? "pre_market" : resolved;
 }
 
 async function main(): Promise<void> {
@@ -221,6 +281,7 @@ async function main(): Promise<void> {
 
   console.log(
     formatPublicBriefingBuildSummary({
+      briefingSession: result.briefingSession,
       outputPath: result.outputPath,
       runDate: result.runDate,
       snapshotCount: result.snapshotCount

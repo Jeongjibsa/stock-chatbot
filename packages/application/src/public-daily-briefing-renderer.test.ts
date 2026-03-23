@@ -29,7 +29,7 @@ describe("public daily briefing renderer", () => {
     const html = renderPublicDailyBriefingHtml(briefing);
 
     expect(html).toContain("<!doctype html>");
-    expect(html).toContain('rel="canonical" href="/briefings/2026-03-20/"');
+    expect(html).toContain('rel="canonical" href="/briefings/2026-03-20/pre-market/"');
     expect(html).toContain("오늘 한 줄 요약");
     expect(html).toContain("시장 종합 해석");
     expect(html).toContain("오늘의 리스크 포인트");

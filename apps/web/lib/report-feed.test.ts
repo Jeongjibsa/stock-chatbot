@@ -8,6 +8,7 @@ describe("report-feed utils", () => {
       groupReportsByDate([
         {
           id: "r2",
+          briefingSession: "pre_market",
           reportDate: "2026-03-22",
           summary: "latest",
           indicatorTags: ["KOSPI +0.31%"],
@@ -19,6 +20,7 @@ describe("report-feed utils", () => {
         },
         {
           id: "r1",
+          briefingSession: "pre_market",
           reportDate: "2026-03-21",
           summary: "older",
           indicatorTags: ["NASDAQ -2.01%"],

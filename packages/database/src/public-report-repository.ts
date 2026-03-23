@@ -1,9 +1,10 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 
 import type { DatabaseClient } from "./client.js";
 import { reports, type ReportRecord } from "./schema.js";
 
 export type InsertPublicReportInput = {
+  briefingSession: "post_market" | "pre_market";
   contentMarkdown: string;
   indicatorTags: string[];
   marketRegime: string;
@@ -17,9 +18,13 @@ export class PublicReportRepository {
   constructor(private readonly db: DatabaseClient) {}
 
   async insertReport(input: InsertPublicReportInput): Promise<ReportRecord> {
-    const existing = await this.findLatestByReportDate(input.reportDate);
+    const existing = await this.findLatestByReportDateAndSession(
+      input.reportDate,
+      input.briefingSession
+    );
     const values = {
       reportDate: input.reportDate,
+      briefingSession: input.briefingSession,
       summary: input.summary,
       marketRegime: input.marketRegime,
       totalScore: input.totalScore,
@@ -60,6 +65,7 @@ export class PublicReportRepository {
         .select({
           id: reports.id,
           reportDate: reports.reportDate,
+          briefingSession: sql<string>`'pre_market'`.as("briefingSession"),
           summary: reports.summary,
           marketRegime: reports.marketRegime,
           totalScore: reports.totalScore,
@@ -91,6 +97,7 @@ export class PublicReportRepository {
         .select({
           id: reports.id,
           reportDate: reports.reportDate,
+          briefingSession: sql<string>`'pre_market'`.as("briefingSession"),
           summary: reports.summary,
           marketRegime: reports.marketRegime,
           totalScore: reports.totalScore,
@@ -109,11 +116,23 @@ export class PublicReportRepository {
   }
 
   async findLatestByReportDate(reportDate: string): Promise<ReportRecord | null> {
+    return this.findLatestByReportDateAndSession(reportDate, "pre_market");
+  }
+
+  async findLatestByReportDateAndSession(
+    reportDate: string,
+    briefingSession: "post_market" | "pre_market"
+  ): Promise<ReportRecord | null> {
     try {
       const result = await this.db
         .select()
         .from(reports)
-        .where(eq(reports.reportDate, reportDate))
+        .where(
+          and(
+            eq(reports.reportDate, reportDate),
+            eq(reports.briefingSession, briefingSession)
+          )
+        )
         .orderBy(desc(reports.createdAt))
         .limit(1);
 
@@ -127,6 +146,7 @@ export class PublicReportRepository {
         .select({
           id: reports.id,
           reportDate: reports.reportDate,
+          briefingSession: sql<string>`'pre_market'`.as("briefingSession"),
           summary: reports.summary,
           marketRegime: reports.marketRegime,
           totalScore: reports.totalScore,
@@ -158,6 +178,7 @@ function isMissingIndicatorTagsError(error: unknown): boolean {
 
   return (
     code === "42703" ||
-    message.includes('column "indicator_tags" does not exist')
+    message.includes('column "indicator_tags" does not exist') ||
+    message.includes('column "briefing_session" does not exist')
   );
 }

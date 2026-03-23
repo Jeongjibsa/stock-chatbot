@@ -22,7 +22,7 @@ describe("telegram smoke test", () => {
     const message = buildTelegramSmokeMessage(new Date("2026-03-21T00:00:00.000Z"));
 
     expect(message).toContain("Telegram smoke test");
-    expect(message).toContain("🗞️ 오늘의 포트폴리오 리밸런싱 브리핑");
+    expect(message).toContain("🗞️ 오늘의 포트폴리오 프리마켓 브리핑");
   });
 
   it("validates bot identity and sends a provider-backed smoke message", async () => {

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 
 import type { DatabaseClient } from "./client.js";
 import {
@@ -69,6 +69,28 @@ export class StrategySnapshotRepository {
       .select()
       .from(strategySnapshots)
       .where(eq(strategySnapshots.reportRunId, reportRunId))
+      .orderBy(desc(strategySnapshots.createdAt));
+  }
+
+  async listByUserAndRunDateAndScheduleTypes(input: {
+    runDate: string;
+    scheduleTypes: string[];
+    userId: string;
+  }): Promise<StrategySnapshotRecord[]> {
+    if (input.scheduleTypes.length === 0) {
+      return [];
+    }
+
+    return this.db
+      .select()
+      .from(strategySnapshots)
+      .where(
+        and(
+          eq(strategySnapshots.userId, input.userId),
+          eq(strategySnapshots.runDate, input.runDate),
+          inArray(strategySnapshots.scheduleType, input.scheduleTypes)
+        )
+      )
       .orderBy(desc(strategySnapshots.createdAt));
   }
 }

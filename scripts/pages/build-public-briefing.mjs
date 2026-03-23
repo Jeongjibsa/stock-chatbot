@@ -38,8 +38,8 @@ if (hasStaticWebApp) {
   writeFileSync(latestBriefingDataTarget, JSON.stringify(briefing, null, 2));
 }
 
-writeArchiveIndex(outputRoot, briefing.runDate);
-writeRootIndex(outputRoot, briefing.runDate, hasStaticWebApp);
+writeArchiveIndex(outputRoot, briefing.runDate, briefing.canonicalPath);
+writeRootIndex(outputRoot, briefing.canonicalPath, hasStaticWebApp);
 writeFileSync(join(outputRoot, ".nojekyll"), "");
 
 console.log(
@@ -60,12 +60,12 @@ function toRelativePath(pathname) {
   return pathname.replace(/^\/+/, "");
 }
 
-function writeArchiveIndex(outputRoot, latestRunDate) {
-  const runDates = readAvailableRunDates(outputRoot);
-  const items = runDates
+function writeArchiveIndex(outputRoot, latestRunDate, latestCanonicalPath) {
+  const entries = readAvailableBriefingEntries(outputRoot);
+  const items = entries
     .map(
-      (runDate) =>
-        `        <li><a href="${escapeHtml(`./${runDate}/`)}">${escapeHtml(runDate)}</a></li>`
+      (entry) =>
+        `        <li><a href="${escapeHtml(entry.href)}">${escapeHtml(entry.label)}</a></li>`
     )
     .join("\n");
   const target = join(outputRoot, "briefings", "index.html");
@@ -96,6 +96,9 @@ function writeArchiveIndex(outputRoot, latestRunDate) {
       '    <section class="card">',
       "      <h1>브리핑 아카이브</h1>",
       `      <p>최신 공개 브리핑 기준일은 ${escapeHtml(latestRunDate)}입니다.</p>`,
+      `      <p><a href="${escapeHtml(
+        relativeFromBriefingsRoot(latestCanonicalPath)
+      )}">최신 브리핑 바로가기</a></p>`,
       "      <ul>",
       items || "        <li>아직 생성된 브리핑이 없습니다.</li>",
       "      </ul>",
@@ -107,10 +110,12 @@ function writeArchiveIndex(outputRoot, latestRunDate) {
   );
 }
 
-function writeRootIndex(outputRoot, latestRunDate, hasStaticWebApp) {
+function writeRootIndex(outputRoot, latestCanonicalPath, hasStaticWebApp) {
   const target = join(outputRoot, "index.html");
   const links = [
-    `        <a class="button primary" href="${escapeHtml(`./briefings/${latestRunDate}/`)}">최신 브리핑 보기</a>`
+    `        <a class="button primary" href="${escapeHtml(
+      `.${latestCanonicalPath}`
+    )}">최신 브리핑 보기</a>`
   ];
 
   if (hasStaticWebApp) {
@@ -144,7 +149,7 @@ function writeRootIndex(outputRoot, latestRunDate, hasStaticWebApp) {
       "  <main>",
       '    <section class="hero">',
       "      <h1>오늘의 공개 브리핑</h1>",
-      `      <p>최신 공개 기준일은 ${escapeHtml(latestRunDate)}입니다. 텔레그램 요약본과 연결되는 시장·매크로·자금·이벤트 상세 브리핑을 확인하실 수 있습니다.</p>`,
+      `      <p>최신 공개 브리핑 경로는 ${escapeHtml(latestCanonicalPath)} 입니다. 텔레그램 요약본과 연결되는 시장·매크로·자금·이벤트 상세 브리핑을 확인하실 수 있습니다.</p>`,
       '      <div class="links">',
       ...links,
       "      </div>",
@@ -156,7 +161,7 @@ function writeRootIndex(outputRoot, latestRunDate, hasStaticWebApp) {
   );
 }
 
-function readAvailableRunDates(outputRoot) {
+function readAvailableBriefingEntries(outputRoot) {
   const briefingsRoot = join(outputRoot, "briefings");
 
   if (!existsSync(briefingsRoot)) {
@@ -165,8 +170,21 @@ function readAvailableRunDates(outputRoot) {
 
   return readdirSync(briefingsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && /^\d{4}-\d{2}-\d{2}$/.test(entry.name))
-    .map((entry) => entry.name)
-    .sort((left, right) => right.localeCompare(left));
+    .flatMap((dateEntry) => {
+      const sessionRoot = join(briefingsRoot, dateEntry.name);
+
+      return readdirSync(sessionRoot, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory())
+        .map((entry) => ({
+          href: `./${dateEntry.name}/${entry.name}/`,
+          label: `${dateEntry.name} · ${entry.name}`
+        }));
+    })
+    .sort((left, right) => right.label.localeCompare(left.label));
+}
+
+function relativeFromBriefingsRoot(canonicalPath) {
+  return `.${canonicalPath.replace(/^\/briefings/, "")}`;
 }
 
 function escapeHtml(value) {

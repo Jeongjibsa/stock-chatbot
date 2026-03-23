@@ -11,7 +11,13 @@ export function groupReportsByDate(reports: PublicReport[]): ReportsByDate {
 
   return [...grouped.entries()].map(([reportDate, items]) => ({
     reportDate,
-    reports: items
+    reports: items.sort((left, right) =>
+      left.briefingSession === right.briefingSession
+        ? right.createdAt.localeCompare(left.createdAt)
+        : left.briefingSession === "pre_market"
+          ? -1
+          : 1
+    )
   }));
 }
 

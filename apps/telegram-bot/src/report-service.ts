@@ -3,12 +3,14 @@ import {
   createLlmClient,
   DailyReportCompositionService,
   DailyReportOrchestrator,
+  type BriefingSession,
   type DailyReportOrchestratorResult,
   FredMarketDataAdapter,
   GOOGLE_PROVIDER_PROFILE,
   GoogleNewsRssAdapter,
   OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
+  resolveManualBriefingSession,
   type PersonalizedPortfolioRebalancingData,
   YahooHoldingPriceSnapshotProvider,
   YahooFinanceScrapingMarketDataAdapter
@@ -53,6 +55,7 @@ export class TelegramReportService {
   ) {}
 
   async runForTelegramUser(input: {
+    briefingSession?: BriefingSession;
     portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
     runDate: string;
     telegramUserId: string;
@@ -84,6 +87,7 @@ export class TelegramReportService {
     }
 
     const runInput: {
+      briefingSession?: BriefingSession;
       portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
       runDate: string;
       scheduleType: string;
@@ -96,8 +100,15 @@ export class TelegramReportService {
     } = {
       user: orchestratorUser,
       runDate: input.runDate,
-      scheduleType: "telegram-report"
+      scheduleType:
+        (input.briefingSession ?? "pre_market") === "pre_market"
+          ? "manual-pre-market"
+          : "manual-post-market"
     };
+
+    if (input.briefingSession) {
+      runInput.briefingSession = input.briefingSession;
+    }
 
     if (input.portfolioRebalancing) {
       runInput.portfolioRebalancing = input.portfolioRebalancing;
@@ -202,6 +213,18 @@ export function resolveTelegramReportRunDate(
   }
 ): string {
   return getRunDateForTimezone(options?.timeZone ?? "Asia/Seoul", options?.now);
+}
+
+export function resolveTelegramBriefingSession(
+  options?: {
+    now?: Date;
+    timeZone?: string;
+  }
+): BriefingSession {
+  return resolveManualBriefingSession({
+    timeZone: options?.timeZone ?? "Asia/Seoul",
+    ...(options?.now ? { now: options.now } : {})
+  });
 }
 
 export function resolveTelegramReportFollowUpMessage(

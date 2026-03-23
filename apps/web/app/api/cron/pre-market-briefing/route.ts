@@ -1,7 +1,6 @@
 import { isAuthorizedCronRequest } from "../../../../lib/cron-auth";
 import {
   readCronRuntimeEnvironment,
-  resolveRequestedBriefingSessions,
   runBriefingSession
 } from "../../../../lib/briefing-cron";
 
@@ -16,24 +15,15 @@ export async function GET(request: Request) {
   }
 
   const runtimeEnv = readCronRuntimeEnvironment(new URL(request.url).origin);
-  const sessions = resolveRequestedBriefingSessions({
-    timeZone: runtimeEnv.REPORT_TIMEZONE ?? "Asia/Seoul"
+  const result = await runBriefingSession({
+    briefingSession: "pre_market",
+    runtimeEnv,
+    triggerType: "schedule"
   });
-  const results = [];
-
-  for (const briefingSession of sessions) {
-    results.push(
-      await runBriefingSession({
-        briefingSession,
-        runtimeEnv,
-        triggerType: "schedule"
-      })
-    );
-  }
 
   return Response.json({
     ok: true,
-    mode: "vercel-cron-primary",
-    results
+    mode: "vercel-cron-pre-market",
+    result
   });
 }

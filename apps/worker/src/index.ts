@@ -6,6 +6,7 @@ import { Redis } from "ioredis";
 import {
   DAILY_REPORT_JOB_NAME,
   REPORT_QUEUE_NAME,
+  type BriefingSession,
   type DailyReportPayload
 } from "@stock-chatbot/application";
 
@@ -39,7 +40,13 @@ async function main(): Promise<void> {
         throw new Error(`Unsupported job name: ${job.name}`);
       }
 
-      return processDailyReport();
+      return processDailyReport({
+        ...(
+          job.data?.briefingSession
+            ? { briefingSession: job.data.briefingSession as BriefingSession }
+            : {}
+        )
+      });
     },
     {
       connection
@@ -62,16 +69,19 @@ async function main(): Promise<void> {
   console.log(getWorkerReadyMessage());
 
   if (process.env.NODE_ENV !== "production") {
-    await queue.add(
-      DAILY_REPORT_JOB_NAME,
-      {
-        source: "bootstrap"
-      } satisfies DailyReportPayload,
-      {
-        removeOnComplete: 50,
-        removeOnFail: 50
-      }
-    );
+    for (const briefingSession of ["pre_market", "post_market"] as const) {
+      await queue.add(
+        DAILY_REPORT_JOB_NAME,
+        {
+          briefingSession,
+          source: "bootstrap"
+        } satisfies DailyReportPayload,
+        {
+          removeOnComplete: 50,
+          removeOnFail: 50
+        }
+      );
+    }
   }
 
   const shutdown = async (signal: string) => {

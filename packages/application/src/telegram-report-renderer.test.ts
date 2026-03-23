@@ -88,17 +88,17 @@ describe("renderTelegramDailyReport", () => {
       }
     });
 
-    expect(report).toContain("1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-20)");
-    expect(report).toContain("3. 🎯 오늘의 리밸런싱 제안");
+    expect(report).toContain("1. 🗞️ 오늘의 포트폴리오 프리마켓 브리핑 (2026-03-20)");
+    expect(report).toContain("5. 🎯 포트폴리오 리밸런싱 제안");
     expect(report).toContain("- 비중 확대 검토: 삼성전자");
     expect(report).toContain("- 비중 조절 필요: 에코프로");
-    expect(report).toContain("4. 🧩 성향별 해석");
-    expect(report).toContain("6. 🌡️ 시장 레짐 요약");
+    expect(report).toContain("4. 🧩 성향별 대응");
+    expect(report).toContain("3. 🧭 오늘의 판단 프레임");
     expect(report).toContain("[삼성전자]");
     expect(report).toContain("- 내재 가치: 양호");
     expect(report).toContain("[에코프로]");
     expect(report).toContain("- 제약 요인: 변동성이 높은 종목인데 포트 내 비중과 집중 리스크가 부담됩니다.");
-    expect(report).toContain("10. 🔎 공개 상세 브리핑");
+    expect(report).toContain("7. 🔎 참고용 공개 프리마켓 브리핑");
     expect(report).toContain("https://example.com/reports/1");
   });
 

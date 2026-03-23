@@ -112,8 +112,17 @@ COREPACK_HOME=/tmp/corepack pnpm test:telegram:e2e -- --suite=minimum --allow-pr
 `report_with_holdings`는 현재 아래까지 함께 본다.
 
 - 보유 종목명이 실제 답장과 `report_runs.report_text`에 포함되는지
-- `오늘의 리밸런싱 제안` 묶음이 보이는지
+- `포트폴리오 리밸런싱 제안` 묶음이 보이는지
 - `시세 스냅샷 연결 전입니다` placeholder가 남지 않는지
+- `/report`가 실행 시점에 맞는 세션 제목(`프리마켓` 또는 `포스트마켓`)을 선택하는지
+
+정기 발송과 공개 브리핑의 운영 캘린더는 별도로 아래를 따른다.
+
+- `월~금`: 07:30 pre + 20:30 post
+- `토`: 07:30 pre만 실행
+- `일`: 정기/public 브리핑 없음
+
+`/report_time`과 settings의 `시간 변경` 버튼은 더 이상 개별 시각 변경이 아니라 위 고정 정책 안내를 검증 대상으로 본다.
 
 ## 자동화 범위
 

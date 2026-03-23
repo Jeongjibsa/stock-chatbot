@@ -65,7 +65,7 @@ export function renderPublicDailyBriefingHtml(briefing: PublicDailyBriefing): st
     "  <main>",
     "    <header>",
     `      <h1>${escapeHtml(briefing.title)}</h1>`,
-    `      <div class="meta">기준일 ${escapeHtml(briefing.runDate)} · 공개 시장 브리핑</div>`,
+    `      <div class="meta">기준일 ${escapeHtml(briefing.runDate)} · ${escapeHtml(briefing.sessionLabel)} · ${escapeHtml(briefing.sessionRole)}</div>`,
     `      <div class="chips">${briefing.indicatorTags
       .map((tag) => `<span class="chip">${escapeHtml(tag)}</span>`)
       .join("")}</div>`,

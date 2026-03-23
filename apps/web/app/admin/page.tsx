@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { formatBriefingSessionLabel } from "@stock-chatbot/application";
+
 import { FeedErrorState } from "../../components/feed-error-state";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent } from "../../components/ui/card";
@@ -131,7 +133,7 @@ export default async function AdminPage() {
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
-                              {report.reportDate}
+                              {report.reportDate} · {formatBriefingSessionLabel(report.briefingSession)}
                             </p>
                             <p className="mt-1 font-semibold leading-6">{report.summary}</p>
                           </div>

@@ -44,7 +44,7 @@ export function buildApp(dependencies: HealthCheckDependencies) {
     promptVersion: "daily-report/v1",
     reportText: buildMockTelegramReportPreview().renderedText,
     runDate: "2026-03-21",
-    scheduleType: "daily-8am",
+    scheduleType: "daily-pre-market",
     skillVersion: "daily-report-orchestrator/v1",
     status: "completed"
   });
@@ -54,9 +54,9 @@ export function buildApp(dependencies: HealthCheckDependencies) {
       id: "mock-run-previous",
       promptVersion: "daily-report/v1",
       reportText:
-        "1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-20)\n\n2. 📌 오늘 한 줄 결론\n- 현재 확보된 데이터 기준으로는 종목별 선별 대응이 가능하며, 무리한 추격보다 포트 균형 점검이 우선입니다.",
+        "1. 🗞️ 오늘의 포트폴리오 프리마켓 브리핑 (2026-03-20)\n\n2. 📌 오늘 한 줄 결론\n- 현재 확보된 데이터 기준으로는 종목별 선별 대응이 가능하며, 무리한 추격보다 포트 균형 점검이 우선입니다.",
       runDate: "2026-03-20",
-      scheduleType: "daily-8am",
+      scheduleType: "daily-pre-market",
       skillVersion: "daily-report-orchestrator/v1",
       status: "partial_success"
     })

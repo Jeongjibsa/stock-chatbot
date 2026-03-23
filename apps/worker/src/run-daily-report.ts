@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import {
   buildDailyReportJobProcessor,
+  readBriefingSession,
   readRunDate,
   type DailyReportJobSummary
 } from "./process-daily-report.js";
@@ -29,12 +30,14 @@ export function readReportTriggerType(
 }
 
 export function formatDailyReportJobSummary(input: {
+  briefingSession: "post_market" | "pre_market";
   runDate: string;
   summary: DailyReportJobSummary;
   triggerType: ReportTriggerType;
 }): string {
   return [
     `[daily-report] trigger=${input.triggerType}`,
+    `session=${input.briefingSession}`,
     `runDate=${input.runDate}`,
     `users=${input.summary.userCount}`,
     `completed=${input.summary.completedCount}`,
@@ -57,10 +60,12 @@ export async function runDailyReport(env: Environment = process.env): Promise<Da
 async function main(): Promise<void> {
   const triggerType = readReportTriggerType();
   const runDate = readRunDate();
+  const briefingSession = readBriefingSession();
   const summary = await runDailyReport();
 
   console.log(
     formatDailyReportJobSummary({
+      briefingSession,
       triggerType,
       runDate,
       summary

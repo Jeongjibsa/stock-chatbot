@@ -539,7 +539,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         chatId: runtime.config.primaryChatId,
         since,
         timeoutMs: REPORT_TIMEOUT_MS,
-        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 리밸런싱 브리핑"]
+        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 프리마켓 브리핑"]
       });
 
       const latestRun = await findLatestTelegramReportRun(runtime, runtime.config.primaryUserId);
@@ -569,18 +569,18 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         chatId: runtime.config.primaryChatId,
         since,
         timeoutMs: REPORT_TIMEOUT_MS,
-        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 리밸런싱 브리핑"]
+        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 프리마켓 브리핑"]
       });
 
       const reportReply = replies.find((message) =>
-        message.text.includes("🗞️ 오늘의 포트폴리오 리밸런싱 브리핑")
+        message.text.includes("🗞️ 오늘의 포트폴리오 프리마켓 브리핑")
       );
 
       if (!reportReply?.text.includes("삼성전자")) {
         throw new Error("Expected personalized /report to mention at least one holding");
       }
 
-      if (!reportReply.text.includes("오늘의 리밸런싱 제안")) {
+      if (!reportReply.text.includes("포트폴리오 리밸런싱 제안")) {
         throw new Error("Expected personalized /report to include a rebalancing summary");
       }
 
@@ -594,7 +594,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         throw new Error("Expected report_runs.report_text to include holding content");
       }
 
-      if (!latestRun.reportText.includes("오늘의 리밸런싱 제안")) {
+      if (!latestRun.reportText.includes("포트폴리오 리밸런싱 제안")) {
         throw new Error("Expected report_runs.report_text to include rebalancing content");
       }
     }

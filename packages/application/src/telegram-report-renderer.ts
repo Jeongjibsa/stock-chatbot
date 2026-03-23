@@ -1,3 +1,4 @@
+import type { BriefingSession } from "./briefing-session.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantAction, QuantScorecard } from "./quant-scorecard.js";
@@ -12,6 +13,7 @@ import {
 
 export type TelegramReportRenderInput = {
   articleSummaryBullets?: string[];
+  briefingSession?: BriefingSession;
   displayName: string;
   eventBullets?: string[];
   fundFlowBullets?: string[];
@@ -37,6 +39,12 @@ export type TelegramReportRenderInput = {
   reportDetailLevel?: "compact" | "standard";
   riskCheckpoints?: string[];
   runDate: string;
+  sessionComparison?: {
+    priorPublicSignals?: string[];
+    priorPublicSummary?: string | null;
+    priorStrategyActions?: string[];
+    priorStrategyStance?: string | null;
+  };
   summaryLine?: string;
 };
 
@@ -45,96 +53,216 @@ type ActionBucket = "hold" | "increase" | "reduce" | "watch";
 export function renderTelegramDailyReport(
   input: TelegramReportRenderInput
 ): string {
+  const briefingSession = input.briefingSession ?? "pre_market";
   const failedMarketItems = input.marketResults.filter(
     (result): result is Extract<MarketDataFetchResult, { status: "error" }> =>
       result.status === "error"
   );
   const selectedProfile = input.portfolioRebalancing?.selectedProfile ?? "balanced";
   const rebalancingSummary = buildRebalancingSummary(input);
-  const portfolioSummary = buildPortfolioSummary(input, rebalancingSummary);
   const marketSummary = buildMarketSummary(input, selectedProfile, failedMarketItems.length);
   const profileInterpretations = buildProfileInterpretations(input, marketSummary.tone);
   const holdingGuides = buildHoldingGuides(input, marketSummary.tone);
   const riskBullets = buildRiskBullets(input, failedMarketItems);
-  const referenceBrief = buildReferenceBrief(input);
   const conclusion = buildConclusion(input, marketSummary.tone, failedMarketItems.length);
+  if (briefingSession === "post_market") {
+    const comparisonBullets = buildSessionComparisonBullets(input, marketSummary);
+    const adjustmentBullets = buildAdjustmentBullets(input, rebalancingSummary, marketSummary);
+    const lines: string[] = [
+      `1. 🗞️ 오늘의 포트폴리오 포스트마켓 브리핑 (${input.runDate})`,
+      "",
+      "2. 📌 오늘 해석 요약",
+      `- ${conclusion}`,
+      "",
+      "3. 🧪 오전 프레임 대비 맞은 점/빗나간 점",
+      ...comparisonBullets.map((bullet) => `- ${bullet}`),
+      "",
+      "4. 📈 보유 종목 검증"
+    ];
+
+    if (holdingGuides.length === 0) {
+      lines.push("- 현재 보유 종목 데이터가 없어 검증 가이드는 점검 필요 상태입니다.");
+    } else {
+      for (const holding of holdingGuides) {
+        lines.push(`[${holding.name}]`);
+        lines.push(`- 최종 의견: ${holding.finalAction}`);
+        lines.push(`- 오늘 해석: ${holding.oneLine}`);
+        lines.push(`- 내재 가치: ${holding.intrinsicValue}`);
+        lines.push(`- 가격/추세: ${holding.priceTrend}`);
+        lines.push(`- 미래 기대치: ${holding.futureExpectation}`);
+        lines.push(`- 포트 적합성: ${holding.portfolioFit}`);
+        if (holding.constraint) {
+          lines.push(`- 제약 요인: ${holding.constraint}`);
+        }
+        lines.push(`- 보정 가이드: ${holding.guide}`);
+        lines.push("");
+      }
+
+      if (lines.at(-1) === "") {
+        lines.pop();
+      }
+    }
+
+    lines.push(
+      "",
+      "5. 🎯 기준 보정 제안",
+      ...adjustmentBullets.map((bullet) => `- ${bullet}`),
+      "",
+      "6. ⚠️ 다음 세션으로 넘길 리스크",
+      ...riskBullets.map((bullet) => `- ${bullet}`),
+      "",
+      "7. 🔎 참고용 공개 포스트마켓 브리핑",
+      input.publicBriefingUrl ?? "확인 필요",
+      "",
+      "8. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
+    );
+
+    return lines.join("\n");
+  }
+
   const lines: string[] = [
-    `1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑 (${input.runDate})`,
+    `1. 🗞️ 오늘의 포트폴리오 프리마켓 브리핑 (${input.runDate})`,
     "",
     "2. 📌 오늘 한 줄 결론",
     `- ${conclusion}`,
     "",
-    "3. 🎯 오늘의 리밸런싱 제안",
-    `- 비중 확대 검토: ${formatCompanyList(rebalancingSummary.increase, "현재 뚜렷한 후보 없음")}`,
-    `- 유지 우세: ${formatCompanyList(rebalancingSummary.hold, "선별 관찰 우선")}`,
-    `- 비중 조절 필요: ${formatCompanyList(rebalancingSummary.reduce, "비중 점검 우선")}`,
-    `- 우선 관찰 대상: ${formatCompanyList(rebalancingSummary.watch, "현재 뚜렷한 후보 없음")}`,
-    "",
-    "4. 🧩 성향별 해석",
-    `- 🛡️ 보수적: ${profileInterpretations.conservative}`,
-    `- ⚖️ 중립적: ${profileInterpretations.balanced}`,
-    `- 🚀 공격적: ${profileInterpretations.aggressive}`,
-    "",
-    "5. 📦 내 포트폴리오 요약",
-    `- 보유 종목: ${formatCount(portfolioSummary.holdingCount, "확인 필요")}`,
-    `- 확대 의견: ${formatCount(portfolioSummary.increaseCount, "확인 필요")}`,
-    `- 유지 의견: ${formatCount(portfolioSummary.holdCount, "확인 필요")}`,
-    `- 관찰 의견: ${formatCount(portfolioSummary.watchCount, "확인 필요")}`,
-    `- 축소 의견: ${formatCount(portfolioSummary.reduceCount, "확인 필요")}`,
-    `- 이벤트 주의 종목: ${formatCount(portfolioSummary.eventRiskCount, "점검 필요")}`,
-    "",
-    "6. 🌡️ 시장 레짐 요약",
+    "3. 🧭 오늘의 판단 프레임",
     `- 시장 종합: ${marketSummary.overall}`,
     `- 심리/강도: ${marketSummary.sentimentStrength}`,
     `- 밸류/펀더멘털: ${marketSummary.valuation}`,
     `- 구조 리스크: ${marketSummary.structureRisk}`,
     `- 한줄 해석: ${marketSummary.interpretation}`,
     "",
-    "7. 📈 종목별 리밸런싱 가이드"
+    "4. 🧩 성향별 대응",
+    `- 🛡️ 보수적: ${profileInterpretations.conservative}`,
+    `- ⚖️ 중립적: ${profileInterpretations.balanced}`,
+    `- 🚀 공격적: ${profileInterpretations.aggressive}`,
+    "",
+    "5. 🎯 포트폴리오 리밸런싱 제안",
+    `- 비중 확대 검토: ${formatCompanyList(rebalancingSummary.increase, "현재 뚜렷한 후보 없음")}`,
+    `- 유지 우세: ${formatCompanyList(rebalancingSummary.hold, "선별 관찰 우선")}`,
+    `- 비중 조절 필요: ${formatCompanyList(rebalancingSummary.reduce, "비중 점검 우선")}`,
+    `- 우선 관찰 대상: ${formatCompanyList(rebalancingSummary.watch, "현재 뚜렷한 후보 없음")}`
   ];
 
-  if (holdingGuides.length === 0) {
-    lines.push("- 현재 보유 종목 데이터가 없어 종목별 가이드는 점검 필요 상태입니다.");
-  } else {
-    for (const holding of holdingGuides) {
-      lines.push(`[${holding.name}]`);
-      lines.push(`- 최종 의견: ${holding.finalAction}`);
-      lines.push(`- 한줄 판단: ${holding.oneLine}`);
-      lines.push(`- 내재 가치: ${holding.intrinsicValue}`);
-      lines.push(`- 가격/추세: ${holding.priceTrend}`);
-      lines.push(`- 미래 기대치: ${holding.futureExpectation}`);
-      lines.push(`- 포트 적합성: ${holding.portfolioFit}`);
-
-      if (holding.constraint) {
-        lines.push(`- 제약 요인: ${holding.constraint}`);
-      }
-
-      lines.push(`- 가이드: ${holding.guide}`);
-      lines.push("");
-    }
-
-    if (lines.at(-1) === "") {
-      lines.pop();
-    }
-  }
+  appendHoldingGuideBlocks(lines, holdingGuides);
 
   lines.push(
     "",
-    "8. ⚠️ 오늘의 포트 리스크 체크",
+    "6. ⚠️ 오늘 반드시 볼 리스크",
     ...riskBullets.map((bullet) => `- ${bullet}`),
     "",
-    "9. 🌍 참고용 시장 브리핑",
-    `- 거시 요약: ${referenceBrief.macroSummary}`,
-    `- 자금 흐름: ${referenceBrief.flowSummary}`,
-    `- 핵심 이벤트: ${referenceBrief.eventSummary}`,
-    "",
-    "10. 🔎 공개 상세 브리핑",
+    "7. 🔎 참고용 공개 프리마켓 브리핑",
     input.publicBriefingUrl ?? "확인 필요",
     "",
-    "11. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
+    "8. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
   );
 
   return lines.join("\n");
+}
+
+function buildSessionComparisonBullets(
+  input: TelegramReportRenderInput,
+  marketSummary: {
+    interpretation: string;
+    overall: string;
+    sentimentStrength: string;
+    structureRisk: string;
+    tone: "defensive" | "neutral" | "selective";
+    valuation: string;
+  }
+): string[] {
+  const bullets: string[] = [];
+  const comparison = input.sessionComparison;
+
+  if (comparison?.priorPublicSummary) {
+    bullets.push(`오전 공개 프레임은 "${comparison.priorPublicSummary}" 쪽에 무게를 두고 있었습니다.`);
+  }
+
+  if (comparison?.priorStrategyStance) {
+    bullets.push(`오전 개인화 기준은 ${comparison.priorStrategyStance} 쪽으로 제시됐습니다.`);
+  }
+
+  bullets.push(`현재 종합 해석은 ${marketSummary.overall}`);
+
+  if (comparison?.priorPublicSignals && comparison.priorPublicSignals.length > 0) {
+    bullets.push(`오전 핵심 시그널은 ${comparison.priorPublicSignals.slice(0, 2).join(", ")}였습니다.`);
+  }
+
+  return bullets.slice(0, 4);
+}
+
+function buildAdjustmentBullets(
+  input: TelegramReportRenderInput,
+  rebalancingSummary: {
+    hold: string[];
+    increase: string[];
+    reduce: string[];
+    watch: string[];
+  },
+  marketSummary: {
+    interpretation: string;
+    overall: string;
+    sentimentStrength: string;
+    structureRisk: string;
+    tone: "defensive" | "neutral" | "selective";
+    valuation: string;
+  }
+): string[] {
+  const bullets: string[] = [];
+
+  if ((input.quantScenarios ?? []).length > 0) {
+    bullets.push(...(input.quantScenarios ?? []).slice(0, 2));
+  }
+
+  bullets.push(`다음 기준은 ${marketSummary.structureRisk}`);
+  bullets.push(
+    `내일 오픈 전에는 확대 ${formatCompanyList(rebalancingSummary.increase, "후보 재점검")} / 축소 ${formatCompanyList(rebalancingSummary.reduce, "급한 조정 없음")} 관점으로 다시 보시는 편이 적절합니다.`
+  );
+
+  return bullets.slice(0, 4);
+}
+
+function appendHoldingGuideBlocks(
+  lines: string[],
+  holdingGuides: Array<{
+    constraint?: string;
+    finalAction: string;
+    futureExpectation: string;
+    guide: string;
+    intrinsicValue: string;
+    name: string;
+    oneLine: string;
+    portfolioFit: string;
+    priceTrend: string;
+  }>
+): void {
+  if (holdingGuides.length === 0) {
+    return;
+  }
+
+  lines.push("");
+
+  for (const holding of holdingGuides) {
+    lines.push(`[${holding.name}]`);
+    lines.push(`- 최종 의견: ${holding.finalAction}`);
+    lines.push(`- 한줄 판단: ${holding.oneLine}`);
+    lines.push(`- 내재 가치: ${holding.intrinsicValue}`);
+    lines.push(`- 가격/추세: ${holding.priceTrend}`);
+    lines.push(`- 미래 기대치: ${holding.futureExpectation}`);
+    lines.push(`- 포트 적합성: ${holding.portfolioFit}`);
+
+    if (holding.constraint) {
+      lines.push(`- 제약 요인: ${holding.constraint}`);
+    }
+
+    lines.push(`- 가이드: ${holding.guide}`);
+    lines.push("");
+  }
+
+  if (lines.at(-1) === "") {
+    lines.pop();
+  }
 }
 
 function buildConclusion(
@@ -191,45 +319,6 @@ function buildRebalancingSummary(input: TelegramReportRenderInput): {
   }
 
   return buckets;
-}
-
-function buildPortfolioSummary(
-  input: TelegramReportRenderInput,
-  rebalancingSummary: {
-    hold: string[];
-    increase: string[];
-    reduce: string[];
-    watch: string[];
-  }
-): {
-  eventRiskCount?: number | null;
-  holdingCount?: number | null;
-  holdCount?: number | null;
-  increaseCount?: number | null;
-  reduceCount?: number | null;
-  watchCount?: number | null;
-} {
-  const snapshot = input.portfolioRebalancing?.portfolioSummary;
-
-  if (snapshot) {
-    return {
-      eventRiskCount: snapshot.eventRiskCount ?? null,
-      holdingCount: snapshot.holdingCount ?? null,
-      holdCount: snapshot.holdCount ?? null,
-      increaseCount: snapshot.increaseCount ?? null,
-      reduceCount: snapshot.reduceCount ?? null,
-      watchCount: snapshot.watchCount ?? null
-    };
-  }
-
-  return {
-    holdingCount: input.holdings.length,
-    increaseCount: rebalancingSummary.increase.length,
-    holdCount: rebalancingSummary.hold.length,
-    watchCount: rebalancingSummary.watch.length,
-    reduceCount: rebalancingSummary.reduce.length,
-    eventRiskCount: null
-  };
 }
 
 function buildMarketSummary(
@@ -432,31 +521,6 @@ function buildRiskBullets(
   return ["현재 확보된 데이터 기준으로는 포트 전체 리스크를 한 번 더 점검하는 편이 적절합니다."];
 }
 
-function buildReferenceBrief(input: TelegramReportRenderInput): {
-  eventSummary: string;
-  flowSummary: string;
-  macroSummary: string;
-} {
-  const reference = input.portfolioRebalancing?.referenceMarketBrief;
-
-  return {
-    macroSummary:
-      reference?.macroSummary ??
-      input.macroBullets?.[0] ??
-      "현재 확보된 거시 데이터 기준으로 핵심 변화만 우선 정리했습니다.",
-    flowSummary:
-      reference?.flowSummary ??
-      input.fundFlowBullets?.[0] ??
-      input.marketBullets?.[0] ??
-      "자금 흐름과 시장 리더십은 추가 확인이 필요한 구간입니다.",
-    eventSummary:
-      reference?.eventSummary ??
-      input.eventBullets?.[0] ??
-      input.articleSummaryBullets?.[0] ??
-      "주요 이벤트 데이터는 보강 중입니다."
-  };
-}
-
 function buildGuide(
   finalAction: string,
   tone: "defensive" | "neutral" | "selective",
@@ -604,10 +668,6 @@ function buildSentimentStrengthFallback(
 
 function formatCompanyList(values: string[], fallback: string): string {
   return values.length > 0 ? values.join(", ") : fallback;
-}
-
-function formatCount(value?: number | null, fallback = "확인 필요"): string {
-  return value === null || value === undefined ? fallback : `${value}개`;
 }
 
 function stripArrow(value: string): string {

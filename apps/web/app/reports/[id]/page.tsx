@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
+import { formatBriefingSessionLabel, formatBriefingSessionRole } from "@stock-chatbot/application";
+
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { MarkdownReport } from "../../../components/markdown-report";
@@ -33,6 +35,9 @@ export default async function ReportDetailPage({
                 <h1 className="gradient-title mt-4 text-[2.55rem] font-semibold tracking-[-0.05em]">
                   {report.reportDate}
                 </h1>
+                <p className="mt-3 text-sm font-medium text-[color:var(--muted)]">
+                  {formatBriefingSessionLabel(report.briefingSession)} · {formatBriefingSessionRole(report.briefingSession)}
+                </p>
               </div>
               <Button asChild variant="secondary" size="sm">
                 <Link href="/">

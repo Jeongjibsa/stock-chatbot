@@ -60,6 +60,7 @@ describe("report prompt contract", () => {
     );
     expect(prompt.metadata).toEqual({
       promptAudience: "telegram_personalized",
+      promptBriefingSession: "pre_market",
       promptKind: "telegram-personalized-report-composition",
       runDate: "2026-03-20"
     });
@@ -112,6 +113,7 @@ describe("report prompt contract", () => {
     );
     expect(prompt.metadata).toEqual({
       promptAudience: "public_web",
+      promptBriefingSession: "pre_market",
       promptKind: "public-market-briefing-composition",
       runDate: "2026-03-22"
     });

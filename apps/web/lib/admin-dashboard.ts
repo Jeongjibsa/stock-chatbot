@@ -50,6 +50,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
   ] =
     await Promise.all([
       pool.query<{
+        briefing_session: "post_market" | "pre_market";
         created_at: Date;
         id: string;
         market_regime: string;
@@ -58,13 +59,14 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
         total_score: string;
       }>(
         [
-          'SELECT "id", "report_date", "summary", "market_regime", "total_score", "created_at"',
+          'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "created_at"',
           'FROM "reports"',
           'ORDER BY "report_date" DESC, "created_at" DESC',
           "LIMIT 1"
         ].join(" ")
       ),
       pool.query<{
+        briefing_session: "post_market" | "pre_market";
         created_at: Date;
         id: string;
         market_regime: string;
@@ -73,7 +75,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
         total_score: string;
       }>(
         [
-          'SELECT "id", "report_date", "summary", "market_regime", "total_score", "created_at"',
+          'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "created_at"',
           'FROM "reports"',
           'ORDER BY "report_date" DESC, "created_at" DESC',
           "LIMIT 6"
@@ -165,6 +167,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
 }
 
 function mapRecentPublicReport(report: {
+  briefing_session: "post_market" | "pre_market";
   created_at: Date;
   id: string;
   market_regime: string;
@@ -173,6 +176,7 @@ function mapRecentPublicReport(report: {
   total_score: string;
 }): AdminRecentPublicReport {
   return {
+    briefingSession: report.briefing_session,
     id: report.id,
     reportDate: normalizeDateOnly(report.report_date),
     summary: report.summary,

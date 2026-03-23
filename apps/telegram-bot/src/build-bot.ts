@@ -42,13 +42,12 @@ import {
 import { parsePortfolioBulkArgument } from "./portfolio-bulk.js";
 import {
   buildTelegramReportRuntime,
+  resolveTelegramBriefingSession,
   resolveTelegramReportRunDate,
   resolveTelegramReportFollowUpMessage
 } from "./report-service.js";
 import {
-  formatHourMinute,
   formatReportSettings,
-  parseReportTimeArgument
 } from "./report-settings.js";
 import { TelegramUserPortfolioService } from "./user-portfolio-service.js";
 
@@ -219,9 +218,13 @@ export function buildTelegramBotApp(
       const runDate = resolveTelegramReportRunDate(env, {
         timeZone: "Asia/Seoul"
       });
+      const briefingSession = resolveTelegramBriefingSession({
+        timeZone: "Asia/Seoul"
+      });
       const result = await getReportRuntime().reportService.runForTelegramUser({
         telegramUserId: userKey,
-        runDate
+        runDate,
+        briefingSession
       });
 
       const followUpMessage = resolveTelegramReportFollowUpMessage(result);
@@ -449,39 +452,14 @@ export function buildTelegramBotApp(
   });
 
   bot.command("report_time", async (context) => {
-    const userKey = getUserKey(context.from?.id);
-
-    if (!userKey) {
-      await context.reply("사용자 식별 정보를 확인하지 못했습니다.");
-      return;
-    }
-
-    const parsedTime = parseReportTimeArgument(context.match);
-
-    if (!parsedTime) {
-      await context.reply("사용 예시: /report_time 08:00");
-      return;
-    }
-
-    try {
-      const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
-        dailyReportEnabled: true,
-        dailyReportHour: parsedTime.hour,
-        dailyReportMinute: parsedTime.minute
-      });
-
-      await context.reply(
-        [
-          `정기 브리핑 시간을 ${formatHourMinute(
-            parsedTime.hour,
-            parsedTime.minute
-          )}로 변경했습니다.`,
-          formatReportSettings(updated)
-        ].join("\n\n")
-      );
-    } catch (error) {
-      await context.reply(resolveTelegramCommandError(error));
-    }
+    await context.reply(
+      [
+        "정기 브리핑 시각은 현재 고정 운영입니다.",
+        "- 장 시작 전 브리핑: 07:30 (Asia/Seoul)",
+        "- 장 마감 후 브리핑: 20:30 (Asia/Seoul)",
+        "- 토요일은 오전 브리핑만 발송하고, 일요일 정기 브리핑은 없습니다."
+      ].join("\n")
+    );
   });
 
   bot.command("report_mode", async (context) => {
@@ -682,11 +660,17 @@ export function buildTelegramBotApp(
 
     try {
       if (action === "time_change") {
-        await conversationStateStore.set(userKey, createInitialConversationState("report_time"));
         await safeAnswerCallbackQuery(context, {
-          text: "변경할 시간을 입력해 주세요."
+          text: "정기 브리핑 시각은 현재 고정 운영입니다."
         });
-        await context.reply("변경할 브리핑 시간을 HH:MM 형식으로 입력해 주세요. 예: 08:30");
+        await context.reply(
+          [
+            "정기 브리핑 시각은 현재 고정 운영입니다.",
+            "- 장 시작 전 브리핑: 07:30 (Asia/Seoul)",
+            "- 장 마감 후 브리핑: 20:30 (Asia/Seoul)",
+            "- 토요일은 오전 브리핑만 발송하고, 일요일 정기 브리핑은 없습니다."
+          ].join("\n")
+        );
         return;
       }
 
@@ -903,18 +887,12 @@ export function buildTelegramBotApp(
             );
             break;
           case "report_time": {
-            const updated = await userPortfolioService.updateDailyReportSettings(userKey, {
-              dailyReportEnabled: true,
-              dailyReportHour: transition.completion.hour,
-              dailyReportMinute: transition.completion.minute
-            });
             await context.reply(
               [
-                `정기 브리핑 시간을 ${formatHourMinute(
-                  transition.completion.hour,
-                  transition.completion.minute
-                )}로 변경했습니다.`,
-                formatReportSettings(updated)
+                "정기 브리핑 시각은 현재 고정 운영입니다.",
+                "- 장 시작 전 브리핑: 07:30 (Asia/Seoul)",
+                "- 장 마감 후 브리핑: 20:30 (Asia/Seoul)",
+                "- 토요일은 오전 브리핑만 발송하고, 일요일 정기 브리핑은 없습니다."
               ].join("\n\n")
             );
             break;

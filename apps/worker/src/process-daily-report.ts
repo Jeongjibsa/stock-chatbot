@@ -1,5 +1,6 @@
 import {
   CompositeMarketDataAdapter,
+  type BriefingSession,
   createLlmClient,
   DailyReportCompositionService,
   DailyReportOrchestrator,
@@ -8,8 +9,10 @@ import {
   FredMarketDataAdapter,
   GOOGLE_PROVIDER_PROFILE,
   GoogleNewsRssAdapter,
+  parseBriefingSession,
   OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
+  resolveScheduledBriefingSession,
   TelegramBotApiClient,
   TelegramReportDeliveryAdapter,
   YahooHoldingPriceSnapshotProvider,
@@ -32,6 +35,7 @@ type LlmProviderRuntime = "google" | "openai";
 
 type OrchestratorPort = {
   runForUser(input: {
+    briefingSession?: BriefingSession;
     promptVersion?: string;
     runDate: string;
     scheduleType: string;
@@ -84,7 +88,11 @@ export type DailyReportJobSummary = {
   userCount: number;
 };
 
-export type DailyReportScheduleType = "daily-8am" | "manual-dispatch";
+export type DailyReportScheduleType =
+  | "daily-post-market"
+  | "daily-pre-market"
+  | "manual-post-market"
+  | "manual-pre-market";
 
 type SchedulableUser = Awaited<ReturnType<UserRepositoryPort["listUsers"]>>[number];
 
@@ -180,11 +188,18 @@ export function readPublicBriefingBaseUrl(
 }
 
 export function readScheduleType(
-  env: Environment = process.env
+  env: Environment = process.env,
+  briefingSession: BriefingSession = "pre_market"
 ): DailyReportScheduleType {
-  return env.REPORT_TRIGGER_TYPE === "workflow_dispatch"
-    ? "manual-dispatch"
-    : "daily-8am";
+  if (env.REPORT_TRIGGER_TYPE === "workflow_dispatch") {
+    return briefingSession === "pre_market"
+      ? "manual-pre-market"
+      : "manual-post-market";
+  }
+
+  return briefingSession === "pre_market"
+    ? "daily-pre-market"
+    : "daily-post-market";
 }
 
 export function readScheduleWindowMinutes(
@@ -242,6 +257,7 @@ export function isUserDueForScheduledReport(input: {
 
 export async function processDailyReportJob(
   dependencies: {
+    briefingSession: BriefingSession;
     deliveryAdapter?: ReportDeliveryAdapterPort;
     now?: Date;
     orchestrator: OrchestratorPort;
@@ -263,30 +279,14 @@ export async function processDailyReportJob(
     partialSuccessCount: 0,
     skippedDuplicateCount: 0
   };
-  const now = dependencies.now ?? new Date();
-  const usersToProcess =
-    dependencies.scheduleType === "daily-8am"
-      ? users.filter((user) => {
-          const due = isUserDueForScheduledReport(
-            dependencies.scheduleWindowMinutes === undefined
-              ? {
-                  now,
-                  user
-                }
-              : {
-                  now,
-                  user,
-                  windowMinutes: dependencies.scheduleWindowMinutes
-                }
-          );
+  const usersToProcess = users.filter((user) => {
+    if (user.dailyReportEnabled === false) {
+      summary.notDueCount += 1;
+      return false;
+    }
 
-          if (!due) {
-            summary.notDueCount += 1;
-          }
-
-          return due;
-        })
-      : users;
+    return true;
+  });
 
   for (const user of usersToProcess) {
     const orchestratorUser: {
@@ -310,6 +310,7 @@ export async function processDailyReportJob(
     const result = await dependencies.orchestrator.runForUser({
       promptVersion: DEFAULT_DAILY_REPORT_PROMPT_VERSION,
       skillVersion: DEFAULT_DAILY_REPORT_SKILL_VERSION,
+      briefingSession: dependencies.briefingSession,
       user: orchestratorUser,
       runDate: dependencies.runDate,
       scheduleType: dependencies.scheduleType
@@ -369,81 +370,88 @@ function getRunDateForTimezone(
   }).format(now);
 }
 
-export function buildDailyReportJobProcessor(env: Environment = process.env): () => Promise<DailyReportJobSummary> {
+export function buildDailyReportJobProcessor(
+  env: Environment = process.env
+): (input?: {
+  briefingSession?: BriefingSession;
+  runDate?: string;
+}) => Promise<DailyReportJobSummary> {
   const databaseUrl = readDatabaseUrl(env);
   const fredApiKey = readFredApiKey(env);
   const openAiApiKey = readOpenAiApiKey(env);
   const geminiApiKey = readGeminiApiKey(env);
   const telegramBotToken = readTelegramBotToken(env);
   const llmProvider = readLlmProvider(env);
-  const runDate = readRunDate(env);
-  const scheduleType = readScheduleType(env);
   const scheduleWindowMinutes = readScheduleWindowMinutes(env);
   const publicBriefingBaseUrl = readPublicBriefingBaseUrl(env);
-  const pool = createPool(databaseUrl);
-  const db = createDatabase(pool);
-  const userRepository = new UserRepository(db);
-  const orchestratorDependencies: ConstructorParameters<
-    typeof DailyReportOrchestrator
-  >[0] = {
-    defaultMarketItems: DEFAULT_MARKET_WATCH_CATALOG.map((item) => ({
-      itemCode: item.itemCode,
-      itemName: item.itemName,
-      sourceKey: item.sourceKey
-    })),
-    holdingPriceSnapshotProvider: new YahooHoldingPriceSnapshotProvider(),
-    marketDataAdapter: new CompositeMarketDataAdapter({
-      fredAdapter: new FredMarketDataAdapter({
-        apiKey: fredApiKey
-      }),
-      yahooFinanceAdapter: new YahooFinanceScrapingMarketDataAdapter()
-    }),
-    personalRebalancingSnapshotRepository: new PersonalRebalancingSnapshotRepository(db),
-    portfolioHoldingRepository: new PortfolioHoldingRepository(db),
-    ...(publicBriefingBaseUrl ? { publicBriefingBaseUrl } : {}),
-    publicReportRepository: new PublicReportRepository(db),
-    reportRunRepository: new ReportRunRepository(db),
-    strategySnapshotRepository: new StrategySnapshotRepository(db)
-  };
-
   const selectedProvider =
     llmProvider ??
     (openAiApiKey ? "openai" : geminiApiKey ? "google" : undefined);
   const llmApiKey =
     selectedProvider === "openai" ? openAiApiKey : selectedProvider === "google" ? geminiApiKey : undefined;
 
-  if (selectedProvider && llmApiKey) {
-    const llmClient = createLlmClient({
-      apiKey: llmApiKey,
-      providerProfile:
-        selectedProvider === "google"
-          ? GOOGLE_PROVIDER_PROFILE
-          : OPENAI_PROVIDER_PROFILE
-    });
+  return async (input = {}) => {
+    const runDate = input.runDate ?? readRunDate(env);
+    const briefingSession = input.briefingSession ?? readBriefingSession(env);
+    const scheduleType = readScheduleType(env, briefingSession);
+    const pool = createPool(databaseUrl);
+    const db = createDatabase(pool);
+    const userRepository = new UserRepository(db);
+    const orchestratorDependencies: ConstructorParameters<
+      typeof DailyReportOrchestrator
+    >[0] = {
+      defaultMarketItems: DEFAULT_MARKET_WATCH_CATALOG.map((item) => ({
+        itemCode: item.itemCode,
+        itemName: item.itemName,
+        sourceKey: item.sourceKey
+      })),
+      holdingPriceSnapshotProvider: new YahooHoldingPriceSnapshotProvider(),
+      marketDataAdapter: new CompositeMarketDataAdapter({
+        fredAdapter: new FredMarketDataAdapter({
+          apiKey: fredApiKey
+        }),
+        yahooFinanceAdapter: new YahooFinanceScrapingMarketDataAdapter()
+      }),
+      personalRebalancingSnapshotRepository: new PersonalRebalancingSnapshotRepository(db),
+      portfolioHoldingRepository: new PortfolioHoldingRepository(db),
+      ...(publicBriefingBaseUrl ? { publicBriefingBaseUrl } : {}),
+      publicReportRepository: new PublicReportRepository(db),
+      reportRunRepository: new ReportRunRepository(db),
+      strategySnapshotRepository: new StrategySnapshotRepository(db)
+    };
 
-    orchestratorDependencies.portfolioNewsBriefService =
-      new PortfolioNewsBriefService({
-        llmClient,
-        newsCollectionAdapter: new GoogleNewsRssAdapter()
+    if (selectedProvider && llmApiKey) {
+      const llmClient = createLlmClient({
+        apiKey: llmApiKey,
+        providerProfile:
+          selectedProvider === "google"
+            ? GOOGLE_PROVIDER_PROFILE
+            : OPENAI_PROVIDER_PROFILE
       });
-    orchestratorDependencies.reportCompositionService =
-      new DailyReportCompositionService({
-        llmClient
-      });
-  }
 
-  const orchestrator = new DailyReportOrchestrator(orchestratorDependencies);
-  const deliveryAdapter = telegramBotToken
-    ? new TelegramReportDeliveryAdapter({
-        telegramClient: new TelegramBotApiClient({
-          token: telegramBotToken
+      orchestratorDependencies.portfolioNewsBriefService =
+        new PortfolioNewsBriefService({
+          llmClient,
+          newsCollectionAdapter: new GoogleNewsRssAdapter()
+        });
+      orchestratorDependencies.reportCompositionService =
+        new DailyReportCompositionService({
+          llmClient
+        });
+    }
+
+    const orchestrator = new DailyReportOrchestrator(orchestratorDependencies);
+    const deliveryAdapter = telegramBotToken
+      ? new TelegramReportDeliveryAdapter({
+          telegramClient: new TelegramBotApiClient({
+            token: telegramBotToken
+          })
         })
-      })
-    : undefined;
+      : undefined;
 
-  return async () => {
     try {
       return await processDailyReportJob({
+        briefingSession,
         ...(deliveryAdapter ? { deliveryAdapter } : {}),
         orchestrator,
         runDate,
@@ -455,4 +463,25 @@ export function buildDailyReportJobProcessor(env: Environment = process.env): ()
       await pool.end();
     }
   };
+}
+
+export function readBriefingSession(
+  env: Environment = process.env,
+  options?: {
+    now?: Date;
+    timeZone?: string;
+  }
+): BriefingSession {
+  const parsed = parseBriefingSession(env.BRIEFING_SESSION?.trim());
+
+  if (parsed) {
+    return parsed;
+  }
+
+  const resolved = resolveScheduledBriefingSession({
+    timeZone: options?.timeZone ?? env.REPORT_TIMEZONE ?? "Asia/Seoul",
+    ...(options?.now ? { now: options.now } : {})
+  });
+
+  return resolved === "none" ? "pre_market" : resolved;
 }

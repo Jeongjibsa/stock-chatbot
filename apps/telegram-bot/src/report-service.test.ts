@@ -46,7 +46,7 @@ describe("TelegramReportService", () => {
         displayName: "Sara Kim"
       },
       runDate: "2026-03-21",
-      scheduleType: "telegram-report"
+      scheduleType: "manual-pre-market"
     });
   });
 

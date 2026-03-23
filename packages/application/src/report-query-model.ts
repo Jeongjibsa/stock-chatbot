@@ -53,7 +53,9 @@ function extractSummaryLine(renderedText: string): string {
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
-  const titledIndex = lines.findIndex((line) => line === "2. 📌 오늘 한 줄 결론");
+  const titledIndex = lines.findIndex(
+    (line) => line === "2. 📌 오늘 한 줄 결론" || line === "2. 📌 오늘 해석 요약"
+  );
 
   if (titledIndex >= 0) {
     const nextLine = lines[titledIndex + 1];

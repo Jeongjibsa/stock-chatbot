@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
+import { formatBriefingSessionLabel, formatBriefingSessionRole } from "@stock-chatbot/application";
+
 import type { PublicReport } from "../types/report";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
@@ -15,13 +17,15 @@ export function ReportCard({ report }: { report: PublicReport }) {
             <div className="flex flex-wrap items-center gap-2 text-[0.75rem] font-medium text-[color:var(--muted)]">
               <span>{report.reportDate}</span>
               <span className="inline-flex h-1 w-1 rounded-full bg-[color:var(--line-strong)]" />
+              <span>{formatBriefingSessionLabel(report.briefingSession)}</span>
+              <span className="inline-flex h-1 w-1 rounded-full bg-[color:var(--line-strong)]" />
               <span>{formatCreatedAt(report.createdAt)}</span>
             </div>
             <h3 className="max-w-[42rem] text-balance text-[1.72rem] font-semibold leading-[1.32] tracking-[-0.045em] text-[color:var(--foreground)]">
               {report.summary}
             </h3>
             <p className="text-[0.93rem] leading-7 text-[color:var(--muted)]">
-              공개 브리핑에서 먼저 읽어야 할 핵심 시그널과 레짐만 압축해서 보여줍니다.
+              {formatBriefingSessionRole(report.briefingSession)}에 맞춘 공개 브리핑 핵심만 압축해서 보여줍니다.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

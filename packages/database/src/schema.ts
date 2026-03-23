@@ -187,6 +187,7 @@ export const personalRebalancingSnapshots = pgTable(
 export const reports = pgTable("reports", {
   id: uuid("id").defaultRandom().primaryKey(),
   reportDate: date("report_date").notNull(),
+  briefingSession: text("briefing_session").notNull().default("pre_market"),
   summary: text("summary").notNull(),
   marketRegime: text("market_regime").notNull(),
   totalScore: numeric("total_score").notNull(),
@@ -194,7 +195,19 @@ export const reports = pgTable("reports", {
   indicatorTags: jsonb("indicator_tags").$type<string[]>().notNull(),
   contentMarkdown: text("content_markdown").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
-});
+},
+  (table) => ({
+    reportDateSessionUnique: unique("reports_report_date_briefing_session_unique").on(
+      table.reportDate,
+      table.briefingSession
+    ),
+    reportDateSessionCreatedAtIndex: index("reports_report_date_session_created_at_idx").on(
+      table.reportDate,
+      table.briefingSession,
+      table.createdAt
+    )
+  })
+);
 
 export const strategySnapshots = pgTable("strategy_snapshots", {
   id: uuid("id").defaultRandom().primaryKey(),

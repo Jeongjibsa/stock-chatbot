@@ -22,6 +22,7 @@ describe("run-daily-report", () => {
   it("formats a concise job summary for workflow logs", () => {
     expect(
       formatDailyReportJobSummary({
+        briefingSession: "pre_market",
         triggerType: "schedule",
         runDate: "2026-03-21",
         summary: {
@@ -37,7 +38,7 @@ describe("run-daily-report", () => {
         }
       })
     ).toBe(
-      "[daily-report] trigger=schedule runDate=2026-03-21 users=3 completed=1 delivered=1 deliverySkipped=1 deliveryFailed=0 notDue=1 partialSuccess=1 failed=0 skippedDuplicate=1"
+      "[daily-report] trigger=schedule session=pre_market runDate=2026-03-21 users=3 completed=1 delivered=1 deliverySkipped=1 deliveryFailed=0 notDue=1 partialSuccess=1 failed=0 skippedDuplicate=1"
     );
   });
 });

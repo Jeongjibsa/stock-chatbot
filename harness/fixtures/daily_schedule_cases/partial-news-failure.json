@@ -4,7 +4,7 @@
   "description": "시장 데이터는 성공했지만 일부 종목 뉴스 추출이 실패하면 partial_success로 남긴다.",
   "input": {
     "runDate": "2026-03-20",
-    "scheduleType": "daily-8am",
+    "scheduleType": "daily-pre-market",
     "marketResults": {
       "ok": 4,
       "error": 0

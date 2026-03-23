@@ -93,12 +93,12 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-8am"
+      scheduleType: "daily-pre-market"
     });
 
     expect(result.status).toBe("partial_success");
-    expect(result.reportText).toContain("1. 🗞️ 오늘의 포트폴리오 리밸런싱 브리핑");
-    expect(result.reportText).toContain("8. ⚠️ 오늘의 포트 리스크 체크");
+    expect(result.reportText).toContain("1. 🗞️ 오늘의 포트폴리오 프리마켓 브리핑");
+    expect(result.reportText).toContain("6. ⚠️ 오늘 반드시 볼 리스크");
     expect(result.reportText).toContain("일부 시장 지표는 지연 또는 누락 상태라 추가 확인이 필요합니다.");
     expect(result.reportText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
     expect(reportRunRepository.completeRun).toHaveBeenCalledWith(
@@ -143,7 +143,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-8am"
+      scheduleType: "daily-pre-market"
     });
 
     expect(result.status).toBe("skipped_duplicate");
@@ -234,6 +234,9 @@ describe("DailyReportOrchestrator", () => {
       },
       publicBriefingBaseUrl: "https://example.com",
       publicReportRepository: {
+        findLatestByReportDateAndSession: vi.fn(async () => {
+          throw new Error('column "indicator_tags" does not exist');
+        }),
         findLatestByReportDate: vi.fn(async () => {
           throw new Error('column "indicator_tags" does not exist');
         })
@@ -425,13 +428,14 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-8am"
+      scheduleType: "daily-pre-market"
     });
 
     expect(result.status).toBe("completed");
     expect(result.portfolioNewsBriefs).toHaveLength(1);
-    expect(result.reportText).toContain("3. 🎯 오늘의 리밸런싱 제안");
-    expect(result.reportText).toContain("7. 📈 종목별 리밸런싱 가이드");
+    expect(result.reportText).toContain("3. 🧭 오늘의 판단 프레임");
+    expect(result.reportText).toContain("5. 🎯 포트폴리오 리밸런싱 제안");
+    expect(result.reportText).toContain("[Apple Inc.]");
     expect(result.reportText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 
@@ -532,6 +536,9 @@ describe("DailyReportOrchestrator", () => {
       },
       publicBriefingBaseUrl: "https://example.com",
       publicReportRepository: {
+        findLatestByReportDateAndSession: vi.fn(async () => ({
+          id: "public-report-1"
+        })),
         findLatestByReportDate: vi.fn(async () => ({
           id: "public-report-1"
         }))
@@ -557,15 +564,16 @@ describe("DailyReportOrchestrator", () => {
       scheduleType: "telegram-report"
     });
 
-    expect(result.reportText).toContain("6. 🌡️ 시장 레짐 요약");
-    expect(result.reportText).toContain("9. 🌍 참고용 시장 브리핑");
-    expect(result.reportText).toContain("10. 🔎 공개 상세 브리핑");
+    expect(result.reportText).toContain("3. 🧭 오늘의 판단 프레임");
+    expect(result.reportText).toContain("6. ⚠️ 오늘 반드시 볼 리스크");
+    expect(result.reportText).toContain("7. 🔎 참고용 공개 프리마켓 브리핑");
     expect(result.reportText).toContain("https://example.com/reports/public-report-1");
   });
 
   it("persists strategy snapshots for generated quant scorecards", async () => {
     const strategySnapshotRepository = {
-      insertMany: vi.fn(async () => [])
+      insertMany: vi.fn(async () => []),
+      listByUserAndRunDateAndScheduleTypes: vi.fn(async () => [])
     };
     const orchestrator = new DailyReportOrchestrator({
       marketDataAdapter: {
@@ -607,7 +615,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-21",
-      scheduleType: "daily-8am"
+      scheduleType: "daily-pre-market"
     });
 
     expect(strategySnapshotRepository.insertMany).toHaveBeenCalledWith([
@@ -646,6 +654,7 @@ describe("DailyReportOrchestrator", () => {
       },
       reportRunRepository,
       strategySnapshotRepository: {
+        listByUserAndRunDateAndScheduleTypes: vi.fn(async () => []),
         insertMany: vi.fn(async () => {
           throw new Error("insert failed");
         })
@@ -661,7 +670,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-21",
-      scheduleType: "daily-8am"
+      scheduleType: "daily-pre-market"
     });
 
     expect(result.status).toBe("partial_success");
@@ -683,6 +692,9 @@ describe("DailyReportOrchestrator", () => {
       },
       publicBriefingBaseUrl: "https://jeongjibsa.github.io/stock-chatbot/",
       publicReportRepository: {
+        findLatestByReportDateAndSession: vi.fn(async () => ({
+          id: "report-2026-03-20"
+        })),
         findLatestByReportDate: vi.fn(async () => ({
           id: "report-2026-03-20"
         }))
@@ -713,7 +725,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-8am"
+      scheduleType: "daily-pre-market"
     });
 
     expect(result.reportText).toContain(
@@ -808,6 +820,6 @@ describe("DailyReportOrchestrator", () => {
       effectiveReportDate: "2026-03-22",
       snapshotVersion: "v2"
     });
-    expect(result.reportText).toContain("오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-22)");
+    expect(result.reportText).toContain("오늘의 포트폴리오 프리마켓 브리핑 (2026-03-22)");
   });
 });

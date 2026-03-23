@@ -1,4 +1,5 @@
 import type { LlmClient } from "./llm-client.js";
+import type { BriefingSession } from "./briefing-session.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
@@ -31,6 +32,7 @@ export class DailyReportCompositionService {
 
   async compose(input: {
     audience?: DailyReportPromptAudience;
+    briefingSession?: BriefingSession;
     holdings: Array<{
       companyName: string;
       exchange: string;
@@ -42,17 +44,27 @@ export class DailyReportCompositionService {
     quantScenarios: string[];
     riskCheckpoints: string[];
     runDate: string;
+    sessionComparison?: {
+      priorPublicSignals?: string[];
+      priorPublicSummary?: string | null;
+      priorStrategyActions?: string[];
+      priorStrategyStance?: string | null;
+    };
     portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
   }): Promise<DailyReportComposition> {
     const promptInput: Parameters<typeof buildDailyReportPromptContract>[0] = {
       ...(input.audience ? { audience: input.audience } : {}),
+      ...(input.briefingSession ? { briefingSession: input.briefingSession } : {}),
       holdings: input.holdings,
       marketResults: input.marketResults,
       newsBriefs: input.newsBriefs,
       quantScorecards: input.quantScorecards,
       quantScenarios: input.quantScenarios,
       riskCheckpoints: input.riskCheckpoints,
-      runDate: input.runDate
+      runDate: input.runDate,
+      ...(input.sessionComparison
+        ? { sessionComparison: input.sessionComparison }
+        : {})
     };
 
     if (input.portfolioRebalancing) {

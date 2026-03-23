@@ -11,8 +11,8 @@ import {
 
 describe("run-public-briefing", () => {
   it("reads a safe default output path", () => {
-    expect(readPublicBriefingOutputPath({})).toBe(
-      "artifacts/public-briefing/public-daily-briefing.json"
+    expect(readPublicBriefingOutputPath({ BRIEFING_SESSION: "pre_market" })).toBe(
+      "artifacts/public-briefing/public-daily-briefing-pre_market.json"
     );
     expect(
       readPublicBriefingOutputPath({
@@ -90,6 +90,7 @@ describe("run-public-briefing", () => {
     }));
 
     const briefing = await buildPublicBriefing({
+      briefingSession: "pre_market",
       runDate: "2026-03-20",
       marketDataAdapter: {
         fetchMany: vi.fn(async () => marketResults)
@@ -99,7 +100,7 @@ describe("run-public-briefing", () => {
       }
     });
 
-    expect(briefing.title).toBe("🗞️ 오늘의 시장 브리핑 (2026-03-20)");
+    expect(briefing.title).toBe("🗞️ 장 시작 전 시장 브리핑 (2026-03-20)");
     expect(briefing.marketSnapshot).toHaveLength(4);
     expect(briefing.indicatorTags).toEqual(["NASDAQ -2.01%"]);
     expect(briefing.keyIndicatorBullets).toEqual(
@@ -162,6 +163,7 @@ describe("run-public-briefing", () => {
     const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const briefing = await buildPublicBriefing({
+      briefingSession: "pre_market",
       runDate: "2026-03-20",
       marketDataAdapter: {
         fetchMany: vi.fn(async () => marketResults)
@@ -188,17 +190,19 @@ describe("run-public-briefing", () => {
   it("formats a concise build summary for workflow logs", () => {
     expect(
       formatPublicBriefingBuildSummary({
+        briefingSession: "pre_market",
         runDate: "2026-03-20",
         snapshotCount: 12,
         outputPath: "site/public-daily-briefing.json"
       })
     ).toBe(
-      "[public-briefing] runDate=2026-03-20 snapshotCount=12 outputPath=site/public-daily-briefing.json"
+      "[public-briefing] runDate=2026-03-20 session=pre_market snapshotCount=12 outputPath=site/public-daily-briefing.json"
     );
   });
 
   it("builds a public report insert payload without personal sections", async () => {
     const briefing = await buildPublicBriefing({
+      briefingSession: "pre_market",
       runDate: "2026-03-20",
       marketDataAdapter: {
         fetchMany: vi.fn(async () => [])

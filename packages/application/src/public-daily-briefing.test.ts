@@ -37,9 +37,9 @@ describe("public daily briefing", () => {
       riskBullets: ["변동성 재확인 구간입니다."]
     });
 
-    expect(briefing.title).toBe("🗞️ 오늘의 시장 브리핑 (2026-03-20)");
-    expect(briefing.canonicalPath).toBe("/briefings/2026-03-20/");
-    expect(briefing.archivePath).toBe("/briefings/2026/03/20/");
+    expect(briefing.title).toBe("🗞️ 장 시작 전 시장 브리핑 (2026-03-20)");
+    expect(briefing.canonicalPath).toBe("/briefings/2026-03-20/pre-market/");
+    expect(briefing.archivePath).toBe("/briefings/2026/03/20/pre-market/");
     expect(briefing.excludedTelegramOnlySections).toContain("portfolioRebalancing");
     expect(briefing.indicatorTags).toEqual(["S&P500 -1.51%"]);
     expect(briefing.marketSummary.overall).toContain("미국 증시 약세");
@@ -48,11 +48,19 @@ describe("public daily briefing", () => {
   });
 
   it("builds canonical and archive paths from run date", () => {
-    expect(buildPublicBriefingCanonicalPath("2026-03-20")).toBe("/briefings/2026-03-20/");
-    expect(buildPublicBriefingArchivePath("2026-03-20")).toBe("/briefings/2026/03/20/");
+    expect(buildPublicBriefingCanonicalPath("2026-03-20", "pre_market")).toBe(
+      "/briefings/2026-03-20/pre-market/"
+    );
+    expect(buildPublicBriefingArchivePath("2026-03-20", "pre_market")).toBe(
+      "/briefings/2026/03/20/pre-market/"
+    );
     expect(
-      buildPublicBriefingUrl("https://jeongjibsa.github.io/stock-chatbot/", "2026-03-20")
-    ).toBe("https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/");
+      buildPublicBriefingUrl(
+        "https://jeongjibsa.github.io/stock-chatbot/",
+        "2026-03-20",
+        "pre_market"
+      )
+    ).toBe("https://jeongjibsa.github.io/stock-chatbot/briefings/2026-03-20/pre-market/");
     expect(buildPublicReportDetailPath("report-1")).toBe("/reports/report-1");
     expect(
       buildPublicReportDetailUrl(

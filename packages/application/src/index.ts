@@ -1,10 +1,24 @@
+import type { BriefingSession } from "./briefing-session.js";
+
 export const REPORT_QUEUE_NAME = "daily-report";
 export const DAILY_REPORT_JOB_NAME = "daily-report.run";
 
 export type DailyReportPayload = {
+  briefingSession?: BriefingSession;
   source: "bootstrap" | "scheduler" | "manual";
 };
 
+export {
+  formatBriefingSessionLabel,
+  formatBriefingSessionRole,
+  formatBriefingSessionSlug,
+  getBriefingSessionTime,
+  isScheduledBriefingSessionAllowed,
+  parseBriefingSession,
+  resolveManualBriefingSession,
+  resolveScheduledBriefingSession,
+  type BriefingSession
+} from "./briefing-session.js";
 export {
   DailyReportCompositionService,
   type DailyReportComposition

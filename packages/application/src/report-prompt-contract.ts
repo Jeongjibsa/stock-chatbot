@@ -1,3 +1,4 @@
+import type { BriefingSession } from "./briefing-session.js";
 import type { HoldingNewsBrief } from "./news.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
@@ -9,6 +10,7 @@ export type DailyReportPromptAudience =
 
 export type DailyReportPromptInput = {
   audience?: DailyReportPromptAudience;
+  briefingSession?: BriefingSession;
   holdings: Array<{
     companyName: string;
     exchange: string;
@@ -20,6 +22,12 @@ export type DailyReportPromptInput = {
   quantScenarios: string[];
   riskCheckpoints: string[];
   runDate: string;
+  sessionComparison?: {
+    priorPublicSignals?: string[];
+    priorPublicSummary?: string | null;
+    priorStrategyActions?: string[];
+    priorStrategyStance?: string | null;
+  };
   portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
 };
 
@@ -43,17 +51,20 @@ export function buildDailyReportPromptContract(
   metadata: Record<string, string>;
 } {
   const audience = input.audience ?? "telegram_personalized";
+  const briefingSession = input.briefingSession ?? "pre_market";
 
   return {
-    instructions: buildPromptInstructions(audience),
+    instructions: buildPromptInstructions(audience, briefingSession),
     input: JSON.stringify(
       buildPromptPayload({
         ...input,
-        audience
+        audience,
+        briefingSession
       })
     ),
     metadata: {
       promptAudience: audience,
+      promptBriefingSession: briefingSession,
       promptKind:
         audience === "public_web"
           ? "public-market-briefing-composition"
@@ -96,7 +107,10 @@ export function parseDailyReportStructuredOutput(
 }
 
 function buildPromptPayload(
-  input: DailyReportPromptInput & { audience: DailyReportPromptAudience }
+  input: DailyReportPromptInput & {
+    audience: DailyReportPromptAudience;
+    briefingSession: BriefingSession;
+  }
 ) {
   const marketAsOfDates = [
     ...new Set(
@@ -108,6 +122,7 @@ function buildPromptPayload(
 
   return {
     audience: input.audience,
+    briefingSession: input.briefingSession,
     runDate: input.runDate,
     dataAvailability: {
       eventInputAvailable: input.newsBriefs.some((brief) => brief.events.length > 0),
@@ -158,12 +173,14 @@ function buildPromptPayload(
     })),
     quantScenarios: input.quantScenarios,
     riskCheckpoints: input.riskCheckpoints,
+    sessionComparison: input.sessionComparison ?? null,
     portfolioRebalancing: input.portfolioRebalancing ?? null
   };
 }
 
 function buildPromptInstructions(
-  audience: DailyReportPromptAudience
+  audience: DailyReportPromptAudience,
+  briefingSession: BriefingSession
 ): string {
   const sharedInstructions = [
     "너의 역할은 제공된 계산 결과를 해석해 브리핑 문장을 조합하는 것이다.",
@@ -192,6 +209,9 @@ function buildPromptInstructions(
     return [
       "너는 공개 웹용 한국어 시장 브리핑 작성기다.",
       "개인 포트폴리오 리밸런싱 리포트가 아니라, 공개 가능한 시장 해석 페이지를 작성한다.",
+      briefingSession === "pre_market"
+        ? "현재 세션은 장 시작 전 브리핑이다. 오늘 어떤 프레임으로 시장을 읽고 무엇을 체크할지에 집중한다."
+        : "현재 세션은 장 마감 후 브리핑이다. 오전 프레임이 실제 시장에서 어떻게 검증됐는지와 다음 기준 보정에 집중한다.",
       "개인 보유 종목, 목표 비중, 포트 적합성, 사용자 맞춤 hard rule, 개인 행동 지시처럼 읽히는 문장은 쓰지 않는다.",
       "비중 확대, 축소 우선, 교체 검토, 매수 기회, 지금 사야 한다 같은 개인 행동 언어를 쓰지 않는다.",
       "표면 모멘텀이 유지돼도 내부 밸류 부담과 구조적 취약성이 크면 균형 잡힌 경고 톤을 유지한다.",
@@ -202,6 +222,9 @@ function buildPromptInstructions(
       "eventBullets는 핵심 뉴스, 이벤트, 일정의 시장 의미를 짧게 정리한다.",
       "holdingTrendBullets, articleSummaryBullets, strategyBullets는 공개 웹에서는 사용하지 않으므로 반드시 빈 배열로 반환한다.",
       "riskBullets는 공개 시장 차원의 리스크 포인트만 작성하고 개인 보유 종목 전제를 넣지 않는다.",
+      briefingSession === "post_market"
+        ? "sessionComparison이 있으면 오전 프레임 대비 실제 결과와 해석 보정 포인트를 자연스럽게 반영한다."
+        : "장 시작 전 브리핑에서는 검증보다는 프레임, 체크포인트, 주의 신호를 우선 정리한다.",
       ...sharedInstructions
     ].join("\n");
   }
@@ -209,17 +232,23 @@ function buildPromptInstructions(
   return [
     "너는 텔레그램 DM용 개인화 포트폴리오 리밸런싱 브리핑 작성기다.",
     "일반 시장 요약이 아니라 `오늘 이 사용자의 포트폴리오에서 무엇을 해야 하는가`를 짧고 실용적으로 설명한다.",
+    briefingSession === "pre_market"
+      ? "현재 세션은 장 시작 전 브리핑이다. 판단 프레임, 오늘의 체크포인트, 리밸런싱 기준을 우선 정리한다."
+      : "현재 세션은 장 마감 후 브리핑이다. 오전 가설 대비 실제 결과를 검증하고, 기준을 어떻게 보정할지 우선 정리한다.",
     "설명 우선순위는 `제약/하드룰 -> 최종 action 또는 actionSummary -> 점수/시장 레짐 -> 기타 사실` 순서를 따른다.",
     "종목이 좋아 보여도 과비중, 집중도, 상관관계, 이벤트 임박, 방어적 시장 레짐이 있으면 먼저 제약을 설명한다.",
     "입력의 quantScorecards.action과 actionSummary, quantScenarios, riskCheckpoints를 upstream 최종 판단으로 존중하고 방향을 뒤집지 않는다.",
     "portfolioRebalancing가 있으면 내재 가치, 가격/추세, 미래 기대치, 포트 적합성, 시장 레짐 오버레이, 하드룰을 먼저 반영한다.",
     "oneLineSummary는 `오늘 한 줄 결론`에 들어갈 문장으로 작성하고, 포트 대응 스탠스와 시장 레짐 톤을 함께 담는다.",
-    "strategyBullets는 `오늘의 리밸런싱 제안`에 바로 쓸 수 있게 작성하고, 확대/유지/축소/관찰 방향이 드러나야 한다.",
+    "strategyBullets는 `포트폴리오 리밸런싱 제안`에 바로 쓸 수 있게 작성하고, 확대/유지/축소/관찰 방향이 드러나야 한다.",
     "holdingTrendBullets는 종목별 `한줄 판단` 또는 보유 종목 가이드로 재사용될 수 있게 작성한다.",
     "articleSummaryBullets는 종목 관련 핵심 기사, 이벤트, 제공 사실을 간단히 묶어준다.",
     "입력에 실제 종목 기사나 이벤트가 없으면 articleSummaryBullets는 반드시 빈 배열로 반환한다.",
     "입력에 종목별 가격/추세 사실이 없으면 holdingTrendBullets는 반드시 빈 배열로 반환하고 업종 일반론으로 종목 동향을 추정하지 않는다.",
     "riskBullets는 오늘 포트폴리오에서 바로 점검해야 할 집중, 이벤트, 상관, 방어적 해석 필요성을 짧게 정리한다.",
+    briefingSession === "post_market"
+      ? "sessionComparison이 있으면 오전 판단과 실제 결과의 차이, 보정 포인트를 oneLineSummary와 strategyBullets에 녹인다."
+      : "장 시작 전 브리핑에서는 검증 어조보다 오늘 무엇을 기준으로 대응할지 선명하게 제시한다.",
     "시장 과열, 블랙스완, 극단적 고평가가 함께 보이면 보수적·중립적 해석의 확대 톤을 자동으로 약화한다.",
     ...sharedInstructions
   ].join("\n");

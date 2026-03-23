@@ -59,6 +59,7 @@ describe("PublicReportRepository", () => {
 
     await expect(
       repository.insertReport({
+        briefingSession: "pre_market",
         reportDate: "2026-03-21",
         summary: "요약",
         marketRegime: "Risk-Off",
@@ -129,6 +130,7 @@ describe("PublicReportRepository", () => {
 
     await expect(
       repository.insertReport({
+        briefingSession: "pre_market",
         reportDate: "2026-03-21",
         summary: "updated",
         marketRegime: "Neutral",

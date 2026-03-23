@@ -1,5 +1,7 @@
 import { unstable_noStore as noStore } from "next/cache";
 
+import type { BriefingSession } from "@stock-chatbot/application";
+
 import type { PublicReport } from "../types/report";
 import { getWebPool } from "./db";
 
@@ -10,6 +12,7 @@ export async function listPublicReports(): Promise<PublicReport[]> {
     const result = await pool.query<{
       content_markdown: string;
       created_at: Date;
+      briefing_session: BriefingSession;
       id: string;
       indicator_tags: string[];
       market_regime: string;
@@ -19,9 +22,9 @@ export async function listPublicReports(): Promise<PublicReport[]> {
       total_score: string;
     }>(
       [
-        'SELECT DISTINCT ON ("report_date") "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
+        'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
         'FROM "reports"',
-        'ORDER BY "report_date" DESC, "created_at" DESC'
+        'ORDER BY "report_date" DESC, "briefing_session" ASC, "created_at" DESC'
       ].join(" ")
     );
 
@@ -34,6 +37,7 @@ export async function listPublicReports(): Promise<PublicReport[]> {
     const legacyResult = await pool.query<{
       content_markdown: string;
       created_at: Date;
+      briefing_session: BriefingSession;
       id: string;
       market_regime: string;
       report_date: Date | string;
@@ -42,7 +46,7 @@ export async function listPublicReports(): Promise<PublicReport[]> {
       total_score: string;
     }>(
       [
-        'SELECT DISTINCT ON ("report_date") "id", "report_date", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"',
+        `SELECT DISTINCT ON ("report_date") "id", "report_date", 'pre_market'::text AS "briefing_session", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"`,
         'FROM "reports"',
         'ORDER BY "report_date" DESC, "created_at" DESC'
       ].join(" ")
@@ -66,6 +70,7 @@ export async function getPublicReportById(
     const result = await pool.query<{
       content_markdown: string;
       created_at: Date;
+      briefing_session: BriefingSession;
       id: string;
       indicator_tags: string[];
       market_regime: string;
@@ -75,7 +80,7 @@ export async function getPublicReportById(
       total_score: string;
     }>(
       [
-        'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
+        'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
         'FROM "reports"',
         'WHERE "id" = $1',
         'LIMIT 1'
@@ -92,6 +97,7 @@ export async function getPublicReportById(
     const legacyResult = await pool.query<{
       content_markdown: string;
       created_at: Date;
+      briefing_session: BriefingSession;
       id: string;
       market_regime: string;
       report_date: Date | string;
@@ -100,7 +106,7 @@ export async function getPublicReportById(
       total_score: string;
     }>(
       [
-        'SELECT "id", "report_date", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"',
+        `SELECT "id", "report_date", 'pre_market'::text AS "briefing_session", "summary", "market_regime", "total_score", "signals", "content_markdown", "created_at"`,
         'FROM "reports"',
         'WHERE "id" = $1',
         'LIMIT 1'
@@ -120,6 +126,7 @@ export async function getPublicReportById(
 function mapRowToPublicReport(report: {
   content_markdown: string;
   created_at: Date;
+  briefing_session: BriefingSession;
   id: string;
   indicator_tags: string[];
   market_regime: string;
@@ -129,6 +136,7 @@ function mapRowToPublicReport(report: {
   total_score: string;
 }): PublicReport {
   return {
+    briefingSession: report.briefing_session ?? "pre_market",
     id: report.id,
     reportDate: normalizeDate(report.report_date),
     summary: report.summary,
@@ -161,6 +169,7 @@ function isMissingIndicatorTagsError(error: unknown): boolean {
 
   return (
     code === "42703" ||
-    message.includes('column "indicator_tags" does not exist')
+    message.includes('column "indicator_tags" does not exist') ||
+    message.includes('column "briefing_session" does not exist')
   );
 }

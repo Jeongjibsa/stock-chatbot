@@ -61,6 +61,11 @@ fixture는 자유 형식 JSON이 아닙니다. 모든 fixture는 `harness/suite-
 
 - `report_render_cases`는 `snapshotFile + renderedText`가 모두 필요합니다.
 - grader는 [harness/graders/report-structure-grader.md](/Users/jisung/Projects/stock-chatbot/harness/graders/report-structure-grader.md)를 사용합니다.
+- 현재 렌더링 기준선은 최소 4축을 함께 유지해야 합니다.
+  - Telegram `pre_market`
+  - Telegram `post_market`
+  - Public `pre_market`
+  - Public `post_market`
 
 ### 3. Active suite는 빈 껍데기로 두지 않는다
 
@@ -110,6 +115,7 @@ COREPACK_HOME=/tmp/corepack pnpm verify
 - `docs/initial-prd.md`의 Harness Engineering Strategy 섹션
 - `docs/change-log.md`
 - 필요 시 `docs/context-summary.md`
+- `docs/telegram-e2e-harness.md`
 - `AGENTS.md`
 
 ## 에이전트 작업 기준

@@ -19,10 +19,11 @@ describe("renderPublicDailyBriefingMarkdown", () => {
       })
     );
 
-    expect(markdown).toContain("1. # 🗞️ 오늘의 시장 브리핑 (2026-03-21)");
-    expect(markdown).toContain("3. 시장 종합 해석");
-    expect(markdown).toContain("11. 오늘 시장에서 읽어야 할 포인트");
-    expect(markdown).toContain("12. ❗ 이 페이지는 공개 시장 브리핑이며");
+    expect(markdown).toContain("1. # 🗞️ 장 시작 전 시장 브리핑 (2026-03-21)");
+    expect(markdown).toContain("3. 브리핑 역할");
+    expect(markdown).toContain("4. 시장 종합 해석");
+    expect(markdown).toContain("12. 오늘 시장에서 읽어야 할 포인트");
+    expect(markdown).toContain("13. ❗ 이 페이지는 공개 프리마켓 브리핑이며");
     expect(markdown).not.toContain("비중 확대");
     expect(markdown).not.toContain("포트 적합성");
   });

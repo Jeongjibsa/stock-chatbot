@@ -36,6 +36,7 @@ describeIntegration("PublicReportRepository integration", () => {
 
   it("inserts, lists, and fetches public reports", async () => {
     const created = await repository.insertReport({
+      briefingSession: "pre_market",
       reportDate: "2026-03-21",
       summary: "달러 강세와 변동성 확대가 겹친 하루입니다.",
       marketRegime: "Risk-Off",

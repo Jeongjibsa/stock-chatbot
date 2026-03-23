@@ -1,8 +1,15 @@
+import {
+  formatBriefingSessionLabel,
+  formatBriefingSessionRole,
+  formatBriefingSessionSlug,
+  type BriefingSession
+} from "./briefing-session.js";
 import type { MarketDataFetchResult } from "./market-data.js";
 import { buildIndicatorTags } from "./personal-rebalancing-snapshot.js";
 
 export type PublicDailyBriefing = {
   archivePath: string;
+  briefingSession: BriefingSession;
   canonicalPath: string;
   closingParagraph: string;
   disclaimer: string;
@@ -38,6 +45,8 @@ export type PublicDailyBriefing = {
   riskBullets: string[];
   runDate: string;
   scheduleBullets: string[];
+  sessionLabel: string;
+  sessionRole: string;
   sectorSummary: {
     strong: string;
     weak: string;
@@ -56,6 +65,7 @@ const EXCLUDED_TELEGRAM_ONLY_SECTIONS = [
 ] as const;
 
 export function buildPublicDailyBriefing(input: {
+  briefingSession?: BriefingSession;
   eventBullets?: string[];
   fundFlowBullets?: string[];
   keyIndicatorBullets?: string[];
@@ -66,6 +76,7 @@ export function buildPublicDailyBriefing(input: {
   runDate: string;
   summaryLine: string;
 }): PublicDailyBriefing {
+  const briefingSession = input.briefingSession ?? "pre_market";
   const marketSnapshot = input.marketResults
     .filter(
       (result): result is Extract<MarketDataFetchResult, { status: "ok" }> =>
@@ -95,8 +106,11 @@ export function buildPublicDailyBriefing(input: {
   );
 
   return {
-    title: `🗞️ 오늘의 시장 브리핑 (${input.runDate})`,
+    title: `🗞️ ${formatBriefingSessionLabel(briefingSession)} 시장 브리핑 (${input.runDate})`,
+    briefingSession,
     runDate: input.runDate,
+    sessionLabel: formatBriefingSessionLabel(briefingSession),
+    sessionRole: formatBriefingSessionRole(briefingSession),
     indicatorTags: buildIndicatorTags(input.marketResults),
     summaryLine: input.summaryLine,
     marketSnapshot,
@@ -148,24 +162,35 @@ export function buildPublicDailyBriefing(input: {
       riskBullets.length > 0
         ? riskBullets
         : ["현재 확보된 시장 데이터 기준으로 변동성 재확인 구간입니다."],
-    canonicalPath: buildPublicBriefingCanonicalPath(input.runDate),
-    archivePath: buildPublicBriefingArchivePath(input.runDate),
+    canonicalPath: buildPublicBriefingCanonicalPath(input.runDate, briefingSession),
+    archivePath: buildPublicBriefingArchivePath(input.runDate, briefingSession),
     excludedTelegramOnlySections: [...EXCLUDED_TELEGRAM_ONLY_SECTIONS],
     closingParagraph:
-      "오늘 시장은 지수 방향성보다 내부 체력과 리스크 신호를 함께 읽는 편이 중요합니다. 단기 강도만으로 해석을 확장하기보다 거시 변수와 이벤트 민감도를 같이 점검해야 합니다.",
+      briefingSession === "pre_market"
+        ? "오늘 시장은 방향성 자체보다 어떤 프레임으로 읽을지와 어디서 해석이 틀어질 수 있는지를 먼저 점검하는 편이 중요합니다."
+        : "오늘 해석은 결과 확인으로 끝나지 않고, 어떤 기준을 다음 세션에 보정해야 하는지까지 이어져야 합니다.",
     disclaimer:
-      "이 페이지는 공개 시장 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다."
+      briefingSession === "pre_market"
+        ? "이 페이지는 공개 프리마켓 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다."
+        : "이 페이지는 공개 포스트마켓 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다."
   };
 }
 
-export function buildPublicBriefingCanonicalPath(runDate: string): string {
-  return `/briefings/${runDate}/`;
+export function buildPublicBriefingCanonicalPath(
+  runDate: string,
+  briefingSession: BriefingSession
+): string {
+  return `/briefings/${runDate}/${formatBriefingSessionSlug(briefingSession)}/`;
 }
 
-export function buildPublicBriefingUrl(baseUrl: string, runDate: string): string {
+export function buildPublicBriefingUrl(
+  baseUrl: string,
+  runDate: string,
+  briefingSession: BriefingSession
+): string {
   const normalizedBaseUrl = baseUrl.replace(/\/+$/, "");
 
-  return `${normalizedBaseUrl}${buildPublicBriefingCanonicalPath(runDate)}`;
+  return `${normalizedBaseUrl}${buildPublicBriefingCanonicalPath(runDate, briefingSession)}`;
 }
 
 export function buildPublicReportDetailPath(reportId: string): string {
@@ -181,14 +206,17 @@ export function buildPublicReportDetailUrl(
   return `${normalizedBaseUrl}${buildPublicReportDetailPath(reportId)}`;
 }
 
-export function buildPublicBriefingArchivePath(runDate: string): string {
+export function buildPublicBriefingArchivePath(
+  runDate: string,
+  briefingSession: BriefingSession
+): string {
   const [year, month, day] = runDate.split("-");
 
   if (!year || !month || !day) {
     throw new Error(`Invalid runDate: ${runDate}`);
   }
 
-  return `/briefings/${year}/${month}/${day}/`;
+  return `/briefings/${year}/${month}/${day}/${formatBriefingSessionSlug(briefingSession)}/`;
 }
 
 function buildMajorIndicesLine(

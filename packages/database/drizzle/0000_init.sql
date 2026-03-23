@@ -116,17 +116,41 @@ CREATE TABLE IF NOT EXISTS "personal_rebalancing_snapshots" (
 CREATE TABLE IF NOT EXISTS "reports" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "report_date" date NOT NULL,
+  "briefing_session" text DEFAULT 'pre_market' NOT NULL,
   "summary" text NOT NULL,
   "market_regime" text NOT NULL,
   "total_score" numeric NOT NULL,
   "signals" jsonb NOT NULL,
   "indicator_tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
   "content_markdown" text NOT NULL,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "reports_report_date_briefing_session_unique" UNIQUE("report_date", "briefing_session")
 );
 
 ALTER TABLE "reports"
   ADD COLUMN IF NOT EXISTS "indicator_tags" jsonb DEFAULT '[]'::jsonb NOT NULL;
+ALTER TABLE "reports"
+  ADD COLUMN IF NOT EXISTS "briefing_session" text DEFAULT 'pre_market';
+UPDATE "reports"
+SET "briefing_session" = 'pre_market'
+WHERE "briefing_session" IS NULL;
+WITH "ranked_reports" AS (
+  SELECT
+    "id",
+    row_number() OVER (
+      PARTITION BY "report_date", "briefing_session"
+      ORDER BY "created_at" DESC, "id" DESC
+    ) AS "rn"
+  FROM "reports"
+)
+DELETE FROM "reports"
+USING "ranked_reports"
+WHERE "reports"."id" = "ranked_reports"."id"
+  AND "ranked_reports"."rn" > 1;
+ALTER TABLE "reports"
+  ALTER COLUMN "briefing_session" SET DEFAULT 'pre_market';
+ALTER TABLE "reports"
+  ALTER COLUMN "briefing_session" SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS "strategy_snapshots" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -186,3 +210,7 @@ CREATE INDEX IF NOT EXISTS "personal_rebalancing_snapshots_user_effective_date_i
   ON "personal_rebalancing_snapshots" ("user_id", "effective_report_date");
 CREATE INDEX IF NOT EXISTS "personal_rebalancing_snapshots_effective_date_idx"
   ON "personal_rebalancing_snapshots" ("effective_report_date");
+CREATE UNIQUE INDEX IF NOT EXISTS "reports_report_date_briefing_session_unique"
+  ON "reports" ("report_date", "briefing_session");
+CREATE INDEX IF NOT EXISTS "reports_report_date_session_created_at_idx"
+  ON "reports" ("report_date", "briefing_session", "created_at");

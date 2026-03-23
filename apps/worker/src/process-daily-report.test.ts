@@ -39,12 +39,13 @@ describe("processDailyReportJob", () => {
     };
 
     const summary = await processDailyReportJob({
+      briefingSession: "pre_market",
       deliveryAdapter: {
         deliver: vi.fn(async () => undefined)
       },
       orchestrator,
       runDate: "2026-03-20",
-      scheduleType: "manual-dispatch",
+      scheduleType: "manual-pre-market",
       userRepository: {
         listUsers: vi.fn(async () => [
           { id: "user-1", displayName: "A", preferredDeliveryChatId: "chat-1" },
@@ -94,10 +95,11 @@ describe("processDailyReportJob", () => {
     };
 
     const summary = await processDailyReportJob({
+      briefingSession: "pre_market",
       deliveryAdapter,
       orchestrator,
       runDate: "2026-03-20",
-      scheduleType: "manual-dispatch",
+      scheduleType: "manual-pre-market",
       userRepository: {
         listUsers: vi.fn(async () => [
           { id: "user-1", displayName: "A", preferredDeliveryChatId: "chat-1" },
@@ -129,13 +131,14 @@ describe("processDailyReportJob", () => {
     };
 
     const summary = await processDailyReportJob({
+      briefingSession: "pre_market",
       deliveryAdapter: {
         deliver: vi.fn(async () => undefined)
       },
       now: new Date("2026-03-21T00:07:00.000Z"),
       orchestrator,
       runDate: "2026-03-21",
-      scheduleType: "daily-8am",
+      scheduleType: "daily-pre-market",
       scheduleWindowMinutes: 15,
       userRepository: {
         listUsers: vi.fn(async () => [
@@ -172,16 +175,16 @@ describe("processDailyReportJob", () => {
 
     expect(summary).toEqual({
       userCount: 3,
-      completedCount: 1,
-      deliveredCount: 1,
+      completedCount: 2,
+      deliveredCount: 2,
       deliveryFailedCount: 0,
       deliverySkippedCount: 0,
       failedCount: 0,
-      notDueCount: 2,
+      notDueCount: 1,
       partialSuccessCount: 0,
       skippedDuplicateCount: 0
     });
-    expect(orchestrator.runForUser).toHaveBeenCalledTimes(1);
+    expect(orchestrator.runForUser).toHaveBeenCalledTimes(2);
   });
 
   it("reads runtime env defaults and required keys", () => {
@@ -210,9 +213,11 @@ describe("processDailyReportJob", () => {
       )
     ).toBe("2026-03-20");
     expect(readRunDate({ REPORT_RUN_DATE: "" })).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(readScheduleType({})).toBe("daily-8am");
-    expect(readScheduleType({ REPORT_TRIGGER_TYPE: "workflow_dispatch" })).toBe(
-      "manual-dispatch"
+    expect(readScheduleType({}, "pre_market")).toBe("daily-pre-market");
+    expect(
+      readScheduleType({ REPORT_TRIGGER_TYPE: "workflow_dispatch" }, "post_market")
+    ).toBe(
+      "manual-post-market"
     );
     expect(() => readFredApiKey({})).toThrow("FRED_API_KEY is missing");
     expect(readFredApiKey({ FRED_API_KEY: "fred-key" })).toBe("fred-key");

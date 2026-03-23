@@ -1,3 +1,4 @@
+import type { BriefingSession } from "./briefing-session.js";
 import type { MarketDataAdapter, MarketDataFetchResult } from "./market-data.js";
 import type { DailyReportComposition } from "./daily-report-composition-service.js";
 import {
@@ -90,6 +91,7 @@ type PortfolioNewsBriefServicePort = {
 type ReportCompositionServicePort = {
   compose(input: {
     audience?: "telegram_personalized" | "public_web";
+    briefingSession?: BriefingSession;
     holdings: Array<{
       companyName: string;
       exchange: string;
@@ -101,6 +103,12 @@ type ReportCompositionServicePort = {
     quantScenarios: string[];
     riskCheckpoints: string[];
     runDate: string;
+    sessionComparison?: {
+      priorPublicSignals?: string[];
+      priorPublicSummary?: string | null;
+      priorStrategyActions?: string[];
+      priorStrategyStance?: string | null;
+    };
   }): Promise<DailyReportComposition>;
 };
 
@@ -123,6 +131,19 @@ type StrategySnapshotRepositoryPort = {
       userId: string;
     }>
   ): Promise<unknown>;
+  listByUserAndRunDateAndScheduleTypes(input: {
+    runDate: string;
+    scheduleTypes: string[];
+    userId: string;
+  }): Promise<
+    Array<{
+      action: string;
+      actionSummary: string;
+      companyName: string;
+      runDate: string | Date;
+      scheduleType: string;
+    }>
+  >;
 };
 
 type PersonalRebalancingSnapshotRepositoryPort = {
@@ -172,6 +193,14 @@ export class DailyReportOrchestrator {
         findLatestByReportDate(reportDate: string): Promise<{
           id: string;
         } | null>;
+        findLatestByReportDateAndSession(
+          reportDate: string,
+          briefingSession: BriefingSession
+        ): Promise<{
+          id: string;
+          signals?: string[] | null;
+          summary?: string | null;
+        } | null>;
       };
       reportCompositionService?: ReportCompositionServicePort;
       reportRunRepository: ReportRunRepositoryPort;
@@ -181,6 +210,7 @@ export class DailyReportOrchestrator {
   ) {}
 
   async runForUser(input: {
+    briefingSession?: BriefingSession;
     portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
     promptVersion?: string;
     runDate: string;
@@ -193,6 +223,7 @@ export class DailyReportOrchestrator {
       reportDetailLevel?: "compact" | "standard";
     };
   }): Promise<DailyReportOrchestratorResult> {
+    const briefingSession = input.briefingSession ?? "pre_market";
     const startRunInput: {
       promptVersion?: string;
       runDate: string;
@@ -272,6 +303,11 @@ export class DailyReportOrchestrator {
         portfolioNewsBriefs
       });
       const quantScenarios = toQuantStrategyBullets(quantScorecards);
+      const sessionComparison = await this.resolveSessionComparison({
+        briefingSession,
+        runDate: input.runDate,
+        userId: input.user.id
+      });
       const sessionDateResolution = resolveEffectiveReportDate({
         marketResults,
         requestedSeoulDate: input.runDate
@@ -381,6 +417,7 @@ export class DailyReportOrchestrator {
         try {
           composition = await this.dependencies.reportCompositionService.compose({
             audience: "telegram_personalized",
+            briefingSession,
             holdings: holdings.map((holding) => ({
               companyName: holding.companyName,
               symbol: holding.symbol,
@@ -392,7 +429,8 @@ export class DailyReportOrchestrator {
             quantScorecards,
             quantScenarios,
             riskCheckpoints: [],
-            runDate: input.runDate
+            runDate: input.runDate,
+            ...(sessionComparison ? { sessionComparison } : {})
           });
         } catch (error) {
           compositionError =
@@ -409,6 +447,7 @@ export class DailyReportOrchestrator {
         strategySnapshotError
       );
       const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
+        briefingSession,
         displayName: input.user.displayName,
         runDate: input.runDate,
         holdings: holdings.map((holding) => {
@@ -431,6 +470,7 @@ export class DailyReportOrchestrator {
         }),
         marketResults,
         portfolioNewsBriefs,
+        ...(sessionComparison ? { sessionComparison } : {}),
         ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
         quantScorecards
       };
@@ -501,9 +541,16 @@ export class DailyReportOrchestrator {
         this.dependencies.publicBriefingBaseUrl &&
         input.user.includePublicBriefingLink !== false
       ) {
-        const latestPublicReport = await this.dependencies.publicReportRepository?.findLatestByReportDate(
-          input.runDate
-        );
+        const publicReportRepository = this.dependencies.publicReportRepository;
+        const latestPublicReport =
+          typeof publicReportRepository?.findLatestByReportDateAndSession === "function"
+            ? await publicReportRepository.findLatestByReportDateAndSession(
+                input.runDate,
+                briefingSession
+              )
+            : briefingSession === "pre_market"
+              ? await publicReportRepository?.findLatestByReportDate(input.runDate)
+              : null;
 
         renderInput.publicBriefingUrl = latestPublicReport
           ? buildPublicReportDetailUrl(
@@ -512,7 +559,8 @@ export class DailyReportOrchestrator {
             )
           : buildPublicBriefingUrl(
               this.dependencies.publicBriefingBaseUrl,
-              input.runDate
+              input.runDate,
+              briefingSession
             );
       }
 
@@ -583,6 +631,53 @@ export class DailyReportOrchestrator {
         portfolioNewsBriefs
       };
     }
+  }
+
+  private async resolveSessionComparison(input: {
+    briefingSession: BriefingSession;
+    runDate: string;
+    userId: string;
+  }): Promise<
+    | {
+        priorPublicSignals?: string[];
+        priorPublicSummary?: string | null;
+        priorStrategyActions?: string[];
+        priorStrategyStance?: string | null;
+      }
+    | undefined
+  > {
+    if (input.briefingSession !== "post_market") {
+      return undefined;
+    }
+
+    const priorPublicReport =
+      await this.dependencies.publicReportRepository?.findLatestByReportDateAndSession(
+        input.runDate,
+        "pre_market"
+      );
+    const priorStrategySnapshots =
+      await this.dependencies.strategySnapshotRepository?.listByUserAndRunDateAndScheduleTypes({
+        userId: input.userId,
+        runDate: input.runDate,
+        scheduleTypes: ["daily-pre-market", "manual-pre-market"]
+      });
+
+    if (!priorPublicReport && (!priorStrategySnapshots || priorStrategySnapshots.length === 0)) {
+      return undefined;
+    }
+
+    const strategyActions =
+      priorStrategySnapshots?.map(
+        (snapshot) => `${snapshot.companyName}: ${snapshot.actionSummary}`
+      ) ?? [];
+
+    return {
+      priorPublicSummary: priorPublicReport?.summary ?? null,
+      priorPublicSignals: priorPublicReport?.signals ?? [],
+      priorStrategyActions: strategyActions,
+      priorStrategyStance:
+        strategyActions.length > 0 ? strategyActions.slice(0, 3).join(" | ") : null
+    };
   }
 
   private async resolvePortfolioRebalancing(input: {

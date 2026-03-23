@@ -58,7 +58,7 @@
 structured output 매핑:
 
 - `oneLineSummary`: 오늘 한 줄 결론
-- `strategyBullets`: 오늘의 리밸런싱 제안
+- `strategyBullets`: 포트폴리오 리밸런싱 제안
 - `holdingTrendBullets`: 종목별 한줄 판단/가이드
 - `articleSummaryBullets`: 종목 관련 기사·이벤트 요약
 - `riskBullets`: 오늘의 포트 리스크 체크
@@ -66,7 +66,7 @@ structured output 매핑:
 최종 Telegram renderer 구조:
 
 - `오늘 한 줄 결론`
-- `오늘의 리밸런싱 제안`
+- `포트폴리오 리밸런싱 제안`
 - `성향별 해석`
 - `내 포트폴리오 요약`
 - `시장 레짐 요약`

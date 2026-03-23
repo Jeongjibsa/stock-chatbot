@@ -46,15 +46,14 @@ export function formatReportSettings(input: {
   return [
     "현재 정기 브리핑 설정입니다.",
     `- 발송 상태: ${input.dailyReportEnabled === false ? "꺼짐" : "켜짐"}`,
-    `- 발송 시간: ${formatHourMinute(
-      input.dailyReportHour ?? 8,
-      input.dailyReportMinute ?? 0
-    )}`,
-    `- 타임존: ${input.timezone ?? "Asia/Seoul"}`,
+    "- 고정 발송 시각: 07:30 / 20:30",
+    `- 기준 타임존: ${input.timezone ?? "Asia/Seoul"}`,
+    "- 운영 캘린더: 월~금 오전/오후, 토요일 오전만, 일요일 없음",
+    "- 역할 분리: 오전은 판단 프레임, 오후는 해석 검증과 기준 보정",
     "",
     "변경 명령:",
     "- /report_on",
     "- /report_off",
-    "- /report_time 08:00"
+    "- /report_time"
   ].join("\n");
 }

@@ -5,8 +5,12 @@
   "buildCommand": "pnpm build",
   "crons": [
     {
-      "path": "/api/cron/daily-report",
-      "schedule": "0 23 * * *"
+      "path": "/api/cron/pre-market-briefing",
+      "schedule": "30 22 * * 0-5"
+    },
+    {
+      "path": "/api/cron/post-market-briefing",
+      "schedule": "30 11 * * 1-5"
     }
   ]
 }
