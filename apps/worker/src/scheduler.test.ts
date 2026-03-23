@@ -34,15 +34,15 @@ describe("scheduler", () => {
         upsertJobScheduler
       },
       {
-        DAILY_REPORT_PATTERN: "0 15 9 * * *",
+        DAILY_REPORT_PATTERN: "0 15 8 * * *",
         REPORT_TIMEZONE: "Asia/Seoul"
       }
     );
 
     expect(upsertJobScheduler).toHaveBeenCalledWith(
-      "daily-report-9am",
+      "daily-report-8am",
       {
-        pattern: "0 15 9 * * *",
+        pattern: "0 15 8 * * *",
         tz: "Asia/Seoul"
       },
       {

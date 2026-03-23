@@ -125,7 +125,7 @@ describe("getRunDateForTimezone", () => {
 });
 
 describe("resolveTelegramReportRunDate", () => {
-  it("prefers REPORT_RUN_DATE when provided", () => {
+  it("uses the timezone-aware current date even when REPORT_RUN_DATE is set", () => {
     expect(
       resolveTelegramReportRunDate(
         {
@@ -136,7 +136,7 @@ describe("resolveTelegramReportRunDate", () => {
           timeZone: "Asia/Seoul"
         }
       )
-    ).toBe("2026-03-20");
+    ).toBe("2026-03-22");
   });
 
   it("falls back to timezone-aware current date when override is missing", () => {

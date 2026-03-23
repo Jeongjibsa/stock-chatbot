@@ -42,7 +42,7 @@
 - `/register`, `/unregister`, `/portfolio_add`, `/portfolio_bulk`, `/report` 흐름으로 사용자별 입력을 받습니다.
 - Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast rule-based 경로를 기본값으로 사용합니다. 보유 종목별 뉴스 수집과 LLM 조합은 기본적으로 끄고, 시장 데이터와 규칙 기반 렌더러로 먼저 빠르게 응답합니다. 이 경로에서도 시장/매크로/자금/이벤트/리스크 섹션과 공개 상세 링크는 rule-based fallback으로 비어 있지 않게 유지합니다.
 - 3대 관점 기반 리밸런싱 해석은 optional `portfolioRebalancing` payload가 실제 runtime에 연결될 때 fully surface됩니다. payload가 없으면 템플릿 구조는 유지하되 `확인 필요 / 점검 필요 / 데이터 보강 필요` fallback label을 사용합니다.
-- 운영이나 수동 검증에서 특정 거래일 `/report`를 재현해야 할 때는 `REPORT_RUN_DATE=YYYY-MM-DD` override로 기준일을 고정할 수 있습니다.
+- 운영이나 수동 검증에서 특정 거래일 데이터를 재현해야 할 때는 worker/manual backfill 경로에서 `REPORT_RUN_DATE=YYYY-MM-DD` override를 사용할 수 있습니다. Telegram `/report`는 항상 요청 시점의 서울 날짜를 사용합니다.
 - `/portfolio_add`는 CSV 기반 ticker master 검색 결과를 보여주고, 상위 5개 후보 중 번호 선택으로 종목을 추가합니다.
 - `삼전`, `현대차`, `app`, `tesl` 같은 짧은 alias는 curated fallback으로 보강하되, 최종 저장과 표시는 PostgreSQL ticker master를 기준으로 합니다.
 - `/portfolio_bulk`는 comma/newline/semicolon으로 여러 키워드를 받아 각 항목을 독립 검색한 뒤 `추가 성공 / 이미 등록 / 실패` 요약을 돌려줍니다.
@@ -257,7 +257,7 @@ COREPACK_HOME=/tmp/corepack pnpm dev:web
 /mock_report      예시 리포트 보기
 ```
 
-`/report`와 공개 브리핑 날짜는 서울 기준 요청일이 아니라 `공통 마감일(effective report date)`을 사용합니다. 즉 국장과 미장의 대표 지표에서 모두 확인 가능한 가장 최근 마감일을 제목과 공개 `report_date` 기준으로 삼습니다. 관심 지표 개인 설정은 현재 개인화 입력 대상에서 제외됐고, `/report`와 공개 브리핑은 시스템 기본 시장 지표 세트를 공통으로 사용합니다.
+`/report`와 공개 브리핑 날짜는 항상 서울 기준 요청일을 사용합니다. 시장 데이터는 해당 날짜 이전 마지막 가용 거래일 스냅샷으로 조회하고, 관심 지표 개인 설정은 현재 개인화 입력 대상에서 제외했으며, `/report`와 공개 브리핑은 시스템 기본 시장 지표 세트를 공통으로 사용합니다.
 
 ### 5. 종목 마스터 CSV 적재
 

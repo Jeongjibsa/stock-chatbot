@@ -1,7 +1,7 @@
 import { DAILY_REPORT_JOB_NAME, REPORT_QUEUE_NAME } from "@stock-chatbot/application";
 
-export const DAILY_REPORT_SCHEDULER_ID = "daily-report-9am";
-export const DEFAULT_DAILY_REPORT_PATTERN = "0 0 9 * * *";
+export const DAILY_REPORT_SCHEDULER_ID = "daily-report-8am";
+export const DEFAULT_DAILY_REPORT_PATTERN = "0 0 8 * * *";
 export const DEFAULT_REPORT_TIMEZONE = "Asia/Seoul";
 
 type Environment = Record<string, string | undefined>;

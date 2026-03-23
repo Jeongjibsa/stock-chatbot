@@ -35,7 +35,7 @@
 | Phase 0 | 문서 기준선과 운영 방식 확정 | done |
 | Phase 1 | 저장소/런타임 기본 구조 구축 | done |
 | Phase 2 | 사용자/포트폴리오/지표 도메인 구현 | done |
-| Phase 3 | 오전 9시 일 배치 리포트 파이프라인 구현 | done |
+| Phase 3 | 오전 8시 일 배치 리포트 파이프라인 구현 | done |
 | Phase 4 | 뉴스 요약 및 퀀트 전략 엔진 구현 | done |
 | Phase 5 | GitHub Actions 기반 CI/스케줄 운영 자동화 구축 | done |
 | Phase 6 | 멀티채널 확장 준비 | done |
@@ -78,7 +78,7 @@
 ### Phase 3. Daily Scheduled Report Pipeline
 
 - [x] 시장 데이터 수집 어댑터 구현
-- [x] 오전 9시 스케줄 트리거 구현
+- [x] 오전 8시 스케줄 트리거 구현
 - [x] 일 배치 보고서 실행 orchestration 구현
 - [x] provider-agnostic LLM client interface 및 OpenAI adapter 초안 구현
 - [x] 중복 실행 방지 및 재시도 규칙 구현
@@ -162,7 +162,7 @@
 - [x] Telegram `/report`를 개인화 리밸런싱 브리핑 템플릿으로 재편
 - [x] 공개 웹 브리핑을 public-market 전용 구조로 분리
 - [x] Telegram DM home reply keyboard 및 settings inline keyboard 추가
-- [x] Telegram `/report`에 `portfolioRebalancing` payload를 실제 런타임으로 연결하고 `REPORT_RUN_DATE` 기준일 override를 지원
+- [x] Telegram `/report`에 `portfolioRebalancing` payload를 실제 런타임으로 연결하고 worker/manual backfill용 `REPORT_RUN_DATE` override를 유지
 
 ## 5. Immediate Next Work
 
@@ -193,7 +193,7 @@
 - 2026-03-20: Telegram bot에 in-memory 대화 상태 저장소와 command별 상태 전이 구조, unit 테스트 추가 완료
 - 2026-03-20: provider-agnostic LLM client interface와 OpenAI adapter 초안, unit 테스트, OpenAI SDK 의존성 및 env 템플릿 추가 완료
 - 2026-03-20: FRED 기반 시장 데이터 어댑터와 source key 매핑, partial failure 처리, unit 테스트, FRED env 템플릿 추가 완료
-- 2026-03-20: BullMQ job scheduler 기반 오전 9시 daily report 트리거와 env 기반 패턴/타임존 설정, unit 테스트 추가 완료
+- 2026-03-20: BullMQ job scheduler 기반 오전 8시 daily report 트리거와 env 기반 패턴/타임존 설정, unit 테스트 추가 완료
 - 2026-03-20: daily report orchestrator, report run log 저장 구조, 텔레그램 렌더러, 중복 실행 방지, partial failure 규칙, worker 수직 slice 연결, unit/integration 테스트 추가 완료
 - 2026-03-20: Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진, worker 뉴스 연동 추가 완료
 - 2026-03-20: harness fixture 포맷, 일 배치/뉴스/퀀트/report 샘플 fixture, grader 기준, snapshot 비교 스크립트, verify 연동, prompt/skill version 기록 연결 완료
@@ -246,8 +246,9 @@
 - 2026-03-22: Telegram `/report`를 `오늘의 포트폴리오 리밸런싱 브리핑` 구조로 재편하고, optional `portfolioRebalancing` payload contract, 종목별 리밸런싱 가이드, 시장 레짐 요약, 성향별 해석 fallback을 코드 기준선으로 반영
 - 2026-03-22: 공개 웹 브리핑을 `오늘의 시장 브리핑` 구조로 재편하고, 개인 포트 용어를 renderer 단계에서 배제하도록 public builder/markdown/html renderer를 동기화
 - 2026-03-22: Telegram DM에 home reply keyboard와 settings inline keyboard를 추가하고, `/start`, `/help`, `/register`, `/report_settings` 이후 버튼 기반 탐색을 지원하면서 기존 slash command semantics를 유지
-- 2026-03-22: Telegram `/report`가 실제 runtime에서 `portfolioRebalancing` payload를 renderer/prompt까지 전달하도록 오케스트레이터와 report service를 연결하고, `REPORT_RUN_DATE=2026-03-20` override로 synthetic bot update 기준 실데이터 브리핑 재현을 확인
-- 2026-03-22: Telegram `/report`와 공개 브리핑이 서울 기준 `공통 마감일(effective report date)`을 사용하도록 오케스트레이터/public builder를 정렬하고, `personal_rebalancing_snapshots` JSONB cache를 추가해 `user_id + effective_report_date` 기준 snapshot reuse와 90일 retention cleanup을 구현
+- 2026-03-22: Telegram `/report`가 실제 runtime에서 `portfolioRebalancing` payload를 renderer/prompt까지 전달하도록 오케스트레이터와 report service를 연결하고, worker/manual backfill 경로에서 `REPORT_RUN_DATE=2026-03-20` override로 실데이터 재현을 확인
+- 2026-03-22: `personal_rebalancing_snapshots` JSONB cache를 추가해 개인화 리밸런싱 payload를 날짜별로 재사용하도록 구현
+- 2026-03-23: 정기 실행 시각을 `Asia/Seoul 오전 8시`로 앞당기고, Telegram `/report`와 공개 브리핑 날짜를 다시 `요청일(KST)` 기준으로 정렬했으며, Vercel cron/reconcile이 공개 브리핑 생성까지 함께 수행하도록 보강
 - 2026-03-22: Telegram 설정 UI를 `브리핑 켜기 / 브리핑 끄기 / 시간 변경`만 남기도록 단순화하고, webhook/register 경로의 `allowed_updates`에 `callback_query`를 추가해 inline button이 실제로 동작하도록 복구
 - 2026-03-22: 관심 지표 개인화는 deprecated 처리하고 `/report`와 공개 브리핑을 시스템 기본 시장 지표 세트 기준으로 통일했으며, 홈 keyboard에서 `📈 관심 지표`를 제거하고 `/market_add`, `/market_items`, `/report_mode`, `/report_link_*`는 deprecation 응답으로 정리
 - 2026-03-22: 공개 `reports` read model에 `indicator_tags`를 추가하고, public feed/detail 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했으며, 공개 적재 경로를 `report_date` 기준 latest-upsert + feed date dedupe 구조로 조정

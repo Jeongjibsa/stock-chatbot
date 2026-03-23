@@ -459,7 +459,7 @@ export function buildTelegramBotApp(
     const parsedTime = parseReportTimeArgument(context.match);
 
     if (!parsedTime) {
-      await context.reply("사용 예시: /report_time 09:00");
+      await context.reply("사용 예시: /report_time 08:00");
       return;
     }
 

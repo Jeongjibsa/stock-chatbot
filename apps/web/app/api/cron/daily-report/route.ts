@@ -1,4 +1,5 @@
 import { runDailyReport } from "@stock-chatbot/worker/run-daily-report";
+import { runPublicBriefing } from "@stock-chatbot/worker/run-public-briefing";
 import { isAuthorizedCronRequest } from "../../../../lib/cron-auth";
 
 export const dynamic = "force-dynamic";
@@ -28,14 +29,20 @@ export async function GET(request: Request) {
     });
   }
 
+  const runtimeEnv = readCronRuntimeEnvironment(new URL(request.url).origin);
   const summary = await runDailyReport({
-    ...readCronRuntimeEnvironment(new URL(request.url).origin),
+    ...runtimeEnv,
+    REPORT_TRIGGER_TYPE: "schedule"
+  });
+  const publicBriefing = await runPublicBriefing({
+    ...runtimeEnv,
     REPORT_TRIGGER_TYPE: "schedule"
   });
 
   return Response.json({
     ok: true,
     mode: "vercel-cron-primary",
-    summary
+    summary,
+    publicBriefing
   });
 }

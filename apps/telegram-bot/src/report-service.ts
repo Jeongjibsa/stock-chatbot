@@ -195,18 +195,12 @@ export function getRunDateForTimezone(
 }
 
 export function resolveTelegramReportRunDate(
-  env: Environment = process.env,
+  _env: Environment = process.env,
   options?: {
     now?: Date;
     timeZone?: string;
   }
 ): string {
-  const override = env.REPORT_RUN_DATE?.trim();
-
-  if (override && /^\d{4}-\d{2}-\d{2}$/.test(override)) {
-    return override;
-  }
-
   return getRunDateForTimezone(options?.timeZone ?? "Asia/Seoul", options?.now);
 }
 

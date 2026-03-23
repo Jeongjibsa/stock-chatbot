@@ -103,7 +103,7 @@ export class UserRepository {
       locale: input.locale ?? "ko-KR",
       timezone: input.timezone ?? "Asia/Seoul",
       dailyReportEnabled: input.dailyReportEnabled ?? true,
-      dailyReportHour: input.dailyReportHour ?? 9,
+      dailyReportHour: input.dailyReportHour ?? 8,
       dailyReportMinute: input.dailyReportMinute ?? 0,
       reportDetailLevel: input.reportDetailLevel ?? "standard",
       includePublicBriefingLink: input.includePublicBriefingLink ?? true,
@@ -128,7 +128,7 @@ export class UserRepository {
         locale: input.locale ?? "ko-KR",
         timezone: input.timezone ?? "Asia/Seoul",
         dailyReportEnabled: input.dailyReportEnabled ?? true,
-        dailyReportHour: input.dailyReportHour ?? 9,
+        dailyReportHour: input.dailyReportHour ?? 8,
         dailyReportMinute: input.dailyReportMinute ?? 0,
         reportDetailLevel: input.reportDetailLevel ?? "standard",
         includePublicBriefingLink: input.includePublicBriefingLink ?? true

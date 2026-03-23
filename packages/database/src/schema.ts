@@ -21,7 +21,7 @@ export const users = pgTable("users", {
   locale: text("locale").notNull().default("ko-KR"),
   timezone: text("timezone").notNull().default("Asia/Seoul"),
   dailyReportEnabled: boolean("daily_report_enabled").notNull().default(true),
-  dailyReportHour: integer("daily_report_hour").notNull().default(9),
+  dailyReportHour: integer("daily_report_hour").notNull().default(8),
   dailyReportMinute: integer("daily_report_minute").notNull().default(0),
   reportDetailLevel: text("report_detail_level").notNull().default("standard"),
   includePublicBriefingLink: boolean("include_public_briefing_link")

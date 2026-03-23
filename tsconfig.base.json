@@ -21,7 +21,8 @@
       "@stock-chatbot/core-types": ["packages/core-types/src/index.ts"],
       "@stock-chatbot/database": ["packages/database/src/index.ts"],
       "@stock-chatbot/telegram-bot/build-bot": ["apps/telegram-bot/src/build-bot.ts"],
-      "@stock-chatbot/worker/run-daily-report": ["apps/worker/src/run-daily-report.ts"]
+      "@stock-chatbot/worker/run-daily-report": ["apps/worker/src/run-daily-report.ts"],
+      "@stock-chatbot/worker/run-public-briefing": ["apps/worker/src/run-public-briefing.ts"]
     }
   }
 }

@@ -135,7 +135,7 @@ describe("processDailyReportJob", () => {
       now: new Date("2026-03-21T00:07:00.000Z"),
       orchestrator,
       runDate: "2026-03-21",
-      scheduleType: "daily-9am",
+      scheduleType: "daily-8am",
       scheduleWindowMinutes: 15,
       userRepository: {
         listUsers: vi.fn(async () => [
@@ -186,9 +186,31 @@ describe("processDailyReportJob", () => {
 
   it("reads runtime env defaults and required keys", () => {
     expect(readDatabaseUrl({})).toContain("postgresql://");
-    expect(readRunDate({ REPORT_RUN_DATE: "2026-03-20" })).toBe("2026-03-20");
+    expect(
+      readRunDate(
+        {
+          REPORT_RUN_DATE: "2026-03-20",
+          REPORT_TRIGGER_TYPE: "schedule",
+          REPORT_TIMEZONE: "Asia/Seoul"
+        },
+        {
+          now: new Date("2026-03-22T16:00:00.000Z")
+        }
+      )
+    ).toBe("2026-03-23");
+    expect(
+      readRunDate(
+        {
+          REPORT_RUN_DATE: "2026-03-20",
+          REPORT_TRIGGER_TYPE: "workflow_dispatch"
+        },
+        {
+          now: new Date("2026-03-22T16:00:00.000Z")
+        }
+      )
+    ).toBe("2026-03-20");
     expect(readRunDate({ REPORT_RUN_DATE: "" })).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(readScheduleType({})).toBe("daily-9am");
+    expect(readScheduleType({})).toBe("daily-8am");
     expect(readScheduleType({ REPORT_TRIGGER_TYPE: "workflow_dispatch" })).toBe(
       "manual-dispatch"
     );

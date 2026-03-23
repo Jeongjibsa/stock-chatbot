@@ -8,8 +8,8 @@ import {
 
 describe("report-settings helpers", () => {
   it("parses valid HH:MM inputs", () => {
-    expect(parseReportTimeArgument("09:00")).toEqual({
-      hour: 9,
+    expect(parseReportTimeArgument("08:00")).toEqual({
+      hour: 8,
       minute: 0
     });
     expect(parseReportTimeArgument("21:15")).toEqual({
@@ -36,6 +36,6 @@ describe("report-settings helpers", () => {
     ).toContain("21:15");
     expect(formatReportSettings({})).not.toContain("compact");
     expect(formatReportSettings({})).not.toContain("상세 링크");
-    expect(formatHourMinute(9, 0)).toBe("09:00");
+    expect(formatHourMinute(8, 0)).toBe("08:00");
   });
 });

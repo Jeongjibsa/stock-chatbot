@@ -52,7 +52,7 @@ describeIntegration("StrategySnapshotRepository integration", () => {
     const run = await reportRunRepository.startRun({
       userId: user.id,
       runDate: "2026-03-21",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     const inserted = await repository.insertMany([
@@ -60,7 +60,7 @@ describeIntegration("StrategySnapshotRepository integration", () => {
         reportRunId: run.run.id,
         userId: user.id,
         runDate: "2026-03-21",
-        scheduleType: "daily-9am",
+        scheduleType: "daily-8am",
         companyName: "삼성전자",
         exchange: "KR",
         symbol: "005930",

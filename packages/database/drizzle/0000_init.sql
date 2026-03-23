@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS "users" (
   "locale" text DEFAULT 'ko-KR' NOT NULL,
   "timezone" text DEFAULT 'Asia/Seoul' NOT NULL,
   "daily_report_enabled" boolean DEFAULT true NOT NULL,
-  "daily_report_hour" integer DEFAULT 9 NOT NULL,
+  "daily_report_hour" integer DEFAULT 8 NOT NULL,
   "daily_report_minute" integer DEFAULT 0 NOT NULL,
   "report_detail_level" text DEFAULT 'standard' NOT NULL,
   "include_public_briefing_link" boolean DEFAULT true NOT NULL,
@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS "users" (
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_id" text;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "preferred_delivery_chat_type" text;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_enabled" boolean DEFAULT true NOT NULL;
-ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_hour" integer DEFAULT 9 NOT NULL;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_hour" integer DEFAULT 8 NOT NULL;
+ALTER TABLE "users" ALTER COLUMN "daily_report_hour" SET DEFAULT 8;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "daily_report_minute" integer DEFAULT 0 NOT NULL;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "report_detail_level" text DEFAULT 'standard' NOT NULL;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "include_public_briefing_link" boolean DEFAULT true NOT NULL;

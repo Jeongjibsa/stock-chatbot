@@ -272,11 +272,10 @@ export class DailyReportOrchestrator {
         portfolioNewsBriefs
       });
       const quantScenarios = toQuantStrategyBullets(quantScorecards);
-      const effectiveDateResolution = resolveEffectiveReportDate({
+      const sessionDateResolution = resolveEffectiveReportDate({
         marketResults,
         requestedSeoulDate: input.runDate
       });
-      const effectiveReportDate = effectiveDateResolution.effectiveReportDate;
       const portfolioRebalancing = await this.resolvePortfolioRebalancing({
         holdings: holdings.map((holding) => {
           const snapshot = holdingSnapshots.get(holding.symbol);
@@ -303,7 +302,14 @@ export class DailyReportOrchestrator {
         ...(input.portfolioRebalancing
           ? { provided: input.portfolioRebalancing }
           : {}),
-        ...effectiveDateResolution
+        effectiveReportDate: input.runDate,
+        requestedSeoulDate: input.runDate,
+        ...(sessionDateResolution.krSessionDate
+          ? { krSessionDate: sessionDateResolution.krSessionDate }
+          : {}),
+        ...(sessionDateResolution.usSessionDate
+          ? { usSessionDate: sessionDateResolution.usSessionDate }
+          : {})
       });
       let strategySnapshotError: string | undefined;
 
@@ -386,7 +392,7 @@ export class DailyReportOrchestrator {
             quantScorecards,
             quantScenarios,
             riskCheckpoints: [],
-            runDate: effectiveReportDate
+            runDate: input.runDate
           });
         } catch (error) {
           compositionError =
@@ -404,7 +410,7 @@ export class DailyReportOrchestrator {
       );
       const renderInput: Parameters<typeof renderTelegramDailyReport>[0] = {
         displayName: input.user.displayName,
-        runDate: effectiveReportDate,
+        runDate: input.runDate,
         holdings: holdings.map((holding) => {
           const snapshot = holdingSnapshots.get(holding.symbol);
 
@@ -496,7 +502,7 @@ export class DailyReportOrchestrator {
         input.user.includePublicBriefingLink !== false
       ) {
         const latestPublicReport = await this.dependencies.publicReportRepository?.findLatestByReportDate(
-          effectiveReportDate
+          input.runDate
         );
 
         renderInput.publicBriefingUrl = latestPublicReport
@@ -506,7 +512,7 @@ export class DailyReportOrchestrator {
             )
           : buildPublicBriefingUrl(
               this.dependencies.publicBriefingBaseUrl,
-              effectiveReportDate
+              input.runDate
             );
       }
 

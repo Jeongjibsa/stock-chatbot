@@ -1,4 +1,5 @@
 import { runDailyReport } from "@stock-chatbot/worker/run-daily-report";
+import { runPublicBriefing } from "@stock-chatbot/worker/run-public-briefing";
 import { isAuthorizedCronRequest } from "../../../../lib/cron-auth";
 
 export const dynamic = "force-dynamic";
@@ -30,15 +31,22 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const reportRunDate = url.searchParams.get("reportRunDate")?.trim();
-  const summary = await runDailyReport({
+  const runtimeEnv = {
     ...readCronRuntimeEnvironment(url.origin),
     REPORT_RUN_DATE: reportRunDate,
-    REPORT_TRIGGER_TYPE: "workflow_dispatch"
+    REPORT_TRIGGER_TYPE: "workflow_dispatch" as const
+  };
+  const summary = await runDailyReport({
+    ...runtimeEnv
+  });
+  const publicBriefing = await runPublicBriefing({
+    ...runtimeEnv
   });
 
   return Response.json({
     ok: true,
     mode: "github-actions-reconcile",
-    summary
+    summary,
+    publicBriefing
   });
 }

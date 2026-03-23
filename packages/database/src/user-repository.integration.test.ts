@@ -46,7 +46,7 @@ describeIntegration("UserRepository integration", () => {
     expect(user.locale).toBe("ko-KR");
     expect(user.preferredDeliveryChatId).toBe("chat-1001");
     expect(user.dailyReportEnabled).toBe(true);
-    expect(user.dailyReportHour).toBe(9);
+    expect(user.dailyReportHour).toBe(8);
     expect(user.dailyReportMinute).toBe(0);
   });
 

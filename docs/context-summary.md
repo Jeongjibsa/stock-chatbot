@@ -29,7 +29,7 @@
 ## 4. Current Product Baseline
 
 - 제품은 개인화된 주식 리포트를 제공하는 서비스다.
-- 현재 MVP는 텔레그램 기반이며, 매일 오전 9시에 한 번 자동 리포트를 발송한다.
+- 현재 MVP는 텔레그램 기반이며, 매일 오전 8시에 한 번 자동 리포트를 발송한다.
 - 현재 구현 기준으로는 DM에서 온디맨드 `/report`도 지원한다.
 - MVP 전달 채널은 `텔레그램 요약본 + 공개 웹 frontend`의 이중 구조다.
 - 사용자 포트폴리오와 사용자별 시장 지표를 저장하고, 이를 바탕으로 시장 요약, 뉴스 요약, 퀀트 기반 시나리오를 생성한다.
@@ -78,7 +78,7 @@
 - `주요 지표 변동 요약`과 `면책 문구`는 항상 출력되며, 현재 mock preview에는 중동 이란 전쟁 이슈를 당일 거시 이슈 예시로 포함한다.
 - 텔레그램 리포트 전체 문체는 존댓말로 통일됐고, 면책 문구는 별도 헤더 없이 `❗` 한 줄 형식으로 출력된다.
 - GitHub Actions schedule은 UTC cron과 기본 브랜치 기준으로 설계해야 하며, 정시 지연 가능성을 전제로 idempotency와 지연 허용 규칙을 함께 둔다.
-- worker에는 BullMQ job scheduler 기반 오전 9시 트리거와 env 기반 패턴/타임존 설정이 추가됐다.
+- worker에는 BullMQ job scheduler 기반 오전 8시 트리거와 env 기반 패턴/타임존 설정이 추가됐다.
 - worker에는 뉴스 brief 연동과 prompt/skill version 기록 연결이 추가됐다.
 - FRED market data는 series 매핑 점검 기준을 문서화했고, `USD/KRW`는 `DEXKOUS`, 달러 강도 proxy는 `DTWEXBGS`를 기준으로 해석한다.
 - application 계층에는 텔레그램 템플릿 구조와 직접 매핑되는 일 리포트 prompt v2와 `DailyReportCompositionService`가 추가됐다.
@@ -124,7 +124,7 @@
 - worker summary 로그에는 `delivered`, `deliverySkipped`, `deliveryFailed` 집계가 추가됐다.
 - 현재 공개 브리핑에는 GitHub Pages fallback 경로가 있으나, primary public web은 `Vercel + Next.js App Router + reports read model` 기준으로 이미 전환 구현됐다.
 - database 계층에는 공개 브리핑용 `reports` 읽기 모델이 추가됐다. 이 테이블은 `report_date`, `summary`, `market_regime`, `total_score`, `signals`, `indicator_tags`, `content_markdown`, `created_at`을 저장하고, 공개 웹 feed/detail의 조회 모델로만 사용한다.
-- database 계층에는 `personal_rebalancing_snapshots` read model이 추가됐다. 이 테이블은 `user_id + effective_report_date + snapshot_version` 키로 개인화 리밸런싱 payload JSONB를 저장하고, Telegram `/report`가 같은 공통 마감일에 재사용하는 source-of-truth cache 역할을 한다.
+- database 계층에는 `personal_rebalancing_snapshots` read model이 추가됐다. 이 테이블은 `user_id + effective_report_date + snapshot_version` 키로 개인화 리밸런싱 payload JSONB를 저장하고, 현재는 요청일(KST) 기준 날짜별 cache로 사용된다.
 - `run-public-briefing`은 이제 공개 브리핑 JSON 파일만 만드는 것이 아니라, `DATABASE_URL`이 설정된 경우 공개 가능한 브리핑을 `reports`에도 저장한다.
 - 공개 웹에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 텔레그램 메시지 하단 상세 링크는 `reports`에서 같은 날짜의 최신 공개 report를 조회해 새 공개 웹의 `/reports/[id]` 경로를 우선 사용한다. 조회 실패 시 기존 `/briefings/YYYY-MM-DD/` fallback 링크를 계속 사용할 수 있다.
@@ -175,7 +175,7 @@
 - telegram-bot에는 command별 in-memory 대화 상태 저장소와 상태 전이 로직이 추가됐다.
 - telegram-bot에는 `/mock_report` 예시 명령이 추가됐다.
 - api에는 `/v1/reports/:userId/latest`, `/v1/reports/:userId/history`, `/v1/mock/telegram/daily-report` 초안이 추가됐다.
-- `Phase 3`은 오전 9시 일 배치 리포트 파이프라인 구현이다.
+- `Phase 3`은 오전 8시 일 배치 리포트 파이프라인 구현이다.
 - `Phase 4`는 뉴스 요약 및 퀀트 전략 엔진 구현 단계였고 현재 완료됐다.
 - `Phase 5`는 하네스, 평가, 운영 자동화 구축 단계이며 fixture, grader, snapshot 비교 흐름이 이미 들어갔다.
 - 하네스는 이제 `harness/suite-contracts.json` 기준의 suite 계약 구조를 사용한다. active/planned suite 상태, 필수 expected key, grader 존재성, snapshot 요구사항을 검증 스크립트에서 기계적으로 강제한다.
@@ -185,11 +185,11 @@
 - Telegram `/report` 최종 템플릿은 이제 `오늘의 포트폴리오 리밸런싱 브리핑 -> 오늘 한 줄 결론 -> 오늘의 리밸런싱 제안 -> 성향별 해석 -> 시장 레짐 요약 -> 종목별 리밸런싱 가이드` 구조를 사용한다.
 - `packages/application/src/rebalancing-contract.ts`가 개인화 리밸런싱 payload의 현재 source-of-truth contract다. runtime payload에 rich score가 없으면 renderer는 `확인 필요 / 점검 필요 / 데이터 보강 필요` fallback을 사용한다.
 - 실제 `/report` 경로에서 rich 3대 관점이 보이려면 `portfolioRebalancing` payload가 오케스트레이터 입력까지 들어와야 하며, 2026-03-22 기준으로 `DailyReportOrchestrator`와 `TelegramReportService`가 이 payload를 renderer/prompt까지 전달하도록 연결됐다.
-- Telegram `/report`와 공개 브리핑의 제목 날짜는 요청일이 아니라 서울 기준 `공통 마감일(effective report date)`을 사용한다. 국장과 미장의 대표 지표에서 확인된 최신 마감일을 각각 구한 뒤 더 이른 날짜를 공통 기준일로 사용한다.
+- Telegram `/report`와 공개 브리핑의 제목 날짜는 요청 시점의 서울 날짜를 사용한다. 시장 데이터는 해당 날짜 이전 마지막 가용 거래일로 fallback하지만, 사용자에게 보이는 리포트 날짜와 공개 `report_date`는 요청일(KST) 기준을 유지한다.
 - Telegram `/report`는 이제 사용자별 `portfolioRebalancing` payload가 외부에서 직접 들어오지 않아도, 현재 보유 종목/시장 데이터/퀀트 점수카드로 fallback snapshot을 만들어 `personal_rebalancing_snapshots` cache에 저장한 뒤 새 리밸런싱 템플릿을 렌더링한다.
 - Telegram `/report`는 예외가 나더라도 `report_runs`를 `failed`로 정리해 stale `running` 상태를 남기면 안 된다. optional read model(`personal_rebalancing_snapshots`, `reports.indicator_tags`)이 아직 반영되지 않은 환경에서도 개인화 `/report`와 공개 feed 읽기 경로는 graceful fallback으로 계속 응답해야 한다.
 - 공개 웹 feed/detail의 우상단 태그는 더 이상 `market_regime + total_score` badge를 사용하지 않는다. 대신 `KOSPI`, `KOSDAQ`, `S&P500`, `NASDAQ`의 indicator chip을 `indicator_tags` 컬럼에서 읽어 보여준다.
-- Telegram command runtime은 `REPORT_RUN_DATE` env가 있으면 `/report` 기준일을 해당 날짜로 고정한다. 이 경로는 historical market fetch와 함께 특정 거래일 실데이터 재현에 사용한다.
+- `REPORT_RUN_DATE` override는 worker/manual backfill에만 사용하고, Telegram command runtime `/report`는 항상 현재 서울 날짜를 사용한다.
 - 공개 웹 브리핑은 `오늘의 시장 브리핑` 구조로 분리됐고, 개인 포트 용어와 action language는 renderer 단계에서 제외된다.
 - Telegram DM에는 홈 reply keyboard(`📊 브리핑 보기`, `➕ 종목 추가`, `📁 내 종목`, `⚙️ 설정`)와 설정 inline keyboard가 추가됐다. 기존 slash command semantics는 유지한다.
 - Telegram DM `/register`는 같은 private chat에 이미 등록된 사용자를 감지하면 중복 등록 대신 `/report`, `/portfolio_list`, `/unregister` 다음 단계를 안내한다.

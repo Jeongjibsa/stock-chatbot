@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 
 import {
   buildPublicDailyBriefing,
-  resolveEffectiveReportDate,
   buildRuleBasedBriefing,
   buildQuantScorecards,
   CompositeMarketDataAdapter,
@@ -67,10 +66,6 @@ export async function buildPublicBriefing(
         sourceKey: item.sourceKey
       }))
   );
-  const dateResolution = resolveEffectiveReportDate({
-    marketResults,
-    requestedSeoulDate: dependencies.runDate
-  });
 
   const quantScorecards = buildQuantScorecards({
     holdings: [],
@@ -86,11 +81,11 @@ export async function buildPublicBriefing(
         audience: "public_web",
         holdings: [],
         marketResults,
-    newsBriefs: [],
+        newsBriefs: [],
         quantScorecards,
         quantScenarios,
         riskCheckpoints: [],
-        runDate: dateResolution.effectiveReportDate
+        runDate: dependencies.runDate
       });
     } catch (error) {
       console.warn(
@@ -103,7 +98,7 @@ export async function buildPublicBriefing(
   const fallbackBriefing = buildRuleBasedBriefing(marketResults);
 
   return buildPublicDailyBriefing({
-    runDate: dateResolution.effectiveReportDate,
+    runDate: dependencies.runDate,
     summaryLine:
       composition?.oneLineSummary ??
       fallbackBriefing.summaryLine,

@@ -50,12 +50,12 @@ describeIntegration("ReportRunRepository integration", () => {
     const first = await repository.startRun({
       userId: user.id,
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
     const second = await repository.startRun({
       userId: user.id,
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     expect(first.created).toBe(true);
@@ -71,7 +71,7 @@ describeIntegration("ReportRunRepository integration", () => {
     const run = await repository.startRun({
       userId: user.id,
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     const completed = await repository.completeRun({

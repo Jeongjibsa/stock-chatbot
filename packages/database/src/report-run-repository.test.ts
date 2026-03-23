@@ -44,7 +44,7 @@ describe("ReportRunRepository", () => {
         id: "run-1",
         userId: "user-1",
         runDate: "2026-03-20",
-        scheduleType: "daily-9am",
+        scheduleType: "daily-8am",
         status: "running"
       }
     ];
@@ -54,7 +54,7 @@ describe("ReportRunRepository", () => {
       repository.startRun({
         userId: "user-1",
         runDate: "2026-03-20",
-        scheduleType: "daily-9am"
+        scheduleType: "daily-8am"
       })
     ).resolves.toMatchObject({
       created: true,
@@ -72,7 +72,7 @@ describe("ReportRunRepository", () => {
     const promise = repository.startRun({
       userId: "user-1",
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     state.result = [
@@ -80,7 +80,7 @@ describe("ReportRunRepository", () => {
         id: "run-1",
         userId: "user-1",
         runDate: "2026-03-20",
-        scheduleType: "daily-9am",
+        scheduleType: "daily-8am",
         status: "completed"
       }
     ];

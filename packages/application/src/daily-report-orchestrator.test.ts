@@ -93,7 +93,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     expect(result.status).toBe("partial_success");
@@ -143,7 +143,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     expect(result.status).toBe("skipped_duplicate");
@@ -425,7 +425,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     expect(result.status).toBe("completed");
@@ -607,7 +607,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-21",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     expect(strategySnapshotRepository.insertMany).toHaveBeenCalledWith([
@@ -661,7 +661,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-21",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     expect(result.status).toBe("partial_success");
@@ -713,7 +713,7 @@ describe("DailyReportOrchestrator", () => {
         displayName: "Jisung"
       },
       runDate: "2026-03-20",
-      scheduleType: "daily-9am"
+      scheduleType: "daily-8am"
     });
 
     expect(result.reportText).toContain(
@@ -721,7 +721,7 @@ describe("DailyReportOrchestrator", () => {
     );
   });
 
-  it("uses the effective common close date for rendering and snapshot lookup", async () => {
+  it("uses the requested run date for rendering and snapshot lookup", async () => {
     const personalSnapshotRepository = {
       findByUserAndEffectiveDate: vi.fn(async () => ({
         payload: {
@@ -805,9 +805,9 @@ describe("DailyReportOrchestrator", () => {
 
     expect(personalSnapshotRepository.findByUserAndEffectiveDate).toHaveBeenCalledWith({
       userId: "user-1",
-      effectiveReportDate: "2026-03-20",
+      effectiveReportDate: "2026-03-22",
       snapshotVersion: "v2"
     });
-    expect(result.reportText).toContain("오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-20)");
+    expect(result.reportText).toContain("오늘의 포트폴리오 리밸런싱 브리핑 (2026-03-22)");
   });
 });

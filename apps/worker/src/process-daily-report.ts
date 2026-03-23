@@ -84,7 +84,7 @@ export type DailyReportJobSummary = {
   userCount: number;
 };
 
-export type DailyReportScheduleType = "daily-9am" | "manual-dispatch";
+export type DailyReportScheduleType = "daily-8am" | "manual-dispatch";
 
 type SchedulableUser = Awaited<ReturnType<UserRepositoryPort["listUsers"]>>[number];
 
@@ -148,14 +148,23 @@ export function readLlmProvider(
   return undefined;
 }
 
-export function readRunDate(env: Environment = process.env): string {
+export function readRunDate(
+  env: Environment = process.env,
+  options?: {
+    now?: Date;
+    timeZone?: string;
+  }
+): string {
   const runDate = env.REPORT_RUN_DATE?.trim();
 
-  if (runDate) {
+  if (runDate && env.REPORT_TRIGGER_TYPE !== "schedule") {
     return runDate;
   }
 
-  return new Date().toISOString().slice(0, 10);
+  return getRunDateForTimezone(
+    options?.timeZone ?? env.REPORT_TIMEZONE ?? "Asia/Seoul",
+    options?.now
+  );
 }
 
 export function readPublicBriefingBaseUrl(
@@ -175,7 +184,7 @@ export function readScheduleType(
 ): DailyReportScheduleType {
   return env.REPORT_TRIGGER_TYPE === "workflow_dispatch"
     ? "manual-dispatch"
-    : "daily-9am";
+    : "daily-8am";
 }
 
 export function readScheduleWindowMinutes(
@@ -206,7 +215,7 @@ export function isUserDueForScheduledReport(input: {
   }
 
   const timeZone = input.user.timezone ?? "Asia/Seoul";
-  const dueHour = input.user.dailyReportHour ?? 9;
+  const dueHour = input.user.dailyReportHour ?? 8;
   const dueMinute = input.user.dailyReportMinute ?? 0;
   const windowMinutes = input.windowMinutes ?? 15;
   const formatter = new Intl.DateTimeFormat("en-GB", {
@@ -256,7 +265,7 @@ export async function processDailyReportJob(
   };
   const now = dependencies.now ?? new Date();
   const usersToProcess =
-    dependencies.scheduleType === "daily-9am"
+    dependencies.scheduleType === "daily-8am"
       ? users.filter((user) => {
           const due = isUserDueForScheduledReport(
             dependencies.scheduleWindowMinutes === undefined
@@ -346,6 +355,18 @@ export async function processDailyReportJob(
   }
 
   return summary;
+}
+
+function getRunDateForTimezone(
+  timeZone: string,
+  now: Date = new Date()
+): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(now);
 }
 
 export function buildDailyReportJobProcessor(env: Environment = process.env): () => Promise<DailyReportJobSummary> {
