@@ -733,6 +733,53 @@ describe("DailyReportOrchestrator", () => {
     );
   });
 
+  it("does not append a legacy date-based public link when a report row is missing", async () => {
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [])
+      },
+      publicBriefingBaseUrl: "https://web-three-tau-58.vercel.app/",
+      publicReportRepository: {
+        findLatestByReportDateAndSession: vi.fn(async () => null),
+        findLatestByReportDate: vi.fn(async () => null)
+      },
+      reportRunRepository: {
+        startRun: vi.fn(async () => ({
+          created: true,
+          run: {
+            id: "run-4",
+            status: "running"
+          }
+        })),
+        completeRun: vi.fn(async (input) => ({
+          id: input.id,
+          status: input.status,
+          reportText: input.reportText,
+          errorMessage: input.errorMessage
+        }))
+      },
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      runDate: "2026-03-24",
+      scheduleType: "telegram-report"
+    });
+
+    expect(result.reportText).not.toContain("/briefings/2026-03-24/");
+    expect(result.reportText).toContain("7. 🔎 참고용 공개 프리마켓 브리핑");
+    expect(result.reportText).toContain("확인 필요");
+  });
+
   it("uses the requested run date for rendering and snapshot lookup", async () => {
     const personalSnapshotRepository = {
       findByUserAndEffectiveDate: vi.fn(async () => ({

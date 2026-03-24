@@ -108,7 +108,7 @@
 - [x] 스냅샷 비교 흐름 구축
 - [x] prompt/skill 버전 기록 체계 구축
 - [x] GitHub Actions CI workflow 정의
-- [x] GitHub Actions scheduled workflow 정의
+- [x] GitHub Actions manual reconcile workflow 정의
 - [x] GitHub Actions `workflow_dispatch` 수동 실행 경로 정의
 - [x] GitHub Actions secret/env 주입 규칙 정의
 - [x] GitHub Actions `workflow_dispatch` 기반 Gemini daily report smoke workflow와 seeded mock portfolio 검증 경로 정의
@@ -146,7 +146,7 @@
 - [x] `apps/telegram-bot` command 처리 로직을 webhook-compatible service로 이동
 - [x] Telegram `setWebhook` 등록/갱신 및 smoke 검증 경로 정의
 - [x] Vercel Cron을 primary daily scheduler로 전환
-- [x] GitHub Actions `Daily Report`를 backup/reconcile/manual rerun 역할로 재편
+- [x] GitHub Actions `Daily Report`를 manual reconcile/manual rerun 역할로 재편
 - [x] 온디맨드 `/report` 요청 처리 추가
 - [x] 사용자별 예약 리포트 전송
 - [x] GitHub Actions에서 전용 worker/queue 인프라로 이관하는 기준 정의 및 전환
@@ -242,7 +242,7 @@
 - 2026-03-21: 개발 및 테스트는 로컬 Docker PostgreSQL 기준으로 유지하고, Neon은 최종 production 배포 시에만 연결하는 운영 원칙을 기준선으로 고정
 - 2026-03-21: `reports` 읽기 모델과 공개 브리핑 저장 경로를 추가하고, `apps/web`를 Next.js App Router 기반 공개 feed/detail 웹으로 전환했으며, Telegram 공개 상세 링크와 README를 새 공개 웹 기준으로 갱신
 - 2026-03-21: `apps/web`용 Vercel 배포 설정, Neon 친화적 웹 DB 연결 옵션, 웹 전용 env 예시, 배포 runbook을 추가하고 `PUBLIC_BRIEFING_BASE_URL` 운영 기준을 문서화
-- 2026-03-21: 사용자 수 10명 이하 조건을 전제로 Telegram command runtime을 Vercel webhook으로, daily report는 `Vercel Cron primary + GitHub Actions backup/reconcile` 하이브리드 구조로 전환하기로 결정하고 관련 Phase 7 작업을 최우선으로 재정렬
+- 2026-03-21: 사용자 수 10명 이하 조건을 전제로 Telegram command runtime을 Vercel webhook으로, daily report는 `Vercel Cron primary + GitHub Actions manual reconcile` 구조로 전환하기로 결정하고 관련 Phase 7 작업을 최우선으로 재정렬
 - 2026-03-21: `apps/web`에 `/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile` route를 추가하고, `apps/telegram-bot/src/build-bot.ts`를 polling/webhook 공용 command runtime entrypoint로 정리
 - 2026-03-21: `pnpm telegram:webhook:register` 기반 `setWebhook` 등록 절차를 추가하고, GitHub Actions `Daily Report`를 `VERCEL_RECONCILE_URL + CRON_SECRET` 기반 backup/reconcile 우선 구조로 재편
 - 2026-03-21: `apps/web`에 Basic Auth 기반 read-only `/admin` 운영 콘솔을 추가해 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그를 조회할 수 있게 하고 관련 env/runbook을 정리

@@ -107,8 +107,8 @@ button:not(:disabled),
   color: var(--foreground);
   display: grid;
   gap: 1rem;
-  font-size: 0.95rem;
-  line-height: 1.8;
+  font-size: 0.99rem;
+  line-height: 1.9;
 }
 
 .report-prose h1,
@@ -118,19 +118,24 @@ button:not(:disabled),
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.25;
-  margin-top: 0.4rem;
+  margin: 0;
+  text-wrap: balance;
 }
 
 .report-prose h1 {
-  font-size: 1.65rem;
+  font-size: 2rem;
+  letter-spacing: -0.04em;
+  padding-bottom: 0.95rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .report-prose h2 {
-  font-size: 1.18rem;
+  font-size: 1.24rem;
+  padding-top: 0.35rem;
 }
 
 .report-prose h3 {
-  font-size: 1.02rem;
+  font-size: 1.05rem;
 }
 
 .report-prose p,
@@ -145,7 +150,7 @@ button:not(:disabled),
 
 .report-prose hr {
   border-color: var(--line);
-  margin: 0.45rem 0 0.25rem;
+  margin: 0.4rem 0;
 }
 
 .report-prose strong {
@@ -154,6 +159,9 @@ button:not(:disabled),
 
 .report-prose ul {
   padding-left: 1.1rem;
+  margin: 0;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .report-prose li::marker {
@@ -165,6 +173,9 @@ button:not(:disabled),
   background: color-mix(in srgb, var(--surface-muted) 92%, white);
   border-radius: 1rem;
   padding: 1rem 1.15rem;
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.8;
 }
 
 .report-prose code {

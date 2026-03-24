@@ -49,7 +49,7 @@
 - Telegram/webhook/cron/public web/Neon production에 영향을 주는 변경은 로컬 검증으로 끝내지 않고 `commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E`까지 끝나야 완료로 본다.
 - GitHub public repository와 `origin/main` push 기준선이 준비됐다.
 - 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
-- 초기 운영은 GitHub Actions CI + scheduled workflow + workflow_dispatch를 우선 사용하고, 정확한 정시성이나 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
+- 초기 운영은 GitHub Actions CI + workflow_dispatch 기반 검증을 우선 사용했고, 정시 실행은 현재 Vercel Cron primary 기준으로 고정한다. 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
 - 저장소에는 GitHub Actions `CI`와 `Daily Report` workflow가 추가됐고, worker에는 queue 없이 직접 일 배치를 수행하는 daily report runner 엔트리포인트가 추가됐다.
 - GitHub Actions에는 `Daily Report Smoke` workflow가 추가됐고, GitHub-hosted runner 안에서 임시 PostgreSQL을 띄워 mock 사용자/포트폴리오를 seed한 뒤 Gemini 기반 daily report 생성 경로를 수동 검증할 수 있다.
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
@@ -132,12 +132,12 @@
 - 텔레그램 메시지 하단 상세 링크는 `reports`에서 같은 날짜의 최신 공개 report를 조회해 새 공개 웹의 `/reports/[id]` 경로를 우선 사용한다. 조회 실패 시 기존 `/briefings/YYYY-MM-DD/` fallback 링크를 계속 사용할 수 있다.
 - 공개 상세 브리핑 permalink는 canonical `/briefings/YYYY-MM-DD/`, archive `/briefings/YYYY/MM/DD/`를 함께 유지하고, 같은 `runDate` 재실행 시 동일 경로를 덮어쓰는 방식으로 idempotent하게 운영한다.
 - 공개 브리핑 build 스크립트는 legacy fallback용 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
-- GitHub Actions `Daily Report` workflow는 `public briefing build -> Pages deploy(fallback) -> daily report generate` 순서로 동작할 수 있으며, 생성된 텔레그램 본문은 `reports` 조회 성공 시 `PUBLIC_BRIEFING_BASE_URL + /reports/[id]` 링크를, 실패 시 legacy `/briefings/YYYY-MM-DD/` fallback 링크를 하단에 붙인다.
+- GitHub Actions `Daily Report` workflow는 `workflow_dispatch` 기준의 manual reconcile entrypoint다. 생성된 텔레그램 본문은 `reports` 조회 성공 시에만 `PUBLIC_BRIEFING_BASE_URL + /reports/[id]` 링크를 붙이고, 공개 row가 없으면 링크를 생략한다.
 - `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입하는 것을 기준으로 한다.
 - Vercel production build는 `apps/web`의 Next.js 패치 라인이 최신 보안 허용 범위 안에 있어야 하며, 현재 기준선은 `15.5.14`다.
 - `apps/web`의 cron/webhook route는 Next.js production runtime에서 env 누락을 피하기 위해 `process.env` 전체 spread 대신 허용된 runtime key를 명시적으로 추출해 worker/bot 계층에 전달한다.
 - GitHub Actions와 Telegram 링크가 새 공개 웹을 가리키도록 하려면 repository variable `PUBLIC_BRIEFING_BASE_URL`을 실제 Vercel 배포 URL로 맞춰야 한다.
-- 사용자 수 10명 이하 가정을 전제로 현재 런타임 기준선은 `Vercel webhook + Vercel Cron primary + GitHub Actions backup/reconcile`이다.
+- 사용자 수 10명 이하 가정을 전제로 현재 런타임 기준선은 `Vercel webhook + Vercel Cron primary + GitHub Actions manual reconcile`이다.
 - 현재 production public alias는 `https://web-three-tau-58.vercel.app`이고, direct deployment URL은 팀 정책에 따라 401이 걸릴 수 있으므로 Telegram webhook과 공개 링크는 alias를 기준으로 삼는다.
 - Neon production branch에는 baseline schema가 이미 적용됐고, Vercel production smoke 기준 `/` empty state, `/api/telegram/webhook` 200, `/api/cron/daily-report` 200, `/api/cron/reconcile` 200, `/admin` 401(Basic Auth gate)까지 확인됐다.
 - Telegram webhook은 이미 `https://web-three-tau-58.vercel.app/api/telegram/webhook`로 등록됐다.
@@ -152,7 +152,7 @@
 - Telegram webhook 경로는 이제 `telegram_processed_updates` 저장 모델로 `update_id`를 dedupe한다. 같은 Telegram update가 재전송돼도 command handler는 한 번만 실행돼야 한다.
 - Telegram bot runtime은 이제 outbound reply를 `telegram_outbound_messages`에 기록한다. 이 로그는 production-like E2E harness가 Telegram-visible 응답 문구를 검증하는 read model 역할을 하며, 운영 장애 분석에도 활용할 수 있다.
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
-- GitHub Actions `Daily Report`는 `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
+- GitHub Actions `Daily Report`는 `workflow_dispatch`로만 실행하며, `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
 - `apps/web`에는 Basic Auth 기반 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, Telegram user별 등록 상태/차단 상태/오늘 사용량을 조회하며 block/unblock 제어를 제공한다. `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
 - `/admin`의 사용자 차단 제어는 POST 후 같은 화면으로 redirect되며 결과 배너를 표시한다. 운영자 `telegram_user_id=8606362482`는 Telegram runtime뿐 아니라 admin route/UI에서도 보호되어 수동 block 대상에서 제외된다.
 - 공개 웹 feed/detail에는 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 들어간다.

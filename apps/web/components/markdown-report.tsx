@@ -39,8 +39,15 @@ export function MarkdownReport({ content }: MarkdownReportProps) {
         }}
         remarkPlugins={[remarkGfm]}
       >
-        {content}
+        {normalizeBriefingMarkdown(content)}
       </ReactMarkdown>
     </div>
   );
+}
+
+export function normalizeBriefingMarkdown(content: string): string {
+  return content
+    .replace(/^\d+\.\s+#\s+/gm, "# ")
+    .replace(/^\d+\.\s+❗\s+/gm, "> ❗ ")
+    .replace(/^\d+\.\s+(?!#)(?!>)(.+)$/gm, "## $1");
 }

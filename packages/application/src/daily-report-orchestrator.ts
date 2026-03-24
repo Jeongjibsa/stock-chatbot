@@ -15,7 +15,6 @@ import type { QuantScorecard } from "./quant-scorecard.js";
 import type { PersonalizedPortfolioRebalancingData } from "./rebalancing-contract.js";
 import { buildRuleBasedBriefing } from "./rule-based-briefing.js";
 import {
-  buildPublicBriefingUrl,
   buildPublicReportDetailUrl
 } from "./public-daily-briefing.js";
 import {
@@ -552,16 +551,12 @@ export class DailyReportOrchestrator {
               ? await publicReportRepository?.findLatestByReportDate(input.runDate)
               : null;
 
-        renderInput.publicBriefingUrl = latestPublicReport
-          ? buildPublicReportDetailUrl(
-              this.dependencies.publicBriefingBaseUrl,
-              latestPublicReport.id
-            )
-          : buildPublicBriefingUrl(
-              this.dependencies.publicBriefingBaseUrl,
-              input.runDate,
-              briefingSession
-            );
+        if (latestPublicReport) {
+          renderInput.publicBriefingUrl = buildPublicReportDetailUrl(
+            this.dependencies.publicBriefingBaseUrl,
+            latestPublicReport.id
+          );
+        }
       }
 
       const reportText = renderTelegramDailyReport(renderInput);
