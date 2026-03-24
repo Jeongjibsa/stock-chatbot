@@ -136,6 +136,7 @@
 - `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입하는 것을 기준으로 한다.
 - Vercel production build는 `apps/web`의 Next.js 패치 라인이 최신 보안 허용 범위 안에 있어야 하며, 현재 기준선은 `15.5.14`다.
 - `apps/web`의 cron/webhook route는 Next.js production runtime에서 env 누락을 피하기 위해 `process.env` 전체 spread 대신 허용된 runtime key를 명시적으로 추출해 worker/bot 계층에 전달한다.
+- `apps/web`는 Vercel build에서 stale workspace `dist`를 참조하지 않도록 `@stock-chatbot/application`, `@stock-chatbot/database`, `@stock-chatbot/telegram-bot/build-bot`를 source 경로로 alias한다. 따라서 webhook/cron/public detail에 반영되는 공용 로직 변경은 별도 package build 없이도 Next.js 번들에 직접 포함된다.
 - GitHub Actions와 Telegram 링크가 새 공개 웹을 가리키도록 하려면 repository variable `PUBLIC_BRIEFING_BASE_URL`을 실제 Vercel 배포 URL로 맞춰야 한다.
 - 사용자 수 10명 이하 가정을 전제로 현재 런타임 기준선은 `Vercel webhook + Vercel Cron primary + GitHub Actions manual reconcile`이다.
 - 현재 production public alias는 `https://web-three-tau-58.vercel.app`이고, direct deployment URL은 팀 정책에 따라 401이 걸릴 수 있으므로 Telegram webhook과 공개 링크는 alias를 기준으로 삼는다.
