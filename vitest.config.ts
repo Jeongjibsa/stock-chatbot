@@ -13,6 +13,12 @@ export default defineConfig({
       ),
       "@stock-chatbot/database": fileURLToPath(
         new URL("./packages/database/src/index.ts", import.meta.url)
+      ),
+      "@stock-chatbot/worker/run-daily-report": fileURLToPath(
+        new URL("./apps/worker/src/run-daily-report.ts", import.meta.url)
+      ),
+      "@stock-chatbot/worker/run-public-briefing": fileURLToPath(
+        new URL("./apps/worker/src/run-public-briefing.ts", import.meta.url)
       )
     }
   },

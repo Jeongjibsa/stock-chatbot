@@ -13,6 +13,7 @@ describe("TelegramReportService", () => {
     const orchestrator = {
       runForUser: vi.fn().mockResolvedValue({
         status: "completed",
+        publicBriefingLinked: false,
         reportRun: {
           id: "run-1",
           status: "completed"
@@ -54,6 +55,7 @@ describe("TelegramReportService", () => {
     const orchestrator = {
       runForUser: vi.fn().mockResolvedValue({
         status: "completed",
+        publicBriefingLinked: false,
         reportRun: {
           id: "run-2",
           status: "completed"
@@ -171,6 +173,7 @@ describe("resolveTelegramReportFollowUpMessage", () => {
     expect(
       resolveTelegramReportFollowUpMessage({
         status: "skipped_duplicate",
+        publicBriefingLinked: false,
         reportRun: {
           id: "run-1",
           status: "running"
@@ -186,6 +189,7 @@ describe("resolveTelegramReportFollowUpMessage", () => {
     expect(
       resolveTelegramReportFollowUpMessage({
         status: "skipped_duplicate",
+        publicBriefingLinked: false,
         reportRun: {
           id: "run-1",
           status: "failed"
@@ -201,6 +205,7 @@ describe("resolveTelegramReportFollowUpMessage", () => {
     expect(
       resolveTelegramReportFollowUpMessage({
         status: "completed",
+        publicBriefingLinked: false,
         reportRun: {
           id: "run-1",
           status: "completed"

@@ -68,6 +68,7 @@ export function renderTelegramDailyReport(
   if (briefingSession === "post_market") {
     const comparisonBullets = buildSessionComparisonBullets(input, marketSummary);
     const adjustmentBullets = buildAdjustmentBullets(input, rebalancingSummary, marketSummary);
+    const disclaimerSectionNumber = input.publicBriefingUrl ? 8 : 7;
     const lines: string[] = [
       `1. 🗞️ 오늘의 포트폴리오 포스트마켓 브리핑 (${input.runDate})`,
       "",
@@ -109,17 +110,26 @@ export function renderTelegramDailyReport(
       ...adjustmentBullets.map((bullet) => `- ${bullet}`),
       "",
       "6. ⚠️ 다음 세션으로 넘길 리스크",
-      ...riskBullets.map((bullet) => `- ${bullet}`),
+      ...riskBullets.map((bullet) => `- ${bullet}`)
+    );
+
+    if (input.publicBriefingUrl) {
+      lines.push(
+        "",
+        "7. 🔎 참고용 공개 포스트마켓 브리핑",
+        input.publicBriefingUrl
+      );
+    }
+
+    lines.push(
       "",
-      "7. 🔎 참고용 공개 포스트마켓 브리핑",
-      input.publicBriefingUrl ?? "확인 필요",
-      "",
-      "8. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
+      `${disclaimerSectionNumber}. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.`
     );
 
     return lines.join("\n");
   }
 
+  const disclaimerSectionNumber = input.publicBriefingUrl ? 8 : 7;
   const lines: string[] = [
     `1. 🗞️ 오늘의 포트폴리오 프리마켓 브리핑 (${input.runDate})`,
     "",
@@ -150,12 +160,20 @@ export function renderTelegramDailyReport(
   lines.push(
     "",
     "6. ⚠️ 오늘 반드시 볼 리스크",
-    ...riskBullets.map((bullet) => `- ${bullet}`),
+    ...riskBullets.map((bullet) => `- ${bullet}`)
+  );
+
+  if (input.publicBriefingUrl) {
+    lines.push(
+      "",
+      "7. 🔎 참고용 공개 프리마켓 브리핑",
+      input.publicBriefingUrl
+    );
+  }
+
+  lines.push(
     "",
-    "7. 🔎 참고용 공개 프리마켓 브리핑",
-    input.publicBriefingUrl ?? "확인 필요",
-    "",
-    "8. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다."
+    `${disclaimerSectionNumber}. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.`
   );
 
   return lines.join("\n");

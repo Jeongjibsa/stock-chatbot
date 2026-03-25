@@ -168,6 +168,7 @@ type PersonalRebalancingSnapshotRepositoryPort = {
 export type DailyReportOrchestratorResult = {
   marketResults: MarketDataFetchResult[];
   portfolioNewsBriefs: HoldingNewsBrief[];
+  publicBriefingLinked: boolean;
   reportRun: {
     id: string;
     errorMessage?: string | null;
@@ -212,6 +213,7 @@ export class DailyReportOrchestrator {
     briefingSession?: BriefingSession;
     portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
     promptVersion?: string;
+    publicBriefingUrl?: string;
     runDate: string;
     scheduleType: string;
     skillVersion?: string;
@@ -250,6 +252,7 @@ export class DailyReportOrchestrator {
         status: "skipped_duplicate",
         reportRun: started.run,
         reportText: started.run.reportText ?? "",
+        publicBriefingLinked: false,
         marketResults: [],
         portfolioNewsBriefs: []
       };
@@ -536,30 +539,32 @@ export class DailyReportOrchestrator {
         renderInput.summaryLine = fallbackBriefing.summaryLine;
       }
 
-      if (
-        this.dependencies.publicBriefingBaseUrl &&
-        input.user.includePublicBriefingLink !== false
-      ) {
-        const publicReportRepository = this.dependencies.publicReportRepository;
-        const latestPublicReport =
-          typeof publicReportRepository?.findLatestByReportDateAndSession === "function"
-            ? await publicReportRepository.findLatestByReportDateAndSession(
-                input.runDate,
-                briefingSession
-              )
-            : briefingSession === "pre_market"
-              ? await publicReportRepository?.findLatestByReportDate(input.runDate)
-              : null;
+      if (input.user.includePublicBriefingLink !== false) {
+        if (input.publicBriefingUrl) {
+          renderInput.publicBriefingUrl = input.publicBriefingUrl;
+        } else if (this.dependencies.publicBriefingBaseUrl) {
+          const publicReportRepository = this.dependencies.publicReportRepository;
+          const latestPublicReport =
+            typeof publicReportRepository?.findLatestByReportDateAndSession === "function"
+              ? await publicReportRepository.findLatestByReportDateAndSession(
+                  input.runDate,
+                  briefingSession
+                )
+              : briefingSession === "pre_market"
+                ? await publicReportRepository?.findLatestByReportDate(input.runDate)
+                : null;
 
-        if (latestPublicReport) {
-          renderInput.publicBriefingUrl = buildPublicReportDetailUrl(
-            this.dependencies.publicBriefingBaseUrl,
-            latestPublicReport.id
-          );
+          if (latestPublicReport) {
+            renderInput.publicBriefingUrl = buildPublicReportDetailUrl(
+              this.dependencies.publicBriefingBaseUrl,
+              latestPublicReport.id
+            );
+          }
         }
       }
 
       const reportText = renderTelegramDailyReport(renderInput);
+      const publicBriefingLinked = Boolean(renderInput.publicBriefingUrl);
       const errorMessage = buildErrorMessage(
         marketResults,
         portfolioNewsBriefs,
@@ -589,6 +594,7 @@ export class DailyReportOrchestrator {
         status,
         reportRun: completedRun,
         reportText,
+        publicBriefingLinked,
         marketResults,
         portfolioNewsBriefs
       };
@@ -622,6 +628,7 @@ export class DailyReportOrchestrator {
         status: "failed",
         reportRun: completedRun,
         reportText: "",
+        publicBriefingLinked: false,
         marketResults,
         portfolioNewsBriefs
       };

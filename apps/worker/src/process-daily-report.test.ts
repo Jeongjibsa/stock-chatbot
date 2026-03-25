@@ -63,6 +63,7 @@ describe("processDailyReportJob", () => {
       deliverySkippedCount: 0,
       partialSuccessCount: 1,
       failedCount: 0,
+      linkAttachedCount: 0,
       notDueCount: 0,
       skippedDuplicateCount: 1
     });
@@ -116,6 +117,7 @@ describe("processDailyReportJob", () => {
       deliverySkippedCount: 1,
       partialSuccessCount: 1,
       failedCount: 0,
+      linkAttachedCount: 0,
       notDueCount: 0,
       skippedDuplicateCount: 0
     });
@@ -200,11 +202,45 @@ describe("processDailyReportJob", () => {
       deliveryFailedCount: 0,
       deliverySkippedCount: 0,
       failedCount: 0,
+      linkAttachedCount: 0,
       notDueCount: 3,
       partialSuccessCount: 0,
       skippedDuplicateCount: 0
     });
     expect(orchestrator.runForUser).toHaveBeenCalledTimes(2);
+  });
+
+  it("passes an explicit public briefing url through to scheduled report generation", async () => {
+    const orchestrator = {
+      runForUser: vi.fn().mockResolvedValue({
+        status: "completed",
+        reportText: "report-1",
+        publicBriefingLinked: true
+      })
+    };
+
+    const summary = await processDailyReportJob({
+      briefingSession: "pre_market",
+      deliveryAdapter: {
+        deliver: vi.fn(async () => undefined)
+      },
+      orchestrator,
+      publicBriefingUrl: "https://example.com/reports/report-1",
+      runDate: "2026-03-20",
+      scheduleType: "daily-pre-market",
+      userRepository: {
+        listUsers: vi.fn(async () => [
+          { id: "user-1", displayName: "A", preferredDeliveryChatId: "chat-1" }
+        ])
+      }
+    });
+
+    expect(orchestrator.runForUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        publicBriefingUrl: "https://example.com/reports/report-1"
+      })
+    );
+    expect(summary.linkAttachedCount).toBe(1);
   });
 
   it("reads runtime env defaults and required keys", () => {

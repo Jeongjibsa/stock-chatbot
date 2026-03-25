@@ -223,4 +223,17 @@ describe("renderTelegramDailyReport", () => {
 
     expect(report).toContain("시세 스냅샷은 확인 필요합니다.");
   });
+
+  it("omits the public briefing section when no link is available", () => {
+    const report = renderTelegramDailyReport({
+      displayName: "Jisung",
+      runDate: "2026-03-20",
+      holdings: [],
+      marketResults: []
+    });
+
+    expect(report).not.toContain("참고용 공개 프리마켓 브리핑");
+    expect(report).not.toContain("확인 필요");
+    expect(report).toContain("7. ❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
+  });
 });

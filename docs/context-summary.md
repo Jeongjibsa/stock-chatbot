@@ -129,10 +129,10 @@
 - database 계층에는 `personal_rebalancing_snapshots` read model이 추가됐다. 이 테이블은 `user_id + effective_report_date + snapshot_version` 키로 개인화 리밸런싱 payload JSONB를 저장하고, 현재는 요청일(KST) 기준 날짜별 cache로 사용된다.
 - `run-public-briefing`은 이제 공개 브리핑 JSON 파일만 만드는 것이 아니라, `DATABASE_URL`이 설정된 경우 공개 가능한 브리핑을 `reports`에도 저장한다.
 - 공개 웹에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
-- 텔레그램 메시지 하단 상세 링크는 `reports`에서 같은 날짜의 최신 공개 report를 조회해 새 공개 웹의 `/reports/[id]` 경로를 우선 사용한다. 조회 실패 시 기존 `/briefings/YYYY-MM-DD/` fallback 링크를 계속 사용할 수 있다.
+- 정기 세션 cron은 이제 `runPublicBriefing -> runDailyReport` 순서로 실행된다. 공개 브리핑이 `reports` row와 `/reports/[id]` 링크를 먼저 확보한 뒤, 같은 세션의 개인 정기 브리핑이 그 explicit URL을 그대로 주입받아 발송된다.
 - 공개 상세 브리핑 permalink는 canonical `/briefings/YYYY-MM-DD/`, archive `/briefings/YYYY/MM/DD/`를 함께 유지하고, 같은 `runDate` 재실행 시 동일 경로를 덮어쓰는 방식으로 idempotent하게 운영한다.
 - 공개 브리핑 build 스크립트는 legacy fallback용 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
-- GitHub Actions `Daily Report` workflow는 `workflow_dispatch` 기준의 manual reconcile entrypoint다. 생성된 텔레그램 본문은 `reports` 조회 성공 시에만 `PUBLIC_BRIEFING_BASE_URL + /reports/[id]` 링크를 붙이고, 공개 row가 없으면 링크를 생략한다.
+- GitHub Actions `Daily Report` workflow는 `workflow_dispatch` 기준의 manual reconcile entrypoint다. scheduled/manual 세션 모두 공개 업로드를 최대 3회(`10초 -> 20초`) 재시도한 뒤 링크를 확보하면 본문에 붙이고, 끝내 확보하지 못하면 공개 링크 섹션 자체를 생략한다.
 - `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입하는 것을 기준으로 한다.
 - Vercel production build는 `apps/web`의 Next.js 패치 라인이 최신 보안 허용 범위 안에 있어야 하며, 현재 기준선은 `15.5.14`다.
 - `apps/web`의 cron/webhook route는 Next.js production runtime에서 env 누락을 피하기 위해 `process.env` 전체 spread 대신 허용된 runtime key를 명시적으로 추출해 worker/bot 계층에 전달한다.
@@ -168,6 +168,7 @@
 - Telegram DM의 기본 UX는 한국어 온보딩 기준으로 유지한다. `/start`와 `/help`는 `등록 -> 종목 추가 -> 목록 확인 -> 브리핑 수신` 흐름과 명령별 짧은 설명을 함께 안내하고, `/register` 성공 후에도 같은 다음 단계가 이어져야 한다. 현재 설정 UX는 `브리핑 켜기`, `브리핑 끄기`, `고정 발송 시각/주말 규칙/역할 설명`을 제공하고, `/report_time`은 시간 변경이 아니라 정책 안내만 반환한다.
 - 홈 `종목 추가` 버튼은 이제 바로 `/portfolio_add`를 시작하지 않고 `여러 종목 빠르게 추가 / 한 종목 상세 추가` 2-depth chooser를 띄운다. 기본 CTA는 bulk 추가다.
 - Telegram DM에서는 `/report`를 바로 사용할 수 있다. 등록만 완료되어 있으면 보유 종목이 없어도 실행 가능하며, 이 경우 보유 종목 관련 섹션을 제외한 시장 중심 브리핑을 생성한다.
+- 온디맨드 `/report`는 여전히 `reports` 조회형 링크 결정을 사용하지만, 공개 row를 찾지 못하면 `확인 필요`를 노출하지 않고 링크 섹션을 제거한다.
 - 현재 운영 기준으로 Telegram DM의 온디맨드 `/report`는 webhook 응답 안정성을 위해 fast path를 기본으로 사용한다. 즉, 장시간이 걸릴 수 있는 보유 종목 뉴스 수집과 LLM 조합은 기본적으로 비활성화돼 있고, 규칙 기반 브리핑을 먼저 빠르게 생성한다.
 - fast path에서도 `시장/매크로/자금/이벤트/리스크` 섹션과 상세 링크가 비어 있지 않도록 시장 데이터 기반 rule-based fallback 문장을 사용한다.
 - `report_runs`는 같은 `userId + runDate + scheduleType` 조합으로 중복을 막지만, `running` 상태가 3분 이상 지속되면 stale run으로 보고 같은 row를 재시작한다. 이 규칙은 webhook timeout이나 중간 종료로 인해 하루 종일 `/report`가 막히는 상황을 방지하기 위한 것이다.

@@ -8,6 +8,7 @@ import type { Pool } from "pg";
 import {
   type BriefingSession,
   buildPublicDailyBriefing,
+  buildPublicReportDetailUrl,
   buildRuleBasedBriefing,
   buildQuantScorecards,
   CompositeMarketDataAdapter,
@@ -182,6 +183,8 @@ export async function runPublicBriefing(
   env: Environment = process.env
 ): Promise<{
   briefingSession: BriefingSession;
+  publicBriefingUrl?: string;
+  status: "completed" | "missing_link";
   persistedReportId?: string;
   outputPath: string;
   runDate: string;
@@ -190,6 +193,8 @@ export async function runPublicBriefing(
   const runDate = readRunDate(env);
   const briefingSession = readPublicBriefingSession(env);
   const outputPath = readPublicBriefingOutputPath(env);
+  const publicBriefingBaseUrl =
+    env.PUBLIC_BRIEFING_BASE_URL?.trim().replace(/\/+$/, "") || undefined;
   const marketDataAdapter = new CompositeMarketDataAdapter({
     fredAdapter: new FredMarketDataAdapter({
       apiKey: readFredApiKey(env)
@@ -209,6 +214,7 @@ export async function runPublicBriefing(
 
   const databaseUrl = readOptionalDatabaseUrl(env);
   let persistedReportId: string | undefined;
+  let publicBriefingUrl: string | undefined;
   let repository: PublicReportRepository | undefined;
   let pool: Pool | undefined;
 
@@ -241,12 +247,20 @@ export async function runPublicBriefing(
         })
       );
       persistedReportId = created.id;
+      if (publicBriefingBaseUrl) {
+        publicBriefingUrl = buildPublicReportDetailUrl(
+          publicBriefingBaseUrl,
+          created.id
+        );
+      }
     } finally {
       await pool.end();
     }
   }
 
   return {
+    ...(publicBriefingUrl ? { publicBriefingUrl } : {}),
+    status: publicBriefingUrl ? "completed" : "missing_link",
     ...(persistedReportId ? { persistedReportId } : {}),
     briefingSession,
     runDate: briefing.runDate,

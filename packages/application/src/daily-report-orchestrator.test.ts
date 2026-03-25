@@ -97,6 +97,7 @@ describe("DailyReportOrchestrator", () => {
     });
 
     expect(result.status).toBe("partial_success");
+    expect(result.publicBriefingLinked).toBe(false);
     expect(result.reportText).toContain("1. 🗞️ 오늘의 포트폴리오 프리마켓 브리핑");
     expect(result.reportText).toContain("6. ⚠️ 오늘 반드시 볼 리스크");
     expect(result.reportText).toContain("일부 시장 지표는 지연 또는 누락 상태라 추가 확인이 필요합니다.");
@@ -148,6 +149,7 @@ describe("DailyReportOrchestrator", () => {
 
     expect(result.status).toBe("skipped_duplicate");
     expect(result.reportText).toBe("existing report");
+    expect(result.publicBriefingLinked).toBe(false);
     expect(marketDataAdapter.fetchMany).not.toHaveBeenCalled();
     expect(reportRunRepository.completeRun).not.toHaveBeenCalled();
   });
@@ -568,6 +570,7 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain("6. ⚠️ 오늘 반드시 볼 리스크");
     expect(result.reportText).toContain("7. 🔎 참고용 공개 프리마켓 브리핑");
     expect(result.reportText).toContain("https://example.com/reports/public-report-1");
+    expect(result.publicBriefingLinked).toBe(true);
   });
 
   it("persists strategy snapshots for generated quant scorecards", async () => {
@@ -731,9 +734,10 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain(
       "https://jeongjibsa.github.io/stock-chatbot/reports/report-2026-03-20"
     );
+    expect(result.publicBriefingLinked).toBe(true);
   });
 
-  it("does not append a legacy date-based public link when a report row is missing", async () => {
+  it("omits the public briefing section when a report row is missing", async () => {
     const orchestrator = new DailyReportOrchestrator({
       marketDataAdapter: {
         fetchMany: vi.fn(async () => [])
@@ -776,8 +780,66 @@ describe("DailyReportOrchestrator", () => {
     });
 
     expect(result.reportText).not.toContain("/briefings/2026-03-24/");
-    expect(result.reportText).toContain("7. 🔎 참고용 공개 프리마켓 브리핑");
-    expect(result.reportText).toContain("확인 필요");
+    expect(result.reportText).not.toContain("참고용 공개 프리마켓 브리핑");
+    expect(result.reportText).not.toContain("확인 필요");
+    expect(result.publicBriefingLinked).toBe(false);
+  });
+
+  it("uses an explicit scheduled public briefing url without re-querying public reports", async () => {
+    const publicReportRepository = {
+      findLatestByReportDateAndSession: vi.fn(async () => ({
+        id: "public-report-1"
+      })),
+      findLatestByReportDate: vi.fn(async () => ({
+        id: "public-report-1"
+      }))
+    };
+    const orchestrator = new DailyReportOrchestrator({
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => [])
+      },
+      portfolioHoldingRepository: {
+        listByUserId: vi.fn(async () => [])
+      },
+      publicBriefingBaseUrl: "https://web-three-tau-58.vercel.app",
+      publicReportRepository,
+      reportRunRepository: {
+        startRun: vi.fn(async () => ({
+          created: true,
+          run: {
+            id: "run-explicit-link",
+            status: "running"
+          }
+        })),
+        completeRun: vi.fn(async (input) => ({
+          id: input.id,
+          status: input.status,
+          reportText: input.reportText,
+          errorMessage: input.errorMessage
+        }))
+      },
+      userMarketWatchRepository: {
+        listEffectiveByUserId: vi.fn(async () => [])
+      }
+    });
+
+    const result = await orchestrator.runForUser({
+      user: {
+        id: "user-1",
+        displayName: "Jisung"
+      },
+      publicBriefingUrl:
+        "https://web-three-tau-58.vercel.app/reports/report-2026-03-24",
+      runDate: "2026-03-24",
+      scheduleType: "daily-pre-market"
+    });
+
+    expect(result.reportText).toContain(
+      "https://web-three-tau-58.vercel.app/reports/report-2026-03-24"
+    );
+    expect(result.publicBriefingLinked).toBe(true);
+    expect(publicReportRepository.findLatestByReportDateAndSession).not.toHaveBeenCalled();
+    expect(publicReportRepository.findLatestByReportDate).not.toHaveBeenCalled();
   });
 
   it("uses the requested run date for rendering and snapshot lookup", async () => {

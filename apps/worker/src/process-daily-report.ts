@@ -37,6 +37,7 @@ type OrchestratorPort = {
   runForUser(input: {
     briefingSession?: BriefingSession;
     promptVersion?: string;
+    publicBriefingUrl?: string;
     runDate: string;
     scheduleType: string;
     skillVersion?: string;
@@ -47,6 +48,7 @@ type OrchestratorPort = {
       reportDetailLevel?: "compact" | "standard";
     };
   }): Promise<{
+    publicBriefingLinked?: boolean;
     status: "completed" | "failed" | "partial_success" | "skipped_duplicate";
     reportText: string;
   }>;
@@ -84,6 +86,7 @@ export type DailyReportJobSummary = {
   deliveryFailedCount: number;
   deliverySkippedCount: number;
   failedCount: number;
+  linkAttachedCount: number;
   notDueCount: number;
   partialSuccessCount: number;
   skippedDuplicateCount: number;
@@ -263,6 +266,7 @@ export async function processDailyReportJob(
     deliveryAdapter?: ReportDeliveryAdapterPort;
     now?: Date;
     orchestrator: OrchestratorPort;
+    publicBriefingUrl?: string;
     runDate: string;
     scheduleWindowMinutes?: number;
     scheduleType: DailyReportScheduleType;
@@ -277,6 +281,7 @@ export async function processDailyReportJob(
     deliveryFailedCount: 0,
     deliverySkippedCount: 0,
     failedCount: 0,
+    linkAttachedCount: 0,
     notDueCount: 0,
     partialSuccessCount: 0,
     skippedDuplicateCount: 0
@@ -317,6 +322,9 @@ export async function processDailyReportJob(
       promptVersion: DEFAULT_DAILY_REPORT_PROMPT_VERSION,
       skillVersion: DEFAULT_DAILY_REPORT_SKILL_VERSION,
       briefingSession: dependencies.briefingSession,
+      ...(dependencies.publicBriefingUrl
+        ? { publicBriefingUrl: dependencies.publicBriefingUrl }
+        : {}),
       user: orchestratorUser,
       runDate: dependencies.runDate,
       scheduleType: dependencies.scheduleType
@@ -342,6 +350,10 @@ export async function processDailyReportJob(
       result.status !== "partial_success"
     ) {
       continue;
+    }
+
+    if (result.publicBriefingLinked) {
+      summary.linkAttachedCount += 1;
     }
 
     if (!user.preferredDeliveryChatId || !dependencies.deliveryAdapter) {
@@ -380,6 +392,7 @@ export function buildDailyReportJobProcessor(
   env: Environment = process.env
 ): (input?: {
   briefingSession?: BriefingSession;
+  publicBriefingUrl?: string;
   runDate?: string;
 }) => Promise<DailyReportJobSummary> {
   const databaseUrl = readDatabaseUrl(env);
@@ -460,6 +473,9 @@ export function buildDailyReportJobProcessor(
         briefingSession,
         ...(deliveryAdapter ? { deliveryAdapter } : {}),
         orchestrator,
+        ...(input.publicBriefingUrl
+          ? { publicBriefingUrl: input.publicBriefingUrl }
+          : {}),
         runDate,
         scheduleType,
         scheduleWindowMinutes,

@@ -168,6 +168,7 @@
 - [x] 정기 브리핑을 `pre_market / post_market` 이중 세션으로 전환하고 주말 게이트를 추가
 - [x] `reports` 읽기 모델과 public feed/detail/admin을 세션 라벨 인지형으로 확장
 - [x] Telegram `/report` 자동 세션 분기, `/report_time` 고정 정책 안내, Vercel/worker 세션별 cron 경로를 반영
+- [x] 정기 세션에서 `공개 브리핑 업로드 -> 개인 발송` 순서를 강제하고, 공개 링크 실패 시 링크 섹션 생략 fallback과 재시도 정책을 반영
 
 ## 5. Immediate Next Work
 
@@ -217,6 +218,7 @@
 - 2026-03-21: 텔레그램 리포트 전체 문체를 존댓말로 통일하고 면책 문구를 `❗` 한 줄 형식으로 조정, 관련 테스트와 하네스 스냅샷 갱신 완료
 - 2026-03-21: public GitHub repository를 기준으로 남은 운영 자동화 계획을 GitHub Actions 우선 전략으로 재편하고, CI/일 배치 스케줄/수동 실행/secret 관리/지연 허용 규칙을 다음 우선 작업으로 상향 조정
 - 2026-03-21: GitHub Actions `CI`와 `Daily Report` workflow, `workflow_dispatch`, secret/env 주입 규칙, direct daily report runner 엔트리포인트를 추가 완료
+- 2026-03-25: 정기 세션 cron이 공개 브리핑 업로드를 선행하도록 재정렬하고, 공개 업로드가 생성한 `/reports/[uuid]` 링크를 scheduled daily report에 직접 주입하도록 수정했다. 공개 업로드는 3회까지 재시도하며, 최종 실패 시 `확인 필요` 대신 링크 섹션 자체를 생략한다.
 - 2026-03-21: FRED series 매핑 점검 문서를 추가하고, 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 실제 daily report worker 경로에 연결 완료
 - 2026-03-21: 실 Telegram provider adapter, `make test-telegram`, GitHub Actions `Telegram Smoke Test` workflow, smoke runner/unit test를 추가해 실채널 검증 자동화 완료
 - 2026-03-21: 브리핑 구조를 `시장 / 매크로 / 자금 / 이벤트` 섹션까지 확장하고, LLM prompt v3, 텔레그램 렌더러, mock preview, harness snapshot을 새 구조로 갱신 완료

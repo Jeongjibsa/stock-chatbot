@@ -44,6 +44,7 @@ export function formatDailyReportJobSummary(input: {
     `delivered=${input.summary.deliveredCount}`,
     `deliverySkipped=${input.summary.deliverySkippedCount}`,
     `deliveryFailed=${input.summary.deliveryFailedCount}`,
+    `linkAttached=${input.summary.linkAttachedCount}`,
     `notDue=${input.summary.notDueCount}`,
     `partialSuccess=${input.summary.partialSuccessCount}`,
     `failed=${input.summary.failedCount}`,
@@ -51,10 +52,17 @@ export function formatDailyReportJobSummary(input: {
   ].join(" ");
 }
 
-export async function runDailyReport(env: Environment = process.env): Promise<DailyReportJobSummary> {
+export async function runDailyReport(
+  env: Environment = process.env,
+  input?: {
+    briefingSession?: "post_market" | "pre_market";
+    publicBriefingUrl?: string;
+    runDate?: string;
+  }
+): Promise<DailyReportJobSummary> {
   const run = buildDailyReportJobProcessor(env);
 
-  return run();
+  return run(input);
 }
 
 async function main(): Promise<void> {

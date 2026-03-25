@@ -16,7 +16,7 @@ describe("buildMockTelegramReportPreview", () => {
     expect(preview.renderedText).toContain("- 유지 우세: SK하이닉스, 현대차, 현대글로비스");
     expect(preview.renderedText).toContain("3. 🧭 오늘의 판단 프레임");
     expect(preview.renderedText).toContain("4. 🧩 성향별 대응");
-    expect(preview.renderedText).toContain("7. 🔎 참고용 공개 프리마켓 브리핑");
+    expect(preview.renderedText).not.toContain("참고용 공개 프리마켓 브리핑");
     expect(preview.renderedText).toContain("❗ 이 리포트는 정보 제공용이며, 투자 판단과 책임은 본인에게 있습니다.");
   });
 });
