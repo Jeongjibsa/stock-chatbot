@@ -117,6 +117,9 @@ DB schema/repository 변경 시 추가:
 make test-integration
 ```
 
+- integration test는 로컬 Docker PostgreSQL만 대상으로 실행한다.
+- production Neon `DATABASE_URL`을 주입한 채 `make test-integration` 또는 `pnpm test:integration`을 실행하면 안 된다.
+
 web 변경 시 추가:
 
 ```bash

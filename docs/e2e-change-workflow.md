@@ -42,7 +42,7 @@
 | Scope | 추가 검증 | 이유 |
 | --- | --- | --- |
 | `default` | `pnpm verify` + Telegram E2E unit checks + live minimum suite | 기본 회귀와 세션별 `/report` 문구/placeholder 회귀 |
-| `db` | `make test-integration` | repository/schema 경로 검증 |
+| `db` | `make test-integration` | repository/schema 경로 검증. integration test는 반드시 로컬 Docker PostgreSQL만 사용해야 하며, non-local/Neon `DATABASE_URL` 대상으로는 실행되면 안 된다. |
 | `web` | `pnpm --filter @stock-chatbot/web build` | Vercel/Next.js 빌드 회귀 |
 | `telegram-harness` | `make test-integration` + E2E env/webhook-driver tests | 하네스/driver 회귀 |
 | `ops` | `make test-integration` + web build + current-week public coverage smoke + live minimum suite + production cron smoke | webhook/cron/feed/admin 운영 경로와 cron fallback/재배치, `weekend_briefing`, Upstash env wiring, public week data retention smoke 회귀 |
@@ -71,6 +71,7 @@ COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=telegram-harness --skip-li
 
 - `--skip-live`는 로컬 준비 단계용입니다.
 - 최종 완료 보고에는 `--allow-production` 기반 live suite 또는 동등한 production verification이 필요합니다.
+- integration test는 검증용 로컬 DB와 운영용 Neon DB를 반드시 분리해야 합니다. Docker Postgres를 띄운 뒤에도 production `DATABASE_URL`을 넘긴 채 실행하면 안 됩니다.
 
 ## 에이전트용 완료 정의
 

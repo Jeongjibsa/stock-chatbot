@@ -38,7 +38,7 @@ test:
 
 test-integration:
 	docker compose up -d --wait postgres
-	RUN_INTEGRATION_TESTS=1 COREPACK_HOME=/tmp/corepack pnpm test:integration
+	DATABASE_URL=postgresql://stockbot:stockbot@127.0.0.1:5432/stockbot RUN_INTEGRATION_TESTS=1 COREPACK_HOME=/tmp/corepack pnpm test:integration
 
 test-telegram:
 	COREPACK_HOME=/tmp/corepack pnpm test:telegram

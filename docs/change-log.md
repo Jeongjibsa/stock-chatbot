@@ -166,6 +166,8 @@
 | CHG-0137 | 2026-03-28 | FIX | `apps/web/eslint.config.mjs`에 app-local `@next/next` flat config sentinel을 추가해 Node 24 기준 `next build`의 `The Next.js plugin was not detected` 경고를 제거했다. 또한 `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL + CRON_SECRET`가 있으면 production runtime `/api/cron/public-backfill` 경로를 우선 사용하고, `run:verify-public-week`는 feed/detail 검증에 retry를 넣어 운영 smoke의 일시적 캐시·네트워크 흔들림으로 false negative가 나지 않게 보강했다. | Change Log, Context, Code, Tests, Ops | yes |
 | CHG-0138 | 2026-03-28 | FIX | 공개 feed/detail이 production DB를 이미 업데이트했는데도 build 시점 스냅샷처럼 오래된 HTML 한 건만 보여주던 문제를 줄이기 위해 `apps/web/app/page.tsx`와 `apps/web/app/reports/[id]/page.tsx`에 Next 15 `connection()` 강제를 추가했다. 공개 브리핑 페이지는 이제 요청 시점 runtime 연결을 먼저 확보한 뒤 DB read path를 수행해야 한다. | Change Log, Context, Code, Ops | yes |
 
+| CHG-0140 | 2026-03-29 | FIX | production `ticker_masters`가 integration fixture 3건으로 오염될 수 있던 검증 경로를 차단했다. integration test는 이제 non-local/Neon `DATABASE_URL`이면 즉시 실패하고, `make test-integration`은 로컬 Docker PostgreSQL(`127.0.0.1:5432`)만 강제로 사용한다. 동시에 production Neon `ticker_masters`를 CSV 9,818행 기준으로 재적재했다. | Change Log, E2E Docs, AGENTS, Code, Ops | yes |
+
 ## 4. Open Change Notes
 
 - 현재까지 보류 중인 변경 요청 없음

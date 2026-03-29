@@ -22,6 +22,7 @@ export default defineConfig({
     exclude: ["**/node_modules/**"],
     fileParallelism: false,
     maxWorkers: 1,
+    setupFiles: ["./scripts/test/require-local-integration-db.ts"],
     sequence: {
       concurrent: false
     }
