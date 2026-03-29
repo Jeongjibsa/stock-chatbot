@@ -56,6 +56,7 @@
 - 최근 CI 실패 원인은 `pnpm/action-setup`의 하드코딩 버전과 루트 `packageManager` 충돌이었고, workflow는 이제 루트 pnpm 버전을 단일 source-of-truth로 사용한다.
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 항상 수행하는 기본 마감 단계다.
+- PR을 열거나 갱신할 때는 본문을 한글/영문 병기 형식으로 유지하며, 두 언어 모두에 동일한 변경 요약과 검증 결과를 남긴다.
 - 분석 엔진이 커지면 Python 분석 서비스 분리를 고려한다.
 
 ## 6. Active Delivery Plan

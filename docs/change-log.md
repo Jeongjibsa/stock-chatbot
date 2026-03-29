@@ -175,6 +175,7 @@
 | CHG-0146 | 2026-03-29 | FIX | 공개 웹 홈의 `Reports / Cadence` 카드를 세로 스택으로 조정해 하단 여백 낭비를 줄였다. 동시에 공개 브리핑 운영 규칙을 MVP 기준으로 다시 고정해 `weekend_briefing` 시각을 `토요일 07:30 KST`로 맞추고, worker/cron/manual reconcile이 `reportRunDate` 없이 현재 날짜를 해석할 때는 허용 세션만 실행하도록 보정해 일요일 current-date `pre_market/post_market` row가 생성되지 않게 했다. | PRD, Plan, Change Log, Context, Architecture, Code, Tests, Ops | yes |
 | CHG-0147 | 2026-03-29 | FIX | 토요일 오전 브리핑 규칙을 MVP 정의대로 `weekend_briefing` 단일 세션으로 다시 고정했다. 이제 `pre_market`은 `월~금`에만 허용되며, public recovery/reconcile/verify와 current-date manual 실행도 `월~금 pre/post + 토 weekend + 일 none` 규칙만 기대한다. 이에 맞춰 토요일 `pre_market` historical public row는 운영 정리 대상에 포함되고, 문서/테스트/운영 시나리오도 같은 기준으로 동기화했다. | PRD, Plan, Change Log, Context, Architecture, Telegram Docs, Code, Tests, Ops | yes |
 | CHG-0148 | 2026-03-29 | FIX | preview 환경의 protected Vercel deployment에서도 rolling public-week smoke를 재사용할 수 있도록 `run:verify-public-week`가 `.vercel.app` 401/403 응답 시 `vercel curl --deployment`로 자동 재시도하도록 보강했다. 하네스 문서에도 preview 검증은 protection 해제가 아니라 authenticated `vercel curl` fallback을 기본값으로 사용한다고 명시했다. | Change Log, Context, Harness Docs, Code, Tests, Ops | yes |
+| CHG-0149 | 2026-03-29 | UPDATE | PR merge 전 협업 문맥을 잃지 않도록 PR 본문 작성 규칙을 한글/영문 병기 기준으로 고정했다. 변경 요약, 검증 결과, 운영 메모는 두 언어 버전 모두에 같은 수준으로 포함해야 한다. | Change Log, Context, E2E Docs, AGENTS | yes |
 
 ## 4. Open Change Notes
 
