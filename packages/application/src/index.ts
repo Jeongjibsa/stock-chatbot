@@ -18,6 +18,7 @@ export {
   formatBriefingSessionSlug,
   getBriefingSessionTime,
   isScheduledBriefingSessionAllowed,
+  listScheduledBriefingSessionsForDate,
   parseBriefingSession,
   resolveManualBriefingSession,
   resolveScheduledBriefingSession,

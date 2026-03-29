@@ -29,7 +29,7 @@
 ## 4. Current Product Baseline
 
 - 제품은 개인화된 주식 리포트를 제공하는 서비스다.
-- 현재 MVP는 텔레그램 + 공개 웹 기반이며, 정기 브리핑은 `07:30 pre_market`, `20:30 post_market`, `토요일 08:00 weekend_briefing(public only)` 세션으로 운영된다. 미국장 기준으로 `월~토 오전`, `월~금 오후`, `토요일 주말 공개 브리핑`만 생성이 허용된다.
+- 현재 MVP는 텔레그램 + 공개 웹 기반이며, 정기 브리핑은 `07:30 pre_market`, `20:30 post_market`, `토요일 07:30 weekend_briefing(public only)` 세션으로 운영된다. 미국장 기준으로 `월~토 오전`, `월~금 오후`, `토요일 주말 공개 브리핑`만 생성이 허용된다.
 - 현재 구현 기준으로는 DM에서 온디맨드 `/report`도 지원한다.
 - MVP 전달 채널은 `텔레그램 요약본 + 공개 웹 frontend`의 이중 구조다.
 - 사용자 포트폴리오와 사용자별 시장 지표를 저장하고, 이를 바탕으로 시장 요약, 뉴스 요약, 퀀트 기반 시나리오를 생성한다.
@@ -75,11 +75,12 @@
 - application 계층에는 daily report orchestrator와 텔레그램 렌더러가 추가됐다.
 - application 계층에는 Google News RSS 기반 종목 뉴스 어댑터와 별도로, 국내/해외 RSS 소스를 읽는 `MacroTrendNewsService`, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진이 추가됐다.
 - 공개 웹은 더 이상 종목별 기사 요약을 쓰지 않고 `거시 정책 / 환율·금리 / 야간 선물 / 글로벌 리스크 / 섹터 로테이션 / 시장 테마` 중심의 `macroTrendBriefs`만 반영한다.
-- 공개 웹의 `브리핑 역할`은 세션별로 `미장 마감 분석 기반 국장 시초가 예측 / 국장·대체거래소 결과 분석 및 미장 예보 / 주간 이슈 총정리 및 다음 주 일정 요약`을 직접 드러내야 한다.
+- 공개 웹의 `브리핑 역할`은 세션별로 `미장 마감 분석 기반 국장 시초가 예측 / 국장·대체거래소 결과 분석 및 미장 예보 / 미장 마감 분석 및 주간 이슈 총정리, 다음 주 일정 요약`을 직접 드러내야 한다.
 - 공개 웹의 `핵심 뉴스 이벤트`는 RSS 원문 headline과 `브리핑용 요약 제안`을 함께 출력하는 `headlineEvents` 구조를 사용하고, 공개 `eventBullets`는 세션별 체크포인트/일정 용도로 사용한다.
 - Upstash REST cache는 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` env가 있을 때만 활성화되고, 뉴스 dedupe/hot cache/analysis cache에만 사용한다. 영속 저장과 최종 idempotency는 Postgres `news_items`, `news_analysis_results`, `reports.news_references`가 담당한다.
 - 운영용 `/api/cron/public-backfill`는 이제 write path 실행 뒤 동일 runtime의 public read path로 persisted row를 즉시 재검증해야 한다. row를 다시 읽지 못하면 성공 응답 대신 실패로 처리해, 최근 7일 recovery window backfill에서 “응답은 성공인데 공개 feed/detail에는 없음” 상태를 남기면 안 된다.
 - `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL`과 `CRON_SECRET`가 있으면 local worker insert 대신 production runtime `/api/cron/public-backfill`를 우선 사용한다. 기본 동작은 current-week만이 아니라 업로드 가능 기준일에서 최근 7일 안에 누락된 공개 브리핑 세션만 다시 채우는 rolling recovery repair다.
+- worker/public worker가 `BRIEFING_SESSION` 없이 현재 날짜를 해석할 때 허용 세션이 없으면 더 이상 `pre_market`로 폴백하지 않는다. `workflow_dispatch`와 `/api/cron/reconcile?briefingSession=both`도 `reportRunDate`가 없으면 현재 날짜에 허용된 세션만 실행해야 하며, 일요일에는 current-date public row를 만들면 안 된다.
 - 공개 `feed/detail` page는 `dynamic = "force-dynamic"`만으로는 build 시점 스냅샷이 남을 수 있어, Next 15 `connection()`을 호출해 요청 시점 runtime 연결을 먼저 확보한 뒤 DB read path를 수행해야 한다.
 - application 계층에는 mock telegram delivery adapter, reusable report preview 템플릿, 공통 report query model이 추가됐다.
 - telegram report 렌더러는 이모지, 방향 기호, 섹션 중심 레이아웃으로 개선됐고 실채널 POC 메시지 발송으로 확인됐다.

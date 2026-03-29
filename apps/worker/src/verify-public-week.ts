@@ -73,7 +73,7 @@ export async function verifyPublicWeek(
   const requiredRoles = new Map([
     ["미장 마감 분석 기반 국장 시초가 예측", false],
     ["국장/대체거래소 결과 분석 및 미장 예보", false],
-    ["주간 이슈 총정리 및 다음 주 일정 요약", false]
+    ["미장 마감 분석 및 주간 이슈 총정리, 다음 주 일정 요약", false]
   ]);
 
   for (const reportId of detailIds.slice(0, Math.max(expectedRecentSessions.length, 12))) {

@@ -360,7 +360,7 @@ function buildBriefingPurposeLine(session: BriefingSession): string {
     return "이번 저녁 브리핑은 오늘 국내장과 대체거래소 흐름을 정리하고, 그 결과를 바탕으로 오늘 밤 미국장 방향을 예보하는 데 목적이 있습니다.";
   }
 
-  return "이번 주말 브리핑은 한 주 동안 시장을 움직인 핵심 이슈를 정리하고, 다음 주 주목해야 할 일정과 준비 포인트를 요약하는 데 목적이 있습니다.";
+  return "이번 주말 브리핑은 가장 최근 미장 마감 흐름을 바탕으로 한 주 동안 시장을 움직인 핵심 이슈를 정리하고, 다음 주 주목해야 할 일정과 준비 포인트를 요약하는 데 목적이 있습니다.";
 }
 
 function buildDefaultCheckpointBullets(session: BriefingSession): string[] {

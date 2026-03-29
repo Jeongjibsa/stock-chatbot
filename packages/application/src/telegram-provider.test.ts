@@ -121,7 +121,11 @@ describe("TelegramBotApiClient", () => {
 
 describe("TelegramReportDeliveryAdapter", () => {
   it("maps provider delivery results into report delivery contract", async () => {
+    const auditPort = {
+      insert: vi.fn(async () => undefined)
+    };
     const adapter = new TelegramReportDeliveryAdapter({
+      auditPort,
       telegramClient: {
         sendMessage: vi.fn(async () => ({
           chatId: "1001",
@@ -144,6 +148,12 @@ describe("TelegramReportDeliveryAdapter", () => {
       recipientId: "1001",
       status: "sent",
       transport: "provider"
+    });
+    expect(auditPort.insert).toHaveBeenCalledWith({
+      chatId: "1001",
+      method: "sendMessage",
+      telegramMessageId: "55",
+      text: "preview"
     });
   });
 });

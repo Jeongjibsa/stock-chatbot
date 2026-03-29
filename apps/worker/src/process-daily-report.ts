@@ -9,6 +9,7 @@ import {
   FredMarketDataAdapter,
   GOOGLE_PROVIDER_PROFILE,
   GoogleNewsRssAdapter,
+  listScheduledBriefingSessionsForDate,
   MacroTrendNewsService,
   NoopNewsCacheAdapter,
   parseBriefingSession,
@@ -30,6 +31,7 @@ import {
   PublicReportRepository,
   ReportRunRepository,
   StrategySnapshotRepository,
+  TelegramOutboundMessageRepository,
   UserRepository
 } from "@stock-chatbot/database";
 
@@ -516,6 +518,7 @@ export function buildDailyReportJobProcessor(
     const orchestrator = new DailyReportOrchestrator(orchestratorDependencies);
     const deliveryAdapter = telegramBotToken
       ? new TelegramReportDeliveryAdapter({
+          auditPort: new TelegramOutboundMessageRepository(db),
           telegramClient: new TelegramBotApiClient({
             token: telegramBotToken
           })
@@ -559,5 +562,19 @@ export function readBriefingSession(
     ...(options?.now ? { now: options.now } : {})
   });
 
-  return resolved === "none" ? "pre_market" : resolved;
+  if (resolved === "none") {
+    const allowedSessions = listScheduledBriefingSessionsForDate({
+      timeZone: options?.timeZone ?? env.REPORT_TIMEZONE ?? "Asia/Seoul",
+      ...(options?.now ? { now: options.now } : {})
+    });
+
+    throw new Error(
+      [
+        "No scheduled briefing session is allowed for the current date.",
+        `Allowed sessions for this date: ${allowedSessions.join(", ") || "none"}`
+      ].join(" ")
+    );
+  }
+
+  return resolved;
 }

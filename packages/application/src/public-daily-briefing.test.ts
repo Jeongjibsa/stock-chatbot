@@ -63,11 +63,33 @@ describe("public daily briefing", () => {
     });
 
     expect(briefing.title).toBe("🗞️ 주말 시장 브리핑 (2026-03-28)");
+    expect(briefing.sessionRole).toBe(
+      "미장 마감 분석 및 주간 이슈 총정리, 다음 주 일정 요약"
+    );
     expect(briefing.marketSummary.purpose).toBe(
-      "이번 주말 브리핑은 한 주 동안 시장을 움직인 핵심 이슈를 정리하고, 다음 주 주목해야 할 일정과 준비 포인트를 요약하는 데 목적이 있습니다."
+      "이번 주말 브리핑은 가장 최근 미장 마감 흐름을 바탕으로 한 주 동안 시장을 움직인 핵심 이슈를 정리하고, 다음 주 주목해야 할 일정과 준비 포인트를 요약하는 데 목적이 있습니다."
     );
     expect(briefing.marketSummary.overall).toBe(
       "미국과 국내 증시 모두 변동성 확대가 이어졌습니다."
+    );
+  });
+
+  it("keeps post-market titles and purpose text aligned to the evening session intent", () => {
+    const briefing = buildPublicDailyBriefing({
+      briefingSession: "post_market",
+      runDate: "2026-03-27",
+      summaryLine: "국내장 결과를 바탕으로 미국장 예보를 다시 맞추는 구간입니다.",
+      marketResults: [],
+      marketBullets: [
+        "국내장 변동성은 컸지만 종가 기준 낙폭은 일부 축소됐습니다.",
+        "환율 부담은 남아 있지만 장 후반 수급은 다소 진정됐습니다."
+      ]
+    });
+
+    expect(briefing.title).toBe("🗞️ 장 마감 후 시장 브리핑 (2026-03-27)");
+    expect(briefing.sessionRole).toBe("국장/대체거래소 결과 분석 및 미장 예보");
+    expect(briefing.marketSummary.purpose).toBe(
+      "이번 저녁 브리핑은 오늘 국내장과 대체거래소 흐름을 정리하고, 그 결과를 바탕으로 오늘 밤 미국장 방향을 예보하는 데 목적이 있습니다."
     );
   });
 

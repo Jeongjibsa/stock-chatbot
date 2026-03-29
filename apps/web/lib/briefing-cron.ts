@@ -1,5 +1,6 @@
 import {
   isScheduledBriefingSessionAllowed,
+  listScheduledBriefingSessionsForDate,
   type BriefingSession,
   parseBriefingSession,
   resolveScheduledBriefingSession
@@ -41,6 +42,7 @@ export function readCronRuntimeEnvironment(publicBriefingBaseUrl: string) {
 
 export async function runBriefingSession(input: {
   briefingSession: BriefingSession;
+  now?: Date;
   reportRunDate?: string | null;
   runtimeEnv: ReturnType<typeof readCronRuntimeEnvironment>;
   triggerType: TriggerType;
@@ -52,9 +54,10 @@ dependencies: {
   sleep?: (ms: number) => Promise<void>;
 } = {}) {
   if (
-    input.triggerType === "schedule" &&
+    !input.reportRunDate?.trim() &&
     !isScheduledBriefingSessionAllowed(input.briefingSession, {
-      timeZone: input.runtimeEnv.REPORT_TIMEZONE ?? "Asia/Seoul"
+      timeZone: input.runtimeEnv.REPORT_TIMEZONE ?? "Asia/Seoul",
+      ...(input.now ? { now: input.now } : {})
     })
   ) {
     return {
@@ -253,7 +256,10 @@ export function resolveRequestedBriefingSessions(input: {
   }
 
   if (input.briefingSessionParam === "both") {
-    return ["pre_market", "post_market"];
+    return listScheduledBriefingSessionsForDate({
+      timeZone: input.timeZone ?? "Asia/Seoul",
+      ...(input.now ? { now: input.now } : {})
+    });
   }
 
   const resolved = resolveScheduledBriefingSession({

@@ -154,6 +154,14 @@ export class TelegramBotApiClient {
 export class TelegramReportDeliveryAdapter implements ReportDeliveryAdapter {
   constructor(
     private readonly dependencies: {
+      auditPort?: {
+        insert(input: {
+          chatId: string;
+          method?: string;
+          telegramMessageId?: string;
+          text: string;
+        }): Promise<unknown>;
+      };
       telegramClient: TelegramBotApiClient;
     }
   ) {}
@@ -167,6 +175,15 @@ export class TelegramReportDeliveryAdapter implements ReportDeliveryAdapter {
       chatId: request.recipientId,
       text: request.renderedText
     });
+
+    if (this.dependencies.auditPort) {
+      await this.dependencies.auditPort.insert({
+        chatId: message.chatId,
+        method: "sendMessage",
+        telegramMessageId: message.messageId,
+        text: message.text
+      });
+    }
 
     return {
       channel: request.channel,

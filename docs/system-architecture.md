@@ -67,7 +67,7 @@ flowchart TD
 
 - `pre_market`: `월~토` 허용
 - `post_market`: `월~금` 허용
-- `weekend_briefing`: `토요일 08:00 KST` 공개 브리핑 전용
+- `weekend_briefing`: `토요일 07:30 KST` 공개 브리핑 전용
 - 구현 기준: `packages/application/src/briefing-session.ts`
 
 ### 3.2 Session Orchestration
@@ -79,7 +79,7 @@ flowchart TD
 
 핵심 규칙:
 
-1. `schedule` 트리거면 먼저 `isScheduledBriefingSessionAllowed()`로 오늘 허용 세션인지 확인한다.
+1. `reportRunDate`가 없는 current-date 실행이면 먼저 `isScheduledBriefingSessionAllowed()`로 오늘 허용 세션인지 확인한다. 이 규칙은 `schedule`뿐 아니라 `workflow_dispatch` current-date 실행에도 적용된다.
 2. 세션별 env를 구성한다.
    - `BRIEFING_SESSION`
    - `REPORT_TRIGGER_TYPE`
