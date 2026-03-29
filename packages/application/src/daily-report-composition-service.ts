@@ -221,6 +221,7 @@ export function repairPublicSummaryLine(input: {
   currentSummary: string;
   keyIndicatorBullets: string[];
   macroTrendBriefs: MacroTrendBrief[];
+  priorSignals?: string[];
   priorSummary?: string | null;
 }) {
   const summary = input.currentSummary.trim();
@@ -233,9 +234,20 @@ export function repairPublicSummaryLine(input: {
     return summary;
   }
 
-  const primarySignal =
-    input.keyIndicatorBullets.find((bullet) => !looksLikeSessionSignal(bullet)) ??
-    input.keyIndicatorBullets[0];
+  const priorSignalSet = new Set(
+    (input.priorSignals ?? []).map((signal) => normalizeEventTitle(signal))
+  );
+  const orderedSignals = [
+    ...input.keyIndicatorBullets.filter(
+      (bullet) =>
+        !looksLikeSessionSignal(bullet) &&
+        !priorSignalSet.has(normalizeEventTitle(bullet))
+    ),
+    ...input.keyIndicatorBullets.filter((bullet) => !looksLikeSessionSignal(bullet)),
+    ...input.keyIndicatorBullets
+  ];
+  const uniqueSignals = dedupeSignalBullets(orderedSignals);
+  const primarySignal = uniqueSignals[0];
   const themeClause = buildThemeBridgeClause(input.macroTrendBriefs[0]?.theme);
   const sessionClause = buildSessionBridgeClause(input.briefingSession);
 

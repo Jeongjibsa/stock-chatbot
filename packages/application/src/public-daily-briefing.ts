@@ -5,6 +5,7 @@ import {
   type BriefingSession
 } from "./briefing-session.js";
 import type { MarketDataFetchResult } from "./market-data.js";
+import { isRelevantPublicMacroReference } from "./macro-trend-news-service.js";
 import { buildIndicatorTags } from "./personal-rebalancing-snapshot.js";
 
 export type PublicDailyBriefing = {
@@ -124,11 +125,8 @@ export function buildPublicDailyBriefing(input: {
   const eventBullets = input.eventBullets ?? [];
   const riskBullets = input.riskBullets ?? [];
   const keyIndicatorBullets = input.keyIndicatorBullets ?? [];
-  const newsReferences = input.newsReferences ?? [];
-  const headlineEvents = (input.headlineEvents ?? []).map((event) => ({
-    ...event,
-    summary: sanitizeHeadlineEventSummary(event.summary)
-  }));
+  const newsReferences = sanitizePublicNewsReferences(input.newsReferences ?? []);
+  const headlineEvents = sanitizePublicHeadlineEvents(input.headlineEvents ?? []);
   const trendNewsBullets = input.trendNewsBullets ?? [];
   const hasExplicitPurposeBullet = isExplicitPurposeBullet(marketBullets[0]);
   const narrativeMarketBullets = hasExplicitPurposeBullet
@@ -221,6 +219,68 @@ function sanitizeHeadlineEventSummary(summary: string) {
     .replace(/^\*\*?\s*브리핑용 요약 제안\s*\**\s*[:：-]?\s*/i, "")
     .replace(/^브리핑용 요약 제안\s*[:：-]?\s*/i, "")
     .trim();
+}
+
+function sanitizePublicHeadlineEvents(
+  events: PublicDailyBriefing["headlineEvents"]
+) {
+  const seen = new Set<string>();
+
+  return events
+    .map((event) => ({
+      ...event,
+      headline: event.headline.trim(),
+      sourceLabel: event.sourceLabel.trim(),
+      summary: sanitizeHeadlineEventSummary(event.summary)
+    }))
+    .filter((event) =>
+      isRelevantPublicMacroReference({
+        sourceLabel: event.sourceLabel,
+        summary: event.summary,
+        title: event.headline
+      })
+    )
+    .filter((event) => {
+      const key = `${event.sourceLabel.toLowerCase()}|${event.headline.toLowerCase()}`;
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 4);
+}
+
+function sanitizePublicNewsReferences(
+  references: PublicDailyBriefing["newsReferences"]
+) {
+  const seen = new Set<string>();
+
+  return references
+    .map((reference) => ({
+      sourceLabel: reference.sourceLabel.trim(),
+      title: reference.title.trim(),
+      url: reference.url.trim()
+    }))
+    .filter((reference) =>
+      isRelevantPublicMacroReference({
+        sourceLabel: reference.sourceLabel,
+        title: reference.title
+      })
+    )
+    .filter((reference) => {
+      const key = reference.url || `${reference.sourceLabel.toLowerCase()}|${reference.title.toLowerCase()}`;
+
+      if (seen.has(key)) {
+        return false;
+      }
+
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 6);
 }
 
 export function buildPublicBriefingCanonicalPath(

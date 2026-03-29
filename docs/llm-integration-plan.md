@@ -124,6 +124,8 @@
 - public briefing 저장/렌더 단계는 `headlineEvents.summary`에 남아 있는 legacy label prefix를 제거해야 한다. 즉 model 출력이 어설프더라도 최종 markdown/html 공개본에는 literal `브리핑용 요약 제안` 문구를 남기지 않는다.
 - public briefing 저장 단계는 `headlineEvents.summary`를 최종 한국어 문장으로 다시 보정할 수 있어야 한다. 즉 model이 headline과 맞지 않는 generic theme summary를 여러 제목에 재사용하거나 영어 설명을 남겨도, 최종 공개본에는 title-aligned Korean 시장 해석 한 줄만 저장해야 한다.
 - historical public regenerate/backfill은 현재 시점 live RSS를 과거 row에 덮어쓰지 않고, 같은 날짜의 persisted `news_items`를 우선 재사용해야 한다. 저장된 historical news가 없으면 headline/trend news 섹션을 비운 채 시장 데이터 기반 fallback만 유지한다.
+- persisted historical `news_items`를 재사용하더라도 public relevance filter는 `analyzeMacroTrends` 단계에서 다시 적용돼야 한다. 즉 이전에 저장된 item이라도 생활형/개인재무성 headline이나 단일 기업성 저신호 기사는 최종 public headline/reference 후보에서 다시 제외한다.
+- public `oneLineSummary`를 fallback으로 다시 조합할 때는 직전 같은 세션의 `priorSignals`와 겹치지 않는 신호를 우선 사용해야 한다. 최근 7일 feed에서 같은 첫 문장만 반복되는 pre/post title을 줄이는 것이 목적이다.
 - fixed scheduled Telegram delivery는 공개 브리핑 row가 먼저 적재된 세션에서는 persisted public `summary/signals`와 개인화 snapshot만 재사용하고, 공통 시장 해석용 추가 LLM 조합을 다시 호출하지 않는다.
 - `OPENAI_API_KEY`가 없거나 composition 단계가 실패하면 기존 규칙 기반 renderer fallback으로 계속 생성한다.
 - scheduled public briefing의 `public_web` composition은 cron critical path 보호를 위해 hard timeout을 사용하고, timeout 또는 provider 지연 시에도 규칙 기반 fallback으로 즉시 완료해야 한다.
