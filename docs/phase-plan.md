@@ -28,6 +28,8 @@
 - 검증이 끝난 작업 단위는 commit하고, 원격이 준비되어 있으면 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 별도 확인 없이 수행하는 기본 단계다.
 - 구현 변경은 테스트 시나리오 delta와 scope 분류를 `docs/e2e-change-workflow.md`에 먼저 반영하고, 최종 gate `pnpm e2e:final`까지 수행하는 것을 기본값으로 한다.
+- browser verification은 `web` 변경일 때만 Playwright를 조건부로 사용하고, Telegram primary 검증 경로는 live webhook E2E를 기준으로 유지한다.
+- GitHub Actions/CI를 건드리는 작업은 마감 전에 `gh workflow list`, `gh run list --limit <n>`, `gh run view <run-id> --log-failed`로 inventory와 최근 failing run을 확인한다.
 - Telegram/webhook/cron/public feed/production Neon에 영향을 주는 작업은 `로컬 검증 -> commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E` 순서를 기본 마감 사이클로 사용한다.
 - 위 사이클 중 하나라도 남아 있으면 해당 작업은 완료가 아니다.
 

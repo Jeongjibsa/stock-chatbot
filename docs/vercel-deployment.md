@@ -53,7 +53,7 @@ ADMIN_DASHBOARD_PASSWORD=strong-password
 
 ## GitHub Actions 연동
 
-공개 웹을 Vercel로 전환한 뒤에는 GitHub repository variable `PUBLIC_BRIEFING_BASE_URL`과 `VERCEL_RECONCILE_URL`을 실제 배포 URL로 맞춰야 한다.
+공개 웹을 Vercel로 전환한 뒤에는 GitHub repository variable `PUBLIC_BRIEFING_BASE_URL`과 `VERCEL_RECONCILE_URL`을 실제 배포 URL로 맞춰야 한다. 현재 GitHub Actions inventory는 `CI`와 `Daily Report` 두 개만 유지한다.
 
 예시:
 
@@ -66,7 +66,7 @@ VERCEL_RECONCILE_URL=https://your-project.vercel.app/api/cron/reconcile
 
 - Telegram 리포트 하단의 공개 상세 링크 생성
 - daily report worker의 public detail URL 조합
-- GitHub Actions `Daily Report` backup/reconcile 호출
+- GitHub Actions `Daily Report` manual reconcile 호출
 
 GitHub repository secret에는 아래 값도 필요하다.
 
@@ -81,6 +81,8 @@ PUBLIC_BRIEFING_BASE_URL=https://web-three-tau-58.vercel.app
 VERCEL_RECONCILE_URL=https://web-three-tau-58.vercel.app/api/cron/reconcile
 CRON_SECRET=<same-shared-secret>
 ```
+
+`Daily Report` workflow는 `workflow_dispatch` 전용이고, 기본 mode는 `vercel-reconcile`이다. reconcile 호출이 실패하면 workflow 로그에 request URL, HTTP status, response body가 남아야 한다.
 
 ## Telegram webhook 등록
 

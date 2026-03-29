@@ -9,6 +9,8 @@
 - 사용자-visible 변경이나 운영 경로 변경은 시나리오 delta 없이 끝내지 않습니다.
 - 최종 마감은 `pnpm e2e:final` 또는 동등한 live verification까지 포함합니다.
 - live E2E를 못 돌리면 완료가 아니라 blocked 상태로 보고합니다.
+- browser verification은 `web` 변경일 때만 Playwright를 조건부로 사용합니다.
+- GitHub Actions/CI 변경은 코드 수정만으로 끝내지 않고 workflow inventory와 최근 failing run 확인까지 포함합니다.
 
 ## 기본 작업 순서
 
@@ -18,12 +20,13 @@
    - `web`
    - `telegram-harness`
    - `ops`
-2. 아래 시나리오 기준선에서 영향받는 항목을 찾고, 기대 결과를 문서와 테스트에 반영합니다.
-3. 코드와 테스트를 함께 수정합니다.
-4. source-of-truth 문서가 바뀌면 `change-log -> PRD -> phase plan -> context summary` 순으로 동기화합니다.
-5. 로컬 범위 검증을 실행합니다.
-6. `pnpm e2e:final -- --scope=... --allow-production --suite=minimum`으로 최종 gate를 수행합니다.
-7. production 영향 변경은 deploy/DB 반영 후 live E2E 결과까지 남깁니다.
+2. GitHub Actions/CI를 건드리는 변경이면 `gh workflow list`, `gh run list --limit <n>`, `gh run view <run-id> --log-failed`로 현재 inventory와 최근 실패 원인을 먼저 확인합니다.
+3. 아래 시나리오 기준선에서 영향받는 항목을 찾고, 기대 결과를 문서와 테스트에 반영합니다.
+4. 코드와 테스트를 함께 수정합니다.
+5. source-of-truth 문서가 바뀌면 `change-log -> PRD -> phase plan -> context summary` 순으로 동기화합니다.
+6. 로컬 범위 검증을 실행합니다.
+7. `pnpm e2e:final -- --scope=... --allow-production --suite=minimum`으로 최종 gate를 수행합니다.
+8. production 영향 변경은 deploy/DB 반영 후 live E2E 결과까지 남깁니다.
 
 ## 시나리오 기준선
 
@@ -45,7 +48,7 @@
 | `db` | `make test-integration` | repository/schema 경로 검증. integration test는 반드시 로컬 Docker PostgreSQL만 사용해야 하며, non-local/Neon `DATABASE_URL` 대상으로는 실행되면 안 된다. |
 | `web` | `pnpm --filter @stock-chatbot/web build` | Vercel/Next.js 빌드 회귀 |
 | `telegram-harness` | `make test-integration` + E2E env/webhook-driver tests | 하네스/driver 회귀 |
-| `ops` | `make test-integration` + web build + current-week public coverage smoke + live minimum suite + production cron smoke | webhook/cron/feed/admin 운영 경로와 cron fallback/재배치, `weekend_briefing`, Upstash env wiring, public week data retention smoke 회귀 |
+| `ops` | `make test-integration` + web build + current-week public coverage smoke + live minimum suite + production cron smoke + GitHub Actions triage(해당 시) | webhook/cron/feed/admin 운영 경로와 cron fallback/재배치, `weekend_briefing`, Upstash env wiring, public week data retention smoke, workflow inventory/최근 failing run 회귀 |
 
 ## 자동화 명령
 
@@ -72,6 +75,7 @@ COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=telegram-harness --skip-li
 - `--skip-live`는 로컬 준비 단계용입니다.
 - 최종 완료 보고에는 `--allow-production` 기반 live suite 또는 동등한 production verification이 필요합니다.
 - integration test는 검증용 로컬 DB와 운영용 Neon DB를 반드시 분리해야 합니다. Docker Postgres를 띄운 뒤에도 production `DATABASE_URL`을 넘긴 채 실행하면 안 됩니다.
+- Upstash는 source-of-truth가 아니므로 cache 관련 변경일 때만 검증 대상으로 올립니다.
 
 ## 에이전트용 완료 정의
 

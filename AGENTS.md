@@ -62,7 +62,6 @@
 - GitHub Actions: CI + backup/reconcile/manual rerun
 - local Docker PostgreSQL/Redis: 개발 및 검증용
 - Neon: production DB target
-- GitHub Pages: 현재 기준 deprecated fallback 성격의 공개 경로
 
 ## Active Product Rules
 
@@ -85,6 +84,8 @@
 - 불필요한 의존성을 추가하지 않는다.
 - core logic는 채널 독립적으로 유지하고, Telegram-specific delivery는 adapter 경계 안에 둔다.
 - `apps/api`를 새 primary runtime처럼 다루지 않는다.
+- browser verification은 `web` 변경일 때만 Playwright를 조건부로 사용한다.
+- GitHub Actions/CI를 바꾸는 작업은 최근 failing run과 workflow inventory 확인까지 포함해 마감한다.
 
 ## Documentation Sync Rules
 
@@ -124,6 +125,14 @@ web 변경 시 추가:
 
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm --filter @stock-chatbot/web build
+```
+
+GitHub Actions/CI 변경 시 추가:
+
+```bash
+gh workflow list
+gh run list --limit 10
+gh run view <run-id> --log-failed
 ```
 
 Telegram E2E harness 변경 시 추가:

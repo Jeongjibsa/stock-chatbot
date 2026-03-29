@@ -169,6 +169,7 @@
 | CHG-0140 | 2026-03-29 | FIX | production `ticker_masters`가 integration fixture 3건으로 오염될 수 있던 검증 경로를 차단했다. integration test는 이제 non-local/Neon `DATABASE_URL`이면 즉시 실패하고, `make test-integration`은 로컬 Docker PostgreSQL(`127.0.0.1:5432`)만 강제로 사용한다. 동시에 production Neon `ticker_masters`를 CSV 9,818행 기준으로 재적재했다. | Change Log, E2E Docs, AGENTS, Code, Ops | yes |
 | CHG-0141 | 2026-03-29 | FIX | 공개 브리핑 JSON artifact 기본 출력 경로를 현재 작업 디렉터리 의존 상대 경로에서 저장소 루트 기준 절대 경로로 고정했다. 동시에 생성물 `artifacts/`, `apps/worker/artifacts/`는 git ignore 대상으로 전환해 실행 위치에 따라 중복 산출물이 생기더라도 저장소 변경으로 섞이지 않게 했다. | Change Log, Architecture, Code, Ops | yes |
 | CHG-0142 | 2026-03-29 | UPDATE | 공개 웹 기반 feed/detail 페이지에서 모바일 친화적인 수직 단일 레이아웃을 도입하고, 시그널 배지를 모노톤(Black/Slate)으로 재디자인했다. 또한 공용 리포트 렌더링 시 항목 라벨에 볼드(`**`) 처리를 강제하여 모바일 화면에서의 스캐너빌리티 및 가독성을 극대화했다. | Change Log, Code | yes |
+| CHG-0143 | 2026-03-29 | UPDATE | 저장소 전용 agent loop를 `repo-native 검증 -> 운영 경로 검증 -> GitHub/Vercel 확인` 기준으로 재정의하고, GitHub Actions inventory를 `CI + Daily Report(manual reconcile)`만 남기도록 정리했다. CI의 pnpm version mismatch를 workflow 설정에서 제거했고, `Daily Report Smoke` 및 `Telegram Smoke Test` workflow와 GitHub Pages fallback deploy 단계는 삭제했다. `Daily Report` workflow는 `vercel-reconcile/local-worker` 명시 모드와 HTTP status/response body 로깅을 사용하도록 단순화했다. | PRD, Plan, Change Log, Context, E2E Docs, Deployment, AGENTS, Workflow | yes |
 
 ## 4. Open Change Notes
 

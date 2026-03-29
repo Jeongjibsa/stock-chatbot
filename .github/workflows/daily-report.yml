@@ -3,6 +3,24 @@ name: Daily Report
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: "Execution mode"
+        required: true
+        default: vercel-reconcile
+        type: choice
+        options:
+          - vercel-reconcile
+          - local-worker
+      briefing_session:
+        description: "Optional briefing session override"
+        required: false
+        type: choice
+        default: both
+        options:
+          - both
+          - pre_market
+          - post_market
+          - weekend_briefing
       report_run_date:
         description: "Optional run date override in YYYY-MM-DD"
         required: false
@@ -13,173 +31,116 @@ env:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  build-public-briefing:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    env:
-      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-      LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      PUBLIC_BRIEFING_OUTPUT_PATH: ""
-      REPORT_RUN_DATE: ""
-      REPORT_TRIGGER_TYPE: ${{ github.event_name }}
-
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Ensure Pages working directory
-        run: mkdir -p public-site
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.15.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24.14.0
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build workspace
-        run: pnpm build
-
-      - name: Build public briefing JSON
-        run: |
-          PUBLIC_BRIEFING_OUTPUT_PATH="$GITHUB_WORKSPACE/artifacts/public-briefing/public-daily-briefing.json" \
-            pnpm --filter @stock-chatbot/worker run run:public-briefing
-
-      - name: Build public briefing site
-        run: |
-          pnpm pages:build "$GITHUB_WORKSPACE/artifacts/public-briefing/public-daily-briefing.json" public-site
-
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: public-site
-
-  deploy-public-briefing:
-    needs: build-public-briefing
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
   run-daily-report:
-    needs: deploy-public-briefing
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     env:
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DAILY_REPORT_TRIGGER_TOKEN: ${{ secrets.DAILY_REPORT_TRIGGER_TOKEN }}
-      DAILY_REPORT_TRIGGER_URL: ${{ secrets.DAILY_REPORT_TRIGGER_URL }}
       FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       PUBLIC_BRIEFING_BASE_URL: ${{ vars.PUBLIC_BRIEFING_BASE_URL }}
       REDIS_URL: ${{ secrets.REDIS_URL }}
-      REPORT_RUN_DATE: ""
+      REPORT_RUN_DATE: ${{ inputs.report_run_date }}
       REPORT_TRIGGER_TYPE: ${{ github.event_name }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       VERCEL_RECONCILE_URL: ${{ vars.VERCEL_RECONCILE_URL }}
+      WORKFLOW_MODE: ${{ inputs.mode }}
+      WORKFLOW_BRIEFING_SESSION: ${{ inputs.briefing_session }}
 
     steps:
       - name: Check daily report prerequisites
         id: preflight
         run: |
-          if [ -n "${VERCEL_RECONCILE_URL}" ] && [ -n "${CRON_SECRET}" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "mode=vercel-reconcile" >> "$GITHUB_OUTPUT"
+          echo "selected_mode=${WORKFLOW_MODE}" >> "$GITHUB_OUTPUT"
+          echo "report_run_date=${REPORT_RUN_DATE}" >> "$GITHUB_OUTPUT"
+          echo "briefing_session=${WORKFLOW_BRIEFING_SESSION}" >> "$GITHUB_OUTPUT"
+
+          if [ "${WORKFLOW_MODE}" = "vercel-reconcile" ]; then
+            if [ -z "${VERCEL_RECONCILE_URL}" ] || [ -z "${CRON_SECRET}" ]; then
+              echo "Missing VERCEL_RECONCILE_URL or CRON_SECRET for vercel-reconcile mode." >&2
+              exit 1
+            fi
             exit 0
           fi
 
-          if [ -n "${DAILY_REPORT_TRIGGER_URL}" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "mode=external-trigger" >> "$GITHUB_OUTPUT"
+          if [ "${WORKFLOW_MODE}" = "local-worker" ]; then
+            if [ -z "${DATABASE_URL}" ]; then
+              echo "Missing DATABASE_URL for local-worker mode." >&2
+              exit 1
+            fi
             exit 0
           fi
 
-          if [ -z "${DATABASE_URL}" ]; then
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            echo "mode=skip-missing-database" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "should_run=true" >> "$GITHUB_OUTPUT"
-          echo "mode=local-worker" >> "$GITHUB_OUTPUT"
+          echo "Unsupported mode: ${WORKFLOW_MODE}" >&2
+          exit 1
 
       - name: Checkout
-        if: ${{ steps.preflight.outputs.should_run == 'true' }}
         uses: actions/checkout@v4
 
       - name: Setup pnpm
-        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
+        if: ${{ steps.preflight.outputs.selected_mode == 'local-worker' }}
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.15.1
 
       - name: Setup Node.js
-        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
+        if: ${{ steps.preflight.outputs.selected_mode == 'local-worker' }}
         uses: actions/setup-node@v4
         with:
           node-version: 24.14.0
           cache: pnpm
 
       - name: Install dependencies
-        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
+        if: ${{ steps.preflight.outputs.selected_mode == 'local-worker' }}
         run: pnpm install --frozen-lockfile
 
       - name: Build worker
-        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
+        if: ${{ steps.preflight.outputs.selected_mode == 'local-worker' }}
         run: pnpm build
 
       - name: Run daily report job
-        if: ${{ steps.preflight.outputs.mode == 'local-worker' }}
+        if: ${{ steps.preflight.outputs.selected_mode == 'local-worker' }}
         run: pnpm --filter @stock-chatbot/worker run run:daily-report
 
-      - name: Trigger dedicated worker
-        if: ${{ steps.preflight.outputs.mode == 'external-trigger' }}
+      - name: Print selected mode
         run: |
-          curl -fsS -X POST "${DAILY_REPORT_TRIGGER_URL}" \
-            -H "content-type: application/json" \
-            -H "authorization: Bearer ${DAILY_REPORT_TRIGGER_TOKEN}" \
-            -d "{\"triggerType\":\"${REPORT_TRIGGER_TYPE}\",\"reportRunDate\":\"${REPORT_RUN_DATE}\",\"source\":\"github-actions\"}"
+          echo "mode=${{ steps.preflight.outputs.selected_mode }}"
+          echo "report_run_date=${{ steps.preflight.outputs.report_run_date }}"
+          echo "briefing_session=${{ steps.preflight.outputs.briefing_session }}"
 
       - name: Trigger Vercel reconcile route
-        if: ${{ steps.preflight.outputs.mode == 'vercel-reconcile' }}
+        if: ${{ steps.preflight.outputs.selected_mode == 'vercel-reconcile' }}
         run: |
           URL="${VERCEL_RECONCILE_URL}"
           if [ -n "${REPORT_RUN_DATE}" ]; then
             URL="${URL}?reportRunDate=${REPORT_RUN_DATE}"
           fi
-          curl -fsS "${URL}" \
-            -H "authorization: Bearer ${CRON_SECRET}"
+          if [ "${WORKFLOW_BRIEFING_SESSION}" != "both" ]; then
+            SEP="?"
+            if printf '%s' "${URL}" | grep -q '?'; then
+              SEP="&"
+            fi
+            URL="${URL}${SEP}briefingSession=${WORKFLOW_BRIEFING_SESSION}"
+          fi
 
-      - name: Skip daily report job
-        if: ${{ steps.preflight.outputs.mode == 'skip-missing-database' }}
-        run: |
-          echo "Neither Vercel reconcile nor worker execution prerequisites are configured, so personal daily report delivery is skipped."
+          echo "Triggering reconcile URL: ${URL}"
+          STATUS_FILE="$(mktemp)"
+          BODY_FILE="$(mktemp)"
+
+          curl -sS -o "${BODY_FILE}" -w "%{http_code}" "${URL}" \
+            -H "authorization: Bearer ${CRON_SECRET}" > "${STATUS_FILE}"
+
+          STATUS="$(cat "${STATUS_FILE}")"
+          echo "selected_mode=${WORKFLOW_MODE}"
+          echo "http_status=${STATUS}"
+          echo "response_body:"
+          cat "${BODY_FILE}"
+
+          if [ "${STATUS}" -lt 200 ] || [ "${STATUS}" -ge 300 ]; then
+            echo "Reconcile request failed with status ${STATUS}." >&2
+            exit 1
+          fi

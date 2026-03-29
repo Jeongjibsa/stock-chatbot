@@ -51,8 +51,9 @@
 - GitHub public repository와 `origin/main` push 기준선이 준비됐다.
 - 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
 - 초기 운영은 GitHub Actions CI + workflow_dispatch 기반 검증을 우선 사용했고, 정시 실행은 현재 Vercel Cron primary 기준으로 고정한다. 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
-- 저장소에는 GitHub Actions `CI`와 `Daily Report` workflow가 추가됐고, worker에는 queue 없이 직접 일 배치를 수행하는 daily report runner 엔트리포인트가 추가됐다.
-- GitHub Actions에는 `Daily Report Smoke` workflow가 추가됐고, GitHub-hosted runner 안에서 임시 PostgreSQL을 띄워 mock 사용자/포트폴리오를 seed한 뒤 Gemini 기반 daily report 생성 경로를 수동 검증할 수 있다.
+- 저장소의 현재 GitHub Actions inventory는 `CI`와 `Daily Report` 두 개다. `CI`는 저장소 공통 검증만 담당하고, `Daily Report`는 `workflow_dispatch` 기반 manual reconcile/local-worker rerun만 담당한다.
+- GitHub Actions 변경을 마감할 때는 `gh workflow list`, `gh run list --limit <n>`, `gh run view <run-id> --log-failed`로 inventory와 최근 실패 원인을 먼저 확인한다.
+- 최근 CI 실패 원인은 `pnpm/action-setup`의 하드코딩 버전과 루트 `packageManager` 충돌이었고, workflow는 이제 루트 pnpm 버전을 단일 source-of-truth로 사용한다.
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 항상 수행하는 기본 마감 단계다.
 - 분석 엔진이 커지면 Python 분석 서비스 분리를 고려한다.
@@ -94,7 +95,7 @@
 - 현재 일 리포트 prompt 계약은 `telegram_personalized`와 `public_web` audience를 구분한다. 두 경로 모두 같은 structured output JSON을 유지하지만, Telegram은 개인화 리밸런싱 우선순위를, 공개 웹은 비개인화 시장 해석 guardrail을 강제한다.
 - worker의 실제 daily report 경로는 `OPENAI_API_KEY`가 있을 때 뉴스 요약뿐 아니라 리포트 본문 조합도 LLM으로 수행하고, 실패 시 기존 렌더러 fallback으로 계속 진행한다.
 - application 계층에는 실 Telegram Bot API `getMe`/`sendMessage`를 감싼 provider adapter가 추가됐다.
-- telegram-bot 앱에는 `TELEGRAM_TEST_CHAT_ID` 기반 smoke runner가 추가됐고, 로컬 `make test-telegram`과 GitHub Actions `Telegram Smoke Test` workflow로 같은 검증을 실행할 수 있다.
+- telegram-bot 앱에는 `TELEGRAM_TEST_CHAT_ID` 기반 smoke runner가 남아 있지만, 현재 운영 기준의 Telegram 회귀 gate는 GitHub Actions smoke가 아니라 live Telegram E2E harness다.
 - 기본 거시 시장 카탈로그에는 `코스피`, `코스닥`, `S&P 500`, `국제 유가 (WTI)`, `천연가스 (Henry Hub)`, `구리`가 포함된다.
 - `commodity:COPPER`는 FRED `PCOPPUSDM`으로 연결돼 있고 월간 지표로 해석한다.
 - 지수성 자산(`S&P500`, `NASDAQ`, `DOW`, `VIX`, `KOSPI`, `KOSDAQ`)은 Yahoo Finance scraping을 우선 사용하고, 금리/환율/원자재는 FRED를 우선 사용한다.
@@ -132,7 +133,7 @@
 - 멀티 사용자 실채널 테스트 체크리스트는 `docs/telegram-multi-user-test-scenarios.md`를 기준으로 사용한다.
 - daily report worker는 이제 생성 성공 후 `preferred_delivery_chat_id`가 있는 사용자에게 Telegram DM delivery를 시도한다.
 - worker summary 로그에는 `delivered`, `deliverySkipped`, `deliveryFailed` 집계가 추가됐다.
-- 현재 공개 브리핑에는 GitHub Pages fallback 경로가 있으나, primary public web은 `Vercel + Next.js App Router + reports read model` 기준으로 이미 전환 구현됐다.
+- 공개 브리핑의 primary public web은 `Vercel + Next.js App Router + reports read model` 기준으로 고정됐고, GitHub Pages fallback deploy는 현재 운영 inventory에서 제거됐다.
 - database 계층에는 공개 브리핑용 `reports` 읽기 모델이 추가됐다. 이 테이블은 `report_date`, `summary`, `market_regime`, `total_score`, `signals`, `indicator_tags`, `content_markdown`, `created_at`을 저장하고, 공개 웹 feed/detail의 조회 모델로만 사용한다.
 - database 계층에는 `personal_rebalancing_snapshots` read model이 추가됐다. 이 테이블은 `user_id + effective_report_date + snapshot_version` 키로 개인화 리밸런싱 payload JSONB를 저장하고, 현재는 요청일(KST) 기준 날짜별 cache로 사용된다.
 - `run-public-briefing`은 이제 공개 브리핑 JSON 파일만 만드는 것이 아니라, `DATABASE_URL`이 설정된 경우 공개 가능한 브리핑을 `reports`에도 저장한다.
@@ -165,12 +166,11 @@
 - Telegram webhook 경로는 이제 `telegram_processed_updates` 저장 모델로 `update_id`를 dedupe한다. 같은 Telegram update가 재전송돼도 command handler는 한 번만 실행돼야 한다.
 - Telegram bot runtime은 이제 outbound reply를 `telegram_outbound_messages`에 기록한다. 이 로그는 production-like E2E harness가 Telegram-visible 응답 문구를 검증하는 read model 역할을 하며, 운영 장애 분석에도 활용할 수 있다.
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
-- GitHub Actions `Daily Report`는 `workflow_dispatch`로만 실행하며, `VERCEL_RECONCILE_URL + CRON_SECRET`이 있으면 Vercel reconcile endpoint를 우선 호출하고, 없을 때만 external worker 또는 local worker fallback으로 동작한다.
+- GitHub Actions `Daily Report`는 `workflow_dispatch`로만 실행하며, 기본 mode는 `vercel-reconcile`이다. 운영자가 선택할 때만 `local-worker` mode를 사용하고, reconcile 호출 실패 시 HTTP status와 response body를 로그에 남긴다.
 - `apps/web`에는 Basic Auth 기반 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, Telegram user별 등록 상태/차단 상태/오늘 사용량을 조회하며 block/unblock 제어를 제공한다. `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
 - `/admin`의 사용자 차단 제어는 POST 후 같은 화면으로 redirect되며 결과 배너를 표시한다. 운영자 `telegram_user_id=8606362482`는 Telegram runtime뿐 아니라 admin route/UI에서도 보호되어 수동 block 대상에서 제외된다.
 - 공개 웹 feed/detail에는 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 들어간다.
 - `/admin`은 Postgres `date` 컬럼을 문자열로 정규화해 렌더링하며, 공개 웹 전체 톤은 Pretendard + shadcn/ui 스타일의 흑백 팔레트로 정리됐다.
-- GitHub Actions `Daily Report` workflow는 `push`와 `schedule`에서도 안전하게 동작하도록 `REPORT_RUN_DATE`를 빈 문자열 fallback으로 읽고, 필요 시 `DAILY_REPORT_TRIGGER_URL`을 통해 외부 전용 worker를 호출할 수 있다.
 - 멀티채널 역할 분리는 `텔레그램=개인화 입력/요약 delivery`, `public web frontend=공개 상세 archive/feed`, `future authenticated web=포트폴리오·히스토리·설정 관리`를 기준선으로 삼는다.
 - 현재 `apps/web`는 `Next.js App Router` 기반 공개 웹으로 전환됐고, Vercel 배포를 primary public frontend로 사용한다.
 - `apps/web`는 이제 Next.js App Router 기반 공개 웹으로 전환됐고, `/`에서 날짜별 latest-first feed를, `/reports/[id]`에서 markdown detail을 제공한다.
@@ -185,7 +185,6 @@
 - fast path에서도 `시장/매크로/자금/이벤트/리스크` 섹션과 상세 링크가 비어 있지 않도록 시장 데이터 기반 rule-based fallback 문장을 사용한다.
 - `report_runs`는 같은 `userId + runDate + scheduleType` 조합으로 중복을 막지만, `running` 상태가 3분 이상 지속되면 stale run으로 보고 같은 row를 재시작한다. 이 규칙은 webhook timeout이나 중간 종료로 인해 하루 종일 `/report`가 막히는 상황을 방지하기 위한 것이다.
 - 사용자별 정기 브리핑 설정은 `daily_report_enabled`, `daily_report_hour`, `daily_report_minute`, `timezone` 기준으로 저장된다. GitHub Actions 스케줄은 매시간 실행되고, worker는 예약 윈도우 안에 들어온 사용자만 실제 발송한다.
-- GitHub Actions `Daily Report` workflow는 기본적으로 local worker를 직접 실행하지만, `DAILY_REPORT_TRIGGER_URL` secret이 설정되면 dedicated worker endpoint를 호출하는 전환 경로를 지원한다.
 - 그룹 온보딩은 `new_chat_members`와 `chat_member`를 둘 다 구독하되, 같은 사용자와 그룹 조합에는 짧은 시간 안에 한 번만 환영 메시지를 보내도록 dedupe한다.
 - legacy note: 과거 텔레그램 `거시 시장 스냅샷` 섹션에서는 `NASDAQ -> S&P500 -> DOW -> VIX -> KOSPI -> KOSDAQ -> 미국 10년물 금리 -> 국제 유가(WTI) -> 천연가스 -> 구리 -> USD/KRW -> 달러인덱스` 순서를 사용했다.
 - legacy note: 과거 텔레그램 `거시 시장 스냅샷` 섹션에서는 `USD/KRW`와 `달러인덱스`를 하단에 연속 배치하고 FX 문장을 바로 아래에 붙였다.
