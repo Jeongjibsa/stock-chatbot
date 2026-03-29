@@ -135,6 +135,9 @@ describe("report prompt contract", () => {
       "headlineEvents는 실제로 입력된 RSS 기사 headline과 reference만 사용해 작성한다."
     );
     expect(prompt.instructions).toContain(
+      "`브리핑용 요약 제안` 같은 라벨 문구를 그대로 쓰지 않는다."
+    );
+    expect(prompt.instructions).toContain(
       "비중 확대, 축소 우선, 교체 검토, 매수 기회, 지금 사야 한다 같은 개인 행동 언어를 쓰지 않는다."
     );
     expect(prompt.instructions).toContain(

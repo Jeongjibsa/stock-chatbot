@@ -125,7 +125,13 @@ export class MacroTrendNewsService implements NewsCollector {
       }
     }
 
-    return dedupeCollectedItems(collected);
+    const deduped = dedupeCollectedItems(collected);
+
+    if (input.audience === "public_web" && input.scope === "macro") {
+      return deduped.filter(isRelevantPublicMacroNewsItem);
+    }
+
+    return deduped;
   }
 
   async analyzeMacroTrends(input: {
@@ -222,6 +228,118 @@ function dedupeCollectedItems(items: CollectedNewsItem[]): CollectedNewsItem[] {
     title: item.title,
     url: item.url
   }));
+}
+
+const STRONG_PERSONAL_FINANCE_KEYWORDS = [
+  "medicaid",
+  "medicare",
+  "social security",
+  "nursing home",
+  "retirement",
+  "retire",
+  "daughter",
+  "son",
+  "wife",
+  "husband",
+  "mother",
+  "father",
+  "parents",
+  "inheritance",
+  "estate planning",
+  "credit card",
+  "mortgage",
+  "student loan",
+  "mobile home",
+  "home insurance",
+  "travel",
+  "shopping",
+  "coupon",
+  "tax refund",
+  "lottery",
+  "divorce"
+];
+
+const MARKET_CONTEXT_KEYWORDS = [
+  "market",
+  "stocks",
+  "shares",
+  "equity",
+  "index",
+  "nasdaq",
+  "s&p",
+  "dow",
+  "kospi",
+  "kosdaq",
+  "bond",
+  "yield",
+  "treasury",
+  "fed",
+  "fomc",
+  "ecb",
+  "boj",
+  "rates",
+  "rate cut",
+  "rate hike",
+  "inflation",
+  "cpi",
+  "ppi",
+  "gdp",
+  "payroll",
+  "jobs report",
+  "dollar",
+  "usd",
+  "fx",
+  "won",
+  "yen",
+  "oil",
+  "crude",
+  "gas",
+  "gold",
+  "copper",
+  "earnings",
+  "guidance",
+  "tariff",
+  "trade",
+  "semiconductor",
+  "chip",
+  "ai",
+  "bank",
+  "energy",
+  "recession",
+  "risk",
+  "volatility",
+  "선물",
+  "증시",
+  "주식",
+  "지수",
+  "금리",
+  "환율",
+  "달러",
+  "국채",
+  "연준",
+  "물가",
+  "고용",
+  "유가",
+  "반도체",
+  "인공지능",
+  "관세",
+  "경기",
+  "긴축",
+  "완화"
+];
+
+function isRelevantPublicMacroNewsItem(item: CollectedNewsItem) {
+  const text = `${item.title} ${item.summary ?? ""}`.toLowerCase();
+
+  if (hasKeyword(text, STRONG_PERSONAL_FINANCE_KEYWORDS)) {
+    return false;
+  }
+
+  if (item.newsSourceId === "marketwatch-topstories") {
+    return hasKeyword(text, MARKET_CONTEXT_KEYWORDS);
+  }
+
+  return true;
 }
 
 async function fetchRssFeed(input: {
