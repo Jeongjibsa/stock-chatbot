@@ -78,6 +78,7 @@ COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=telegram-harness --skip-li
 - 최종 완료 보고에는 `--allow-production` 기반 live suite 또는 동등한 production verification이 필요합니다.
 - integration test는 검증용 로컬 DB와 운영용 Neon DB를 반드시 분리해야 합니다. Docker Postgres를 띄운 뒤에도 production `DATABASE_URL`을 넘긴 채 실행하면 안 됩니다.
 - Upstash는 source-of-truth가 아니므로 cache 관련 변경일 때만 검증 대상으로 올립니다.
+- rolling public recovery smoke의 기본 기준일은 단순 오늘이 아니라 `마지막으로 완결된 공개 브리핑 일자`입니다. 평일 `20:30 KST` 전이나 토요일 `07:30 KST` 전에는 아직 생성될 수 없는 당일 세션을 기대하면 안 됩니다.
 
 ## 에이전트용 완료 정의
 

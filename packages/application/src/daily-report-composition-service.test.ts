@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { DailyReportCompositionService } from "./daily-report-composition-service.js";
+import {
+  DailyReportCompositionService,
+  diversifyPublicKeyIndicatorBullets,
+  repairPublicHeadlineEvents,
+  repairPublicSummaryLine
+} from "./daily-report-composition-service.js";
 
 describe("DailyReportCompositionService", () => {
   it("builds a structured composition request and parses the response", async () => {
@@ -150,5 +155,145 @@ describe("DailyReportCompositionService", () => {
       "미국 장기금리 부담이 남아 있어 성장주 밸류 부담을 같이 보셔야 합니다.",
       "오늘 대응 기준은 환율과 선물 방향이 같은 쪽인지 먼저 보는 것입니다."
     ]);
+  });
+
+  it("rewrites public headline event summaries into title-aligned Korean lines", () => {
+    const result = repairPublicHeadlineEvents({
+      briefingSession: "pre_market",
+      headlineEvents: [
+        {
+          sourceLabel: "MarketWatch",
+          headline:
+            "Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround.",
+          summary:
+            "공개 시장 해석 기준으로 The sportswear giant has been trying to focus more on the needs of athletes."
+        },
+        {
+          sourceLabel: "Yahoo Finance",
+          headline:
+            "Trump 'pays attention to the stock market': Wall Street eyes signs of TACO amid Iran war",
+          summary: "Some English summary from upstream."
+        }
+      ],
+      macroTrendBriefs: [
+        {
+          theme: "market_theme",
+          summary: "공개 시장 해석 기준으로 시장 전반 테마 뉴스가 반복돼 지수 심리와 업종 확산 여부를 함께 점검해야 합니다.",
+          sentiment: "neutral",
+          confidence: "medium",
+          publishedAt: "2026-03-29T00:00:00.000Z",
+          sourceIds: ["marketwatch-topstories"],
+          headlines: [
+            "Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround."
+          ],
+          references: [
+            {
+              sourceLabel: "MarketWatch",
+              title:
+                "Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround.",
+              url: "https://example.com/nike"
+            }
+          ]
+        },
+        {
+          theme: "global_risk",
+          summary: "공개 시장 해석 기준으로 공급망과 지정학 리스크가 시장 전반 테마에 영향을 주고 있어 방어적 해석 비중을 높일 필요가 있습니다.",
+          sentiment: "negative",
+          confidence: "medium",
+          publishedAt: "2026-03-29T00:00:00.000Z",
+          sourceIds: ["yahoo-finance-news"],
+          headlines: [
+            "Trump 'pays attention to the stock market': Wall Street eyes signs of TACO amid Iran war"
+          ],
+          references: [
+            {
+              sourceLabel: "Yahoo Finance",
+              title:
+                "Trump 'pays attention to the stock market': Wall Street eyes signs of TACO amid Iran war",
+              url: "https://example.com/taco"
+            }
+          ]
+        }
+      ]
+    });
+
+    expect(result).toEqual([
+      {
+        sourceLabel: "MarketWatch",
+        headline:
+          "Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround.",
+        summary:
+          "개별 대형주와 업종 뉴스가 지수 기여도와 섹터 심리를 얼마나 흔드는지 함께 보셔야 합니다."
+      },
+      {
+        sourceLabel: "Yahoo Finance",
+        headline:
+          "Trump 'pays attention to the stock market': Wall Street eyes signs of TACO amid Iran war",
+        summary:
+          "관세와 지정학 변수는 경기민감주와 수출주 심리를 동시에 흔들 수 있어 방어적 해석이 필요합니다."
+      }
+    ]);
+  });
+
+  it("diversifies repeated public signals with macro theme candidates", () => {
+    const result = diversifyPublicKeyIndicatorBullets({
+      briefingSession: "post_market",
+      priorSignals: [
+        "VIX 급등으로 변동성 경계가 강화됐습니다.",
+        "에너지 가격 약세가 이어져 인플레이션 기대와 경기 민감주 해석을 함께 조정하셔야 합니다.",
+        "미국 장기금리 부담이 남아 있어 밸류에이션이 높은 성장주는 금리 민감도를 같이 봐야 합니다."
+      ],
+      signals: [
+        "VIX 급등으로 변동성 경계가 강화됐습니다.",
+        "에너지 가격 약세가 이어져 인플레이션 기대와 경기 민감주 해석을 함께 조정하셔야 합니다.",
+        "미국 장기금리 부담이 남아 있어 밸류에이션이 높은 성장주는 금리 민감도를 같이 봐야 합니다."
+      ],
+      macroTrendBriefs: [
+        {
+          theme: "global_risk",
+          summary: "공개 시장 해석 기준으로 공급망과 지정학 리스크가 시장 전반 테마에 영향을 주고 있어 방어적 해석 비중을 높일 필요가 있습니다.",
+          sentiment: "negative",
+          confidence: "medium",
+          publishedAt: "2026-03-29T00:00:00.000Z",
+          sourceIds: ["yahoo-finance-news"],
+          headlines: [],
+          references: []
+        }
+      ]
+    });
+
+    expect(result).toContain(
+      "관세와 지정학 뉴스가 반복돼 경기민감주 심리보다 방어 업종 반응을 먼저 보셔야 합니다."
+    );
+  });
+
+  it("rewrites duplicated generic public summaries from signals and theme context", () => {
+    const result = repairPublicSummaryLine({
+      briefingSession: "pre_market",
+      currentSummary:
+        "달러 강세와 환율 부담이 이어지고 있어, 비중 확대보다 관망과 리스크 관리에 집중하시는 편이 좋습니다.",
+      priorSummary:
+        "달러 강세와 환율 부담이 이어지고 있어, 비중 확대보다 관망과 리스크 관리에 집중하시는 편이 좋습니다.",
+      keyIndicatorBullets: [
+        "달러 강세와 원화 약세가 함께 나타나 환율 부담을 먼저 점검하셔야 합니다.",
+        "장 시작 전에는 미국장 마감 흐름이 국내 시초가에 그대로 이어지는지 먼저 확인하셔야 합니다."
+      ],
+      macroTrendBriefs: [
+        {
+          theme: "fx_rates",
+          summary: "공개 시장 해석 기준으로 달러, 환율, 채권금리 흐름이 변동성 방향을 좌우하고 있어 외환과 금리 민감도를 같이 봐야 합니다.",
+          sentiment: "negative",
+          confidence: "medium",
+          publishedAt: "2026-03-29T00:00:00.000Z",
+          sourceIds: ["reuters"],
+          headlines: [],
+          references: []
+        }
+      ]
+    });
+
+    expect(result).toBe(
+      "달러 강세와 원화 약세가 함께 나타나 환율 부담을 먼저 점검하셔야 합니다. 환율과 채권금리 뉴스가 자산 가격 해석의 중심에 있습니다. 국장 시초가와 초반 수급 반응을 함께 확인하셔야 합니다."
+    );
   });
 });

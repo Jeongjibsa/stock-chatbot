@@ -243,7 +243,8 @@ describe("run-public-briefing", () => {
       {
         sourceLabel: "Reuters",
         headline: "Dollar strength persists",
-        summary: "달러 강세 뉴스가 반복돼 환율 부담을 같이 봐야 합니다."
+        summary:
+          "달러와 환율 흐름이 외국인 수급과 성장주 밸류 부담에 어떤 영향을 주는지 함께 보셔야 합니다."
       }
     ]);
     expect(compose).toHaveBeenCalledWith(
@@ -367,7 +368,7 @@ describe("run-public-briefing", () => {
     });
 
     expect(briefing.summaryLine).toBe(
-      "달러 강세와 환율 부담이 이어지고 있어, 비중 확대보다 관망과 리스크 관리에 집중하시는 편이 좋습니다."
+      "VIX 급등으로 변동성 경계가 강화됐습니다. 국장 시초가와 초반 수급 반응을 함께 확인하셔야 합니다."
     );
     expect(briefing.marketSummary.overall.length).toBeGreaterThan(0);
     expect(briefing.headlineEvents).toEqual([]);
@@ -377,6 +378,57 @@ describe("run-public-briefing", () => {
     expect(warning).toHaveBeenCalledWith(
       "[public-briefing] falling back to rule-based summary",
       "Gemini API request failed with status 429"
+    );
+  });
+
+  it("rewrites duplicated generic feed summaries when the previous same-session report used the same line", async () => {
+    const marketResults: MarketDataFetchResult[] = [
+      {
+        status: "ok",
+        data: {
+          itemCode: "DXY",
+          itemName: "달러인덱스",
+          source: "fred",
+          sourceKey: "index:DXY",
+          asOfDate: "2026-03-27",
+          previousValue: 100,
+          value: 101,
+          changePercent: 1
+        }
+      }
+    ];
+
+    const briefing = await buildPublicBriefing({
+      briefingSession: "pre_market",
+      runDate: "2026-03-27",
+      priorPublicReport: {
+        summary:
+          "달러 강세와 환율 부담이 이어지고 있어, 비중 확대보다 관망과 리스크 관리에 집중하시는 편이 좋습니다.",
+        signals: [
+          "에너지 가격 약세가 이어져 인플레이션 기대와 경기 민감주 해석을 함께 조정하셔야 합니다.",
+          "미국 증시 반등 흐름이 이어져 국내 개장 초반 위험 선호 회복 여부를 볼 필요가 있습니다."
+        ]
+      },
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => marketResults)
+      },
+      macroTrendBriefs: [
+        {
+          theme: "fx_rates",
+          summary:
+            "공개 시장 해석 기준으로 달러, 환율, 채권금리 흐름이 변동성 방향을 좌우하고 있어 외환과 금리 민감도를 같이 봐야 합니다.",
+          sentiment: "negative",
+          confidence: "medium",
+          publishedAt: "2026-03-27T00:00:00.000Z",
+          sourceIds: ["reuters"],
+          headlines: [],
+          references: []
+        }
+      ]
+    });
+
+    expect(briefing.summaryLine).toBe(
+      "달러 강세와 원화 약세가 함께 나타나 환율 부담을 먼저 점검하셔야 합니다. 환율과 채권금리 뉴스가 자산 가격 해석의 중심에 있습니다. 국장 시초가와 초반 수급 반응을 함께 확인하셔야 합니다."
     );
   });
 

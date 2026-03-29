@@ -1,4 +1,4 @@
-import { and, desc, eq, gte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, lt } from "drizzle-orm";
 
 import type { DatabaseClient } from "./client.js";
 import { newsItems, type NewsItemRecord } from "./schema.js";
@@ -77,6 +77,36 @@ export class NewsItemRepository {
         and(
           eq(newsItems.contentScope, input.contentScope),
           gte(newsItems.publishedAt, new Date(input.since))
+        )
+      )
+      .orderBy(desc(newsItems.publishedAt));
+  }
+
+  async listByIds(ids: string[]): Promise<NewsItemRecord[]> {
+    if (ids.length === 0) {
+      return [];
+    }
+
+    return this.db
+      .select()
+      .from(newsItems)
+      .where(inArray(newsItems.id, ids))
+      .orderBy(desc(newsItems.publishedAt));
+  }
+
+  async listByPublishedAtRange(input: {
+    contentScope: string;
+    endExclusive: string;
+    startInclusive: string;
+  }): Promise<NewsItemRecord[]> {
+    return this.db
+      .select()
+      .from(newsItems)
+      .where(
+        and(
+          eq(newsItems.contentScope, input.contentScope),
+          gte(newsItems.publishedAt, new Date(input.startInclusive)),
+          lt(newsItems.publishedAt, new Date(input.endExclusive))
         )
       )
       .orderBy(desc(newsItems.publishedAt));

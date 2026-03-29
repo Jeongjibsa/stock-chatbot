@@ -14,6 +14,7 @@ import {
   buildQuantScorecards,
   CompositeMarketDataAdapter,
   DailyReportCompositionService,
+  diversifyPublicKeyIndicatorBullets,
   FredMarketDataAdapter,
   createLlmClient,
   GOOGLE_PROVIDER_PROFILE,
@@ -21,7 +22,9 @@ import {
   MacroTrendNewsService,
   OPENAI_PROVIDER_PROFILE,
   parseBriefingSession,
+  repairPublicHeadlineEvents,
   repairPublicKeyIndicatorBullets,
+  repairPublicSummaryLine,
   resolveScheduledBriefingSession,
   renderPublicDailyBriefingMarkdown,
   toQuantStrategyBullets,
@@ -55,6 +58,10 @@ type PublicBriefingBuilderDependencies = {
   compositionTimeoutMs?: number;
   marketDataAdapter: MarketDataAdapter;
   macroTrendBriefs?: MacroTrendBrief[];
+  priorPublicReport?: {
+    signals: string[];
+    summary?: string | null;
+  };
   reportCompositionService?: Pick<DailyReportCompositionService, "compose">;
   runDate: string;
   sessionComparison?: {
@@ -164,38 +171,67 @@ export async function buildPublicBriefing(
   const fallbackBriefing = buildRuleBasedBriefing(marketResults, {
     briefingSession: dependencies.briefingSession
   });
+  const selectedKeyIndicatorBullets = composition
+    ? (() => {
+        const repaired = repairPublicKeyIndicatorBullets(
+          {
+            oneLineSummary: composition.oneLineSummary,
+            marketBullets: composition.marketBullets,
+            macroBullets: composition.macroBullets,
+            fundFlowBullets: composition.fundFlowBullets,
+            eventBullets: composition.eventBullets,
+            holdingTrendBullets: composition.holdingTrendBullets,
+            articleSummaryBullets: composition.articleSummaryBullets,
+            keyIndicatorBullets: composition.keyIndicatorBullets,
+            headlineEvents: composition.headlineEvents,
+            strategyBullets: composition.strategyBullets,
+            riskBullets: composition.riskBullets,
+            trendNewsBullets: composition.trendNewsBullets,
+            newsReferences: composition.newsReferences
+          },
+          dependencies.briefingSession
+        );
+
+        return repaired.length > 0 ? repaired : fallbackBriefing.keyIndicatorBullets;
+      })()
+    : fallbackBriefing.keyIndicatorBullets;
+  const diversifiedKeyIndicatorBullets = diversifyPublicKeyIndicatorBullets({
+    briefingSession: dependencies.briefingSession,
+    macroTrendBriefs,
+    ...(dependencies.priorPublicReport?.signals
+      ? { priorSignals: dependencies.priorPublicReport.signals }
+      : {}),
+    signals: selectedKeyIndicatorBullets
+  });
+  const repairedHeadlineEvents = repairPublicHeadlineEvents({
+    briefingSession: dependencies.briefingSession,
+    headlineEvents:
+      composition?.headlineEvents?.length
+        ? composition.headlineEvents
+        : buildFallbackHeadlineEvents(
+            macroTrendBriefs,
+            dependencies.briefingSession
+          ),
+    macroTrendBriefs
+  });
+  const repairedSummaryLine = repairPublicSummaryLine({
+    briefingSession: dependencies.briefingSession,
+    currentSummary:
+      composition?.oneLineSummary ??
+      fallbackBriefing.summaryLine,
+    keyIndicatorBullets: diversifiedKeyIndicatorBullets,
+    macroTrendBriefs,
+    ...(dependencies.priorPublicReport?.summary !== undefined
+      ? { priorSummary: dependencies.priorPublicReport.summary }
+      : {})
+  });
 
   return buildPublicDailyBriefing({
     briefingSession: dependencies.briefingSession,
     runDate: dependencies.runDate,
-    summaryLine:
-      composition?.oneLineSummary ??
-      fallbackBriefing.summaryLine,
+    summaryLine: repairedSummaryLine,
     marketResults,
-    keyIndicatorBullets: composition
-      ? (() => {
-          const repaired = repairPublicKeyIndicatorBullets(
-            {
-              oneLineSummary: composition.oneLineSummary,
-              marketBullets: composition.marketBullets,
-              macroBullets: composition.macroBullets,
-              fundFlowBullets: composition.fundFlowBullets,
-              eventBullets: composition.eventBullets,
-              holdingTrendBullets: composition.holdingTrendBullets,
-              articleSummaryBullets: composition.articleSummaryBullets,
-              keyIndicatorBullets: composition.keyIndicatorBullets,
-              headlineEvents: composition.headlineEvents,
-              strategyBullets: composition.strategyBullets,
-              riskBullets: composition.riskBullets,
-              trendNewsBullets: composition.trendNewsBullets,
-              newsReferences: composition.newsReferences
-            },
-            dependencies.briefingSession
-          );
-
-          return repaired.length > 0 ? repaired : fallbackBriefing.keyIndicatorBullets;
-        })()
-      : fallbackBriefing.keyIndicatorBullets,
+    keyIndicatorBullets: diversifiedKeyIndicatorBullets,
     marketBullets: composition?.marketBullets?.length
       ? composition.marketBullets
       : fallbackBriefing.marketBullets,
@@ -208,9 +244,7 @@ export async function buildPublicBriefing(
     eventBullets: composition?.eventBullets?.length
       ? composition.eventBullets
       : fallbackBriefing.eventBullets,
-    headlineEvents: composition?.headlineEvents?.length
-      ? composition.headlineEvents
-      : buildFallbackHeadlineEvents(macroTrendBriefs),
+    headlineEvents: repairedHeadlineEvents,
     riskBullets: composition?.riskBullets?.length
       ? composition.riskBullets
       : fallbackBriefing.riskBullets,
@@ -252,13 +286,16 @@ export function buildPublicReportInsertInput(input: {
   };
 }
 
-function buildFallbackHeadlineEvents(macroTrendBriefs: MacroTrendBrief[]) {
+function buildFallbackHeadlineEvents(
+  macroTrendBriefs: MacroTrendBrief[],
+  briefingSession: BriefingSession
+) {
   return macroTrendBriefs
     .flatMap((brief) =>
       brief.references.slice(0, 2).map((reference) => ({
         sourceLabel: reference.sourceLabel,
         headline: reference.title,
-        summary: brief.summary
+        summary: `${briefingSession === "post_market" ? "오늘 밤" : briefingSession === "weekend_briefing" ? "다음 주" : "개장 전"} 시장 해석에서는 ${brief.summary.replace(/^공개 시장 해석 기준으로\s*/u, "")}`
       }))
     )
     .slice(0, 4);
@@ -332,6 +369,44 @@ export function persistPublicBriefingArtifact(
   }
 }
 
+async function loadStoredHistoricalMacroItems(input: {
+  newsItemRepository: NewsItemRepository;
+  runDate: string;
+}): Promise<Awaited<ReturnType<MacroTrendNewsService["collect"]>>> {
+  const startDate = new Date(`${input.runDate}T00:00:00+09:00`);
+  const endDate = new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+  const startInclusive = startDate.toISOString();
+  const endExclusive = endDate.toISOString();
+  const storedItems = await input.newsItemRepository.listByPublishedAtRange({
+    contentScope: "macro",
+    startInclusive,
+    endExclusive
+  });
+
+  return storedItems.map((item) => ({
+    canonicalUrl: item.canonicalUrl,
+    collectedAt: item.collectedAt.toISOString(),
+    contentScope: "macro" as const,
+    newsSourceId: item.newsSourceId,
+    newsSourceLabel: item.newsSourceLabel,
+    normalizedTitle: item.normalizedTitle,
+    publishedAt: item.publishedAt.toISOString(),
+    region: item.region === "kr" ? "kr" : "global",
+    ...(item.summary ? { summary: item.summary } : {}),
+    title: item.title,
+    url: item.url
+  }));
+}
+
+function formatDateInTimeZone(date: Date, timeZone: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).format(date);
+}
+
 export async function runPublicBriefing(
   env: Environment = process.env
 ): Promise<{
@@ -396,16 +471,49 @@ export async function runPublicBriefing(
     }
   }
 
+  if (repository) {
+    const priorSameSession = await repository.findLatestBeforeReportDateAndSession(
+      runDate,
+      briefingSession
+    );
+
+    if (priorSameSession) {
+      buildInput.priorPublicReport = {
+        summary: priorSameSession.summary ?? null,
+        signals: priorSameSession.signals ?? []
+      };
+    }
+  }
+
   let collectedMacroItems: Awaited<ReturnType<MacroTrendNewsService["collect"]>> = [];
   let macroTrendBriefs: MacroTrendBrief[] = [];
 
   try {
-    collectedMacroItems = await macroTrendNewsService.collect({
-      audience: "public_web",
-      runDate,
-      scope: "macro",
-      session: briefingSession
-    });
+    const currentKstDate = formatDateInTimeZone(new Date(), "Asia/Seoul");
+    const storedHistoricalMacroItems =
+      newsItemRepository && runDate < currentKstDate
+        ? await loadStoredHistoricalMacroItems({
+            newsItemRepository,
+            runDate
+          })
+        : [];
+
+    if (storedHistoricalMacroItems.length > 0) {
+      collectedMacroItems = storedHistoricalMacroItems;
+    } else if (runDate < currentKstDate) {
+      console.warn(
+        "[public-briefing] historical run missing stored macro news, skipping live fetch",
+        runDate
+      );
+    } else {
+      collectedMacroItems = await macroTrendNewsService.collect({
+        audience: "public_web",
+        runDate,
+        scope: "macro",
+        session: briefingSession
+      });
+    }
+
     macroTrendBriefs = await macroTrendNewsService.analyzeMacroTrends({
       audience: "public_web",
       items: collectedMacroItems,
