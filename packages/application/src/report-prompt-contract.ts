@@ -301,7 +301,7 @@ function buildPromptInstructions(
       "marketBullets는 `시장 종합 해석` 섹션용 문장으로 작성한다. 첫 번째 문장은 반드시 이번 브리핑의 역할과 해석 목적을 직접 드러내야 한다.",
       "macroBullets는 `글로벌/국내 시장 스냅샷`과 `거시 관점`에 재사용될 수 있게 작성한다.",
       "fundFlowBullets는 breadth, rotation, leadership, sector/style 흐름이 실제로 입력된 경우에만 작성한다.",
-      "headlineEvents는 실제로 입력된 RSS 기사 headline과 reference만 사용해 작성한다. 각 항목은 `주요 뉴스 헤드라인 + 브리핑용 요약 제안` 구조로 이어질 수 있어야 하며, headline을 새로 만들거나 합치지 않는다.",
+      "headlineEvents는 실제로 입력된 RSS 기사 headline과 reference만 사용해 작성한다. 각 항목은 실제 headline 뒤에 시장 의미를 짧게 설명하는 한 문장을 덧붙이는 구조로 작성하고, `브리핑용 요약 제안` 같은 라벨 문구를 그대로 쓰지 않는다. headline을 새로 만들거나 합치지 않는다.",
       briefingSession === "pre_market"
         ? "eventBullets는 `오늘 대응 기준` 섹션용 체크포인트를 작성한다."
         : briefingSession === "post_market"

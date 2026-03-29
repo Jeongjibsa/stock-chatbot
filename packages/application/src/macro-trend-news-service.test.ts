@@ -38,6 +38,52 @@ describe("MacroTrendNewsService", () => {
     });
   });
 
+  it("filters out personal-finance top stories from public macro news", async () => {
+    const marketWatchXml = `
+      <rss>
+        <channel>
+          <item>
+            <title><![CDATA[My brother says lawyers can get him a Medicaid nursing home]]></title>
+            <link>https://example.com/personal-finance</link>
+            <pubDate>Sat, 28 Mar 2026 07:00:00 GMT</pubDate>
+            <description><![CDATA[Family finance advice column.]]></description>
+          </item>
+          <item>
+            <title><![CDATA[Nasdaq futures slip as bond yields rise before Fed speakers]]></title>
+            <link>https://example.com/market-story</link>
+            <pubDate>Sat, 28 Mar 2026 07:05:00 GMT</pubDate>
+            <description><![CDATA[Bond yields and Fed remarks keep markets cautious.]]></description>
+          </item>
+        </channel>
+      </rss>
+    `;
+    const emptyXml = "<rss><channel></channel></rss>";
+    const fetchImplementation = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+
+      return new Response(
+        url.includes("mw_topstories") ? marketWatchXml : emptyXml,
+        { status: 200 }
+      );
+    });
+    const service = new MacroTrendNewsService({
+      cache: new NoopNewsCacheAdapter(),
+      fetchImplementation
+    });
+
+    const items = await service.collect({
+      audience: "public_web",
+      runDate: "2026-03-28",
+      scope: "macro",
+      session: "weekend_briefing"
+    });
+
+    expect(items).toHaveLength(1);
+    expect(items[0]?.title).toBe(
+      "Nasdaq futures slip as bond yields rise before Fed speakers"
+    );
+  });
+
   it("groups collected items into macro trend briefs", async () => {
     const service = new MacroTrendNewsService({
       cache: new NoopNewsCacheAdapter(),
