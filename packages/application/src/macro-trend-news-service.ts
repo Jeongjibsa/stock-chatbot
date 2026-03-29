@@ -280,6 +280,30 @@ const STRONG_PERSONAL_FINANCE_KEYWORDS = [
   "쉽게 설명해주죠"
 ];
 
+const LOW_SIGNAL_PUBLIC_MACRO_KEYWORDS = [
+  "대표 선임",
+  "대표이사 선임",
+  "ceo appointment",
+  "appoints",
+  "appointed as ceo",
+  "named ceo",
+  "chairman",
+  "executive reshuffle",
+  "인사",
+  "취임",
+  "선임",
+  "승진",
+  "turnaround",
+  "ahead of earnings",
+  "stock is at",
+  "9-year lows",
+  "discount stock",
+  "to buy at a discount",
+  "artificial intelligence (ai) stocks to buy",
+  "do we fire him",
+  "how to avoid it"
+];
+
 const MARKET_CONTEXT_KEYWORDS = [
   "market",
   "markets",
@@ -366,6 +390,28 @@ function isRelevantPublicMacroNewsItem(item: CollectedNewsItem) {
   const text = `${item.title} ${item.summary ?? ""}`.toLowerCase();
 
   if (hasKeyword(text, STRONG_PERSONAL_FINANCE_KEYWORDS)) {
+    return false;
+  }
+
+  if (
+    hasKeyword(item.title.toLowerCase(), LOW_SIGNAL_PUBLIC_MACRO_KEYWORDS) &&
+    !hasKeyword(text, [
+      "markets",
+      "nasdaq",
+      "s&p",
+      "dow",
+      "kospi",
+      "kosdaq",
+      "futures",
+      "yield",
+      "rates",
+      "fed",
+      "환율",
+      "금리",
+      "선물",
+      "증시"
+    ])
+  ) {
     return false;
   }
 
@@ -537,8 +583,6 @@ function summarizeTheme(
   items: CollectedNewsItem[],
   audience: NewsAudience
 ): string {
-  const latest = items[0];
-  const sourceCount = new Set(items.map((item) => item.newsSourceId)).size;
   const summaryPrefix =
     audience === "public_web"
       ? "공개 시장 해석 기준으로"
@@ -558,9 +602,7 @@ function summarizeTheme(
     case "macro_policy":
       return `${summaryPrefix} 거시 정책과 정부 발언이 시장 기대를 흔들고 있어 정책 방향성 재점검이 필요합니다.`;
     default:
-      return latest?.summary
-        ? `${summaryPrefix} ${latest.summary}`
-        : `${summaryPrefix} 시장 전반 테마 뉴스가 ${sourceCount}개 소스에서 반복 확인됐습니다.`;
+      return `${summaryPrefix} 시장 전반 테마 뉴스가 반복돼 지수 심리와 업종 확산 여부를 함께 점검해야 합니다.`;
   }
 }
 

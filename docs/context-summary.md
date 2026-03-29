@@ -79,15 +79,19 @@
 - 공개 웹은 더 이상 종목별 기사 요약을 쓰지 않고 `거시 정책 / 환율·금리 / 야간 선물 / 글로벌 리스크 / 섹터 로테이션 / 시장 테마` 중심의 `macroTrendBriefs`만 반영한다.
 - 공개 웹의 `브리핑 역할`은 세션별로 `미장 마감 분석 기반 국장 시초가 예측 / 국장·대체거래소 결과 분석 및 미장 예보 / 미장 마감 분석 및 주간 이슈 총정리, 다음 주 일정 요약`을 직접 드러내야 한다.
 - 공개 웹의 `핵심 뉴스 이벤트`는 RSS 원문 headline과 그 시장 함의를 설명하는 짧은 요약을 함께 출력하는 `headlineEvents` 구조를 사용한다. literal `브리핑용 요약 제안` 같은 라벨 문구는 출력하면 안 되며, 공개 `eventBullets`는 세션별 체크포인트/일정 용도로 사용한다.
+- public `headlineEvents` summary는 이제 LLM 원문을 그대로 믿지 않고 저장 직전 한 번 더 보정한다. headline별 시장 해석 문장은 항상 한국어로 써야 하며, 영어 RSS description이 섞이거나 서로 다른 제목 아래 같은 summary가 반복되면 안 된다.
 - 공개 `public_web` macro news 수집은 이제 명백한 개인 재무/생활형 기사와 가족 사연형 조언 기사를 제외한다. 특히 `MarketWatch` top stories는 시장/금리/환율/지수/정책 맥락 키워드가 있는 기사만 통과시켜 공개 피드에 생활형 콘텐츠가 섞이지 않도록 한다.
-- 위 relevance filter는 영어 `personal finance` 기사뿐 아니라 Yahoo consumer-advice 제목, 한국어 은퇴/예금/생활형 기사, 설명형 정책 칼럼까지 공개 시장 맥락이 약한 경우를 함께 제외하는 방향으로 확장됐다. markdown/html renderer도 `headlineEvents` summary 앞의 literal 라벨을 제거해 headline 아래 실제 시장 의미 문장만 남긴다.
+- 위 relevance filter는 영어 `personal finance` 기사뿐 아니라 Yahoo consumer-advice 제목, 한국어 은퇴/예금/생활형 기사, 설명형 정책 칼럼, 운용사 인사/대표 선임, 단일 기업 turnaround 기사처럼 공개 시장 함의가 약한 low-signal 기사까지 함께 제외하는 방향으로 확장됐다. markdown/html renderer도 `headlineEvents` summary 앞의 literal 라벨을 제거해 headline 아래 실제 시장 의미 문장만 남긴다.
 - 공개 웹 feed/detail의 `핵심 시그널`은 이제 rule-based fallback이 아니라 `market-report-composition` structured output의 `keyIndicatorBullets`를 우선 저장해 사용한다. LLM composition이 실패하거나 빈 배열을 반환할 때만 기존 규칙 기반 fallback으로 내려간다.
 - 공개 `핵심 시그널` fallback은 세션 인지형으로 확장됐다. `pre_market`, `post_market`, `weekend_briefing`은 서로 다른 카테고리 후보를 사용하고, threshold가 적게 걸리는 날에도 `pre/post`는 최소 2개, `weekend_briefing`은 최소 3개 시그널을 기본 관찰 포인트로 채워 넣는다.
 - public composition 경로는 이제 LLM이 `keyIndicatorBullets`를 비우더라도, 같은 응답의 `market/macro/risk/event/trend` bullets에서 `핵심 시그널` 후보를 먼저 재조합해 저장한다. 즉 공개 detail 렌더러의 generic placeholder만 보이고 `reports.signals`는 빈 배열로 남는 mismatch를 줄인다.
+- 공개 feed title(`reports.summary`)과 `signals`가 직전 같은 세션 row와 완전히 같은 문구로 반복되면, 저장 단계가 현재 signal과 macro theme을 다시 조합해 summary/signals를 한 번 더 보정한다. 따라서 연속 regenerate에서도 같은 generic fallback 한 줄이 카드 타이틀로 그대로 반복되는 상태를 줄인다.
+- historical public regenerate/backfill은 이제 과거 날짜에 대해 live RSS를 다시 긁지 않는다. `runDate < current KST date`이면 먼저 같은 날짜 KST window의 persisted `news_items`를 재사용하고, 저장된 뉴스가 없으면 뉴스 headline 섹션을 비운 채 시장 데이터 기반 summary/signals만 갱신한다.
 - Upstash REST cache는 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` env가 있을 때만 활성화되고, 뉴스 dedupe/hot cache/analysis cache에만 사용한다. 영속 저장과 최종 idempotency는 Postgres `news_items`, `news_analysis_results`, `reports.news_references`가 담당한다.
 - 운영용 `/api/cron/public-backfill`는 이제 write path 실행 뒤 동일 runtime의 public read path로 persisted row를 즉시 재검증해야 한다. row를 다시 읽지 못하면 성공 응답 대신 실패로 처리해, 최근 7일 recovery window backfill에서 “응답은 성공인데 공개 feed/detail에는 없음” 상태를 남기면 안 된다.
 - `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL`과 `CRON_SECRET`가 있으면 local worker insert 대신 production runtime `/api/cron/public-backfill`를 우선 사용한다. 기본 동작은 current-week만이 아니라 업로드 가능 기준일에서 최근 7일 안에 누락된 공개 브리핑 세션만 다시 채우는 rolling recovery repair다.
 - `run:verify-public-week`는 protected Vercel preview URL을 검증할 때 raw `curl`이 401/403을 반환하면 `vercel curl --deployment`로 자동 재시도해야 한다. preview smoke 때문에 protection을 끄는 방식은 기준선이 아니다.
+- `run:verify-public-week`와 ops final gate의 reference date는 단순 wall-clock 오늘이 아니라 `마지막으로 완결된 공개 브리핑 일자`를 기본값으로 사용한다. 즉 평일 `20:30 KST` 전에는 전일, 토요일 `07:30 KST` 전에는 금요일, 일요일에는 토요일을 기준일로 본다.
 - worker/public worker가 `BRIEFING_SESSION` 없이 현재 날짜를 해석할 때 허용 세션이 없으면 더 이상 `pre_market`로 폴백하지 않는다. `workflow_dispatch`와 `/api/cron/reconcile?briefingSession=both`도 `reportRunDate`가 없으면 현재 날짜에 허용된 세션만 실행해야 하며, 토요일에는 current-date `weekend_briefing`만, 일요일에는 어떤 public row도 만들면 안 된다.
 - 공개 `feed/detail` page는 `dynamic = "force-dynamic"`만으로는 build 시점 스냅샷이 남을 수 있어, Next 15 `connection()`을 호출해 요청 시점 runtime 연결을 먼저 확보한 뒤 DB read path를 수행해야 한다.
 - application 계층에는 mock telegram delivery adapter, reusable report preview 템플릿, 공통 report query model이 추가됐다.

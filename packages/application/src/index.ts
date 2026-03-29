@@ -26,7 +26,10 @@ export {
 } from "./briefing-session.js";
 export {
   DailyReportCompositionService,
+  diversifyPublicKeyIndicatorBullets,
+  repairPublicHeadlineEvents,
   repairPublicKeyIndicatorBullets,
+  repairPublicSummaryLine,
   type DailyReportComposition
 } from "./daily-report-composition-service.js";
 export {

@@ -1,6 +1,10 @@
 import type { BriefingSession } from "@stock-chatbot/application";
 
 export const PUBLIC_BRIEFING_RECOVERY_WINDOW_DAYS = 7;
+const PUBLIC_POST_MARKET_HOUR = 20;
+const PUBLIC_POST_MARKET_MINUTE = 30;
+const PUBLIC_WEEKEND_HOUR = 7;
+const PUBLIC_WEEKEND_MINUTE = 30;
 
 export type PublicWeekSession = {
   reportDate: string;
@@ -96,7 +100,10 @@ export function readPublicWeekReferenceDate(
     return value;
   }
 
-  return formatDateInTimeZone(options?.timeZone ?? "Asia/Seoul", options?.now);
+  return resolveLatestCompletedPublicCoverageDate({
+    timeZone: options?.timeZone ?? "Asia/Seoul",
+    ...(options?.now ? { now: options.now } : {})
+  });
 }
 
 function formatDateInTimeZone(timeZone: string, now: Date = new Date()) {
@@ -108,6 +115,94 @@ function formatDateInTimeZone(timeZone: string, now: Date = new Date()) {
   });
 
   return formatter.format(now);
+}
+
+function resolveLatestCompletedPublicCoverageDate(input: {
+  now?: Date;
+  timeZone: string;
+}) {
+  const now = input.now ?? new Date();
+  const parts = getZonedTimeParts(input.timeZone, now);
+
+  if (parts.weekday >= 1 && parts.weekday <= 5) {
+    if (
+      parts.totalMinutes >=
+      PUBLIC_POST_MARKET_HOUR * 60 + PUBLIC_POST_MARKET_MINUTE
+    ) {
+      return formatDateInTimeZone(input.timeZone, now);
+    }
+
+    return findPreviousCompletedPublicCoverageDate(input.timeZone, now);
+  }
+
+  if (parts.weekday === 6) {
+    if (parts.totalMinutes >= PUBLIC_WEEKEND_HOUR * 60 + PUBLIC_WEEKEND_MINUTE) {
+      return formatDateInTimeZone(input.timeZone, now);
+    }
+
+    return findPreviousCompletedPublicCoverageDate(input.timeZone, now);
+  }
+
+  return findPreviousCompletedPublicCoverageDate(input.timeZone, now);
+}
+
+function getZonedTimeParts(timeZone: string, now: Date = new Date()) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone
+  });
+  const parts = formatter.formatToParts(now);
+  const weekdayToken = parts.find((part) => part.type === "weekday")?.value ?? "Sun";
+  const hour = Number.parseInt(
+    parts.find((part) => part.type === "hour")?.value ?? "0",
+    10
+  );
+  const minute = Number.parseInt(
+    parts.find((part) => part.type === "minute")?.value ?? "0",
+    10
+  );
+
+  return {
+    weekday: toWeekdayNumber(weekdayToken),
+    hour,
+    minute,
+    totalMinutes: hour * 60 + minute
+  };
+}
+
+function toWeekdayNumber(token: string): number {
+  switch (token) {
+    case "Mon":
+      return 1;
+    case "Tue":
+      return 2;
+    case "Wed":
+      return 3;
+    case "Thu":
+      return 4;
+    case "Fri":
+      return 5;
+    case "Sat":
+      return 6;
+    default:
+      return 0;
+  }
+}
+
+function findPreviousCompletedPublicCoverageDate(timeZone: string, now: Date) {
+  for (let dayOffset = 1; dayOffset <= 7; dayOffset += 1) {
+    const candidate = new Date(now.getTime() - dayOffset * 24 * 60 * 60 * 1000);
+    const weekday = getZonedTimeParts(timeZone, candidate).weekday;
+
+    if ((weekday >= 1 && weekday <= 5) || weekday === 6) {
+      return formatDateInTimeZone(timeZone, candidate);
+    }
+  }
+
+  return formatDateInTimeZone(timeZone, now);
 }
 
 function resolveWeekStartDate(endDate: Date) {

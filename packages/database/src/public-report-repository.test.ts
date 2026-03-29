@@ -113,6 +113,24 @@ describe("PublicReportRepository", () => {
     });
   });
 
+  it("returns the latest previous report for the same session", async () => {
+    const { db, state } = createDbDouble();
+    state.selectResult = [
+      {
+        id: "report-prior",
+        reportDate: "2026-03-20",
+        briefingSession: "pre_market"
+      }
+    ];
+    const repository = new PublicReportRepository(db);
+
+    await expect(
+      repository.findLatestBeforeReportDateAndSession("2026-03-21", "pre_market")
+    ).resolves.toMatchObject({
+      id: "report-prior"
+    });
+  });
+
   it("updates the latest report when the report date already exists", async () => {
     const { db, state } = createDbDouble();
     state.selectResult = [

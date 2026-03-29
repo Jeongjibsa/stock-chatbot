@@ -101,7 +101,7 @@
 - 현재 prompt 입력은 audience 외에 `briefingSession=pre_market|post_market`도 함께 받아, 같은 채널 안에서도 `판단 프레임 제공 / 해석 검증+기준 보정` 역할을 분리한다.
 - Telegram personalized prompt는 `제약/하드룰 -> 최종 action -> 점수/시장 레짐 -> 기타 사실` 우선순위와 개인화 리밸런싱 해석을 강화한다.
 - Public web prompt는 개인 포트폴리오 언어를 금지하고, 공개 시장 해석과 공용 리스크 설명에만 집중한다.
-- Public web prompt는 `headlineEvents`에서 실제 RSS headline과 브리핑용 요약 제안을 함께 생성하고, `eventBullets`는 세션별 체크포인트/일정으로 사용한다.
+- Public web prompt는 `headlineEvents`에서 실제 RSS headline과 공개 시장 해석 문장을 함께 생성하고, `eventBullets`는 세션별 체크포인트/일정으로 사용한다.
 - Public web prompt는 `keyIndicatorBullets`를 통해 feed/detail 카드의 `핵심 시그널`을 직접 생성하고, 공개 세션에서는 최소 signal 개수(`pre/post` 2개, `weekend` 3개)를 채우도록 지시한다. LLM이 이 배열을 비우더라도 composition service는 `market/macro/risk/event/trend` bullets에서 저장용 signal을 먼저 재조합하고, 그 뒤에만 rule-based fallback이 개입한다.
 - 리포트 조합 결과는 renderer가 그대로 섹션에 주입할 수 있어야 하며, 숫자 재계산 대신 해석 문장만 생성해야 한다.
 - 정보가 부족한 섹션은 빈 배열로 반환하도록 강제한다.
@@ -117,11 +117,13 @@
 
 현재 상태:
 
-- `market-report-composition` prompt v5가 채널별 audience 분리와 세션별 역할 분기를 포함한 structured output 계약으로 구현됐고, 부재 데이터 추론을 더 강하게 억제한다. 2026-03-29 기준 public path는 `headlineEvents`에 더해 `keyIndicatorBullets`를 사용해 실제 공개 `핵심 시그널`도 LLM composition 결과를 우선 노출한다. public `headlineEvents` summary는 이제 시장 의미만 짧게 설명해야 하며 literal `브리핑용 요약 제안` 라벨을 출력하면 안 된다.
+- `market-report-composition` prompt v5가 채널별 audience 분리와 세션별 역할 분기를 포함한 structured output 계약으로 구현됐고, 부재 데이터 추론을 더 강하게 억제한다. 2026-03-29 기준 public path는 `headlineEvents`에 더해 `keyIndicatorBullets`를 사용해 실제 공개 `핵심 시그널`도 LLM composition 결과를 우선 노출한다. public `headlineEvents` summary는 이제 시장 의미만 짧게 설명해야 하며 literal `브리핑용 요약 제안` 라벨이나 영어 RSS description을 그대로 출력하면 안 된다.
 - `DailyReportCompositionService`가 실제 daily report worker 경로에 연결됐다.
 - public briefing build는 같은 service를 쓰되 `public_web` audience로 호출해 개인 행동 언어를 금지하고, `post_market`에서는 같은 날짜의 오전 공개 브리핑/전략 스냅샷이 있으면 검증 관점 비교 입력을 함께 제공한다.
 - `public_web`용 거시 뉴스 수집은 명백한 개인 재무/생활형 기사와 가족 사연형 조언 기사를 제외하고, `MarketWatch` top stories는 거시/시장 문맥 키워드가 있는 기사만 통과시킨다.
 - public briefing 저장/렌더 단계는 `headlineEvents.summary`에 남아 있는 legacy label prefix를 제거해야 한다. 즉 model 출력이 어설프더라도 최종 markdown/html 공개본에는 literal `브리핑용 요약 제안` 문구를 남기지 않는다.
+- public briefing 저장 단계는 `headlineEvents.summary`를 최종 한국어 문장으로 다시 보정할 수 있어야 한다. 즉 model이 headline과 맞지 않는 generic theme summary를 여러 제목에 재사용하거나 영어 설명을 남겨도, 최종 공개본에는 title-aligned Korean 시장 해석 한 줄만 저장해야 한다.
+- historical public regenerate/backfill은 현재 시점 live RSS를 과거 row에 덮어쓰지 않고, 같은 날짜의 persisted `news_items`를 우선 재사용해야 한다. 저장된 historical news가 없으면 headline/trend news 섹션을 비운 채 시장 데이터 기반 fallback만 유지한다.
 - fixed scheduled Telegram delivery는 공개 브리핑 row가 먼저 적재된 세션에서는 persisted public `summary/signals`와 개인화 snapshot만 재사용하고, 공통 시장 해석용 추가 LLM 조합을 다시 호출하지 않는다.
 - `OPENAI_API_KEY`가 없거나 composition 단계가 실패하면 기존 규칙 기반 renderer fallback으로 계속 생성한다.
 - scheduled public briefing의 `public_web` composition은 cron critical path 보호를 위해 hard timeout을 사용하고, timeout 또는 provider 지연 시에도 규칙 기반 fallback으로 즉시 완료해야 한다.

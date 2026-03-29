@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, lt, sql } from "drizzle-orm";
 
 import type { DatabaseClient } from "./client.js";
 import { reports, type ReportRecord } from "./schema.js";
@@ -170,6 +170,55 @@ export class PublicReportRepository {
         .from(reports)
         .where(eq(reports.reportDate, reportDate))
         .orderBy(desc(reports.createdAt))
+        .limit(1);
+
+      return result[0]
+        ? ({ ...result[0], indicatorTags: [] } as ReportRecord)
+        : null;
+    }
+  }
+
+  async findLatestBeforeReportDateAndSession(
+    reportDate: string,
+    briefingSession: "post_market" | "pre_market" | "weekend_briefing"
+  ): Promise<ReportRecord | null> {
+    try {
+      const result = await this.db
+        .select()
+        .from(reports)
+        .where(
+          and(
+            lt(reports.reportDate, reportDate),
+            eq(reports.briefingSession, briefingSession)
+          )
+        )
+        .orderBy(desc(reports.reportDate), desc(reports.createdAt))
+        .limit(1);
+
+      return result[0] ?? null;
+    } catch (error) {
+      if (!isMissingIndicatorTagsError(error)) {
+        throw error;
+      }
+
+      const result = await this.db
+        .select({
+          id: reports.id,
+          reportDate: reports.reportDate,
+          briefingSession: sql<string>`'pre_market'`.as("briefingSession"),
+          summary: reports.summary,
+          marketRegime: reports.marketRegime,
+          totalScore: reports.totalScore,
+          signals: reports.signals,
+          newsReferences: sql<
+            Array<{ sourceLabel: string; title: string; url: string }>
+          >`'[]'::jsonb`.as("newsReferences"),
+          contentMarkdown: reports.contentMarkdown,
+          createdAt: reports.createdAt
+        })
+        .from(reports)
+        .where(lt(reports.reportDate, reportDate))
+        .orderBy(desc(reports.reportDate), desc(reports.createdAt))
         .limit(1);
 
       return result[0]

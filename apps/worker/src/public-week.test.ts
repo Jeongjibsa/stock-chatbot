@@ -32,6 +32,30 @@ describe("public week helpers", () => {
     ).toBe("2026-03-28");
   });
 
+  it("uses the latest fully completed public coverage date before weekday pre-market opens", () => {
+    expect(
+      readPublicWeekReferenceDate(
+        {},
+        {
+          timeZone: "Asia/Seoul",
+          now: new Date("2026-03-29T15:24:00.000Z")
+        }
+      )
+    ).toBe("2026-03-28");
+  });
+
+  it("uses the current weekday once post-market coverage should exist", () => {
+    expect(
+      readPublicWeekReferenceDate(
+        {},
+        {
+          timeZone: "Asia/Seoul",
+          now: new Date("2026-03-30T12:30:00.000Z")
+        }
+      )
+    ).toBe("2026-03-30");
+  });
+
   it("builds a rolling 7-day public recovery window ending at the reference date", () => {
     expect(buildPublicRecoverySessions("2026-03-29")).toEqual([
       { reportDate: "2026-03-23", briefingSession: "pre_market" },

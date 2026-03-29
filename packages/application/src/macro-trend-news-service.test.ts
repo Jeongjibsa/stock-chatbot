@@ -43,6 +43,12 @@ describe("MacroTrendNewsService", () => {
       <rss>
         <channel>
           <item>
+            <title><![CDATA[Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround.]]></title>
+            <link>https://example.com/nike-stock</link>
+            <pubDate>Sat, 28 Mar 2026 06:55:00 GMT</pubDate>
+            <description><![CDATA[Single-company turnaround story.]]></description>
+          </item>
+          <item>
             <title><![CDATA[My brother says lawyers can get him a Medicaid nursing home]]></title>
             <link>https://example.com/personal-finance</link>
             <pubDate>Sat, 28 Mar 2026 07:00:00 GMT</pubDate>
@@ -78,6 +84,12 @@ describe("MacroTrendNewsService", () => {
     const hankyungXml = `
       <rss>
         <channel>
+          <item>
+            <title><![CDATA[트러스톤자산운용, 이성원 대표 선임]]></title>
+            <link>https://example.com/hk-appointment</link>
+            <pubDate>Sat, 28 Mar 2026 07:18:00 GMT</pubDate>
+            <description><![CDATA[자산운용사 인사 기사입니다.]]></description>
+          </item>
           <item>
             <title><![CDATA['은퇴 11년차' 70대, 예금 해지하더니…과감하게 뛰어든 곳]]></title>
             <link>https://example.com/hk-retire</link>
@@ -155,7 +167,13 @@ describe("MacroTrendNewsService", () => {
       "How can a surgeon struggle on a $665K salary? Ramit Sethi blames a certain financial mistake — here’s how to avoid it"
     );
     expect(items.map((item) => item.title)).not.toContain(
+      "Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround."
+    );
+    expect(items.map((item) => item.title)).not.toContain(
       "'은퇴 11년차' 70대, 예금 해지하더니…과감하게 뛰어든 곳"
+    );
+    expect(items.map((item) => item.title)).not.toContain(
+      "트러스톤자산운용, 이성원 대표 선임"
     );
     expect(items.map((item) => item.title)).not.toContain(
       "[세종 인사이드] \"어려운 암호화자산 규정, AI 챗봇이 쉽게 설명해주죠\""
@@ -214,6 +232,40 @@ describe("MacroTrendNewsService", () => {
           ])
         })
       ])
+    );
+  });
+
+  it("keeps public market-theme summaries in Korean instead of raw RSS descriptions", async () => {
+    const service = new MacroTrendNewsService({
+      cache: new NoopNewsCacheAdapter(),
+      fetchImplementation: vi.fn()
+    });
+
+    const briefs = await service.analyzeMacroTrends({
+      audience: "public_web",
+      runDate: "2026-03-28",
+      session: "weekend_briefing",
+      items: [
+        {
+          canonicalUrl: "https://example.com/theme",
+          collectedAt: "2026-03-28T07:10:00.000Z",
+          contentScope: "macro",
+          newsSourceId: "marketwatch-topstories",
+          newsSourceLabel: "MarketWatch",
+          normalizedTitle: "nike stock at lows ahead of earnings",
+          publishedAt: "2026-03-28T07:00:00.000Z",
+          region: "global",
+          summary:
+            "The sportswear giant has been trying to focus more on the needs of athletes, but analysts say new products aren't catching on.",
+          title:
+            "Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround.",
+          url: "https://example.com/theme"
+        }
+      ]
+    });
+
+    expect(briefs[0]?.summary).toBe(
+      "공개 시장 해석 기준으로 시장 전반 테마 뉴스가 반복돼 지수 심리와 업종 확산 여부를 함께 점검해야 합니다."
     );
   });
 });
