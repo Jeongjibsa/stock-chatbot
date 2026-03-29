@@ -47,7 +47,7 @@
 - 현재 기본 검증 루프는 실제로 `pnpm verify` 통과 상태다.
 - DB/저장 계층 변경 시 `make test-integration`까지 수행한다.
 - 기능 변경은 `docs/e2e-change-workflow.md`에 시나리오 delta와 scope를 먼저 반영하고, `pnpm e2e:final`로 최종 live E2E gate를 수행하는 기준선을 사용한다.
-- Telegram/webhook/cron/public web/Neon production에 영향을 주는 변경은 로컬 검증으로 끝내지 않고 `commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E`까지 끝나야 완료로 본다.
+- Telegram/webhook/cron/public web/Neon production에 영향을 주는 변경은 로컬 검증으로 끝내지 않고 `commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E -> PR merge 후 local branch delete`까지 끝나야 완료로 본다.
 - GitHub public repository와 `origin/main` push 기준선이 준비됐다.
 - 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
 - 초기 운영은 GitHub Actions CI + workflow_dispatch 기반 검증을 우선 사용했고, 정시 실행은 현재 Vercel Cron primary 기준으로 고정한다. 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
@@ -57,6 +57,7 @@
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 항상 수행하는 기본 마감 단계다.
 - PR을 열거나 갱신할 때는 본문을 한글/영문 병기 형식으로 유지하며, 두 언어 모두에 동일한 변경 요약과 검증 결과를 남긴다.
+- PR merge가 끝난 뒤에는 해당 feature/fix 로컬 브랜치도 삭제해 브랜치 inventory를 누적시키지 않는다.
 - 분석 엔진이 커지면 Python 분석 서비스 분리를 고려한다.
 
 ## 6. Active Delivery Plan

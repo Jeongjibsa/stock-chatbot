@@ -28,6 +28,7 @@
 7. `pnpm e2e:final -- --scope=... --allow-production --suite=minimum`으로 최종 gate를 수행합니다.
 8. production 영향 변경은 deploy/DB 반영 후 live E2E 결과까지 남깁니다.
 9. PR을 열거나 갱신할 때는 본문을 한글/영문 병기 형식으로 작성하고, 두 버전 모두에 변경 요약과 검증 결과를 포함합니다.
+10. PR merge가 완료되면 해당 feature/fix 로컬 브랜치를 삭제해 로컬 branch inventory를 정리합니다.
 
 ## 시나리오 기준선
 
