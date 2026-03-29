@@ -160,7 +160,9 @@ export async function buildPublicBriefing(
     }
   }
 
-  const fallbackBriefing = buildRuleBasedBriefing(marketResults);
+  const fallbackBriefing = buildRuleBasedBriefing(marketResults, {
+    briefingSession: dependencies.briefingSession
+  });
 
   return buildPublicDailyBriefing({
     briefingSession: dependencies.briefingSession,

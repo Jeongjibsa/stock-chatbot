@@ -178,6 +178,7 @@
 | CHG-0149 | 2026-03-29 | UPDATE | PR merge 전 협업 문맥을 잃지 않도록 PR 본문 작성 규칙을 한글/영문 병기 기준으로 고정했다. 변경 요약, 검증 결과, 운영 메모는 두 언어 버전 모두에 같은 수준으로 포함해야 한다. | Change Log, Context, E2E Docs, AGENTS | yes |
 | CHG-0150 | 2026-03-29 | UPDATE | PR merge 완료 후에는 해당 feature/fix 로컬 브랜치도 기본 마감 루프에서 삭제하도록 정리 규칙을 추가했다. merge 이후 로컬 branch inventory를 누적시키지 않도록 AGENTS, E2E workflow, context summary를 같은 기준으로 동기화했다. | Change Log, Context, E2E Docs, AGENTS | yes |
 | CHG-0151 | 2026-03-29 | FIX | 공개 브리핑 feed/detail의 `핵심 시그널`이 항상 규칙 기반 fallback만 저장되던 문제를 수정했다. `market-report-composition` structured output에 `keyIndicatorBullets`를 추가하고, public path는 이제 LLM composition의 시그널을 우선 저장하며 composition 실패 또는 빈 배열일 때만 rule-based fallback으로 내려간다. | Change Log, PRD, Context, LLM Plan, Prompt Contract, Code, Tests | yes |
+| CHG-0152 | 2026-03-29 | FIX | 공개 브리핑 `핵심 시그널`의 규칙 기반 fallback 범위를 세션 인지형으로 확장했다. `pre_market`, `post_market`, `weekend_briefing`은 이제 각 세션 목적에 맞는 신호 후보를 사용하고, 극단적 threshold가 적게 걸리는 날에도 최소 2개(`weekend_briefing`은 3개) 이상 시그널이 노출되도록 카테고리별 후보와 기본 관찰 포인트를 함께 조합한다. | Change Log, PRD, Context, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

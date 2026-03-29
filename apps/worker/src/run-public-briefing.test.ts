@@ -319,6 +319,7 @@ describe("run-public-briefing", () => {
     expect(briefing.headlineEvents).toEqual([]);
     expect(briefing.marketInterpretation.macro.length).toBeGreaterThan(0);
     expect(briefing.riskBullets.length).toBeGreaterThan(0);
+    expect(briefing.keyIndicatorBullets.length).toBeGreaterThanOrEqual(2);
     expect(warning).toHaveBeenCalledWith(
       "[public-briefing] falling back to rule-based summary",
       "Gemini API request failed with status 429"
@@ -354,9 +355,9 @@ describe("run-public-briefing", () => {
     ).toMatchObject({
       reportDate: "2026-03-20",
       marketRegime: "Neutral",
-      signals: [],
       indicatorTags: [],
       newsReferences: []
     });
+    expect(briefing.keyIndicatorBullets.length).toBeGreaterThanOrEqual(2);
   });
 });
