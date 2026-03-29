@@ -21,6 +21,7 @@ import {
   MacroTrendNewsService,
   OPENAI_PROVIDER_PROFILE,
   parseBriefingSession,
+  repairPublicKeyIndicatorBullets,
   resolveScheduledBriefingSession,
   renderPublicDailyBriefingMarkdown,
   toQuantStrategyBullets,
@@ -171,8 +172,29 @@ export async function buildPublicBriefing(
       composition?.oneLineSummary ??
       fallbackBriefing.summaryLine,
     marketResults,
-    keyIndicatorBullets: composition?.keyIndicatorBullets?.length
-      ? composition.keyIndicatorBullets
+    keyIndicatorBullets: composition
+      ? (() => {
+          const repaired = repairPublicKeyIndicatorBullets(
+            {
+              oneLineSummary: composition.oneLineSummary,
+              marketBullets: composition.marketBullets,
+              macroBullets: composition.macroBullets,
+              fundFlowBullets: composition.fundFlowBullets,
+              eventBullets: composition.eventBullets,
+              holdingTrendBullets: composition.holdingTrendBullets,
+              articleSummaryBullets: composition.articleSummaryBullets,
+              keyIndicatorBullets: composition.keyIndicatorBullets,
+              headlineEvents: composition.headlineEvents,
+              strategyBullets: composition.strategyBullets,
+              riskBullets: composition.riskBullets,
+              trendNewsBullets: composition.trendNewsBullets,
+              newsReferences: composition.newsReferences
+            },
+            dependencies.briefingSession
+          );
+
+          return repaired.length > 0 ? repaired : fallbackBriefing.keyIndicatorBullets;
+        })()
       : fallbackBriefing.keyIndicatorBullets,
     marketBullets: composition?.marketBullets?.length
       ? composition.marketBullets

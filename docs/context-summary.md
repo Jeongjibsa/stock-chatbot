@@ -81,6 +81,7 @@
 - 공개 웹의 `핵심 뉴스 이벤트`는 RSS 원문 headline과 `브리핑용 요약 제안`을 함께 출력하는 `headlineEvents` 구조를 사용하고, 공개 `eventBullets`는 세션별 체크포인트/일정 용도로 사용한다.
 - 공개 웹 feed/detail의 `핵심 시그널`은 이제 rule-based fallback이 아니라 `market-report-composition` structured output의 `keyIndicatorBullets`를 우선 저장해 사용한다. LLM composition이 실패하거나 빈 배열을 반환할 때만 기존 규칙 기반 fallback으로 내려간다.
 - 공개 `핵심 시그널` fallback은 세션 인지형으로 확장됐다. `pre_market`, `post_market`, `weekend_briefing`은 서로 다른 카테고리 후보를 사용하고, threshold가 적게 걸리는 날에도 `pre/post`는 최소 2개, `weekend_briefing`은 최소 3개 시그널을 기본 관찰 포인트로 채워 넣는다.
+- public composition 경로는 이제 LLM이 `keyIndicatorBullets`를 비우더라도, 같은 응답의 `market/macro/risk/event/trend` bullets에서 `핵심 시그널` 후보를 먼저 재조합해 저장한다. 즉 공개 detail 렌더러의 generic placeholder만 보이고 `reports.signals`는 빈 배열로 남는 mismatch를 줄인다.
 - Upstash REST cache는 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` env가 있을 때만 활성화되고, 뉴스 dedupe/hot cache/analysis cache에만 사용한다. 영속 저장과 최종 idempotency는 Postgres `news_items`, `news_analysis_results`, `reports.news_references`가 담당한다.
 - 운영용 `/api/cron/public-backfill`는 이제 write path 실행 뒤 동일 runtime의 public read path로 persisted row를 즉시 재검증해야 한다. row를 다시 읽지 못하면 성공 응답 대신 실패로 처리해, 최근 7일 recovery window backfill에서 “응답은 성공인데 공개 feed/detail에는 없음” 상태를 남기면 안 된다.
 - `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL`과 `CRON_SECRET`가 있으면 local worker insert 대신 production runtime `/api/cron/public-backfill`를 우선 사용한다. 기본 동작은 current-week만이 아니라 업로드 가능 기준일에서 최근 7일 안에 누락된 공개 브리핑 세션만 다시 채우는 rolling recovery repair다.

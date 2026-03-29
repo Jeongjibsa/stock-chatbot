@@ -254,6 +254,60 @@ describe("run-public-briefing", () => {
     );
   });
 
+  it("repairs empty composition key signals from other public bullets before fallback", async () => {
+    const marketResults: MarketDataFetchResult[] = [
+      {
+        status: "ok",
+        data: {
+          itemCode: "NASDAQ",
+          itemName: "나스닥 종합",
+          source: "yahoo_finance",
+          sourceKey: "index:NASDAQ:IXIC",
+          asOfDate: "2026-03-20",
+          previousValue: 22090.6895,
+          value: 21647.6113,
+          changePercent: -2.01
+        }
+      }
+    ];
+
+    const briefing = await buildPublicBriefing({
+      briefingSession: "pre_market",
+      compositionTimeoutMs: 8000,
+      runDate: "2026-03-20",
+      marketDataAdapter: {
+        fetchMany: vi.fn(async () => marketResults)
+      },
+      reportCompositionService: {
+        compose: vi.fn(async () => ({
+          oneLineSummary: "달러 강세와 변동성 재확인이 필요한 날입니다.",
+          marketBullets: [
+            "이번 오전 브리핑은 미국장 마감 결과를 바탕으로 오늘 국내장 시초가와 장 초반 수급 방향을 가늠하는 데 목적이 있습니다.",
+            "미국 지수 약세가 이어져 국내 개장 초반 위험 회피 심리가 재확인될 수 있습니다."
+          ],
+          macroBullets: ["달러 강세와 환율 부담을 함께 확인하셔야 합니다."],
+          fundFlowBullets: [],
+          eventBullets: ["오늘 대응 기준은 시초가 이후 환율과 선물 흐름이 같은 방향인지 보는 것입니다."],
+          holdingTrendBullets: [],
+          articleSummaryBullets: [],
+          keyIndicatorBullets: [],
+          headlineEvents: [],
+          strategyBullets: [],
+          riskBullets: ["변동성 재확인 전까지 추격 대응은 보수적으로 보셔야 합니다."],
+          trendNewsBullets: ["달러 강세 뉴스가 반복돼 위험 자산 선호는 다소 눌릴 수 있습니다."],
+          newsReferences: []
+        }))
+      }
+    });
+
+    expect(briefing.keyIndicatorBullets).toEqual([
+      "미국 지수 약세가 이어져 국내 개장 초반 위험 회피 심리가 재확인될 수 있습니다.",
+      "달러 강세와 환율 부담을 함께 확인하셔야 합니다.",
+      "변동성 재확인 전까지 추격 대응은 보수적으로 보셔야 합니다.",
+      "오늘 대응 기준은 시초가 이후 환율과 선물 흐름이 같은 방향인지 보는 것입니다."
+    ]);
+  });
+
   it("falls back to rule-based output when composition fails", async () => {
     const marketResults: MarketDataFetchResult[] = [
       {
