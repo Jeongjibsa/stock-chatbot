@@ -1,34 +1,65 @@
-export type BriefingSession = "post_market" | "pre_market";
+export type BriefingSession =
+  | "post_market"
+  | "pre_market"
+  | "weekend_briefing";
 
 export const PRE_MARKET_HOUR = 7;
 export const PRE_MARKET_MINUTE = 30;
 export const POST_MARKET_HOUR = 20;
 export const POST_MARKET_MINUTE = 30;
+export const WEEKEND_BRIEFING_HOUR = 8;
+export const WEEKEND_BRIEFING_MINUTE = 0;
 
 export function formatBriefingSessionLabel(
   session: BriefingSession
 ): string {
-  return session === "pre_market" ? "장 시작 전" : "장 마감 후";
+  if (session === "pre_market") {
+    return "장 시작 전";
+  }
+
+  if (session === "post_market") {
+    return "장 마감 후";
+  }
+
+  return "주말 브리핑";
 }
 
 export function formatBriefingSessionRole(
   session: BriefingSession
 ): string {
-  return session === "pre_market"
-    ? "판단 프레임과 오늘 대응 기준"
-    : "해석 검증과 다음 기준 보정";
+  if (session === "pre_market") {
+    return "미장 마감 분석 기반 국장 시초가 예측";
+  }
+
+  if (session === "post_market") {
+    return "국장/대체거래소 결과 분석 및 미장 예보";
+  }
+
+  return "주간 이슈 총정리 및 다음 주 일정 요약";
 }
 
 export function formatBriefingSessionSlug(
   session: BriefingSession
 ): string {
-  return session === "pre_market" ? "pre-market" : "post-market";
+  if (session === "pre_market") {
+    return "pre-market";
+  }
+
+  if (session === "post_market") {
+    return "post-market";
+  }
+
+  return "weekend-briefing";
 }
 
 export function parseBriefingSession(
   value: string | null | undefined
 ): BriefingSession | null {
-  if (value === "pre_market" || value === "post_market") {
+  if (
+    value === "pre_market" ||
+    value === "post_market" ||
+    value === "weekend_briefing"
+  ) {
     return value;
   }
 
@@ -50,6 +81,16 @@ export function resolveScheduledBriefingSession(input?: {
 }): BriefingSession | "none" {
   const timeZone = input?.timeZone ?? "Asia/Seoul";
   const parts = getZonedTimeParts(timeZone, input?.now);
+
+  if (
+    parts.totalMinutes >= WEEKEND_BRIEFING_HOUR * 60 + WEEKEND_BRIEFING_MINUTE &&
+    isScheduledBriefingSessionAllowed("weekend_briefing", {
+      timeZone,
+      ...(input?.now ? { now: input.now } : {})
+    })
+  ) {
+    return "weekend_briefing";
+  }
 
   if (
     parts.totalMinutes >= POST_MARKET_HOUR * 60 + POST_MARKET_MINUTE &&
@@ -82,6 +123,10 @@ export function isScheduledBriefingSessionAllowed(
 ): boolean {
   const parts = getZonedTimeParts(input?.timeZone ?? "Asia/Seoul", input?.now);
 
+  if (session === "weekend_briefing") {
+    return parts.weekday === 6;
+  }
+
   if (session === "pre_market") {
     return parts.weekday >= 1 && parts.weekday <= 6;
   }
@@ -92,9 +137,15 @@ export function isScheduledBriefingSessionAllowed(
 export function getBriefingSessionTime(
   session: BriefingSession
 ): { hour: number; minute: number } {
-  return session === "pre_market"
-    ? { hour: PRE_MARKET_HOUR, minute: PRE_MARKET_MINUTE }
-    : { hour: POST_MARKET_HOUR, minute: POST_MARKET_MINUTE };
+  if (session === "pre_market") {
+    return { hour: PRE_MARKET_HOUR, minute: PRE_MARKET_MINUTE };
+  }
+
+  if (session === "post_market") {
+    return { hour: POST_MARKET_HOUR, minute: POST_MARKET_MINUTE };
+  }
+
+  return { hour: WEEKEND_BRIEFING_HOUR, minute: WEEKEND_BRIEFING_MINUTE };
 }
 
 function getZonedTimeParts(timeZone: string, now: Date = new Date()) {

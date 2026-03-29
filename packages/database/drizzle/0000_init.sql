@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS "reports" (
   "total_score" numeric NOT NULL,
   "signals" jsonb NOT NULL,
   "indicator_tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
+  "news_references" jsonb DEFAULT '[]'::jsonb NOT NULL,
   "content_markdown" text NOT NULL,
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "reports_report_date_briefing_session_unique" UNIQUE("report_date", "briefing_session")
@@ -146,6 +147,8 @@ CREATE TABLE IF NOT EXISTS "reports" (
 
 ALTER TABLE "reports"
   ADD COLUMN IF NOT EXISTS "indicator_tags" jsonb DEFAULT '[]'::jsonb NOT NULL;
+ALTER TABLE "reports"
+  ADD COLUMN IF NOT EXISTS "news_references" jsonb DEFAULT '[]'::jsonb NOT NULL;
 ALTER TABLE "reports"
   ADD COLUMN IF NOT EXISTS "briefing_session" text DEFAULT 'pre_market';
 UPDATE "reports"
@@ -168,6 +171,43 @@ ALTER TABLE "reports"
   ALTER COLUMN "briefing_session" SET DEFAULT 'pre_market';
 ALTER TABLE "reports"
   ALTER COLUMN "briefing_session" SET NOT NULL;
+
+CREATE TABLE IF NOT EXISTS "news_items" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "news_source_id" text NOT NULL,
+  "news_source_label" text NOT NULL,
+  "content_scope" text NOT NULL,
+  "region" text NOT NULL,
+  "title" text NOT NULL,
+  "normalized_title" text NOT NULL,
+  "url" text NOT NULL,
+  "canonical_url" text NOT NULL,
+  "published_at" timestamp with time zone NOT NULL,
+  "summary" text,
+  "symbol" text,
+  "company_name" text,
+  "raw_payload" jsonb NOT NULL,
+  "collected_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "news_items_canonical_published_source_unique"
+    UNIQUE("canonical_url", "published_at", "news_source_id")
+);
+
+CREATE TABLE IF NOT EXISTS "news_analysis_results" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "run_date" date NOT NULL,
+  "briefing_session" text NOT NULL,
+  "audience_scope" text NOT NULL,
+  "analysis_type" text NOT NULL,
+  "subject_key" text NOT NULL,
+  "summary" text NOT NULL,
+  "sentiment" text NOT NULL,
+  "confidence" text NOT NULL,
+  "tags" jsonb DEFAULT '[]'::jsonb NOT NULL,
+  "supporting_news_item_ids" jsonb NOT NULL,
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "news_analysis_results_run_session_audience_subject_unique"
+    UNIQUE("run_date", "briefing_session", "audience_scope", "analysis_type", "subject_key")
+);
 
 CREATE TABLE IF NOT EXISTS "strategy_snapshots" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -235,3 +275,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS "reports_report_date_briefing_session_unique"
   ON "reports" ("report_date", "briefing_session");
 CREATE INDEX IF NOT EXISTS "reports_report_date_session_created_at_idx"
   ON "reports" ("report_date", "briefing_session", "created_at");
+CREATE INDEX IF NOT EXISTS "news_items_source_published_idx"
+  ON "news_items" ("news_source_id", "published_at");
+CREATE INDEX IF NOT EXISTS "news_items_scope_published_idx"
+  ON "news_items" ("content_scope", "published_at");
+CREATE INDEX IF NOT EXISTS "news_analysis_results_run_date_session_idx"
+  ON "news_analysis_results" ("run_date", "briefing_session");

@@ -17,6 +17,7 @@ export type LlmGenerateRequest = {
   instructions?: string;
   metadata?: Record<string, string>;
   task: LlmTaskKind;
+  timeoutMs?: number;
 };
 
 export type LlmGenerateResponse = {
@@ -52,7 +53,10 @@ type OpenAiResponsesApi = {
 
 type GoogleGenerateContentApi = {
   generateContent(
-    params: Record<string, unknown>
+    params: Record<string, unknown>,
+    options?: {
+      signal?: AbortSignal;
+    }
   ): Promise<{
     candidates?: Array<{
       content?: {
@@ -89,8 +93,9 @@ export class OpenAiLlmClient implements LlmClient {
 
   async generate(request: LlmGenerateRequest): Promise<LlmGenerateResponse> {
     const policy = this.resolvePolicy(request);
-    const response = await this.responsesApi.create(
-      buildOpenAiCreateParams(request, policy)
+    const response = await runWithTimeout(
+      () => this.responsesApi.create(buildOpenAiCreateParams(request, policy)),
+      request.timeoutMs
     );
 
     return mapOpenAiResponse(response, policy);
@@ -168,8 +173,17 @@ export class GoogleGeminiLlmClient implements LlmClient {
 
   async generate(request: LlmGenerateRequest): Promise<LlmGenerateResponse> {
     const policy = this.resolvePolicy(request);
-    const response = await this.generateContentApi.generateContent(
-      buildGoogleGenerateContentParams(request, policy)
+    const abortController = request.timeoutMs
+      ? new AbortController()
+      : undefined;
+    const response = await runWithTimeout(
+      () =>
+        this.generateContentApi.generateContent(
+          buildGoogleGenerateContentParams(request, policy),
+          abortController ? { signal: abortController.signal } : undefined
+        ),
+      request.timeoutMs,
+      () => abortController?.abort()
     );
 
     return mapGoogleResponse(response, policy);
@@ -268,7 +282,12 @@ function createGoogleGenerateContentApi(input: {
   }
 
   return {
-    async generateContent(params: Record<string, unknown>) {
+    async generateContent(
+      params: Record<string, unknown>,
+      options?: {
+        signal?: AbortSignal;
+      }
+    ) {
       const model = String(params.model);
       const payload = { ...params };
       delete payload.model;
@@ -281,7 +300,8 @@ function createGoogleGenerateContentApi(input: {
               "content-type": "application/json",
               "x-goog-api-key": apiKey
             }),
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            ...(options?.signal ? { signal: options.signal } : {})
           }
       );
 
@@ -301,6 +321,34 @@ function createGoogleGenerateContentApi(input: {
       };
     }
   };
+}
+
+function runWithTimeout<T>(
+  execute: () => Promise<T>,
+  timeoutMs?: number,
+  onTimeout?: () => void
+): Promise<T> {
+  if (!timeoutMs || timeoutMs <= 0) {
+    return execute();
+  }
+
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      onTimeout?.();
+      reject(new Error(`LLM request timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    void execute().then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
 }
 
 

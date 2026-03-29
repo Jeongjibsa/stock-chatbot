@@ -5,9 +5,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
+    "run:backfill-public-week": "tsx src/backfill-public-week.ts",
     "run:daily-report": "tsx src/run-daily-report.ts",
     "run:import-tickers": "tsx src/import-ticker-master.ts",
     "run:public-briefing": "tsx src/run-public-briefing.ts",
+    "run:verify-public-week": "tsx src/verify-public-week.ts",
     "start": "tsx src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

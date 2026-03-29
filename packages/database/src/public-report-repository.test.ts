@@ -52,6 +52,7 @@ describe("PublicReportRepository", () => {
         totalScore: "-0.42",
         signals: ["VIX 급등", "달러 강세"],
         indicatorTags: ["KOSPI +0.31%"],
+        newsReferences: [],
         contentMarkdown: "# 보고서"
       }
     ];
@@ -66,6 +67,7 @@ describe("PublicReportRepository", () => {
         totalScore: "-0.42",
         signals: ["VIX 급등", "달러 강세"],
         indicatorTags: ["KOSPI +0.31%"],
+        newsReferences: [],
         contentMarkdown: "# 보고서"
       })
     ).resolves.toMatchObject({
@@ -137,6 +139,7 @@ describe("PublicReportRepository", () => {
         totalScore: "0.00",
         signals: [],
         indicatorTags: ["NASDAQ -1.20%"],
+        newsReferences: [],
         contentMarkdown: "# updated"
       })
     ).resolves.toMatchObject({

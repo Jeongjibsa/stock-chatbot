@@ -1,11 +1,8 @@
 import { Pool } from "pg";
+import { normalizePostgresConnectionString } from "@stock-chatbot/database";
 
 declare global {
   var __stockChatbotWebPool: Pool | undefined;
-}
-
-function shouldUseSsl(databaseUrl: string) {
-  return databaseUrl.includes("sslmode=require") || databaseUrl.includes(".neon.tech");
 }
 
 export function getWebPool() {
@@ -15,12 +12,14 @@ export function getWebPool() {
     throw new Error("DATABASE_URL is missing");
   }
 
+  const { normalizedConnectionString, ssl } =
+    normalizePostgresConnectionString(databaseUrl);
   const pool =
     globalThis.__stockChatbotWebPool ??
     new Pool({
-      connectionString: databaseUrl,
+      connectionString: normalizedConnectionString,
       max: 1,
-      ssl: shouldUseSsl(databaseUrl) ? { rejectUnauthorized: false } : undefined
+      ...(ssl ? { ssl } : {})
     });
 
   if (!globalThis.__stockChatbotWebPool) {

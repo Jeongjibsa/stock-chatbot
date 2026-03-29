@@ -52,7 +52,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
   ] =
     await Promise.all([
       pool.query<{
-        briefing_session: "post_market" | "pre_market";
+        briefing_session: "post_market" | "pre_market" | "weekend_briefing";
         created_at: Date;
         id: string;
         market_regime: string;
@@ -68,7 +68,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
         ].join(" ")
       ),
       pool.query<{
-        briefing_session: "post_market" | "pre_market";
+        briefing_session: "post_market" | "pre_market" | "weekend_briefing";
         created_at: Date;
         id: string;
         market_regime: string;
@@ -201,7 +201,7 @@ export async function getAdminDashboardSnapshot(): Promise<AdminDashboardSnapsho
 }
 
 function mapRecentPublicReport(report: {
-  briefing_session: "post_market" | "pre_market";
+  briefing_session: "post_market" | "pre_market" | "weekend_briefing";
   created_at: Date;
   id: string;
   market_regime: string;

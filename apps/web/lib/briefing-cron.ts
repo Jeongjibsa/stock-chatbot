@@ -25,7 +25,9 @@ export function readCronRuntimeEnvironment(publicBriefingBaseUrl: string) {
       process.env.PUBLIC_BRIEFING_BASE_URL || publicBriefingBaseUrl,
     REDIS_URL: process.env.REDIS_URL,
     REPORT_TIMEZONE: process.env.REPORT_TIMEZONE,
-    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+    UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
+    UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL
   };
 }
 
@@ -66,6 +68,16 @@ dependencies: {
     runPublicBriefingImpl: dependencies.runPublicBriefingImpl ?? runPublicBriefing,
     sleep: dependencies.sleep ?? delay
   });
+
+  if (input.briefingSession === "weekend_briefing") {
+    return {
+      skipped: false,
+      briefingSession: input.briefingSession,
+      linkAttachedToDaily: false,
+      publicBriefing
+    };
+  }
+
   const summary = await (dependencies.runDailyReportImpl ?? runDailyReport)(env, {
     briefingSession: input.briefingSession,
     ...(publicBriefing.publicBriefingUrl

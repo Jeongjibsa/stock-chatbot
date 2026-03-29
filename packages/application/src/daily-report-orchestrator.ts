@@ -10,7 +10,7 @@ import type {
   HoldingPriceSnapshot,
   HoldingPriceSnapshotProvider
 } from "./holding-price-snapshot.js";
-import type { HoldingNewsBrief } from "./news.js";
+import type { HoldingNewsBrief, MacroTrendBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
 import type { PersonalizedPortfolioRebalancingData } from "./rebalancing-contract.js";
 import { buildRuleBasedBriefing } from "./rule-based-briefing.js";
@@ -97,6 +97,7 @@ type ReportCompositionServicePort = {
       symbol: string;
     }>;
     marketResults: MarketDataFetchResult[];
+    macroTrendBriefs?: MacroTrendBrief[];
     newsBriefs: HoldingNewsBrief[];
     quantScorecards: QuantScorecard[];
     quantScenarios: string[];
@@ -109,6 +110,48 @@ type ReportCompositionServicePort = {
       priorStrategyStance?: string | null;
     };
   }): Promise<DailyReportComposition>;
+};
+
+type MacroTrendNewsServicePort = {
+  analyzeMacroTrends(input: {
+    audience: "public_web" | "telegram_personalized";
+    items: Array<{
+      canonicalUrl: string;
+      collectedAt: string;
+      contentScope: "holding" | "macro";
+      newsSourceId: string;
+      newsSourceLabel: string;
+      normalizedTitle: string;
+      publishedAt: string;
+      region: "global" | "kr";
+      summary?: string;
+      title: string;
+      url: string;
+    }>;
+    runDate: string;
+    session: string;
+  }): Promise<MacroTrendBrief[]>;
+  collect(input: {
+    audience: "public_web" | "telegram_personalized";
+    limitPerSource?: number;
+    runDate: string;
+    scope: "holding" | "macro";
+    session: string;
+  }): Promise<
+    Array<{
+      canonicalUrl: string;
+      collectedAt: string;
+      contentScope: "holding" | "macro";
+      newsSourceId: string;
+      newsSourceLabel: string;
+      normalizedTitle: string;
+      publishedAt: string;
+      region: "global" | "kr";
+      summary?: string;
+      title: string;
+      url: string;
+    }>
+  >;
 };
 
 type StrategySnapshotRepositoryPort = {
@@ -185,6 +228,7 @@ export class DailyReportOrchestrator {
       defaultMarketItems?: DefaultMarketItem[];
       holdingPriceSnapshotProvider?: HoldingPriceSnapshotProvider;
       marketDataAdapter: MarketDataAdapter;
+      macroTrendNewsService?: MacroTrendNewsServicePort;
       personalRebalancingSnapshotRepository?: PersonalRebalancingSnapshotRepositoryPort;
       portfolioHoldingRepository: PortfolioHoldingRepositoryPort;
       portfolioNewsBriefService?: PortfolioNewsBriefServicePort;
@@ -192,6 +236,8 @@ export class DailyReportOrchestrator {
       publicReportRepository?: {
         findLatestByReportDate(reportDate: string): Promise<{
           id: string;
+          signals?: string[] | null;
+          summary?: string | null;
         } | null>;
         findLatestByReportDateAndSession(
           reportDate: string,
@@ -259,6 +305,7 @@ export class DailyReportOrchestrator {
     }
 
     let marketResults: MarketDataFetchResult[] = [];
+    let macroTrendBriefs: MacroTrendBrief[] = [];
     let portfolioNewsBriefs: HoldingNewsBrief[] = [];
 
     try {
@@ -286,6 +333,23 @@ export class DailyReportOrchestrator {
               exchange: holding.exchange
             }))
           )
+        : [];
+      macroTrendBriefs = this.dependencies.macroTrendNewsService
+        ? await this.dependencies.macroTrendNewsService
+            .collect({
+              audience: "telegram_personalized",
+              runDate: input.runDate,
+              scope: "macro",
+              session: briefingSession
+            })
+            .then((items) =>
+              this.dependencies.macroTrendNewsService?.analyzeMacroTrends({
+                audience: "telegram_personalized",
+                items,
+                runDate: input.runDate,
+                session: briefingSession
+              }) ?? Promise.resolve([])
+            )
         : [];
       const holdingInputs = holdings.map((holding) => ({
         companyName: holding.companyName,
@@ -349,6 +413,24 @@ export class DailyReportOrchestrator {
           ? { usSessionDate: sessionDateResolution.usSessionDate }
           : {})
       });
+      const persistedPublicBriefingInput: {
+        briefingSession: BriefingSession;
+        explicitPublicBriefingUrl?: string;
+        runDate: string;
+      } = {
+        briefingSession,
+        runDate: input.runDate
+      };
+
+      if (input.publicBriefingUrl) {
+        persistedPublicBriefingInput.explicitPublicBriefingUrl = input.publicBriefingUrl;
+      }
+
+      const persistedPublicBriefing = await this.resolvePersistedPublicBriefing(
+        persistedPublicBriefingInput
+      );
+      const reusePersistedPublicBriefing =
+        isScheduledDailyRun(input.scheduleType) && Boolean(persistedPublicBriefing);
       let strategySnapshotError: string | undefined;
 
       if (this.dependencies.strategySnapshotRepository) {
@@ -415,7 +497,7 @@ export class DailyReportOrchestrator {
       let compositionError: string | undefined;
       const fallbackBriefing = buildRuleBasedBriefing(marketResults);
 
-      if (this.dependencies.reportCompositionService) {
+      if (this.dependencies.reportCompositionService && !reusePersistedPublicBriefing) {
         try {
           composition = await this.dependencies.reportCompositionService.compose({
             audience: "telegram_personalized",
@@ -426,6 +508,7 @@ export class DailyReportOrchestrator {
               exchange: holding.exchange
             })),
             marketResults,
+            macroTrendBriefs,
             newsBriefs: portfolioNewsBriefs,
             ...(portfolioRebalancing ? { portfolioRebalancing } : {}),
             quantScorecards,
@@ -483,6 +566,8 @@ export class DailyReportOrchestrator {
 
       if (composition?.oneLineSummary) {
         renderInput.summaryLine = composition.oneLineSummary;
+      } else if (persistedPublicBriefing?.summary) {
+        renderInput.summaryLine = persistedPublicBriefing.summary;
       }
 
       if (composition?.holdingTrendBullets) {
@@ -515,6 +600,8 @@ export class DailyReportOrchestrator {
 
       if (composition?.macroBullets?.length) {
         renderInput.keyIndicatorSummaries = composition.macroBullets;
+      } else if (persistedPublicBriefing?.signals?.length) {
+        renderInput.keyIndicatorSummaries = persistedPublicBriefing.signals;
       } else if (fallbackBriefing.keyIndicatorBullets.length > 0) {
         renderInput.keyIndicatorSummaries = fallbackBriefing.keyIndicatorBullets;
       }
@@ -542,24 +629,8 @@ export class DailyReportOrchestrator {
       if (input.user.includePublicBriefingLink !== false) {
         if (input.publicBriefingUrl) {
           renderInput.publicBriefingUrl = input.publicBriefingUrl;
-        } else if (this.dependencies.publicBriefingBaseUrl) {
-          const publicReportRepository = this.dependencies.publicReportRepository;
-          const latestPublicReport =
-            typeof publicReportRepository?.findLatestByReportDateAndSession === "function"
-              ? await publicReportRepository.findLatestByReportDateAndSession(
-                  input.runDate,
-                  briefingSession
-                )
-              : briefingSession === "pre_market"
-                ? await publicReportRepository?.findLatestByReportDate(input.runDate)
-                : null;
-
-          if (latestPublicReport) {
-            renderInput.publicBriefingUrl = buildPublicReportDetailUrl(
-              this.dependencies.publicBriefingBaseUrl,
-              latestPublicReport.id
-            );
-          }
+        } else if (persistedPublicBriefing?.url) {
+          renderInput.publicBriefingUrl = persistedPublicBriefing.url;
         }
       }
 
@@ -753,6 +824,53 @@ export class DailyReportOrchestrator {
     return built;
   }
 
+  private async resolvePersistedPublicBriefing(input: {
+    briefingSession: BriefingSession;
+    explicitPublicBriefingUrl?: string;
+    runDate: string;
+  }): Promise<{
+    id: string;
+    signals: string[];
+    summary: string | null;
+    url?: string;
+  } | null> {
+    const publicReportRepository = this.dependencies.publicReportRepository;
+
+    if (!publicReportRepository) {
+      return null;
+    }
+
+    const latestPublicReport =
+      typeof publicReportRepository.findLatestByReportDateAndSession === "function"
+        ? await publicReportRepository.findLatestByReportDateAndSession(
+            input.runDate,
+            input.briefingSession
+          )
+        : input.briefingSession === "pre_market"
+          ? await publicReportRepository.findLatestByReportDate(input.runDate)
+          : null;
+
+    if (!latestPublicReport) {
+      return null;
+    }
+
+    return {
+      id: latestPublicReport.id,
+      signals: latestPublicReport.signals ?? [],
+      summary: latestPublicReport.summary ?? null,
+      ...(input.explicitPublicBriefingUrl
+        ? { url: input.explicitPublicBriefingUrl }
+        : this.dependencies.publicBriefingBaseUrl
+          ? {
+              url: buildPublicReportDetailUrl(
+                this.dependencies.publicBriefingBaseUrl,
+                latestPublicReport.id
+              )
+            }
+          : {})
+    };
+  }
+
   private async persistPersonalSnapshot(input: {
     effectiveReportDate: string;
     krSessionDate?: string;
@@ -780,6 +898,10 @@ export class DailyReportOrchestrator {
 
     await repository.deleteOlderThan(subtractDays(input.effectiveReportDate, 90));
   }
+}
+
+function isScheduledDailyRun(scheduleType: string): boolean {
+  return scheduleType === "daily-pre-market" || scheduleType === "daily-post-market";
 }
 
 function resolveRunStatus(

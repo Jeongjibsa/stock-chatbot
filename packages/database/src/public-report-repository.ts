@@ -4,10 +4,11 @@ import type { DatabaseClient } from "./client.js";
 import { reports, type ReportRecord } from "./schema.js";
 
 export type InsertPublicReportInput = {
-  briefingSession: "post_market" | "pre_market";
+  briefingSession: "post_market" | "pre_market" | "weekend_briefing";
   contentMarkdown: string;
   indicatorTags: string[];
   marketRegime: string;
+  newsReferences: Array<{ sourceLabel: string; title: string; url: string }>;
   reportDate: string;
   signals: string[];
   summary: string;
@@ -30,6 +31,7 @@ export class PublicReportRepository {
       totalScore: input.totalScore,
       signals: input.signals,
       indicatorTags: input.indicatorTags,
+      newsReferences: input.newsReferences,
       contentMarkdown: input.contentMarkdown
     };
     const [created] = existing
@@ -70,12 +72,17 @@ export class PublicReportRepository {
           marketRegime: reports.marketRegime,
           totalScore: reports.totalScore,
           signals: reports.signals,
+          newsReferences: sql<
+            Array<{ sourceLabel: string; title: string; url: string }>
+          >`'[]'::jsonb`.as("newsReferences"),
           contentMarkdown: reports.contentMarkdown,
           createdAt: reports.createdAt
         })
         .from(reports)
         .orderBy(desc(reports.reportDate), desc(reports.createdAt))
-        .then((rows) => rows.map((row) => ({ ...row, indicatorTags: [] } as ReportRecord)));
+        .then((rows) =>
+          rows.map((row) => ({ ...row, indicatorTags: [] } as ReportRecord))
+        );
     }
   }
 
@@ -102,6 +109,9 @@ export class PublicReportRepository {
           marketRegime: reports.marketRegime,
           totalScore: reports.totalScore,
           signals: reports.signals,
+          newsReferences: sql<
+            Array<{ sourceLabel: string; title: string; url: string }>
+          >`'[]'::jsonb`.as("newsReferences"),
           contentMarkdown: reports.contentMarkdown,
           createdAt: reports.createdAt
         })
@@ -121,7 +131,7 @@ export class PublicReportRepository {
 
   async findLatestByReportDateAndSession(
     reportDate: string,
-    briefingSession: "post_market" | "pre_market"
+    briefingSession: "post_market" | "pre_market" | "weekend_briefing"
   ): Promise<ReportRecord | null> {
     try {
       const result = await this.db
@@ -151,6 +161,9 @@ export class PublicReportRepository {
           marketRegime: reports.marketRegime,
           totalScore: reports.totalScore,
           signals: reports.signals,
+          newsReferences: sql<
+            Array<{ sourceLabel: string; title: string; url: string }>
+          >`'[]'::jsonb`.as("newsReferences"),
           contentMarkdown: reports.contentMarkdown,
           createdAt: reports.createdAt
         })
@@ -179,6 +192,7 @@ function isMissingIndicatorTagsError(error: unknown): boolean {
   return (
     code === "42703" ||
     message.includes('column "indicator_tags" does not exist') ||
+    message.includes('column "news_references" does not exist') ||
     message.includes('column "briefing_session" does not exist')
   );
 }

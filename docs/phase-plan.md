@@ -27,6 +27,7 @@
 - 코드 변경 후에는 최소한 대상 범위 테스트와 기본 검증 결과를 남긴다.
 - 검증이 끝난 작업 단위는 commit하고, 원격이 준비되어 있으면 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 별도 확인 없이 수행하는 기본 단계다.
+- 구현 변경은 테스트 시나리오 delta와 scope 분류를 `docs/e2e-change-workflow.md`에 먼저 반영하고, 최종 gate `pnpm e2e:final`까지 수행하는 것을 기본값으로 한다.
 - Telegram/webhook/cron/public feed/production Neon에 영향을 주는 작업은 `로컬 검증 -> commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E` 순서를 기본 마감 사이클로 사용한다.
 - 위 사이클 중 하나라도 남아 있으면 해당 작업은 완료가 아니다.
 
@@ -128,6 +129,7 @@
 - [x] 텔레그램 메시지 하단에 GitHub Pages 상세 브리핑 링크를 삽입하는 전달 규칙 정의
 - [x] 공개 페이지에서 개인화 정보(보유 종목/개인 기사 요약)를 제외하는 privacy guardrail 정의
 - [x] managed Postgres free-tier 후보(Neon, Supabase) 비교 및 현재 운영 권장안 정의
+- [x] 기능 변경용 E2E workflow 문서, scope-based final verification runner, project skill 정의
 
 ### Phase 6. Multi-Channel Readiness
 
@@ -169,6 +171,7 @@
 - [x] `reports` 읽기 모델과 public feed/detail/admin을 세션 라벨 인지형으로 확장
 - [x] Telegram `/report` 자동 세션 분기, `/report_time` 고정 정책 안내, Vercel/worker 세션별 cron 경로를 반영
 - [x] 정기 세션에서 `공개 브리핑 업로드 -> 개인 발송` 순서를 강제하고, 공개 링크 실패 시 링크 섹션 생략 fallback과 재시도 정책을 반영
+- [x] 공개 웹용 거시 트렌드 뉴스 수집/분석 계층, `weekend_briefing` 세션, Upstash dedupe/cache, `news_items`/`news_analysis_results` 저장 경로, RSS headline 기반 `headlineEvents` 출력 구조를 추가
 
 ## 5. Immediate Next Work
 
@@ -219,6 +222,8 @@
 - 2026-03-21: public GitHub repository를 기준으로 남은 운영 자동화 계획을 GitHub Actions 우선 전략으로 재편하고, CI/일 배치 스케줄/수동 실행/secret 관리/지연 허용 규칙을 다음 우선 작업으로 상향 조정
 - 2026-03-21: GitHub Actions `CI`와 `Daily Report` workflow, `workflow_dispatch`, secret/env 주입 규칙, direct daily report runner 엔트리포인트를 추가 완료
 - 2026-03-25: 정기 세션 cron이 공개 브리핑 업로드를 선행하도록 재정렬하고, 공개 업로드가 생성한 `/reports/[uuid]` 링크를 scheduled daily report에 직접 주입하도록 수정했다. 공개 업로드는 3회까지 재시도하며, 최종 실패 시 `확인 필요` 대신 링크 섹션 자체를 생략한다.
+- 2026-03-28: 공개 웹 브리핑을 종목 기사 대신 거시 트렌드 뉴스 기반으로 확장하고, `weekend_briefing` 세션, Upstash REST dedupe/hot cache, `news_items`/`news_analysis_results` 저장 모델, public `newsReferences` 노출을 추가했다.
+- 2026-03-28: 공개 웹 브리핑의 `브리핑 역할`과 `시장 종합 해석`을 세션 의도 중심으로 보강하고, `핵심 뉴스 이벤트`를 RSS 헤드라인 + 브리핑용 요약 제안 구조의 `headlineEvents`로 확장했다.
 - 2026-03-21: FRED series 매핑 점검 문서를 추가하고, 텔레그램 템플릿 구조에 맞춘 일 리포트 structured output prompt v2와 composition service를 실제 daily report worker 경로에 연결 완료
 - 2026-03-21: 실 Telegram provider adapter, `make test-telegram`, GitHub Actions `Telegram Smoke Test` workflow, smoke runner/unit test를 추가해 실채널 검증 자동화 완료
 - 2026-03-21: 브리핑 구조를 `시장 / 매크로 / 자금 / 이벤트` 섹션까지 확장하고, LLM prompt v3, 텔레그램 렌더러, mock preview, harness snapshot을 새 구조로 갱신 완료
@@ -273,3 +278,6 @@
 - 2026-03-22: 공개 `reports` read model에 `indicator_tags`를 추가하고, public feed/detail 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했으며, 공개 적재 경로를 `report_date` 기준 latest-upsert + feed date dedupe 구조로 조정
 - 2026-03-23: Telegram `/report`가 예외 발생 시에도 `report_runs`를 `failed`로 정리해 stale `running`을 남기지 않도록 보강하고, optional read model이 아직 반영되지 않은 환경에서 개인화 `/report`와 공개 feed 읽기 경로가 graceful fallback으로 계속 동작하도록 수정
 - 2026-03-23: Neon production branch에 최신 schema migration을 적용하고 runtime/user 데이터를 초기화한 뒤 공개 브리핑을 2026-03-16~2026-03-20 기준으로 재적재했으며, Telegram webhook을 `callback_query` 포함 allowed updates로 재등록
+- 2026-03-27: 기능 변경 시 `시나리오 delta -> scope 분류 -> 범위별 검증 -> live Telegram E2E`를 같은 루프에서 끝내도록 `docs/e2e-change-workflow.md`, `skills/e2e-change-automation`, `pnpm e2e:final` runner, README 지시문 예시를 추가
+- 2026-03-27: Vercel cron 공개 브리핑 업로드가 Gemini composition 지연으로 길어지던 문제를 수정하기 위해 `public_web` LLM 조합에 hard timeout을 추가하고, timeout 시 즉시 rule-based fallback으로 전환했으며 관련 Telegram E2E 시나리오와 E2E workflow 기준선을 세션별 `/report` 제목/핵심 섹션 분기까지 반영하도록 갱신
+- 2026-03-27: 고정 스케줄 정기 Telegram 발송은 공개 브리핑 row 적재를 선행 조건으로 두고, 같은 세션의 persisted public `summary/signals`와 개인화 데이터만 재조합해 보내도록 보강했다. 이에 따라 scheduled delivery는 공통 시장 해석용 두 번째 LLM 조합을 건너뛰며, production smoke 기준선에는 임시 cron 재배치 후 자동 업로드 확인과 최종 고정 스케줄 복구 절차를 추가했다.

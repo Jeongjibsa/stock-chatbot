@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -217,6 +218,10 @@ export const reports = pgTable("reports", {
   totalScore: numeric("total_score").notNull(),
   signals: jsonb("signals").$type<string[]>().notNull(),
   indicatorTags: jsonb("indicator_tags").$type<string[]>().notNull(),
+  newsReferences: jsonb("news_references")
+    .$type<Array<{ sourceLabel: string; title: string; url: string }>>()
+    .notNull()
+    .default(sql`'[]'::jsonb`),
   contentMarkdown: text("content_markdown").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 },
@@ -229,6 +234,73 @@ export const reports = pgTable("reports", {
       table.reportDate,
       table.briefingSession,
       table.createdAt
+    )
+  })
+);
+
+export const newsItems = pgTable(
+  "news_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    newsSourceId: text("news_source_id").notNull(),
+    newsSourceLabel: text("news_source_label").notNull(),
+    contentScope: text("content_scope").notNull(),
+    region: text("region").notNull(),
+    title: text("title").notNull(),
+    normalizedTitle: text("normalized_title").notNull(),
+    url: text("url").notNull(),
+    canonicalUrl: text("canonical_url").notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    summary: text("summary"),
+    symbol: text("symbol"),
+    companyName: text("company_name"),
+    rawPayload: jsonb("raw_payload").$type<Record<string, unknown>>().notNull(),
+    collectedAt: timestamp("collected_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    canonicalPublishedSourceUnique: unique(
+      "news_items_canonical_published_source_unique"
+    ).on(table.canonicalUrl, table.publishedAt, table.newsSourceId),
+    sourcePublishedIndex: index("news_items_source_published_idx").on(
+      table.newsSourceId,
+      table.publishedAt
+    ),
+    scopePublishedIndex: index("news_items_scope_published_idx").on(
+      table.contentScope,
+      table.publishedAt
+    )
+  })
+);
+
+export const newsAnalysisResults = pgTable(
+  "news_analysis_results",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    runDate: date("run_date").notNull(),
+    briefingSession: text("briefing_session").notNull(),
+    audienceScope: text("audience_scope").notNull(),
+    analysisType: text("analysis_type").notNull(),
+    subjectKey: text("subject_key").notNull(),
+    summary: text("summary").notNull(),
+    sentiment: text("sentiment").notNull(),
+    confidence: text("confidence").notNull(),
+    tags: jsonb("tags").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    supportingNewsItemIds: jsonb("supporting_news_item_ids").$type<string[]>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    runSessionAudienceSubjectUnique: unique(
+      "news_analysis_results_run_session_audience_subject_unique"
+    ).on(
+      table.runDate,
+      table.briefingSession,
+      table.audienceScope,
+      table.analysisType,
+      table.subjectKey
+    ),
+    runDateSessionIndex: index("news_analysis_results_run_date_session_idx").on(
+      table.runDate,
+      table.briefingSession
     )
   })
 );
@@ -306,6 +378,10 @@ export type NewPersonalRebalancingSnapshotRecord =
   typeof personalRebalancingSnapshots.$inferInsert;
 export type ReportRecord = typeof reports.$inferSelect;
 export type NewReportRecord = typeof reports.$inferInsert;
+export type NewsItemRecord = typeof newsItems.$inferSelect;
+export type NewNewsItemRecord = typeof newsItems.$inferInsert;
+export type NewsAnalysisResultRecord = typeof newsAnalysisResults.$inferSelect;
+export type NewNewsAnalysisResultRecord = typeof newsAnalysisResults.$inferInsert;
 export type StrategySnapshotRecord = typeof strategySnapshots.$inferSelect;
 export type NewStrategySnapshotRecord = typeof strategySnapshots.$inferInsert;
 export type TelegramConversationStateRecord =

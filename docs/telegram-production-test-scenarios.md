@@ -151,6 +151,13 @@
 
 - 공개 웹에는 보유 종목, 개인 기사 요약, 개인 점수카드가 없어야 한다.
 - 공개 가능한 시장/매크로/자금/이벤트/리스크만 보여야 한다.
+- detail에는 세션에 맞는 `브리핑 역할`이 직접 노출돼야 한다.
+  - `pre_market`: `미장 마감 분석 기반 국장 시초가 예측`
+  - `post_market`: `국장/대체거래소 결과 분석 및 미장 예보`
+  - `weekend_briefing`: `주간 이슈 총정리 및 다음 주 일정 요약`
+- `시장 종합 해석` 첫 문장은 해당 세션의 목적을 직접 설명해야 한다.
+- `핵심 뉴스 이벤트`는 실제 RSS 기사 기준의 `출처 + 헤드라인 + 브리핑용 요약 제안` 구조여야 한다.
+- `거시 트렌드 뉴스`와 `참고한 뉴스 출처` 섹션이 함께 보여야 한다.
 - 개인화 정보는 Telegram DM에서만 확인 가능해야 한다.
 
 ## 시나리오 9. 운영 보호 경계
@@ -181,6 +188,42 @@
 - GitHub Actions run도 success여야 한다.
 - `VERCEL_RECONCILE_URL + CRON_SECRET` 조합으로 backup 경로가 동작해야 한다.
 
+## 시나리오 11. 임시 cron 재배치 smoke
+
+### 절차
+
+1. production deploy 전에 cron 스케줄을 현재 UTC 기준 가까운 시각으로 임시 조정한다.
+2. production deploy를 수행한다.
+3. Vercel Hobby의 1시간 flexible window를 감안해 `/api/cron/pre-market-briefing`, `/api/cron/post-market-briefing` 자동 invocation 로그를 확인한다.
+4. `reports`에 같은 날짜 `pre_market`, `post_market` row가 적재됐는지 확인한다.
+5. `report_runs` 또는 운영 로그에서 같은 세션의 개인 정기 리포트가 공개 브리핑 row 이후에 완료됐는지 확인한다.
+6. 검증이 끝나면 cron 스케줄을 `07:30 pre / 20:30 post` 고정값으로 되돌려 다시 production deploy한다.
+
+### 기대 결과
+
+- 두 cron route 모두 실제 스케줄 invocation으로 `200` 완료되어야 한다.
+- 공개 브리핑 row가 먼저 생성되고, 그 뒤 같은 날짜/세션의 개인 정기 리포트가 이어져야 한다.
+- scheduled Telegram 리포트는 공개 브리핑 row의 `summary/signals`를 재사용해 공통 시장 해석용 추가 LLM 조합 없이 발송되어야 한다.
+- 마지막 production deploy 후 cron 정의는 다시 `30 22 * * 0-5`, `30 11 * * 1-5`로 복구돼 있어야 한다.
+- 임시 UTC 시각은 반드시 서울 기준 유효 세션 창을 만족해야 한다. 금요일 늦은 UTC 시각은 서울 기준 토요일 00시 이후가 되어 `post_market` 자동 smoke가 skip될 수 있다.
+
+## 시나리오 12. current-week 공개 브리핑 coverage / backfill
+
+### 절차
+
+1. `GET /api/cron/public-backfill?briefingSession=...&reportRunDate=...`를 current-week 허용 세션 수만큼 호출한다.
+2. 필요 시 로컬 worker `run:backfill-public-week`는 참고용으로만 사용하고, 최종 source-of-truth는 production site runtime backfill 결과로 본다.
+3. 이어서 `pnpm --filter @stock-chatbot/worker run run:verify-public-week`를 실행한다.
+4. public feed에서 이번 주 날짜 그룹과 `pre_market`, `post_market`, `weekend_briefing` 노출을 확인한다.
+
+### 기대 결과
+
+- 서울 기준 이번 주 월요일부터 현재까지 허용된 세션 row가 `reports`에 모두 존재해야 한다.
+- 토요일 기준 기대 세션은 `월~금 pre/post + 토 pre + 토 weekend`다.
+- `/api/cron/public-backfill`와 `run:backfill-public-week`는 기본적으로 `DISABLE_UPSTASH_NEWS_CACHE=true` 경로를 사용해 cross-session dedupe 때문에 뉴스 출처가 비는 현상을 줄여야 한다.
+- `run:verify-public-week`는 최소 `pre_market`, `weekend_briefing` detail에서 `브리핑 역할`, `시장 종합 해석`, `핵심 뉴스 이벤트`, `거시 트렌드 뉴스`, `참고한 뉴스 출처`를 확인해야 한다.
+- final gate에서 `pnpm e2e:final -- --scope=ops`를 실행할 때도 같은 coverage smoke가 포함되어야 한다.
+
 ## 운영 메모
 
 - Neon free tier를 아끼기 위해 production smoke는 schema 적용과 최소 GET/empty state 확인까지만 수행한다.
@@ -204,3 +247,10 @@
 8. `report_with_holdings`
 
 자동화 실행 경로와 env는 [docs/telegram-e2e-harness.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-e2e-harness.md)를 따른다.
+
+운영 경로 보강:
+
+- cron/public 경로를 수정한 change set에서는 최소 회귀 세트와 별도로 공개 브리핑 cron이 LLM timeout 시에도 rule-based fallback으로 `200`을 반환하고 `reports` 적재를 계속하는지 확인한다.
+- 공개 브리핑 포맷을 수정한 change set에서는 `pre_market`, `post_market`, `weekend_briefing` 중 영향을 받은 세션 row를 production에서 다시 생성한 뒤, public detail에서 `브리핑 역할`, 목적 문장, RSS headline 기반 `핵심 뉴스 이벤트`, `거시 트렌드 뉴스`, `참고한 뉴스 출처`를 직접 확인한다.
+- public feed가 의도보다 적은 수의 row만 보이면 worker current-week backfill을 먼저 수행하고, `run:verify-public-week`로 DB와 detail HTML을 동시에 확인한다.
+- cron 스케줄 자체를 만진 change set에서는 임시 재배치 smoke를 수행한 뒤, 마지막 production deploy에서 반드시 오전/오후 고정 스케줄 정의를 복구한다.

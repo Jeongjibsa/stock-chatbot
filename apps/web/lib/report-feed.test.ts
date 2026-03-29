@@ -7,11 +7,25 @@ describe("report-feed utils", () => {
     expect(
       groupReportsByDate([
         {
+          id: "r3",
+          briefingSession: "weekend_briefing",
+          reportDate: "2026-03-22",
+          summary: "weekend",
+          indicatorTags: [],
+          newsReferences: [],
+          marketRegime: "Neutral",
+          totalScore: 0.2,
+          signals: [],
+          contentMarkdown: "",
+          createdAt: "2026-03-22T01:00:00.000Z"
+        },
+        {
           id: "r2",
           briefingSession: "pre_market",
           reportDate: "2026-03-22",
           summary: "latest",
           indicatorTags: ["KOSPI +0.31%"],
+          newsReferences: [],
           marketRegime: "Risk-On",
           totalScore: 0.4,
           signals: [],
@@ -24,6 +38,7 @@ describe("report-feed utils", () => {
           reportDate: "2026-03-21",
           summary: "older",
           indicatorTags: ["NASDAQ -2.01%"],
+          newsReferences: [],
           marketRegime: "Neutral",
           totalScore: 0,
           signals: [],
@@ -34,7 +49,10 @@ describe("report-feed utils", () => {
     ).toEqual([
       {
         reportDate: "2026-03-22",
-        reports: [expect.objectContaining({ id: "r2" })]
+        reports: [
+          expect.objectContaining({ id: "r2" }),
+          expect.objectContaining({ id: "r3" })
+        ]
       },
       {
         reportDate: "2026-03-21",

@@ -1,9 +1,14 @@
 import type { PublicDailyBriefing } from "./public-daily-briefing.js";
 
 export function renderPublicDailyBriefingHtml(briefing: PublicDailyBriefing): string {
+  const checkpointSectionTitle = formatCheckpointSectionTitle(
+    briefing.briefingSession
+  );
   const sections = [
     renderSection("오늘 한 줄 요약", [`<p>${escapeHtml(briefing.summaryLine)}</p>`]),
+    renderBulletSection("브리핑 역할", [briefing.sessionRole]),
     renderDefinitionSection("시장 종합 해석", [
+      ["브리핑 목적", briefing.marketSummary.purpose],
       ["시장 종합", briefing.marketSummary.overall],
       ["심리/강도", briefing.marketSummary.sentimentStrength],
       ["밸류/펀더멘털", briefing.marketSummary.valuationFundamentals],
@@ -25,9 +30,13 @@ export function renderPublicDailyBriefingHtml(briefing: PublicDailyBriefing): st
       ["2. 자금 흐름 관점", briefing.marketInterpretation.fundFlow],
       ["3. 스타일/테마 관점", briefing.marketInterpretation.styleTheme]
     ]),
-    renderBulletSection("오늘의 핵심 뉴스/이벤트", briefing.eventBullets),
-    renderBulletSection("체크할 주요 일정", briefing.scheduleBullets),
+    renderHeadlineEventSection("핵심 뉴스 이벤트", briefing.headlineEvents),
+    renderBulletSection("거시 트렌드 뉴스", briefing.trendNewsBullets),
+    renderBulletSection(checkpointSectionTitle, briefing.scheduleBullets),
     renderBulletSection("오늘의 리스크 포인트", briefing.riskBullets),
+    ...(briefing.newsReferences.length > 0
+      ? [renderNewsReferenceSection("참고한 뉴스 출처", briefing.newsReferences)]
+      : []),
     renderSection("오늘 시장에서 읽어야 할 포인트", [
       `<p>${escapeHtml(briefing.closingParagraph)}</p>`
     ])
@@ -119,6 +128,71 @@ function renderDefinitionSection(title: string, rows: Array<[string, string]>): 
     "      </dl>",
     "    </section>"
   ].join("\n");
+}
+
+function renderHeadlineEventSection(
+  title: string,
+  events: PublicDailyBriefing["headlineEvents"]
+): string {
+  if (events.length === 0) {
+    return renderBulletSection(title, ["수집된 핵심 뉴스 헤드라인은 추가 확인이 필요한 구간입니다."]);
+  }
+
+  const items = events
+    .map(
+      (event) =>
+        [
+          "        <li>",
+          `          <strong>[${escapeHtml(event.sourceLabel)}] ${escapeHtml(event.headline)}</strong>`,
+          `          <div>브리핑용 요약 제안: ${escapeHtml(event.summary)}</div>`,
+          "        </li>"
+        ].join("\n")
+    )
+    .join("\n");
+
+  return [
+    "    <section>",
+    `      <h2>${escapeHtml(title)}</h2>`,
+    "      <ul>",
+    items,
+    "      </ul>",
+    "    </section>"
+  ].join("\n");
+}
+
+function renderNewsReferenceSection(
+  title: string,
+  references: PublicDailyBriefing["newsReferences"]
+): string {
+  const items = references
+    .map(
+      (reference) =>
+        `        <li>${escapeHtml(reference.sourceLabel)}: ${escapeHtml(reference.title)} (${escapeHtml(reference.url)})</li>`
+    )
+    .join("\n");
+
+  return [
+    "    <section>",
+    `      <h2>${escapeHtml(title)}</h2>`,
+    "      <ul>",
+    items,
+    "      </ul>",
+    "    </section>"
+  ].join("\n");
+}
+
+function formatCheckpointSectionTitle(
+  session: PublicDailyBriefing["briefingSession"]
+): string {
+  if (session === "pre_market") {
+    return "오늘 대응 기준";
+  }
+
+  if (session === "post_market") {
+    return "오늘 밤 체크포인트";
+  }
+
+  return "다음 주 주요 일정 요약";
 }
 
 function escapeHtml(value: string): string {

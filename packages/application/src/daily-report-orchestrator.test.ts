@@ -785,13 +785,33 @@ describe("DailyReportOrchestrator", () => {
     expect(result.publicBriefingLinked).toBe(false);
   });
 
-  it("uses an explicit scheduled public briefing url without re-querying public reports", async () => {
+  it("reuses persisted public briefing data for scheduled reports", async () => {
+    const reportCompositionService = {
+      compose: vi.fn(async () => ({
+        oneLineSummary: "LLM 요약",
+        marketBullets: ["LLM 시장 해석"],
+        macroBullets: [],
+        fundFlowBullets: [],
+        eventBullets: [],
+        holdingTrendBullets: [],
+        articleSummaryBullets: [],
+        headlineEvents: [],
+        strategyBullets: [],
+        riskBullets: [],
+        trendNewsBullets: [],
+        newsReferences: []
+      }))
+    };
     const publicReportRepository = {
       findLatestByReportDateAndSession: vi.fn(async () => ({
-        id: "public-report-1"
+        id: "public-report-1",
+        summary: "공개 브리핑 요약",
+        signals: ["코스피 약세", "달러 강세"]
       })),
       findLatestByReportDate: vi.fn(async () => ({
-        id: "public-report-1"
+        id: "public-report-1",
+        summary: "공개 브리핑 요약",
+        signals: ["코스피 약세", "달러 강세"]
       }))
     };
     const orchestrator = new DailyReportOrchestrator({
@@ -803,6 +823,7 @@ describe("DailyReportOrchestrator", () => {
       },
       publicBriefingBaseUrl: "https://web-three-tau-58.vercel.app",
       publicReportRepository,
+      reportCompositionService,
       reportRunRepository: {
         startRun: vi.fn(async () => ({
           created: true,
@@ -837,9 +858,14 @@ describe("DailyReportOrchestrator", () => {
     expect(result.reportText).toContain(
       "https://web-three-tau-58.vercel.app/reports/report-2026-03-24"
     );
+    expect(result.reportText).toContain("공개 브리핑 요약");
     expect(result.publicBriefingLinked).toBe(true);
-    expect(publicReportRepository.findLatestByReportDateAndSession).not.toHaveBeenCalled();
+    expect(publicReportRepository.findLatestByReportDateAndSession).toHaveBeenCalledWith(
+      "2026-03-24",
+      "pre_market"
+    );
     expect(publicReportRepository.findLatestByReportDate).not.toHaveBeenCalled();
+    expect(reportCompositionService.compose).not.toHaveBeenCalled();
   });
 
   it("uses the requested run date for rendering and snapshot lookup", async () => {

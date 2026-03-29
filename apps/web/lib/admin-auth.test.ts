@@ -16,7 +16,7 @@ describe("admin-auth", () => {
   });
 
   it("allows access when dashboard auth is not configured", () => {
-    expect(isAuthorizedAdminRequest(new Headers())).toBe(true);
+    expect(isAuthorizedAdminRequest(new Headers(), {})).toBe(true);
   });
 
   it("rejects invalid credentials when auth is configured", () => {

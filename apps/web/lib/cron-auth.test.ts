@@ -4,7 +4,7 @@ import { isAuthorizedCronRequest } from "./cron-auth";
 
 describe("isAuthorizedCronRequest", () => {
   it("allows requests when CRON_SECRET is unset", () => {
-    expect(isAuthorizedCronRequest(new Request("https://example.com"))).toBe(true);
+    expect(isAuthorizedCronRequest(new Request("https://example.com"), {})).toBe(true);
   });
 
   it("validates bearer token when CRON_SECRET is set", () => {

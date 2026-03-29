@@ -16,8 +16,17 @@ describe("DailyReportCompositionService", () => {
         eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
         holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
         articleSummaryBullets: ["Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다."],
+        headlineEvents: [],
         strategyBullets: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
-        riskBullets: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."]
+        riskBullets: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."],
+        trendNewsBullets: ["달러 강세와 금리 뉴스가 겹쳐 시장 전반 부담이 커졌습니다."],
+        newsReferences: [
+          {
+            sourceLabel: "Reuters",
+            title: "Dollar strength persists",
+            url: "https://example.com/reuters-dollar"
+          }
+        ]
       }),
       provider: "openai" as const,
       status: "completed" as const
@@ -55,7 +64,8 @@ describe("DailyReportCompositionService", () => {
       ],
       quantScenarios: [],
       riskCheckpoints: [],
-      runDate: "2026-03-21"
+      runDate: "2026-03-21",
+      timeoutMs: 8000
     });
 
     expect(generate).toHaveBeenCalledWith(
@@ -64,7 +74,8 @@ describe("DailyReportCompositionService", () => {
           promptAudience: "telegram_personalized",
           promptKind: "telegram-personalized-report-composition"
         }),
-        task: "market-report-composition"
+        task: "market-report-composition",
+        timeoutMs: 8000
       })
     );
     expect(result).toEqual({
@@ -75,8 +86,17 @@ describe("DailyReportCompositionService", () => {
       eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
       holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
       articleSummaryBullets: ["Apple 관련 핵심 기사는 제품 기대감 유지에 초점을 두고 있습니다."],
+      headlineEvents: [],
       strategyBullets: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
       riskBullets: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."],
+      trendNewsBullets: ["달러 강세와 금리 뉴스가 겹쳐 시장 전반 부담이 커졌습니다."],
+      newsReferences: [
+        {
+          sourceLabel: "Reuters",
+          title: "Dollar strength persists",
+          url: "https://example.com/reuters-dollar"
+        }
+      ],
       llmResponseId: "resp_report_1"
     });
   });

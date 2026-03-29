@@ -22,14 +22,14 @@
 
 ## 3. Rollup Status
 
-- last_rollup_date: 2026-03-23
-- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083, CHG-0084, CHG-0085, CHG-0086, CHG-0087, CHG-0088, CHG-0089, CHG-0090, CHG-0091, CHG-0092, CHG-0093, CHG-0094, CHG-0095, CHG-0096, CHG-0097, CHG-0098, CHG-0099, CHG-0100, CHG-0101, CHG-0102, CHG-0103, CHG-0104, CHG-0105, CHG-0106, CHG-0107, CHG-0108, CHG-0109, CHG-0110, CHG-0111, CHG-0112, CHG-0113, CHG-0114, CHG-0115, CHG-0116, CHG-0117, CHG-0118, CHG-0119, CHG-0120, CHG-0121, CHG-0122
+- last_rollup_date: 2026-03-28
+- included_change_ids: CHG-0001, CHG-0002, CHG-0003, CHG-0004, CHG-0005, CHG-0006, CHG-0007, CHG-0008, CHG-0009, CHG-0010, CHG-0011, CHG-0012, CHG-0013, CHG-0014, CHG-0015, CHG-0016, CHG-0017, CHG-0018, CHG-0019, CHG-0020, CHG-0021, CHG-0022, CHG-0023, CHG-0024, CHG-0025, CHG-0026, CHG-0027, CHG-0028, CHG-0029, CHG-0030, CHG-0031, CHG-0032, CHG-0033, CHG-0034, CHG-0035, CHG-0036, CHG-0037, CHG-0038, CHG-0039, CHG-0040, CHG-0041, CHG-0042, CHG-0043, CHG-0044, CHG-0045, CHG-0046, CHG-0047, CHG-0048, CHG-0049, CHG-0050, CHG-0051, CHG-0052, CHG-0053, CHG-0054, CHG-0055, CHG-0056, CHG-0057, CHG-0058, CHG-0059, CHG-0060, CHG-0061, CHG-0062, CHG-0063, CHG-0064, CHG-0065, CHG-0066, CHG-0067, CHG-0068, CHG-0069, CHG-0070, CHG-0071, CHG-0072, CHG-0073, CHG-0074, CHG-0075, CHG-0076, CHG-0077, CHG-0078, CHG-0079, CHG-0080, CHG-0081, CHG-0082, CHG-0083, CHG-0084, CHG-0085, CHG-0086, CHG-0087, CHG-0088, CHG-0089, CHG-0090, CHG-0091, CHG-0092, CHG-0093, CHG-0094, CHG-0095, CHG-0096, CHG-0097, CHG-0098, CHG-0099, CHG-0100, CHG-0101, CHG-0102, CHG-0103, CHG-0104, CHG-0105, CHG-0106, CHG-0107, CHG-0108, CHG-0109, CHG-0110, CHG-0111, CHG-0112, CHG-0113, CHG-0114, CHG-0115, CHG-0116, CHG-0117, CHG-0118, CHG-0119, CHG-0120, CHG-0121, CHG-0122, CHG-0123, CHG-0124, CHG-0125, CHG-0126, CHG-0127, CHG-0128, CHG-0129, CHG-0130, CHG-0131, CHG-0132, CHG-0133, CHG-0134, CHG-0135, CHG-0136, CHG-0137
 - source_of_truth: PRD + Phase Plan + Change Log
 
 ## 4. Current Product Baseline
 
 - 제품은 개인화된 주식 리포트를 제공하는 서비스다.
-- 현재 MVP는 텔레그램 + 공개 웹 기반이며, 정기 브리핑은 `07:30 pre_market`, `20:30 post_market` 이중 세션으로 발송한다. 미국장 기준으로 `월~토 오전`, `월~금 오후`만 정기/public 생성이 허용된다.
+- 현재 MVP는 텔레그램 + 공개 웹 기반이며, 정기 브리핑은 `07:30 pre_market`, `20:30 post_market`, `토요일 08:00 weekend_briefing(public only)` 세션으로 운영된다. 미국장 기준으로 `월~토 오전`, `월~금 오후`, `토요일 주말 공개 브리핑`만 생성이 허용된다.
 - 현재 구현 기준으로는 DM에서 온디맨드 `/report`도 지원한다.
 - MVP 전달 채널은 `텔레그램 요약본 + 공개 웹 frontend`의 이중 구조다.
 - 사용자 포트폴리오와 사용자별 시장 지표를 저장하고, 이를 바탕으로 시장 요약, 뉴스 요약, 퀀트 기반 시나리오를 생성한다.
@@ -46,6 +46,7 @@
 - 코드 변경의 기본 검증 명령은 `make verify`다.
 - 현재 기본 검증 루프는 실제로 `pnpm verify` 통과 상태다.
 - DB/저장 계층 변경 시 `make test-integration`까지 수행한다.
+- 기능 변경은 `docs/e2e-change-workflow.md`에 시나리오 delta와 scope를 먼저 반영하고, `pnpm e2e:final`로 최종 live E2E gate를 수행하는 기준선을 사용한다.
 - Telegram/webhook/cron/public web/Neon production에 영향을 주는 변경은 로컬 검증으로 끝내지 않고 `commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E`까지 끝나야 완료로 본다.
 - GitHub public repository와 `origin/main` push 기준선이 준비됐다.
 - 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
@@ -71,7 +72,14 @@
 - application 계층에는 provider-agnostic LLM client interface와 OpenAI adapter 초안이 추가됐다.
 - application 계층에는 `FRED + Yahoo Finance scraping` 혼합 market data adapter가 추가됐다.
 - application 계층에는 daily report orchestrator와 텔레그램 렌더러가 추가됐다.
-- application 계층에는 Google News RSS 기반 뉴스 어댑터, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진이 추가됐다.
+- application 계층에는 Google News RSS 기반 종목 뉴스 어댑터와 별도로, 국내/해외 RSS 소스를 읽는 `MacroTrendNewsService`, 기사 정규화/중복 제거, portfolio news brief 서비스, structured output 뉴스/리포트 계약, 규칙 기반 quant/risk/scenario 엔진이 추가됐다.
+- 공개 웹은 더 이상 종목별 기사 요약을 쓰지 않고 `거시 정책 / 환율·금리 / 야간 선물 / 글로벌 리스크 / 섹터 로테이션 / 시장 테마` 중심의 `macroTrendBriefs`만 반영한다.
+- 공개 웹의 `브리핑 역할`은 세션별로 `미장 마감 분석 기반 국장 시초가 예측 / 국장·대체거래소 결과 분석 및 미장 예보 / 주간 이슈 총정리 및 다음 주 일정 요약`을 직접 드러내야 한다.
+- 공개 웹의 `핵심 뉴스 이벤트`는 RSS 원문 headline과 `브리핑용 요약 제안`을 함께 출력하는 `headlineEvents` 구조를 사용하고, 공개 `eventBullets`는 세션별 체크포인트/일정 용도로 사용한다.
+- Upstash REST cache는 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` env가 있을 때만 활성화되고, 뉴스 dedupe/hot cache/analysis cache에만 사용한다. 영속 저장과 최종 idempotency는 Postgres `news_items`, `news_analysis_results`, `reports.news_references`가 담당한다.
+- 운영용 `/api/cron/public-backfill`는 이제 write path 실행 뒤 동일 runtime의 public read path로 persisted row를 즉시 재검증해야 한다. row를 다시 읽지 못하면 성공 응답 대신 실패로 처리해, current-week backfill에서 “응답은 성공인데 공개 feed/detail에는 없음” 상태를 남기면 안 된다.
+- `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL`과 `CRON_SECRET`가 있으면 local worker insert 대신 production runtime `/api/cron/public-backfill`를 우선 사용한다. 운영 백필은 write-path와 read-path가 같은 runtime을 기준으로 검증해야 한다.
+- 공개 `feed/detail` page는 `dynamic = "force-dynamic"`만으로는 build 시점 스냅샷이 남을 수 있어, Next 15 `connection()`을 호출해 요청 시점 runtime 연결을 먼저 확보한 뒤 DB read path를 수행해야 한다.
 - application 계층에는 mock telegram delivery adapter, reusable report preview 템플릿, 공통 report query model이 추가됐다.
 - telegram report 렌더러는 이모지, 방향 기호, 섹션 중심 레이아웃으로 개선됐고 실채널 POC 메시지 발송으로 확인됐다.
 - 시장 지표 렌더링은 `전일값 → 현재값` 형식으로 표시하고, `USD/KRW`는 `DXY`와 함께 상대 강도를 해석하도록 확장됐다.
@@ -128,12 +136,16 @@
 - database 계층에는 공개 브리핑용 `reports` 읽기 모델이 추가됐다. 이 테이블은 `report_date`, `summary`, `market_regime`, `total_score`, `signals`, `indicator_tags`, `content_markdown`, `created_at`을 저장하고, 공개 웹 feed/detail의 조회 모델로만 사용한다.
 - database 계층에는 `personal_rebalancing_snapshots` read model이 추가됐다. 이 테이블은 `user_id + effective_report_date + snapshot_version` 키로 개인화 리밸런싱 payload JSONB를 저장하고, 현재는 요청일(KST) 기준 날짜별 cache로 사용된다.
 - `run-public-briefing`은 이제 공개 브리핑 JSON 파일만 만드는 것이 아니라, `DATABASE_URL`이 설정된 경우 공개 가능한 브리핑을 `reports`에도 저장한다.
+- 공개 브리핑 `public_web` LLM 조합은 cron critical path를 막지 않도록 hard timeout을 사용하며, provider 지연이나 timeout이 발생하면 즉시 rule-based summary로 fallback한다.
 - 공개 웹에는 `보유 종목별 최근 동향`과 `종목 관련 핵심 기사 및 이벤트 요약` 같은 개인화 섹션이 포함되지 않는다.
 - 정기 세션 cron은 이제 `runPublicBriefing -> runDailyReport` 순서로 실행된다. 공개 브리핑이 `reports` row와 `/reports/[id]` 링크를 먼저 확보한 뒤, 같은 세션의 개인 정기 브리핑이 그 explicit URL을 그대로 주입받아 발송된다.
+- 고정 스케줄 정기 Telegram 발송은 공개 브리핑 row가 있으면 그 `summary/signals`를 개인화 데이터와 함께 재사용하고, 공통 시장 해석을 위해 별도의 두 번째 LLM 조합을 다시 호출하지 않는다.
 - 공개 상세 브리핑 permalink는 canonical `/briefings/YYYY-MM-DD/`, archive `/briefings/YYYY/MM/DD/`를 함께 유지하고, 같은 `runDate` 재실행 시 동일 경로를 덮어쓰는 방식으로 idempotent하게 운영한다.
 - 공개 브리핑 build 스크립트는 legacy fallback용 root `/`를 최신 브리핑 진입점으로, `/briefings/`를 날짜 archive index로 재생성한다.
 - GitHub Actions `Daily Report` workflow는 `workflow_dispatch` 기준의 manual reconcile entrypoint다. scheduled/manual 세션 모두 공개 업로드를 최대 3회(`10초 -> 20초`) 재시도한 뒤 링크를 확보하면 본문에 붙이고, 끝내 확보하지 못하면 공개 링크 섹션 자체를 생략한다.
-- `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입하는 것을 기준으로 한다.
+- 저장소 전체의 Node 기준선은 `.nvmrc`와 root/web `engines` 모두 `24.x`다. web lint/build는 root flat ESLint에 연결된 `@next/eslint-plugin-next` 구성을 사용한다.
+- `apps/web`는 `apps/web/vercel.json`, `.env.local.example`, Node 24 engine 선언을 포함한 Vercel 배포 준비 상태이며, production에서는 Neon connection string을 `DATABASE_URL`로 주입한다. Neon URL의 `sslmode`/`channel_binding` query는 pool 생성 시 제거하고 SSL 옵션으로 치환해 pg warning을 줄인다.
+- `apps/web/eslint.config.mjs`는 app-local `@next/next` plugin sentinel을 먼저 노출해 Next 15 flat-config 감지 로직이 `next build` 중 경고 없이 통과하도록 맞춘다.
 - Vercel production build는 `apps/web`의 Next.js 패치 라인이 최신 보안 허용 범위 안에 있어야 하며, 현재 기준선은 `15.5.14`다.
 - `apps/web`의 cron/webhook route는 Next.js production runtime에서 env 누락을 피하기 위해 `process.env` 전체 spread 대신 허용된 runtime key를 명시적으로 추출해 worker/bot 계층에 전달한다.
 - `apps/web`는 Vercel build에서 stale workspace `dist`를 참조하지 않도록 `@stock-chatbot/application`, `@stock-chatbot/database`, `@stock-chatbot/telegram-bot/build-bot`를 source 경로로 alias한다. 따라서 webhook/cron/public detail에 반영되는 공용 로직 변경은 별도 package build 없이도 Next.js 번들에 직접 포함된다.
@@ -188,7 +200,9 @@
 - 하네스는 이제 `harness/suite-contracts.json` 기준의 suite 계약 구조를 사용한다. active/planned suite 상태, 필수 expected key, grader 존재성, snapshot 요구사항을 검증 스크립트에서 기계적으로 강제한다.
 - 하네스 세부 운영 기준은 `docs/harness-engineering.md`를 기준으로 삼는다.
 - `Phase 7`의 계획 항목과 production deployment smoke는 모두 완료 상태다. 다음 우선순위는 실제 Telegram E2E 운영 점검, 첫 공개 브리핑 저장 확인, 전략 스코어 튜닝이다.
-- live Telegram E2E의 `report_with_holdings`는 이제 보유 종목명 노출 여부뿐 아니라 `포트폴리오 리밸런싱 제안` 문구와 `시세 스냅샷 연결 전입니다` placeholder 부재까지 함께 검증한다.
+- live Telegram E2E의 `report_with_holdings`는 이제 보유 종목명 노출 여부뿐 아니라 세션별 핵심 가이드 섹션(`포트폴리오 리밸런싱 제안` 또는 `기준 보정 제안`)과 `시세 스냅샷 연결 전입니다` placeholder 부재까지 함께 검증한다.
+- live Telegram E2E는 production webhook 경로를 칠 때 `TELEGRAM_E2E_DATABASE_URL`을 우선 읽어 webhook runtime과 동일한 Neon DB를 기준으로 outbound audit log와 side effect를 검증한다. 값이 없으면 기존 `DATABASE_URL`을 fallback으로 사용한다.
+- minimum live suite의 `portfolio_bulk_mixed`는 production ticker breadth에 흔들리지 않도록 `005930 + 삼성 + zzzzzz` 조합으로 고정돼 있다. exact success, ambiguous failure, miss failure를 한 번에 확인하는 목적이다.
 - Telegram `/report`는 현재 서울 시각 기준으로 세션을 자동 선택한다. `00:00~15:29`는 `pre_market`, `15:30~23:59`는 `post_market`으로 분기한다.
 - `packages/application/src/rebalancing-contract.ts`가 개인화 리밸런싱 payload의 현재 source-of-truth contract다. runtime payload에 rich score가 없으면 renderer는 `확인 필요 / 점검 필요 / 데이터 보강 필요` fallback을 사용한다.
 - 실제 `/report` 경로에서 rich 3대 관점이 보이려면 `portfolioRebalancing` payload가 오케스트레이터 입력까지 들어와야 하며, 2026-03-22 기준으로 `DailyReportOrchestrator`와 `TelegramReportService`가 이 payload를 renderer/prompt까지 전달하도록 연결됐다.
@@ -198,6 +212,9 @@
 - 공개 웹 feed/detail의 우상단 태그는 더 이상 `market_regime + total_score` badge를 사용하지 않는다. 대신 `KOSPI`, `KOSDAQ`, `S&P500`, `NASDAQ`의 indicator chip을 `indicator_tags` 컬럼에서 읽어 보여준다.
 - `REPORT_RUN_DATE` override는 worker/manual backfill에만 사용하고, Telegram command runtime `/report`는 항상 현재 서울 날짜를 사용한다.
 - 공개 웹 브리핑은 `오늘의 시장 브리핑` 구조로 분리됐고, 개인 포트 용어와 action language는 renderer 단계에서 제외된다.
+- `apps/web`는 app-local `eslint.config.mjs`에서 공식 `eslint-config-next/core-web-vitals + typescript` flat 구성을 사용하고, 저장소 공통 lint는 root config가 담당한다. Node 24 전환 이후 남은 web build 경고는 이 경로를 기준으로 줄인다.
+- `run:verify-public-week`는 current-week public briefing smoke에서 DB query만 믿지 않고 public feed/detail HTML도 같이 본다. production page fetch는 간헐적으로 partial/stale 응답이 섞일 수 있어 no-cache + retry를 기준선으로 삼는다.
+- 고정 스케줄 Telegram 발송은 같은 기준일/세션의 persisted public `summary/signals`를 재사용해 공통 시장 해석용 두 번째 LLM 조합을 건너뛴다. serverless runtime에서 공개 브리핑 JSON artifact를 상대 경로에 쓰지 못하면 `/tmp/public-briefing/...`로 자동 전환한 뒤 DB 적재를 계속 진행해야 한다.
 - Telegram DM에는 홈 reply keyboard(`📊 브리핑 보기`, `➕ 종목 추가`, `📁 내 종목`, `⚙️ 설정`)와 설정 inline keyboard가 추가됐다. 기존 slash command semantics는 유지한다.
 - Telegram DM `/register`는 같은 private chat에 이미 등록된 사용자를 감지하면 중복 등록 대신 `/report`, `/portfolio_list`, `/unregister` 다음 단계를 안내한다.
 - Telegram DM에는 `/unregister`와 `/portfolio_bulk`가 추가됐다. `/unregister`는 보유 종목과 대화 상태, delivery 설정을 비우는 soft reset이며 user identity, request history, block 상태는 유지한다. `/portfolio_bulk`는 여러 종목을 comma, semicolon, newline 기준으로 받아 평균단가/수량/메모 없이 기본 보유 종목을 벌크 추가하고, 인라인 argument가 없으면 대화형 입력도 지원한다.

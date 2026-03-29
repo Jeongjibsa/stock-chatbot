@@ -290,6 +290,19 @@ Telegram E2E harness 변경 시:
 ```bash
 COREPACK_HOME=/tmp/corepack pnpm test -- apps/telegram-bot/src/e2e/env.test.ts apps/telegram-bot/src/e2e/webhook-driver.test.ts
 make test-integration
+```
+
+기능 변경의 최종 E2E gate:
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=default --allow-production --suite=minimum
+```
+
+DB/web/운영 경로까지 함께 바뀐 경우:
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=db,web,ops --allow-production --suite=minimum
+```
 
 운영 영향 변경의 표준 마감 사이클:
 
@@ -300,6 +313,24 @@ make test-integration
 5. Neon production DB schema/data 반영
 6. 공개 웹, webhook, cron smoke
 7. Telegram production E2E 또는 동등한 live verification
+
+## AI 작업 지시 예시
+
+기능 구현부터 시나리오 갱신, 최종 E2E까지 한 번에 맡길 때는 아래처럼 지시하면 됩니다.
+
+```text
+이번 변경은 webhook + 공개 웹 + DB read model에 영향이 있어.
+구현 전에 docs/e2e-change-workflow.md 기준으로 영향받는 시나리오 delta를 먼저 정리하고,
+코드/테스트/문서를 같이 수정한 뒤 최종 검증은
+COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=db,web,ops --allow-production --suite=minimum
+까지 수행해. 실행하지 못한 검증은 이유와 리스크를 남겨줘.
+```
+
+```text
+이 버그를 수정해.
+관련 Telegram E2E 시나리오와 docs/e2e-change-workflow.md 기준선을 갱신하고,
+최종 검증은 COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=default --allow-production --suite=minimum
+으로 마감해.
 ```
 
 ## 배포 메모
@@ -334,6 +365,8 @@ COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 - `docs/phase-plan.md`
 - `docs/change-log.md`
 - `docs/context-summary.md`
+- `docs/e2e-change-workflow.md`
+- `docs/system-architecture.md`
 - `docs/harness-engineering.md`
 - `docs/telegram-e2e-harness.md`
 
@@ -342,5 +375,6 @@ COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 README에서 분리한 구현 메모는 아래 문서를 참고합니다.
 
 - [docs/implementation-reference.md](docs/implementation-reference.md)
+- [docs/system-architecture.md](docs/system-architecture.md)
 - [docs/vercel-deployment.md](docs/vercel-deployment.md)
 - [docs/telegram-production-test-scenarios.md](docs/telegram-production-test-scenarios.md)

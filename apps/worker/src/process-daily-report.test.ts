@@ -6,6 +6,7 @@ import {
 } from "@stock-chatbot/application";
 import {
   isUserDueForScheduledReport,
+  isNewsCacheDisabled,
   processDailyReportJob,
   readDatabaseUrl,
   readFredApiKey,
@@ -292,6 +293,8 @@ describe("processDailyReportJob", () => {
     expect(readLlmProvider({})).toBeUndefined();
     expect(readLlmProvider({ LLM_PROVIDER: "google" })).toBe("google");
     expect(readLlmProvider({ LLM_PROVIDER: "openai" })).toBe("openai");
+    expect(isNewsCacheDisabled({})).toBe(false);
+    expect(isNewsCacheDisabled({ DISABLE_UPSTASH_NEWS_CACHE: "true" })).toBe(true);
     expect(readPublicBriefingBaseUrl({})).toBeUndefined();
     expect(
       readPublicBriefingBaseUrl({

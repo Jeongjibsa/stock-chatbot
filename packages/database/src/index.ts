@@ -1,4 +1,9 @@
-export { createDatabase, createPool, type DatabaseClient } from "./client.js";
+export {
+  createDatabase,
+  createPool,
+  normalizePostgresConnectionString,
+  type DatabaseClient
+} from "./client.js";
 export {
   DEFAULT_MARKET_WATCH_CATALOG,
   type DefaultMarketWatchCatalogItem
@@ -7,6 +12,8 @@ export { runMigrations } from "./migrate.js";
 export {
   personalRebalancingSnapshots,
   marketWatchCatalogItems,
+  newsAnalysisResults,
+  newsItems,
   portfolioHoldings,
   reports,
   reportRuns,
@@ -18,8 +25,12 @@ export {
   userMarketWatchItems,
   users,
   type MarketWatchCatalogItemRecord,
+  type NewsAnalysisResultRecord,
+  type NewsItemRecord,
   type NewReportRunRecord,
   type NewReportRecord,
+  type NewNewsAnalysisResultRecord,
+  type NewNewsItemRecord,
   type NewMarketWatchCatalogItemRecord,
   type NewPortfolioHoldingRecord,
   type NewPersonalRebalancingSnapshotRecord,
@@ -40,6 +51,11 @@ export {
   type UserRecord
 } from "./schema.js";
 export { MarketWatchCatalogRepository } from "./market-watch-catalog-repository.js";
+export { NewsItemRepository, type InsertNewsItemInput } from "./news-item-repository.js";
+export {
+  NewsAnalysisResultRepository,
+  type UpsertNewsAnalysisResultInput
+} from "./news-analysis-result-repository.js";
 export {
   PortfolioHoldingRepository,
   type UpsertPortfolioHoldingInput

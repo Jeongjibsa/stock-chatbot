@@ -16,13 +16,14 @@ export async function listPublicReports(): Promise<PublicReport[]> {
       id: string;
       indicator_tags: string[];
       market_regime: string;
+      news_references: Array<{ sourceLabel: string; title: string; url: string }>;
       report_date: Date | string;
       signals: string[];
       summary: string;
       total_score: string;
     }>(
       [
-        'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
+        'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "signals", "indicator_tags", "news_references", "content_markdown", "created_at"',
         'FROM "reports"',
         'ORDER BY "report_date" DESC, "briefing_session" ASC, "created_at" DESC'
       ].join(" ")
@@ -40,6 +41,7 @@ export async function listPublicReports(): Promise<PublicReport[]> {
       briefing_session: BriefingSession;
       id: string;
       market_regime: string;
+      news_references: Array<{ sourceLabel: string; title: string; url: string }>;
       report_date: Date | string;
       signals: string[];
       summary: string;
@@ -55,7 +57,8 @@ export async function listPublicReports(): Promise<PublicReport[]> {
     return legacyResult.rows.map((row) =>
       mapRowToPublicReport({
         ...row,
-        indicator_tags: []
+        indicator_tags: [],
+        news_references: []
       })
     );
   }
@@ -74,13 +77,14 @@ export async function getPublicReportById(
       id: string;
       indicator_tags: string[];
       market_regime: string;
+      news_references: Array<{ sourceLabel: string; title: string; url: string }>;
       report_date: Date | string;
       signals: string[];
       summary: string;
       total_score: string;
     }>(
       [
-        'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "signals", "indicator_tags", "content_markdown", "created_at"',
+        'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "signals", "indicator_tags", "news_references", "content_markdown", "created_at"',
         'FROM "reports"',
         'WHERE "id" = $1',
         'LIMIT 1'
@@ -100,6 +104,7 @@ export async function getPublicReportById(
       briefing_session: BriefingSession;
       id: string;
       market_regime: string;
+      news_references: Array<{ sourceLabel: string; title: string; url: string }>;
       report_date: Date | string;
       signals: string[];
       summary: string;
@@ -117,7 +122,8 @@ export async function getPublicReportById(
     return legacyResult.rows[0]
       ? mapRowToPublicReport({
           ...legacyResult.rows[0],
-          indicator_tags: []
+          indicator_tags: [],
+          news_references: []
         })
       : null;
   }
@@ -130,6 +136,7 @@ function mapRowToPublicReport(report: {
   id: string;
   indicator_tags: string[];
   market_regime: string;
+  news_references: Array<{ sourceLabel: string; title: string; url: string }>;
   report_date: Date | string;
   signals: string[];
   summary: string;
@@ -141,6 +148,7 @@ function mapRowToPublicReport(report: {
     reportDate: normalizeDate(report.report_date),
     summary: report.summary,
     indicatorTags: report.indicator_tags ?? [],
+    newsReferences: report.news_references ?? [],
     marketRegime: report.market_regime,
     totalScore: Number.parseFloat(report.total_score),
     signals: report.signals,
@@ -170,6 +178,7 @@ function isMissingIndicatorTagsError(error: unknown): boolean {
   return (
     code === "42703" ||
     message.includes('column "indicator_tags" does not exist') ||
+    message.includes('column "news_references" does not exist') ||
     message.includes('column "briefing_session" does not exist')
   );
 }

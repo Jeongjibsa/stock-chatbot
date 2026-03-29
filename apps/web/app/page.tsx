@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { Activity, ArrowUpRight } from "lucide-react";
 
 import { FeedEmptyState } from "../components/feed-empty-state";
@@ -12,6 +13,8 @@ import { listPublicReports } from "../lib/public-reports";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  await connection();
+
   try {
     const reports = await listPublicReports();
 

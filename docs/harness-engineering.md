@@ -12,6 +12,7 @@
 
 참고:
 - [OpenAI Harness Engineering](https://openai.com/ko-KR/index/harness-engineering/)
+- [E2E Change Workflow](/Users/jisung/Projects/stock-chatbot/docs/e2e-change-workflow.md)
 
 ## 현재 하네스 구조
 
@@ -66,6 +67,7 @@ fixture는 자유 형식 JSON이 아닙니다. 모든 fixture는 `harness/suite-
   - Telegram `post_market`
   - Public `pre_market`
   - Public `post_market`
+  - Public `weekend_briefing`
 
 ### 3. Active suite는 빈 껍데기로 두지 않는다
 
@@ -87,6 +89,11 @@ fixture는 자유 형식 JSON이 아닙니다. 모든 fixture는 `harness/suite-
 - `portfolio_news_cases`
 - `quant_signal_cases`
 - `report_render_cases`
+
+추가 불변성:
+
+- `portfolio_news_cases`는 `holding`과 `macro` 입력을 구분해야 합니다.
+- 공개 웹 fixture에는 개별 종목 기사 요약이 들어가면 안 되고, `trendNewsBullets`와 `newsReferences`만 허용합니다.
 
 `market_snapshot_cases`는 현재 `planned` 상태입니다.
 
@@ -115,6 +122,7 @@ COREPACK_HOME=/tmp/corepack pnpm verify
 - `docs/initial-prd.md`의 Harness Engineering Strategy 섹션
 - `docs/change-log.md`
 - 필요 시 `docs/context-summary.md`
+- `docs/e2e-change-workflow.md`
 - `docs/telegram-e2e-harness.md`
 - `AGENTS.md`
 
@@ -129,6 +137,7 @@ COREPACK_HOME=/tmp/corepack pnpm verify
 5. 코드 수정
 6. `pnpm harness:check`
 7. `pnpm verify`
+8. 기능/운영 영향 변경이면 `pnpm e2e:final -- --scope=... --allow-production --suite=minimum`
 
 하네스를 건드렸는데 계약/문서/검증이 빠져 있으면 완료가 아닙니다.
 
@@ -136,4 +145,5 @@ COREPACK_HOME=/tmp/corepack pnpm verify
 
 - Telegram webhook, cron, 공개 웹, Neon production schema/data를 건드린 변경은 하네스나 로컬 테스트만 통과했다고 완료로 보지 않는다.
 - 이런 변경은 배포 후 production smoke와 Telegram live E2E까지 수행해야 한다.
+- live Telegram E2E는 production webhook runtime과 같은 DB를 읽어야 하므로, 필요하면 `TELEGRAM_E2E_DATABASE_URL`로 production Neon connection string을 별도 주입한다.
 - Telegram rate-limit이나 block 정책을 추가한 경우 E2E reset helper가 request history/block 상태를 테스트용으로만 정리하는지, 실제 `/unregister` 시나리오는 soft reset semantics를 그대로 검증하는지 함께 확인한다.

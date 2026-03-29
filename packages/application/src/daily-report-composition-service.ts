@@ -1,7 +1,7 @@
 import type { LlmClient } from "./llm-client.js";
 import type { BriefingSession } from "./briefing-session.js";
 import type { MarketDataFetchResult } from "./market-data.js";
-import type { HoldingNewsBrief } from "./news.js";
+import type { HoldingNewsBrief, MacroTrendBrief } from "./news.js";
 import type { QuantScorecard } from "./quant-scorecard.js";
 import type { PersonalizedPortfolioRebalancingData } from "./rebalancing-contract.js";
 import {
@@ -14,13 +14,16 @@ export type DailyReportComposition = {
   articleSummaryBullets: string[];
   eventBullets: string[];
   fundFlowBullets: string[];
+  headlineEvents: Array<{ headline: string; sourceLabel: string; summary: string }>;
   holdingTrendBullets: string[];
   macroBullets: string[];
   marketBullets: string[];
   llmResponseId?: string;
+  newsReferences: Array<{ sourceLabel: string; title: string; url: string }>;
   oneLineSummary: string;
   riskBullets: string[];
   strategyBullets: string[];
+  trendNewsBullets: string[];
 };
 
 export class DailyReportCompositionService {
@@ -39,11 +42,13 @@ export class DailyReportCompositionService {
       symbol: string;
     }>;
     marketResults: MarketDataFetchResult[];
+    macroTrendBriefs?: MacroTrendBrief[];
     newsBriefs: HoldingNewsBrief[];
     quantScorecards: QuantScorecard[];
     quantScenarios: string[];
     riskCheckpoints: string[];
     runDate: string;
+    timeoutMs?: number;
     sessionComparison?: {
       priorPublicSignals?: string[];
       priorPublicSummary?: string | null;
@@ -57,6 +62,7 @@ export class DailyReportCompositionService {
       ...(input.briefingSession ? { briefingSession: input.briefingSession } : {}),
       holdings: input.holdings,
       marketResults: input.marketResults,
+      macroTrendBriefs: input.macroTrendBriefs ?? [],
       newsBriefs: input.newsBriefs,
       quantScorecards: input.quantScorecards,
       quantScenarios: input.quantScenarios,
@@ -76,7 +82,8 @@ export class DailyReportCompositionService {
       task: "market-report-composition",
       input: prompt.input,
       instructions: prompt.instructions,
-      metadata: prompt.metadata
+      metadata: prompt.metadata,
+      ...(input.timeoutMs ? { timeoutMs: input.timeoutMs } : {})
     });
     const parsed = parseDailyReportStructuredOutput(llmResponse.outputText);
     const result: DailyReportComposition = {
@@ -87,8 +94,11 @@ export class DailyReportCompositionService {
       eventBullets: parsed.eventBullets,
       holdingTrendBullets: parsed.holdingTrendBullets,
       articleSummaryBullets: parsed.articleSummaryBullets,
+      headlineEvents: parsed.headlineEvents,
       strategyBullets: parsed.strategyBullets,
-      riskBullets: parsed.riskBullets
+      riskBullets: parsed.riskBullets,
+      trendNewsBullets: parsed.trendNewsBullets,
+      newsReferences: parsed.newsReferences
     };
 
     if (llmResponse.id) {

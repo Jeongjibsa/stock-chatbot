@@ -1,6 +1,7 @@
 import "dotenv/config";
 
 import { mkdirSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Pool } from "pg";
@@ -17,22 +18,27 @@ import {
   parseBriefingSession,
   GOOGLE_PROVIDER_PROFILE,
   createLlmClient,
+  MacroTrendNewsService,
   OPENAI_PROVIDER_PROFILE,
   resolveScheduledBriefingSession,
   renderPublicDailyBriefingMarkdown,
   toQuantStrategyBullets,
   YahooFinanceScrapingMarketDataAdapter,
   type DailyReportComposition,
+  type MacroTrendBrief,
   type MarketDataAdapter
 } from "@stock-chatbot/application";
 import {
   createDatabase,
   createPool,
   DEFAULT_MARKET_WATCH_CATALOG,
+  NewsAnalysisResultRepository,
+  NewsItemRepository,
   PublicReportRepository
 } from "@stock-chatbot/database";
 
 import {
+  buildNewsCacheAdapter,
   readFredApiKey,
   readGeminiApiKey,
   readLlmProvider,
@@ -44,7 +50,9 @@ type Environment = Record<string, string | undefined>;
 
 type PublicBriefingBuilderDependencies = {
   briefingSession: BriefingSession;
+  compositionTimeoutMs?: number;
   marketDataAdapter: MarketDataAdapter;
+  macroTrendBriefs?: MacroTrendBrief[];
   reportCompositionService?: Pick<DailyReportCompositionService, "compose">;
   runDate: string;
   sessionComparison?: {
@@ -61,6 +69,24 @@ export function readPublicBriefingOutputPath(
     env.PUBLIC_BRIEFING_OUTPUT_PATH?.trim() ||
     `artifacts/public-briefing/public-daily-briefing-${briefingSession}.json`
   );
+}
+
+export function readPublicBriefingLlmTimeoutMs(
+  env: Environment = process.env
+): number {
+  const raw = env.PUBLIC_BRIEFING_LLM_TIMEOUT_MS?.trim();
+
+  if (!raw) {
+    return 8_000;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return 8_000;
+  }
+
+  return parsed;
 }
 
 export async function buildPublicBriefing(
@@ -84,6 +110,7 @@ export async function buildPublicBriefing(
     portfolioNewsBriefs: []
   });
   const quantScenarios = toQuantStrategyBullets(quantScorecards);
+  const macroTrendBriefs = dependencies.macroTrendBriefs ?? [];
   let composition: DailyReportComposition | undefined;
 
   if (dependencies.reportCompositionService) {
@@ -93,11 +120,15 @@ export async function buildPublicBriefing(
         briefingSession: dependencies.briefingSession,
         holdings: [],
         marketResults,
+        macroTrendBriefs,
         newsBriefs: [],
         quantScorecards,
         quantScenarios,
         riskCheckpoints: [],
         runDate: dependencies.runDate,
+        ...(dependencies.compositionTimeoutMs
+          ? { timeoutMs: dependencies.compositionTimeoutMs }
+          : {}),
         ...(dependencies.sessionComparison
           ? { sessionComparison: dependencies.sessionComparison }
           : {})
@@ -132,9 +163,18 @@ export async function buildPublicBriefing(
     eventBullets: composition?.eventBullets?.length
       ? composition.eventBullets
       : fallbackBriefing.eventBullets,
+    headlineEvents: composition?.headlineEvents?.length
+      ? composition.headlineEvents
+      : buildFallbackHeadlineEvents(macroTrendBriefs),
     riskBullets: composition?.riskBullets?.length
       ? composition.riskBullets
-      : fallbackBriefing.riskBullets
+      : fallbackBriefing.riskBullets,
+    trendNewsBullets: composition?.trendNewsBullets?.length
+      ? composition.trendNewsBullets
+      : macroTrendBriefs.map((brief) => brief.summary).slice(0, 5),
+    newsReferences: composition?.newsReferences?.length
+      ? composition.newsReferences
+      : macroTrendBriefs.flatMap((brief) => brief.references).slice(0, 6)
   });
 }
 
@@ -145,6 +185,7 @@ export function buildPublicReportInsertInput(input: {
   contentMarkdown: string;
   indicatorTags: string[];
   marketRegime: string;
+  newsReferences: Array<{ sourceLabel: string; title: string; url: string }>;
   reportDate: string;
   signals: string[];
   summary: string;
@@ -161,8 +202,21 @@ export function buildPublicReportInsertInput(input: {
     totalScore: totalScore.toFixed(2),
     signals: input.briefing.keyIndicatorBullets.slice(0, 3),
     indicatorTags: input.briefing.indicatorTags,
+    newsReferences: input.briefing.newsReferences,
     contentMarkdown: renderPublicDailyBriefingMarkdown(input.briefing)
   };
+}
+
+function buildFallbackHeadlineEvents(macroTrendBriefs: MacroTrendBrief[]) {
+  return macroTrendBriefs
+    .flatMap((brief) =>
+      brief.references.slice(0, 2).map((reference) => ({
+        sourceLabel: reference.sourceLabel,
+        headline: reference.title,
+        summary: brief.summary
+      }))
+    )
+    .slice(0, 4);
 }
 
 export function formatPublicBriefingBuildSummary(input: {
@@ -177,6 +231,60 @@ export function formatPublicBriefingBuildSummary(input: {
     `snapshotCount=${input.snapshotCount}`,
     `outputPath=${input.outputPath}`
   ].join(" ");
+}
+
+export function resolveFallbackPublicBriefingOutputPath(input: {
+  briefingSession: BriefingSession;
+}): string {
+  return `${tmpdir()}/public-briefing/public-daily-briefing-${input.briefingSession}.json`;
+}
+
+export function persistPublicBriefingArtifact(
+  input: {
+    briefing: Awaited<ReturnType<typeof buildPublicBriefing>>;
+    preferredOutputPath: string;
+  },
+  dependencies: {
+    mkdirSyncImpl?: typeof mkdirSync;
+    warn?: typeof console.warn;
+    writeFileSyncImpl?: typeof writeFileSync;
+  } = {}
+): string {
+  const mkdirSyncImpl = dependencies.mkdirSyncImpl ?? mkdirSync;
+  const warn = dependencies.warn ?? console.warn;
+  const writeFileSyncImpl = dependencies.writeFileSyncImpl ?? writeFileSync;
+
+  try {
+    writeBriefingArtifactFile(
+      input.preferredOutputPath,
+      input.briefing,
+      mkdirSyncImpl,
+      writeFileSyncImpl
+    );
+    return input.preferredOutputPath;
+  } catch (error) {
+    if (!isRecoverableArtifactWriteError(error)) {
+      throw error;
+    }
+
+    const fallbackOutputPath = resolveFallbackPublicBriefingOutputPath({
+      briefingSession: input.briefing.briefingSession
+    });
+
+    warn(
+      "[public-briefing] switching artifact output path to temporary storage",
+      input.preferredOutputPath,
+      fallbackOutputPath,
+      error.message
+    );
+    writeBriefingArtifactFile(
+      fallbackOutputPath,
+      input.briefing,
+      mkdirSyncImpl,
+      writeFileSyncImpl
+    );
+    return fallbackOutputPath;
+  }
 }
 
 export async function runPublicBriefing(
@@ -204,9 +312,13 @@ export async function runPublicBriefing(
   const reportCompositionService = buildReportCompositionService(env);
   const buildInput: PublicBriefingBuilderDependencies = {
     briefingSession,
+    compositionTimeoutMs: readPublicBriefingLlmTimeoutMs(env),
     marketDataAdapter,
     runDate
   };
+  const macroTrendNewsService = new MacroTrendNewsService({
+    cache: buildNewsCacheAdapter(env)
+  });
 
   if (reportCompositionService) {
     buildInput.reportCompositionService = reportCompositionService;
@@ -215,12 +327,17 @@ export async function runPublicBriefing(
   const databaseUrl = readOptionalDatabaseUrl(env);
   let persistedReportId: string | undefined;
   let publicBriefingUrl: string | undefined;
+  let newsAnalysisResultRepository: NewsAnalysisResultRepository | undefined;
+  let newsItemRepository: NewsItemRepository | undefined;
   let repository: PublicReportRepository | undefined;
   let pool: Pool | undefined;
 
   if (databaseUrl) {
     pool = createPool(databaseUrl);
-    repository = new PublicReportRepository(createDatabase(pool));
+    const db = createDatabase(pool);
+    repository = new PublicReportRepository(db);
+    newsItemRepository = new NewsItemRepository(db);
+    newsAnalysisResultRepository = new NewsAnalysisResultRepository(db);
   }
 
   if (briefingSession === "post_market" && repository) {
@@ -234,13 +351,84 @@ export async function runPublicBriefing(
     }
   }
 
+  let collectedMacroItems: Awaited<ReturnType<MacroTrendNewsService["collect"]>> = [];
+  let macroTrendBriefs: MacroTrendBrief[] = [];
+
+  try {
+    collectedMacroItems = await macroTrendNewsService.collect({
+      audience: "public_web",
+      runDate,
+      scope: "macro",
+      session: briefingSession
+    });
+    macroTrendBriefs = await macroTrendNewsService.analyzeMacroTrends({
+      audience: "public_web",
+      items: collectedMacroItems,
+      runDate,
+      session: briefingSession
+    });
+  } catch (error) {
+    console.warn(
+      "[public-briefing] macro trend enrichment unavailable",
+      error instanceof Error ? error.message : error
+    );
+  }
+  buildInput.macroTrendBriefs = macroTrendBriefs;
+
   const briefing = await buildPublicBriefing(buildInput);
 
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, `${JSON.stringify(briefing, null, 2)}\n`);
+  const persistedOutputPath = persistPublicBriefingArtifact({
+    briefing,
+    preferredOutputPath: outputPath
+  });
 
   if (repository && pool) {
     try {
+      const storedItems = newsItemRepository
+        ? await newsItemRepository.insertMany(
+            collectedMacroItems.map((item) => ({
+              canonicalUrl: item.canonicalUrl,
+              collectedAt: item.collectedAt,
+              contentScope: item.contentScope,
+              newsSourceId: item.newsSourceId,
+              newsSourceLabel: item.newsSourceLabel,
+              normalizedTitle: item.normalizedTitle,
+              publishedAt: item.publishedAt,
+              rawPayload: {
+                canonicalUrl: item.canonicalUrl,
+                ...(item.summary ? { summary: item.summary } : {}),
+                title: item.title,
+                url: item.url
+              },
+              region: item.region,
+              ...(item.summary ? { summary: item.summary } : {}),
+              title: item.title,
+              url: item.url
+            }))
+          )
+        : [];
+      const storedIds = new Map<string, string>();
+
+      for (const item of storedItems) {
+        storedIds.set(item.canonicalUrl, item.id);
+        storedIds.set(item.url, item.id);
+      }
+      await newsAnalysisResultRepository?.upsertMany(
+        macroTrendBriefs.map((brief) => ({
+          analysisType: "macro_trend",
+          audienceScope: "public_web",
+          briefingSession,
+          confidence: brief.confidence,
+          runDate,
+          sentiment: brief.sentiment,
+          subjectKey: brief.theme,
+          summary: brief.summary,
+          supportingNewsItemIds: brief.references
+            .map((reference) => storedIds.get(reference.url))
+            .filter((value): value is string => typeof value === "string"),
+          tags: [brief.theme, ...brief.sourceIds]
+        }))
+      );
       const created = await repository.insertReport(
         buildPublicReportInsertInput({
           briefing
@@ -264,7 +452,7 @@ export async function runPublicBriefing(
     ...(persistedReportId ? { persistedReportId } : {}),
     briefingSession,
     runDate: briefing.runDate,
-    outputPath,
+    outputPath: persistedOutputPath,
     snapshotCount: briefing.marketSnapshot.length
   };
 }
@@ -344,6 +532,27 @@ function readOptionalDatabaseUrl(env: Environment): string | undefined {
   }
 
   return databaseUrl;
+}
+
+function writeBriefingArtifactFile(
+  outputPath: string,
+  briefing: Awaited<ReturnType<typeof buildPublicBriefing>>,
+  mkdirSyncImpl: typeof mkdirSync,
+  writeFileSyncImpl: typeof writeFileSync
+) {
+  mkdirSyncImpl(dirname(outputPath), { recursive: true });
+  writeFileSyncImpl(outputPath, `${JSON.stringify(briefing, null, 2)}\n`);
+}
+
+function isRecoverableArtifactWriteError(
+  error: unknown
+): error is NodeJS.ErrnoException {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    typeof error.code === "string" &&
+    ["EACCES", "ENOENT", "EPERM", "EROFS"].includes(error.code)
+  );
 }
 
 function deriveMarketRegime(

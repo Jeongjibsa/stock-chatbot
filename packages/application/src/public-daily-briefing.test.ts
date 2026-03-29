@@ -42,9 +42,33 @@ describe("public daily briefing", () => {
     expect(briefing.archivePath).toBe("/briefings/2026/03/20/pre-market/");
     expect(briefing.excludedTelegramOnlySections).toContain("portfolioRebalancing");
     expect(briefing.indicatorTags).toEqual(["S&P500 -1.51%"]);
+    expect(briefing.marketSummary.purpose).toBe(
+      "이번 오전 브리핑은 미국장 마감 결과를 바탕으로 오늘 국내장 시초가와 장 초반 수급 방향을 가늠하는 데 목적이 있습니다."
+    );
     expect(briefing.marketSummary.overall).toContain("미국 증시 약세");
     expect(briefing.disclaimer).toContain("개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다.");
     expect(JSON.stringify(briefing)).not.toContain("비중 확대");
+  });
+
+  it("keeps weekend titles and purpose text aligned to the weekend session intent", () => {
+    const briefing = buildPublicDailyBriefing({
+      briefingSession: "weekend_briefing",
+      runDate: "2026-03-28",
+      summaryLine: "한 주 흐름을 정리하고 다음 주 준비 포인트를 우선 확인하는 구간입니다.",
+      marketResults: [],
+      marketBullets: [
+        "미국과 국내 증시 모두 변동성 확대가 이어졌습니다.",
+        "금리와 환율이 다시 시장 변동성을 자극했습니다."
+      ]
+    });
+
+    expect(briefing.title).toBe("🗞️ 주말 시장 브리핑 (2026-03-28)");
+    expect(briefing.marketSummary.purpose).toBe(
+      "이번 주말 브리핑은 한 주 동안 시장을 움직인 핵심 이슈를 정리하고, 다음 주 주목해야 할 일정과 준비 포인트를 요약하는 데 목적이 있습니다."
+    );
+    expect(briefing.marketSummary.overall).toBe(
+      "미국과 국내 증시 모두 변동성 확대가 이어졌습니다."
+    );
   });
 
   it("builds canonical and archive paths from run date", () => {

@@ -9,12 +9,15 @@ import {
   FredMarketDataAdapter,
   GOOGLE_PROVIDER_PROFILE,
   GoogleNewsRssAdapter,
+  MacroTrendNewsService,
+  NoopNewsCacheAdapter,
   parseBriefingSession,
   OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
   resolveScheduledBriefingSession,
   TelegramBotApiClient,
   TelegramReportDeliveryAdapter,
+  UpstashNewsCacheAdapter,
   YahooHoldingPriceSnapshotProvider,
   YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
@@ -190,6 +193,54 @@ export function readPublicBriefingBaseUrl(
   }
 
   return baseUrl.replace(/\/+$/, "");
+}
+
+export function readUpstashRedisRestUrl(
+  env: Environment = process.env
+): string | undefined {
+  const value = env.UPSTASH_REDIS_REST_URL?.trim();
+
+  if (!value || value === "replace-me") {
+    return undefined;
+  }
+
+  return value;
+}
+
+export function readUpstashRedisRestToken(
+  env: Environment = process.env
+): string | undefined {
+  const value = env.UPSTASH_REDIS_REST_TOKEN?.trim();
+
+  if (!value || value === "replace-me") {
+    return undefined;
+  }
+
+  return value;
+}
+
+export function buildNewsCacheAdapter(env: Environment = process.env) {
+  if (isNewsCacheDisabled(env)) {
+    return new NoopNewsCacheAdapter();
+  }
+
+  const url = readUpstashRedisRestUrl(env);
+  const token = readUpstashRedisRestToken(env);
+
+  if (!url || !token) {
+    return new NoopNewsCacheAdapter();
+  }
+
+  return new UpstashNewsCacheAdapter({
+    token,
+    url
+  });
+}
+
+export function isNewsCacheDisabled(env: Environment = process.env): boolean {
+  const value = env.DISABLE_UPSTASH_NEWS_CACHE?.trim().toLowerCase();
+
+  return value === "1" || value === "true" || value === "yes";
 }
 
 export function readScheduleType(
@@ -453,6 +504,9 @@ export function buildDailyReportJobProcessor(
           llmClient,
           newsCollectionAdapter: new GoogleNewsRssAdapter()
         });
+      orchestratorDependencies.macroTrendNewsService = new MacroTrendNewsService({
+        cache: buildNewsCacheAdapter(env)
+      });
       orchestratorDependencies.reportCompositionService =
         new DailyReportCompositionService({
           llmClient

@@ -17,6 +17,24 @@ describe("report prompt contract", () => {
         }
       ],
       marketResults: [],
+      macroTrendBriefs: [
+        {
+          theme: "fx_rates",
+          summary: "달러 강세와 환율 부담이 같이 커지고 있습니다.",
+          sentiment: "negative",
+          confidence: "medium",
+          sourceIds: ["reuters"],
+          headlines: ["Dollar strength persists"],
+          references: [
+            {
+              sourceLabel: "Reuters",
+              title: "Dollar strength persists",
+              url: "https://example.com/reuters-dollar"
+            }
+          ],
+          publishedAt: "2026-03-20T00:00:00.000Z"
+        }
+      ],
       newsBriefs: [],
       quantScorecards: [
         {
@@ -58,6 +76,9 @@ describe("report prompt contract", () => {
     expect(prompt.instructions).toContain(
       "portfolioRebalancing가 있으면 내재 가치, 가격/추세, 미래 기대치, 포트 적합성, 시장 레짐 오버레이, 하드룰을 먼저 반영한다."
     );
+    expect(prompt.instructions).toContain(
+      "headlineEvents는 개인화 경로에서는 사용하지 않으므로 반드시 빈 배열로 반환한다."
+    );
     expect(prompt.metadata).toEqual({
       promptAudience: "telegram_personalized",
       promptBriefingSession: "pre_market",
@@ -76,6 +97,11 @@ describe("report prompt contract", () => {
         holdings: [
           expect.objectContaining({
             symbol: "AAPL"
+          })
+        ],
+        macroTrendBriefs: [
+          expect.objectContaining({
+            theme: "fx_rates"
           })
         ],
         quantScorecards: [
@@ -106,6 +132,9 @@ describe("report prompt contract", () => {
 
     expect(prompt.instructions).toContain("공개 웹용 한국어 시장 브리핑 작성기");
     expect(prompt.instructions).toContain(
+      "headlineEvents는 실제로 입력된 RSS 기사 headline과 reference만 사용해 작성한다."
+    );
+    expect(prompt.instructions).toContain(
       "비중 확대, 축소 우선, 교체 검토, 매수 기회, 지금 사야 한다 같은 개인 행동 언어를 쓰지 않는다."
     );
     expect(prompt.instructions).toContain(
@@ -135,8 +164,23 @@ describe("report prompt contract", () => {
         eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
         holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
         articleSummaryBullets: ["Apple 관련 핵심 기사는 아직 제품 기대감이 유지된다는 점에 초점을 두고 있습니다."],
+        headlineEvents: [
+          {
+            sourceLabel: "Reuters",
+            headline: "Dollar strength persists",
+            summary: "달러 강세가 이어져 외환 부담을 같이 보셔야 합니다."
+          }
+        ],
         strategyBullets: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
-        riskBullets: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."]
+        riskBullets: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."],
+        trendNewsBullets: ["금리와 환율 뉴스가 동시에 부담으로 작용하고 있습니다."],
+        newsReferences: [
+          {
+            sourceLabel: "Reuters",
+            title: "Dollar strength persists",
+            url: "https://example.com/reuters-dollar"
+          }
+        ]
       })
     );
 
@@ -148,8 +192,23 @@ describe("report prompt contract", () => {
       eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
       holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
       articleSummaryBullets: ["Apple 관련 핵심 기사는 아직 제품 기대감이 유지된다는 점에 초점을 두고 있습니다."],
+      headlineEvents: [
+        {
+          sourceLabel: "Reuters",
+          headline: "Dollar strength persists",
+          summary: "달러 강세가 이어져 외환 부담을 같이 보셔야 합니다."
+        }
+      ],
       strategyBullets: ["추세 유지 시 분할 매수를 관찰하는 전략이 유효합니다."],
-      riskBullets: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."]
+      riskBullets: ["변동성 급등 시 비중 확대를 보류하는 편이 안전합니다."],
+      trendNewsBullets: ["금리와 환율 뉴스가 동시에 부담으로 작용하고 있습니다."],
+      newsReferences: [
+        {
+          sourceLabel: "Reuters",
+          title: "Dollar strength persists",
+          url: "https://example.com/reuters-dollar"
+        }
+      ]
     });
   });
 
@@ -164,8 +223,11 @@ describe("report prompt contract", () => {
           eventBullets: [],
           holdingTrendBullets: [],
           articleSummaryBullets: "bad",
+          headlineEvents: [],
           strategyBullets: [],
-          riskBullets: []
+          riskBullets: [],
+          trendNewsBullets: [],
+          newsReferences: []
         })
       )
     ).toThrow("Daily report structured output is invalid");

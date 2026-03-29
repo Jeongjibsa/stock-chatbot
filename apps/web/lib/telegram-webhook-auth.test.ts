@@ -9,7 +9,7 @@ import {
 describe("isAuthorizedTelegramWebhookRequest", () => {
   it("allows requests when webhook secret is unset", () => {
     expect(
-      isAuthorizedTelegramWebhookRequest(new Request("https://example.com"))
+      isAuthorizedTelegramWebhookRequest(new Request("https://example.com"), {})
     ).toBe(true);
   });
 

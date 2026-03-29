@@ -2,16 +2,14 @@ import "dotenv/config";
 
 import { fileURLToPath } from "node:url";
 import { Redis } from "ioredis";
-import { Pool } from "pg";
+import { createPool } from "@stock-chatbot/database";
 
 import { buildApp } from "./app.js";
 import { readConfig } from "./config.js";
 
 async function main(): Promise<void> {
   const config = readConfig();
-  const database = new Pool({
-    connectionString: config.databaseUrl
-  });
+  const database = createPool(config.databaseUrl);
   const redis = new Redis(config.redisUrl, {
     lazyConnect: true,
     maxRetriesPerRequest: 1

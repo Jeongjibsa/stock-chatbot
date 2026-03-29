@@ -19,7 +19,9 @@ describe("runBriefingSession", () => {
           PUBLIC_BRIEFING_BASE_URL: "https://example.com",
           REDIS_URL: undefined,
           REPORT_TIMEZONE: "Asia/Seoul",
-          TELEGRAM_BOT_TOKEN: "token"
+          TELEGRAM_BOT_TOKEN: "token",
+          UPSTASH_REDIS_REST_TOKEN: undefined,
+          UPSTASH_REDIS_REST_URL: undefined
         },
         triggerType: "workflow_dispatch"
       },
@@ -121,9 +123,11 @@ describe("runBriefingSession", () => {
           PUBLIC_BRIEFING_BASE_URL: "https://example.com",
           REDIS_URL: undefined,
           REPORT_TIMEZONE: "Asia/Seoul",
-          TELEGRAM_BOT_TOKEN: "token"
+          TELEGRAM_BOT_TOKEN: "token",
+          UPSTASH_REDIS_REST_TOKEN: undefined,
+          UPSTASH_REDIS_REST_URL: undefined
         },
-        triggerType: "schedule"
+        triggerType: "workflow_dispatch"
       },
       {
         runPublicBriefingImpl: runPublicBriefingImpl as never,
@@ -146,5 +150,51 @@ describe("runBriefingSession", () => {
     expect(sleep).toHaveBeenNthCalledWith(2, 20000);
     expect(publicBriefing.retryCount).toBe(2);
     expect(result.linkAttachedToDaily).toBe(false);
+  });
+
+  it("runs only the public briefing for weekend sessions", async () => {
+    const runDailyReportImpl = vi.fn();
+    const result = await runBriefingSession(
+      {
+        briefingSession: "weekend_briefing",
+        runtimeEnv: {
+          CRON_SECRET: "secret",
+          DAILY_REPORT_WINDOW_MINUTES: "15",
+          DATABASE_URL: "postgres://example",
+          FRED_API_KEY: "fred-key",
+          GEMINI_API_KEY: undefined,
+          LLM_PROVIDER: undefined,
+          OPENAI_API_KEY: undefined,
+          PUBLIC_BRIEFING_BASE_URL: "https://example.com",
+          REDIS_URL: undefined,
+          REPORT_TIMEZONE: "Asia/Seoul",
+          TELEGRAM_BOT_TOKEN: "token",
+          UPSTASH_REDIS_REST_TOKEN: undefined,
+          UPSTASH_REDIS_REST_URL: undefined
+        },
+        triggerType: "workflow_dispatch"
+      },
+      {
+        runPublicBriefingImpl: vi.fn(async () => ({
+          briefingSession: "weekend_briefing",
+          outputPath: "artifacts/weekend.json",
+          publicBriefingUrl: "https://example.com/reports/weekend",
+          persistedReportId: "report-weekend",
+          runDate: "2026-03-28",
+          snapshotCount: 3,
+          status: "completed"
+        })) as never,
+        runDailyReportImpl: runDailyReportImpl as never,
+        sleep: vi.fn(async () => undefined)
+      }
+    );
+
+    expect(result.skipped).toBe(false);
+    if (result.skipped) {
+      throw new Error("expected weekend briefing session to run");
+    }
+    expect(result.linkAttachedToDaily).toBe(false);
+    expect(result.publicBriefing?.briefingSession).toBe("weekend_briefing");
+    expect(runDailyReportImpl).not.toHaveBeenCalled();
   });
 });

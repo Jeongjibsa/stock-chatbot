@@ -48,6 +48,9 @@ export {
   GoogleNewsRssAdapter
 } from "./google-news-rss-adapter.js";
 export {
+  MacroTrendNewsService
+} from "./macro-trend-news-service.js";
+export {
   createLlmClient,
   GoogleGeminiLlmClient,
   OpenAiLlmClient,
@@ -84,9 +87,26 @@ export {
   DEFAULT_PERSONAL_REBALANCING_SNAPSHOT_VERSION
 } from "./personal-rebalancing-snapshot.js";
 export {
+  DEFAULT_NEWS_ANALYSIS_TTL_SECONDS,
+  DEFAULT_NEWS_DEDUPE_TTL_SECONDS,
+  DEFAULT_NEWS_FEED_TTL_SECONDS,
+  DEFAULT_NEWS_SOURCE_BACKOFF_TTL_SECONDS,
+  NoopNewsCacheAdapter,
+  UpstashNewsCacheAdapter,
+  buildNewsDedupeKey,
+  buildNewsFeedCacheKey,
+  buildNewsHoldingAnalysisKey,
+  buildNewsMacroAnalysisKey,
+  buildSourceFailureKey
+} from "./news-cache.js";
+export {
   dedupeNewsArticles,
   normalizeNewsArticles
 } from "./news-normalization.js";
+export {
+  NEWS_SOURCE_CONFIGS,
+  listNewsSources
+} from "./news-source-config.js";
 export {
   resolveEffectiveReportDate,
   type EffectiveReportDateResolution
@@ -172,12 +192,23 @@ export {
   generateStrategyScenarios
 } from "./strategy-scenario-generator.js";
 export {
+  type CollectedNewsItem,
   type HoldingNewsBrief,
   type HoldingReference,
+  type MacroTrendBrief,
+  type MacroTrendTheme,
   type NewsArticle,
+  type NewsAudience,
+  type NewsCachePort,
   type NewsCollectionAdapter,
+  type NewsCollector,
   type NewsEvent,
   type NewsEventSentiment,
+  type NewsScope,
+  type NewsSourceConfig,
+  type NewsSourceFallbackMode,
+  type NewsSourcePrimaryMode,
+  type NewsSourceRegion,
   type NormalizedNewsArticle
 } from "./news.js";
 export {

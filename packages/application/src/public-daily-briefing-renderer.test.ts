@@ -23,7 +23,22 @@ describe("public daily briefing renderer", () => {
           }
         }
       ],
-      marketBullets: ["미국 증시 약세가 두드러졌습니다."]
+      marketBullets: ["미국 증시 약세가 두드러졌습니다."],
+      headlineEvents: [
+        {
+          sourceLabel: "Reuters",
+          headline: "Dollar strength persists",
+          summary: "달러 강세가 이어져 외환 부담을 같이 보셔야 합니다."
+        }
+      ],
+      trendNewsBullets: ["금리와 달러 강세가 동시에 부담으로 작용하고 있습니다."],
+      newsReferences: [
+        {
+          sourceLabel: "Reuters",
+          title: "Dollar strength persists",
+          url: "https://example.com/reuters-dollar"
+        }
+      ]
     });
 
     const html = renderPublicDailyBriefingHtml(briefing);
@@ -32,6 +47,11 @@ describe("public daily briefing renderer", () => {
     expect(html).toContain('rel="canonical" href="/briefings/2026-03-20/pre-market/"');
     expect(html).toContain("오늘 한 줄 요약");
     expect(html).toContain("시장 종합 해석");
+    expect(html).toContain("브리핑 목적");
+    expect(html).toContain("핵심 뉴스 이벤트");
+    expect(html).toContain("브리핑용 요약 제안");
+    expect(html).toContain("거시 트렌드 뉴스");
+    expect(html).toContain("참고한 뉴스 출처");
     expect(html).toContain("오늘의 리스크 포인트");
     expect(html).toContain("S&amp;P500");
     expect(html).not.toContain("포트 적합성");

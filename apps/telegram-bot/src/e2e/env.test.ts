@@ -46,4 +46,17 @@ describe("readTelegramE2EConfig", () => {
       })
     );
   });
+
+  it("prefers a dedicated e2e database url when provided", () => {
+    expect(
+      readTelegramE2EConfig({
+        TELEGRAM_BOT_TOKEN: "token",
+        TELEGRAM_WEBHOOK_URL: "https://example.com/api/telegram/webhook",
+        TELEGRAM_WEBHOOK_SECRET_TOKEN: "secret",
+        TELEGRAM_E2E_DATABASE_URL: "postgresql://neon/prod",
+        DATABASE_URL: "postgresql://localhost/test",
+        TELEGRAM_TEST_CHAT_ID: "1001"
+      }).databaseUrl
+    ).toBe("postgresql://neon/prod");
+  });
 });

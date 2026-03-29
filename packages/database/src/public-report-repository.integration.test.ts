@@ -43,6 +43,13 @@ describeIntegration("PublicReportRepository integration", () => {
       totalScore: "-0.42",
       signals: ["VIX 급등", "달러 강세"],
       indicatorTags: ["KOSPI +0.31%", "NASDAQ -2.01%"],
+      newsReferences: [
+        {
+          sourceLabel: "Reuters",
+          title: "Dollar strength persists",
+          url: "https://example.com/reuters-dollar"
+        }
+      ],
       contentMarkdown: "# 오늘의 브리핑"
     });
 
@@ -58,7 +65,14 @@ describeIntegration("PublicReportRepository integration", () => {
       id: created.id,
       reportDate: "2026-03-21",
       signals: ["VIX 급등", "달러 강세"],
-      indicatorTags: ["KOSPI +0.31%", "NASDAQ -2.01%"]
+      indicatorTags: ["KOSPI +0.31%", "NASDAQ -2.01%"],
+      newsReferences: [
+        {
+          sourceLabel: "Reuters",
+          title: "Dollar strength persists",
+          url: "https://example.com/reuters-dollar"
+        }
+      ]
     });
   });
 });

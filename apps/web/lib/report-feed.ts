@@ -1,5 +1,11 @@
 import type { PublicReport, ReportsByDate } from "../types/report";
 
+const BRIEFING_SESSION_ORDER = {
+  pre_market: 0,
+  post_market: 1,
+  weekend_briefing: 2
+} as const;
+
 export function groupReportsByDate(reports: PublicReport[]): ReportsByDate {
   const grouped = new Map<string, PublicReport[]>();
 
@@ -14,9 +20,8 @@ export function groupReportsByDate(reports: PublicReport[]): ReportsByDate {
     reports: items.sort((left, right) =>
       left.briefingSession === right.briefingSession
         ? right.createdAt.localeCompare(left.createdAt)
-        : left.briefingSession === "pre_market"
-          ? -1
-          : 1
+        : BRIEFING_SESSION_ORDER[left.briefingSession] -
+          BRIEFING_SESSION_ORDER[right.briefingSession]
     )
   }));
 }

@@ -44,10 +44,12 @@ export function readTelegramE2EConfig(
     throw new Error("TELEGRAM_WEBHOOK_SECRET_TOKEN is missing");
   }
 
-  const databaseUrl = env.DATABASE_URL?.trim();
+  const databaseUrl =
+    env.TELEGRAM_E2E_DATABASE_URL?.trim() ??
+    env.DATABASE_URL?.trim();
 
   if (!databaseUrl) {
-    throw new Error("DATABASE_URL is missing");
+    throw new Error("TELEGRAM_E2E_DATABASE_URL or DATABASE_URL is missing");
   }
 
   const primaryChatId =

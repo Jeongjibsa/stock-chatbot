@@ -151,6 +151,35 @@ describe("OpenAiLlmClient", () => {
     });
   });
 
+  it("times out a Gemini request when a hard timeout is provided", async () => {
+    const client = new GoogleGeminiLlmClient({
+      providerProfile: GOOGLE_PROVIDER_PROFILE,
+      generateContentApi: {
+        generateContent: vi.fn(
+          () =>
+            new Promise<{
+              candidates?: Array<{
+                content?: {
+                  parts?: Array<{
+                    text?: string;
+                  }>;
+                };
+                finishReason?: string;
+              }>;
+            }>(() => undefined)
+        )
+      }
+    });
+
+    await expect(
+      client.generate({
+        task: "market-report-composition",
+        input: "input text",
+        timeoutMs: 5
+      })
+    ).rejects.toThrow("LLM request timed out after 5ms");
+  });
+
   it("creates a Gemini client from the generic factory", () => {
     const client = createLlmClient({
       apiKey: "gemini-key",

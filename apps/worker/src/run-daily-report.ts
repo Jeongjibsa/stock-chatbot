@@ -30,7 +30,7 @@ export function readReportTriggerType(
 }
 
 export function formatDailyReportJobSummary(input: {
-  briefingSession: "post_market" | "pre_market";
+  briefingSession: "post_market" | "pre_market" | "weekend_briefing";
   runDate: string;
   summary: DailyReportJobSummary;
   triggerType: ReportTriggerType;
@@ -55,7 +55,7 @@ export function formatDailyReportJobSummary(input: {
 export async function runDailyReport(
   env: Environment = process.env,
   input?: {
-    briefingSession?: "post_market" | "pre_market";
+    briefingSession?: "post_market" | "pre_market" | "weekend_briefing";
     publicBriefingUrl?: string;
     runDate?: string;
   }

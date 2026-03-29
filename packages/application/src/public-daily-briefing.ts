@@ -15,6 +15,11 @@ export type PublicDailyBriefing = {
   disclaimer: string;
   eventBullets: string[];
   excludedTelegramOnlySections: string[];
+  headlineEvents: Array<{
+    headline: string;
+    sourceLabel: string;
+    summary: string;
+  }>;
   indicatorTags: string[];
   globalSnapshot: {
     majorIndices: string;
@@ -28,6 +33,7 @@ export type PublicDailyBriefing = {
     styleTheme: string;
   };
   marketSummary: {
+    purpose: string;
     interpretation: string;
     overall: string;
     sentimentStrength: string;
@@ -47,12 +53,18 @@ export type PublicDailyBriefing = {
   scheduleBullets: string[];
   sessionLabel: string;
   sessionRole: string;
+  newsReferences: Array<{
+    sourceLabel: string;
+    title: string;
+    url: string;
+  }>;
   sectorSummary: {
     strong: string;
     weak: string;
   };
   summaryLine: string;
   title: string;
+  trendNewsBullets: string[];
 };
 
 const EXCLUDED_TELEGRAM_ONLY_SECTIONS = [
@@ -67,14 +79,25 @@ const EXCLUDED_TELEGRAM_ONLY_SECTIONS = [
 export function buildPublicDailyBriefing(input: {
   briefingSession?: BriefingSession;
   eventBullets?: string[];
+  headlineEvents?: Array<{
+    headline: string;
+    sourceLabel: string;
+    summary: string;
+  }>;
   fundFlowBullets?: string[];
   keyIndicatorBullets?: string[];
   macroBullets?: string[];
   marketBullets?: string[];
   marketResults: MarketDataFetchResult[];
+  newsReferences?: Array<{
+    sourceLabel: string;
+    title: string;
+    url: string;
+  }>;
   riskBullets?: string[];
   runDate: string;
   summaryLine: string;
+  trendNewsBullets?: string[];
 }): PublicDailyBriefing {
   const briefingSession = input.briefingSession ?? "pre_market";
   const marketSnapshot = input.marketResults
@@ -101,12 +124,20 @@ export function buildPublicDailyBriefing(input: {
   const eventBullets = input.eventBullets ?? [];
   const riskBullets = input.riskBullets ?? [];
   const keyIndicatorBullets = input.keyIndicatorBullets ?? [];
-  const scheduleBullets = eventBullets.filter((bullet) =>
-    bullet.includes("일정") || bullet.includes("예정") || bullet.includes("캘린더")
-  );
+  const newsReferences = input.newsReferences ?? [];
+  const headlineEvents = input.headlineEvents ?? [];
+  const trendNewsBullets = input.trendNewsBullets ?? [];
+  const hasExplicitPurposeBullet = isExplicitPurposeBullet(marketBullets[0]);
+  const narrativeMarketBullets = hasExplicitPurposeBullet
+    ? marketBullets.slice(1)
+    : marketBullets;
+  const scheduleBullets =
+    eventBullets.length > 0
+      ? eventBullets
+      : buildDefaultCheckpointBullets(briefingSession);
 
   return {
-    title: `🗞️ ${formatBriefingSessionLabel(briefingSession)} 시장 브리핑 (${input.runDate})`,
+    title: buildPublicBriefingTitle(briefingSession, input.runDate),
     briefingSession,
     runDate: input.runDate,
     sessionLabel: formatBriefingSessionLabel(briefingSession),
@@ -115,16 +146,18 @@ export function buildPublicDailyBriefing(input: {
     summaryLine: input.summaryLine,
     marketSnapshot,
     marketSummary: {
+      purpose: buildBriefingPurposeLine(briefingSession),
       overall:
-        marketBullets[0] ??
+        narrativeMarketBullets[0] ??
         "현재 확보된 시장 데이터 기준으로 핵심 흐름을 우선 정리했습니다.",
       sentimentStrength: buildRiskAppetiteLine(marketMap),
       valuationFundamentals:
-        marketBullets[1] ?? "밸류와 펀더멘털 세부 데이터는 일부 보강 중입니다.",
+        narrativeMarketBullets[1] ??
+        "밸류와 펀더멘털 세부 데이터는 일부 보강 중입니다.",
       structureRisk:
         riskBullets[0] ?? "구조 리스크는 추가 확인이 필요한 구간입니다.",
       interpretation:
-        marketBullets[2] ??
+        narrativeMarketBullets[2] ??
         "표면 흐름만 보기보다 내부 체력과 리스크 신호를 함께 읽는 편이 적절합니다."
     },
     globalSnapshot: {
@@ -154,10 +187,8 @@ export function buildPublicDailyBriefing(input: {
         "스타일과 테마 해석은 일부 이벤트 데이터 보강이 더 필요합니다."
     },
     eventBullets,
-    scheduleBullets:
-      scheduleBullets.length > 0
-        ? scheduleBullets
-        : ["현재 확보된 데이터 기준으로 일정 영향은 추가 확인이 필요합니다."],
+    headlineEvents,
+    scheduleBullets,
     riskBullets:
       riskBullets.length > 0
         ? riskBullets
@@ -165,14 +196,20 @@ export function buildPublicDailyBriefing(input: {
     canonicalPath: buildPublicBriefingCanonicalPath(input.runDate, briefingSession),
     archivePath: buildPublicBriefingArchivePath(input.runDate, briefingSession),
     excludedTelegramOnlySections: [...EXCLUDED_TELEGRAM_ONLY_SECTIONS],
+    newsReferences,
     closingParagraph:
       briefingSession === "pre_market"
         ? "오늘 시장은 방향성 자체보다 어떤 프레임으로 읽을지와 어디서 해석이 틀어질 수 있는지를 먼저 점검하는 편이 중요합니다."
+        : briefingSession === "weekend_briefing"
+          ? "주말 브리핑은 지난 한 주의 큰 흐름과 다음 주 초 체크포인트를 함께 묶어 읽는 편이 중요합니다."
         : "오늘 해석은 결과 확인으로 끝나지 않고, 어떤 기준을 다음 세션에 보정해야 하는지까지 이어져야 합니다.",
     disclaimer:
       briefingSession === "pre_market"
         ? "이 페이지는 공개 프리마켓 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다."
-        : "이 페이지는 공개 포스트마켓 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다."
+        : briefingSession === "weekend_briefing"
+          ? "이 페이지는 공개 주말 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다."
+        : "이 페이지는 공개 포스트마켓 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다.",
+    trendNewsBullets
   };
 }
 
@@ -289,4 +326,60 @@ function formatChange(value?: number): string {
   }
 
   return "보합";
+}
+
+function buildPublicBriefingTitle(
+  session: BriefingSession,
+  runDate: string
+): string {
+  if (session === "weekend_briefing") {
+    return `🗞️ 주말 시장 브리핑 (${runDate})`;
+  }
+
+  return `🗞️ ${formatBriefingSessionLabel(session)} 시장 브리핑 (${runDate})`;
+}
+
+function isExplicitPurposeBullet(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+
+  return (
+    value.startsWith("이번 ") &&
+    value.includes("브리핑") &&
+    value.includes("목적")
+  );
+}
+
+function buildBriefingPurposeLine(session: BriefingSession): string {
+  if (session === "pre_market") {
+    return "이번 오전 브리핑은 미국장 마감 결과를 바탕으로 오늘 국내장 시초가와 장 초반 수급 방향을 가늠하는 데 목적이 있습니다.";
+  }
+
+  if (session === "post_market") {
+    return "이번 저녁 브리핑은 오늘 국내장과 대체거래소 흐름을 정리하고, 그 결과를 바탕으로 오늘 밤 미국장 방향을 예보하는 데 목적이 있습니다.";
+  }
+
+  return "이번 주말 브리핑은 한 주 동안 시장을 움직인 핵심 이슈를 정리하고, 다음 주 주목해야 할 일정과 준비 포인트를 요약하는 데 목적이 있습니다.";
+}
+
+function buildDefaultCheckpointBullets(session: BriefingSession): string[] {
+  if (session === "pre_market") {
+    return [
+      "시초가 급락이 과민 반응인지 실제 수급 이탈인지 장 시작 30분 안에 구분해서 보셔야 합니다.",
+      "환율과 외국인 선물 흐름이 같은 방향으로 이어지는지 먼저 확인하는 편이 좋습니다."
+    ];
+  }
+
+  if (session === "post_market") {
+    return [
+      "미국 선물 반등이 현물 개장까지 유지되는지 먼저 보셔야 합니다.",
+      "국내장에서 강했던 테마가 미국 동종 업종에서도 이어지는지 확인이 필요합니다."
+    ];
+  }
+
+  return [
+    "다음 주 핵심 경제지표와 주요 실적 일정을 먼저 정리해 두는 편이 좋습니다.",
+    "반복적으로 언급된 거시 이슈가 다음 주 초에도 이어지는지 우선 확인하셔야 합니다."
+  ];
 }

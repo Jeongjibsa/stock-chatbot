@@ -8,10 +8,13 @@ import {
   FredMarketDataAdapter,
   GOOGLE_PROVIDER_PROFILE,
   GoogleNewsRssAdapter,
+  MacroTrendNewsService,
+  NoopNewsCacheAdapter,
   OPENAI_PROVIDER_PROFILE,
   PortfolioNewsBriefService,
   resolveManualBriefingSession,
   type PersonalizedPortfolioRebalancingData,
+  UpstashNewsCacheAdapter,
   YahooHoldingPriceSnapshotProvider,
   YahooFinanceScrapingMarketDataAdapter
 } from "@stock-chatbot/application";
@@ -161,6 +164,9 @@ export function buildTelegramReportRuntime(env: Environment = process.env): {
         llmClient,
         newsCollectionAdapter: new GoogleNewsRssAdapter()
       });
+    orchestratorDependencies.macroTrendNewsService = new MacroTrendNewsService({
+      cache: buildNewsCacheAdapter(env)
+    });
     orchestratorDependencies.reportCompositionService =
       new DailyReportCompositionService({
         llmClient
@@ -283,6 +289,20 @@ function buildLlmClient(env: Environment) {
       selectedProvider === "google"
         ? GOOGLE_PROVIDER_PROFILE
         : OPENAI_PROVIDER_PROFILE
+  });
+}
+
+function buildNewsCacheAdapter(env: Environment) {
+  const url = readOptionalApiKey(env.UPSTASH_REDIS_REST_URL);
+  const token = readOptionalApiKey(env.UPSTASH_REDIS_REST_TOKEN);
+
+  if (!url || !token) {
+    return new NoopNewsCacheAdapter();
+  }
+
+  return new UpstashNewsCacheAdapter({
+    token,
+    url
   });
 }
 

@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/post-market-briefing",
       "schedule": "30 11 * * 1-5"
+    },
+    {
+      "path": "/api/cron/weekend-briefing",
+      "schedule": "0 23 * * 5"
     }
   ]
 }

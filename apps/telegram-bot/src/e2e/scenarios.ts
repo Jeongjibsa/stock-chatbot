@@ -23,6 +23,12 @@ export type TelegramE2EScenarioDefinition = {
 };
 
 const REPORT_TIMEOUT_MS = 60_000;
+const REPORT_GENERATION_PHRASE = "브리핑을 생성하고 있습니다.";
+const PORTFOLIO_REPORT_TITLE_PREFIX = "🗞️ 오늘의 포트폴리오 ";
+const SESSION_SPECIFIC_REPORT_SECTION_PHRASES = [
+  "포트폴리오 리밸런싱 제안",
+  "기준 보정 제안"
+] as const;
 
 export const MINIMUM_REGRESSION_SCENARIO_IDS = [
   "smoke_connectivity",
@@ -411,7 +417,7 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
       await runtime.invokePrivateText({
         chatId: runtime.config.primaryChatId,
         userId: runtime.config.primaryUserId,
-        text: "/portfolio_bulk 삼성, app, zzzzzz",
+        text: "/portfolio_bulk 005930, 삼성, zzzzzz",
         updateId: runtime.nextUpdateId()
       });
       await runtime.waitForReplyContaining({
@@ -539,7 +545,13 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         chatId: runtime.config.primaryChatId,
         since,
         timeoutMs: REPORT_TIMEOUT_MS,
-        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 프리마켓 브리핑"]
+        expectedPhrases: [REPORT_GENERATION_PHRASE]
+      });
+
+      await waitForPortfolioReportReply(runtime, {
+        chatId: runtime.config.primaryChatId,
+        since,
+        timeoutMs: REPORT_TIMEOUT_MS
       });
 
       const latestRun = await findLatestTelegramReportRun(runtime, runtime.config.primaryUserId);
@@ -565,27 +577,45 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         text: "/report",
         updateId: runtime.nextUpdateId()
       });
-      const replies = await runtime.waitForReplyContaining({
+      await runtime.waitForReplyContaining({
         chatId: runtime.config.primaryChatId,
         since,
         timeoutMs: REPORT_TIMEOUT_MS,
-        expectedPhrases: ["브리핑을 생성하고 있습니다.", "🗞️ 오늘의 포트폴리오 프리마켓 브리핑"]
+        expectedPhrases: [REPORT_GENERATION_PHRASE]
       });
 
-      const reportReply = replies.find((message) =>
-        message.text.includes("🗞️ 오늘의 포트폴리오 프리마켓 브리핑")
-      );
+      const replies = await waitForPortfolioReportReply(runtime, {
+        chatId: runtime.config.primaryChatId,
+        since,
+        timeoutMs: REPORT_TIMEOUT_MS
+      });
 
-      if (!reportReply?.text.includes("삼성전자")) {
+      const reportReply = replies.find((message) => isPortfolioReportReply(message.text));
+
+      if (!reportReply) {
+        throw new Error("Expected personalized /report to include a portfolio report title");
+      }
+
+      if (!reportReply.text.includes("삼성전자")) {
         throw new Error("Expected personalized /report to mention at least one holding");
       }
 
-      if (!reportReply.text.includes("포트폴리오 리밸런싱 제안")) {
-        throw new Error("Expected personalized /report to include a rebalancing summary");
+      if (!hasSessionSpecificReportSection(reportReply.text)) {
+        throw new Error(
+          "Expected personalized /report to include the session-specific guidance section"
+        );
       }
 
       if (!reportReply.text.includes("시세 스냅샷은")) {
         throw new Error("Expected personalized /report to include holding price snapshots");
+      }
+
+      if (reportReply.text.includes("확인 필요")) {
+        throw new Error("Expected personalized /report to avoid public link placeholders");
+      }
+
+      if (reportReply.text.includes("/briefings/")) {
+        throw new Error("Expected personalized /report to avoid legacy public briefing paths");
       }
 
       const latestRun = await findLatestTelegramReportRun(runtime, runtime.config.primaryUserId);
@@ -594,8 +624,10 @@ export const TELEGRAM_E2E_SCENARIOS: TelegramE2EScenarioDefinition[] = [
         throw new Error("Expected report_runs.report_text to include holding content");
       }
 
-      if (!latestRun.reportText.includes("포트폴리오 리밸런싱 제안")) {
-        throw new Error("Expected report_runs.report_text to include rebalancing content");
+      if (!hasSessionSpecificReportSection(latestRun.reportText)) {
+        throw new Error(
+          "Expected report_runs.report_text to include the session-specific guidance section"
+        );
       }
     }
   },
@@ -907,6 +939,42 @@ async function findLatestTelegramReportRun(
   return (
     runs.find((run) => run.scheduleType === "telegram-report") ?? null
   );
+}
+
+function isPortfolioReportReply(text: string): boolean {
+  return text.includes(PORTFOLIO_REPORT_TITLE_PREFIX) && text.includes("브리핑 (");
+}
+
+function hasSessionSpecificReportSection(text: string): boolean {
+  return SESSION_SPECIFIC_REPORT_SECTION_PHRASES.some((phrase) =>
+    text.includes(phrase)
+  );
+}
+
+async function waitForPortfolioReportReply(
+  runtime: TelegramE2ERuntime,
+  input: {
+    chatId: string;
+    since: Date;
+    timeoutMs?: number;
+  }
+) {
+  const waitInput: {
+    chatId: string;
+    since: Date;
+    timeoutMs?: number;
+    predicate: Parameters<TelegramE2ERuntime["waitForReplies"]>[0]["predicate"];
+  } = {
+    chatId: input.chatId,
+    since: input.since,
+    predicate: (messages) => messages.some((message) => isPortfolioReportReply(message.text))
+  };
+
+  if (input.timeoutMs !== undefined) {
+    waitInput.timeoutMs = input.timeoutMs;
+  }
+
+  return runtime.waitForReplies(waitInput);
 }
 
 function requireGroupChatId(runtime: TelegramE2ERuntime): string {

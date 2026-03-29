@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { ArrowLeft } from "lucide-react";
 
 import { formatBriefingSessionLabel, formatBriefingSessionRole } from "@stock-chatbot/application";
@@ -16,6 +17,8 @@ export default async function ReportDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await connection();
+
   const { id } = await params;
 
   try {

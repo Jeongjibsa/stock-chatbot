@@ -16,7 +16,9 @@
 - [docs/phase-plan.md](/Users/jisung/Projects/stock-chatbot/docs/phase-plan.md)
 - [docs/change-log.md](/Users/jisung/Projects/stock-chatbot/docs/change-log.md)
 - [docs/context-summary.md](/Users/jisung/Projects/stock-chatbot/docs/context-summary.md)
+- [docs/system-architecture.md](/Users/jisung/Projects/stock-chatbot/docs/system-architecture.md)
 - [docs/llm-integration-plan.md](/Users/jisung/Projects/stock-chatbot/docs/llm-integration-plan.md)
+- [docs/e2e-change-workflow.md](/Users/jisung/Projects/stock-chatbot/docs/e2e-change-workflow.md)
 - [docs/harness-engineering.md](/Users/jisung/Projects/stock-chatbot/docs/harness-engineering.md)
 - [docs/telegram-e2e-harness.md](/Users/jisung/Projects/stock-chatbot/docs/telegram-e2e-harness.md)
 
@@ -128,10 +130,18 @@ COREPACK_HOME=/tmp/corepack pnpm test -- apps/telegram-bot/src/e2e/env.test.ts a
 make test-integration
 ```
 
+기능 변경의 최종 E2E gate:
+
+```bash
+COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=<comma-separated-scopes> --allow-production --suite=minimum
+```
+
 운영 영향 변경의 표준 마감 사이클:
 
 1. 로컬 코드/문서 변경과 source-of-truth 동기화
 2. `COREPACK_HOME=/tmp/corepack pnpm verify`와 필요한 범위별 추가 검증 수행
+   - 시나리오 기준선은 `docs/e2e-change-workflow.md`에 먼저 반영한다.
+   - 최종 gate는 `pnpm e2e:final`을 사용한다.
 3. commit/push
 4. production deploy 확인
 5. Neon production DB schema/data 반영

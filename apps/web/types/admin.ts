@@ -10,7 +10,7 @@ export type AdminRecentRun = {
 };
 
 export type AdminRecentPublicReport = {
-  briefingSession: "post_market" | "pre_market";
+  briefingSession: "post_market" | "pre_market" | "weekend_briefing";
   createdAt: string;
   id: string;
   marketRegime: string;
