@@ -23,6 +23,7 @@
 현재 structured output 최상위 키:
 
 - `oneLineSummary`
+- `keyIndicatorBullets`
 - `marketBullets`
 - `macroBullets`
 - `fundFlowBullets`
@@ -93,6 +94,7 @@ structured output 매핑:
 structured output 매핑:
 
 - `oneLineSummary`: 오늘 한 줄 요약
+- `keyIndicatorBullets`: 공개 feed/detail 카드용 핵심 시그널
 - `marketBullets`: 시장 종합 해석
 - `macroBullets`: 글로벌/국내 시장 스냅샷, 거시 관점
 - `fundFlowBullets`: 자금 흐름, breadth, rotation, leadership, sector/style 흐름

@@ -169,7 +169,9 @@ export async function buildPublicBriefing(
       composition?.oneLineSummary ??
       fallbackBriefing.summaryLine,
     marketResults,
-    keyIndicatorBullets: fallbackBriefing.keyIndicatorBullets,
+    keyIndicatorBullets: composition?.keyIndicatorBullets?.length
+      ? composition.keyIndicatorBullets
+      : fallbackBriefing.keyIndicatorBullets,
     marketBullets: composition?.marketBullets?.length
       ? composition.marketBullets
       : fallbackBriefing.marketBullets,

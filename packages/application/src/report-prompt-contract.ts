@@ -42,6 +42,7 @@ export type DailyReportStructuredOutput = {
     summary: string;
   }>;
   holdingTrendBullets: string[];
+  keyIndicatorBullets: string[];
   macroBullets: string[];
   marketBullets: string[];
   newsReferences: Array<{ sourceLabel: string; title: string; url: string }>;
@@ -94,6 +95,7 @@ export const DAILY_REPORT_JSON_SCHEMA = {
     eventBullets: { type: "array", items: { type: "string" } },
     holdingTrendBullets: { type: "array", items: { type: "string" } },
     articleSummaryBullets: { type: "array", items: { type: "string" } },
+    keyIndicatorBullets: { type: "array", items: { type: "string" } },
     headlineEvents: {
       type: "array",
       items: {
@@ -130,6 +132,7 @@ export const DAILY_REPORT_JSON_SCHEMA = {
     "eventBullets",
     "holdingTrendBullets",
     "articleSummaryBullets",
+    "keyIndicatorBullets",
     "headlineEvents",
     "strategyBullets",
     "riskBullets",
@@ -151,6 +154,7 @@ export function parseDailyReportStructuredOutput(
     !isStringArray(parsed.eventBullets) ||
     !isStringArray(parsed.holdingTrendBullets) ||
     !isStringArray(parsed.articleSummaryBullets) ||
+    !isStringArray(parsed.keyIndicatorBullets) ||
     !isHeadlineEventArray(parsed.headlineEvents) ||
     !isStringArray(parsed.strategyBullets) ||
     !isStringArray(parsed.riskBullets) ||
@@ -168,6 +172,7 @@ export function parseDailyReportStructuredOutput(
     eventBullets: parsed.eventBullets,
     holdingTrendBullets: parsed.holdingTrendBullets,
     articleSummaryBullets: parsed.articleSummaryBullets,
+    keyIndicatorBullets: parsed.keyIndicatorBullets,
     headlineEvents: parsed.headlineEvents,
     strategyBullets: parsed.strategyBullets,
     riskBullets: parsed.riskBullets,
@@ -274,7 +279,7 @@ function buildPromptInstructions(
     "입력에 명시적인 이벤트 데이터가 없으면 eventBullets는 반드시 빈 배열로 반환한다.",
     "정보가 부족한 섹션은 빈 배열로 반환한다.",
     "배열 각 항목은 바로 bullet로 붙일 수 있게 독립 문장으로 작성한다.",
-    "marketBullets는 최대 5개, macroBullets는 최대 4개, fundFlowBullets는 최대 3개, eventBullets는 최대 5개, holdingTrendBullets는 최대 4개, articleSummaryBullets는 최대 4개, headlineEvents는 최대 4개, strategyBullets는 최대 4개, riskBullets는 최대 3개, trendNewsBullets는 최대 5개로 제한한다."
+    "keyIndicatorBullets는 최대 4개, marketBullets는 최대 5개, macroBullets는 최대 4개, fundFlowBullets는 최대 3개, eventBullets는 최대 5개, holdingTrendBullets는 최대 4개, articleSummaryBullets는 최대 4개, headlineEvents는 최대 4개, strategyBullets는 최대 4개, riskBullets는 최대 3개, trendNewsBullets는 최대 5개로 제한한다."
   ];
 
   if (audience === "public_web") {
@@ -290,6 +295,7 @@ function buildPromptInstructions(
       "비중 확대, 축소 우선, 교체 검토, 매수 기회, 지금 사야 한다 같은 개인 행동 언어를 쓰지 않는다.",
       "표면 모멘텀이 유지돼도 내부 밸류 부담과 구조적 취약성이 크면 균형 잡힌 경고 톤을 유지한다.",
       "oneLineSummary는 `오늘 한 줄 요약`에 들어갈 문장으로 작성하고, 시장 톤과 핵심 해석 포인트를 1문장으로 정리한다.",
+      "keyIndicatorBullets는 공개 feed 카드의 `핵심 시그널`에 바로 쓸 수 있게 작성한다. 시장에서 지금 가장 먼저 읽어야 할 신호를 최대 4개 독립 문장으로 짧게 정리한다.",
       "marketBullets는 `시장 종합 해석` 섹션용 문장으로 작성한다. 첫 번째 문장은 반드시 이번 브리핑의 역할과 해석 목적을 직접 드러내야 한다.",
       "macroBullets는 `글로벌/국내 시장 스냅샷`과 `거시 관점`에 재사용될 수 있게 작성한다.",
       "fundFlowBullets는 breadth, rotation, leadership, sector/style 흐름이 실제로 입력된 경우에만 작성한다.",
@@ -325,6 +331,7 @@ function buildPromptInstructions(
     "입력의 quantScorecards.action과 actionSummary, quantScenarios, riskCheckpoints를 upstream 최종 판단으로 존중하고 방향을 뒤집지 않는다.",
     "portfolioRebalancing가 있으면 내재 가치, 가격/추세, 미래 기대치, 포트 적합성, 시장 레짐 오버레이, 하드룰을 먼저 반영한다.",
     "oneLineSummary는 `오늘 한 줄 결론`에 들어갈 문장으로 작성하고, 포트 대응 스탠스와 시장 레짐 톤을 함께 담는다.",
+    "keyIndicatorBullets는 개인화 경로에서는 사용하지 않으므로 반드시 빈 배열로 반환한다.",
     "strategyBullets는 `포트폴리오 리밸런싱 제안`에 바로 쓸 수 있게 작성하고, 확대/유지/축소/관찰 방향이 드러나야 한다.",
     "holdingTrendBullets는 종목별 `한줄 판단` 또는 보유 종목 가이드로 재사용될 수 있게 작성한다.",
     "articleSummaryBullets는 종목 관련 핵심 기사, 이벤트, 제공 사실을 간단히 묶어준다.",

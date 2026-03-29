@@ -140,6 +140,9 @@ describe("report prompt contract", () => {
     expect(prompt.instructions).toContain(
       "holdingTrendBullets, articleSummaryBullets, strategyBullets는 공개 웹에서는 사용하지 않으므로 반드시 빈 배열로 반환한다."
     );
+    expect(prompt.instructions).toContain(
+      "keyIndicatorBullets는 공개 feed 카드의 `핵심 시그널`에 바로 쓸 수 있게 작성한다."
+    );
     expect(prompt.metadata).toEqual({
       promptAudience: "public_web",
       promptBriefingSession: "pre_market",
@@ -164,6 +167,7 @@ describe("report prompt contract", () => {
         eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
         holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
         articleSummaryBullets: ["Apple 관련 핵심 기사는 아직 제품 기대감이 유지된다는 점에 초점을 두고 있습니다."],
+        keyIndicatorBullets: ["달러 강세와 환율 부담을 먼저 점검하셔야 합니다."],
         headlineEvents: [
           {
             sourceLabel: "Reuters",
@@ -192,6 +196,7 @@ describe("report prompt contract", () => {
       eventBullets: ["중동 리스크와 AI 반도체 이슈가 동시에 시장 변동성을 키우고 있습니다."],
       holdingTrendBullets: ["Apple은 시장 조정 영향으로 단기 변동성이 커졌습니다."],
       articleSummaryBullets: ["Apple 관련 핵심 기사는 아직 제품 기대감이 유지된다는 점에 초점을 두고 있습니다."],
+      keyIndicatorBullets: ["달러 강세와 환율 부담을 먼저 점검하셔야 합니다."],
       headlineEvents: [
         {
           sourceLabel: "Reuters",
@@ -223,6 +228,7 @@ describe("report prompt contract", () => {
           eventBullets: [],
           holdingTrendBullets: [],
           articleSummaryBullets: "bad",
+          keyIndicatorBullets: [],
           headlineEvents: [],
           strategyBullets: [],
           riskBullets: [],

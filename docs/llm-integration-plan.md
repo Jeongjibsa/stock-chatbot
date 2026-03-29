@@ -95,13 +95,14 @@
 - 요약 단계는 기사/지표 출처 ID를 함께 반환
 - 리포트 조합 단계는 최종 텔레그램 섹션 구조를 고정
 - 모델에게 매수/매도 확정 지시를 요구하지 않고 시나리오 제안 형식으로 제한
-- 현재 일 리포트 prompt의 출력 키는 `oneLineSummary`, `marketBullets`, `macroBullets`, `fundFlowBullets`, `eventBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `headlineEvents`, `strategyBullets`, `riskBullets`, `trendNewsBullets`, `newsReferences`로 고정한다.
+- 현재 일 리포트 prompt의 출력 키는 `oneLineSummary`, `keyIndicatorBullets`, `marketBullets`, `macroBullets`, `fundFlowBullets`, `eventBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `headlineEvents`, `strategyBullets`, `riskBullets`, `trendNewsBullets`, `newsReferences`로 고정한다.
 - prompt v4는 `입력 부재 시 빈 배열 강제` 규칙을 추가해 `fundFlowBullets`, `holdingTrendBullets`, `articleSummaryBullets`, `eventBullets`에서 근거 없는 추론을 금지한다.
 - prompt v5는 같은 structured output을 유지하되 `telegram_personalized`와 `public_web` audience를 분리한다.
 - 현재 prompt 입력은 audience 외에 `briefingSession=pre_market|post_market`도 함께 받아, 같은 채널 안에서도 `판단 프레임 제공 / 해석 검증+기준 보정` 역할을 분리한다.
 - Telegram personalized prompt는 `제약/하드룰 -> 최종 action -> 점수/시장 레짐 -> 기타 사실` 우선순위와 개인화 리밸런싱 해석을 강화한다.
 - Public web prompt는 개인 포트폴리오 언어를 금지하고, 공개 시장 해석과 공용 리스크 설명에만 집중한다.
 - Public web prompt는 `headlineEvents`에서 실제 RSS headline과 브리핑용 요약 제안을 함께 생성하고, `eventBullets`는 세션별 체크포인트/일정으로 사용한다.
+- Public web prompt는 `keyIndicatorBullets`를 통해 feed/detail 카드의 `핵심 시그널`을 직접 생성하고, composition 실패 시에만 rule-based fallback이 이를 대신한다.
 - 리포트 조합 결과는 renderer가 그대로 섹션에 주입할 수 있어야 하며, 숫자 재계산 대신 해석 문장만 생성해야 한다.
 - 정보가 부족한 섹션은 빈 배열로 반환하도록 강제한다.
 
@@ -116,7 +117,7 @@
 
 현재 상태:
 
-- `market-report-composition` prompt v5가 채널별 audience 분리와 세션별 역할 분기를 포함한 structured output 계약으로 구현됐고, 부재 데이터 추론을 더 강하게 억제한다. 2026-03-28 기준 public path는 `headlineEvents`를 추가해 실제 RSS headline과 브리핑용 요약 제안을 함께 노출한다.
+- `market-report-composition` prompt v5가 채널별 audience 분리와 세션별 역할 분기를 포함한 structured output 계약으로 구현됐고, 부재 데이터 추론을 더 강하게 억제한다. 2026-03-29 기준 public path는 `headlineEvents`에 더해 `keyIndicatorBullets`를 사용해 실제 공개 `핵심 시그널`도 LLM composition 결과를 우선 노출한다.
 - `DailyReportCompositionService`가 실제 daily report worker 경로에 연결됐다.
 - public briefing build는 같은 service를 쓰되 `public_web` audience로 호출해 개인 행동 언어를 금지하고, `post_market`에서는 같은 날짜의 오전 공개 브리핑/전략 스냅샷이 있으면 검증 관점 비교 입력을 함께 제공한다.
 - fixed scheduled Telegram delivery는 공개 브리핑 row가 먼저 적재된 세션에서는 persisted public `summary/signals`와 개인화 snapshot만 재사용하고, 공통 시장 해석용 추가 LLM 조합을 다시 호출하지 않는다.
