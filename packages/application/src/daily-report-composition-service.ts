@@ -16,6 +16,7 @@ export type DailyReportComposition = {
   fundFlowBullets: string[];
   headlineEvents: Array<{ headline: string; sourceLabel: string; summary: string }>;
   holdingTrendBullets: string[];
+  keyIndicatorBullets: string[];
   macroBullets: string[];
   marketBullets: string[];
   llmResponseId?: string;
@@ -97,6 +98,7 @@ export class DailyReportCompositionService {
       eventBullets: parsed.eventBullets,
       holdingTrendBullets: parsed.holdingTrendBullets,
       articleSummaryBullets: parsed.articleSummaryBullets,
+      keyIndicatorBullets: parsed.keyIndicatorBullets,
       headlineEvents: parsed.headlineEvents,
       strategyBullets: parsed.strategyBullets,
       riskBullets: parsed.riskBullets,

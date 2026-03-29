@@ -177,6 +177,7 @@
 | CHG-0148 | 2026-03-29 | FIX | preview 환경의 protected Vercel deployment에서도 rolling public-week smoke를 재사용할 수 있도록 `run:verify-public-week`가 `.vercel.app` 401/403 응답 시 `vercel curl --deployment`로 자동 재시도하도록 보강했다. 하네스 문서에도 preview 검증은 protection 해제가 아니라 authenticated `vercel curl` fallback을 기본값으로 사용한다고 명시했다. | Change Log, Context, Harness Docs, Code, Tests, Ops | yes |
 | CHG-0149 | 2026-03-29 | UPDATE | PR merge 전 협업 문맥을 잃지 않도록 PR 본문 작성 규칙을 한글/영문 병기 기준으로 고정했다. 변경 요약, 검증 결과, 운영 메모는 두 언어 버전 모두에 같은 수준으로 포함해야 한다. | Change Log, Context, E2E Docs, AGENTS | yes |
 | CHG-0150 | 2026-03-29 | UPDATE | PR merge 완료 후에는 해당 feature/fix 로컬 브랜치도 기본 마감 루프에서 삭제하도록 정리 규칙을 추가했다. merge 이후 로컬 branch inventory를 누적시키지 않도록 AGENTS, E2E workflow, context summary를 같은 기준으로 동기화했다. | Change Log, Context, E2E Docs, AGENTS | yes |
+| CHG-0151 | 2026-03-29 | FIX | 공개 브리핑 feed/detail의 `핵심 시그널`이 항상 규칙 기반 fallback만 저장되던 문제를 수정했다. `market-report-composition` structured output에 `keyIndicatorBullets`를 추가하고, public path는 이제 LLM composition의 시그널을 우선 저장하며 composition 실패 또는 빈 배열일 때만 rule-based fallback으로 내려간다. | Change Log, PRD, Context, LLM Plan, Prompt Contract, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

@@ -795,6 +795,7 @@ describe("DailyReportOrchestrator", () => {
         eventBullets: [],
         holdingTrendBullets: [],
         articleSummaryBullets: [],
+        keyIndicatorBullets: [],
         headlineEvents: [],
         strategyBullets: [],
         riskBullets: [],

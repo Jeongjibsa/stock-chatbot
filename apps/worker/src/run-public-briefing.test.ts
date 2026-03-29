@@ -190,6 +190,10 @@ describe("run-public-briefing", () => {
       eventBullets: ["환율과 외국인 선물 흐름이 같은 방향인지 먼저 확인하셔야 합니다."],
       holdingTrendBullets: [],
       articleSummaryBullets: [],
+      keyIndicatorBullets: [
+        "달러 강세와 환율 부담을 먼저 점검하셔야 합니다.",
+        "변동성 확대 여부를 장 초반에 다시 확인하셔야 합니다."
+      ],
       headlineEvents: [
         {
           sourceLabel: "Reuters",
@@ -226,10 +230,10 @@ describe("run-public-briefing", () => {
     expect(briefing.indicatorTags).toEqual(["NASDAQ -2.01%"]);
     expect(briefing.sessionRole).toBe("미장 마감 분석 기반 국장 시초가 예측");
     expect(briefing.keyIndicatorBullets).toEqual(
-      expect.arrayContaining([
-        "VIX 급등으로 변동성 경계가 강화됐습니다.",
-        "NASDAQ 약세가 커지며 성장주 변동성이 확대됐습니다."
-      ])
+      [
+        "달러 강세와 환율 부담을 먼저 점검하셔야 합니다.",
+        "변동성 확대 여부를 장 초반에 다시 확인하셔야 합니다."
+      ]
     );
     expect(briefing.marketSummary.purpose).toBe(
       "이번 오전 브리핑은 미국장 마감 결과를 바탕으로 오늘 국내장 시초가와 장 초반 수급 방향을 가늠하는 데 목적이 있습니다."
