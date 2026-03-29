@@ -32,6 +32,7 @@
 - GitHub Actions/CI를 건드리는 작업은 마감 전에 `gh workflow list`, `gh run list --limit <n>`, `gh run view <run-id> --log-failed`로 inventory와 최근 failing run을 확인한다.
 - Telegram/webhook/cron/public feed/production Neon에 영향을 주는 작업은 `로컬 검증 -> commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E` 순서를 기본 마감 사이클로 사용한다.
 - 위 사이클 중 하나라도 남아 있으면 해당 작업은 완료가 아니다.
+- 공개 브리핑 운영 변경은 current-week smoke만이 아니라 `2026-03-23` 이후 retained archive 보유 여부까지 함께 검증해야 한다.
 
 ## 3. Phase Overview
 
@@ -280,6 +281,7 @@
 - 2026-03-22: 공개 `reports` read model에 `indicator_tags`를 추가하고, public feed/detail 우상단 태그를 score badge 대신 `KOSPI/KOSDAQ/S&P500/NASDAQ` indicator chip으로 전환했으며, 공개 적재 경로를 `report_date` 기준 latest-upsert + feed date dedupe 구조로 조정
 - 2026-03-23: Telegram `/report`가 예외 발생 시에도 `report_runs`를 `failed`로 정리해 stale `running`을 남기지 않도록 보강하고, optional read model이 아직 반영되지 않은 환경에서 개인화 `/report`와 공개 feed 읽기 경로가 graceful fallback으로 계속 동작하도록 수정
 - 2026-03-23: Neon production branch에 최신 schema migration을 적용하고 runtime/user 데이터를 초기화한 뒤 공개 브리핑을 2026-03-16~2026-03-20 기준으로 재적재했으며, Telegram webhook을 `callback_query` 포함 allowed updates로 재등록
+- 2026-03-29: 공개 브리핑 retained archive 기준을 `2026-03-23`부터로 고정하고, `run:backfill-public-week`/`run:verify-public-week`를 누적 보유 smoke로 확장했다. Vercel cron/manual reconcile 공통 경로는 현재 세션 처리 후 누락된 공개 브리핑 row를 자동 복구하도록 보강했다.
 - 2026-03-27: 기능 변경 시 `시나리오 delta -> scope 분류 -> 범위별 검증 -> live Telegram E2E`를 같은 루프에서 끝내도록 `docs/e2e-change-workflow.md`, `skills/e2e-change-automation`, `pnpm e2e:final` runner, README 지시문 예시를 추가
 - 2026-03-27: Vercel cron 공개 브리핑 업로드가 Gemini composition 지연으로 길어지던 문제를 수정하기 위해 `public_web` LLM 조합에 hard timeout을 추가하고, timeout 시 즉시 rule-based fallback으로 전환했으며 관련 Telegram E2E 시나리오와 E2E workflow 기준선을 세션별 `/report` 제목/핵심 섹션 분기까지 반영하도록 갱신
 - 2026-03-27: 고정 스케줄 정기 Telegram 발송은 공개 브리핑 row 적재를 선행 조건으로 두고, 같은 세션의 persisted public `summary/signals`와 개인화 데이터만 재조합해 보내도록 보강했다. 이에 따라 scheduled delivery는 공통 시장 해석용 두 번째 LLM 조합을 건너뛰며, production smoke 기준선에는 임시 cron 재배치 후 자동 업로드 확인과 최종 고정 스케줄 복구 절차를 추가했다.

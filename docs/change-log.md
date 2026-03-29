@@ -171,6 +171,7 @@
 | CHG-0142 | 2026-03-29 | UPDATE | 공개 웹 기반 feed/detail 페이지에서 모바일 친화적인 수직 단일 레이아웃을 도입하고, 시그널 배지를 모노톤(Black/Slate)으로 재디자인했다. 또한 공용 리포트 렌더링 시 항목 라벨에 볼드(`**`) 처리를 강제하여 모바일 화면에서의 스캐너빌리티 및 가독성을 극대화했다. | Change Log, Code | yes |
 | CHG-0143 | 2026-03-29 | UPDATE | 저장소 전용 agent loop를 `repo-native 검증 -> 운영 경로 검증 -> GitHub/Vercel 확인` 기준으로 재정의하고, GitHub Actions inventory를 `CI + Daily Report(manual reconcile)`만 남기도록 정리했다. CI의 pnpm version mismatch를 workflow 설정에서 제거했고, `Daily Report Smoke` 및 `Telegram Smoke Test` workflow와 GitHub Pages fallback deploy 단계는 삭제했다. `Daily Report` workflow는 `vercel-reconcile/local-worker` 명시 모드와 HTTP status/response body 로깅을 사용하도록 단순화했다. | PRD, Plan, Change Log, Context, E2E Docs, Deployment, AGENTS, Workflow | yes |
 | CHG-0144 | 2026-03-29 | UPDATE | 공개 브리핑 웹의 feed/detail을 pastel blue accent 중심으로 절제해 재정비했다. CTA 버튼 계층과 badge 톤을 shadcn 소스 컴포넌트 기준으로 통일하고 모바일 우선 spacing/레이아웃을 다듬었으며, 상세 브리핑의 `참고한 뉴스 출처`는 `매체명 | 기사 제목` 링크 라벨만 보이도록 markdown/legacy HTML 표현 계약을 함께 수정했다. | Change Log, Code, Tests | yes |
+| CHG-0145 | 2026-03-29 | FIX | 공개 브리핑 보유 기준을 `2026-03-23`부터의 누적 세션으로 고정했다. `run:backfill-public-week`/`run:verify-public-week`는 이제 current-week만이 아니라 고정 기준일 이후 전체 `reports` 보유 여부를 확인하고, public feed/detail HTML smoke는 최근 구간과 earliest retained date를 함께 검사한다. 또한 Vercel cron/manual reconcile 공통 경로는 실행 후 `2026-03-23` 이후 누락된 공개 브리핑 세션을 자동으로 다시 생성해, row 유실이 생겨도 다음 운영 실행에서 self-heal 하도록 보강했다. | PRD, Plan, Change Log, Context, E2E Docs, Deployment, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 

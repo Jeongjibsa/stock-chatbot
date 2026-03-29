@@ -82,7 +82,7 @@ VERCEL_RECONCILE_URL=https://web-three-tau-58.vercel.app/api/cron/reconcile
 CRON_SECRET=<same-shared-secret>
 ```
 
-`Daily Report` workflow는 `workflow_dispatch` 전용이고, 기본 mode는 `vercel-reconcile`이다. reconcile 호출이 실패하면 workflow 로그에 request URL, HTTP status, response body가 남아야 한다.
+`Daily Report` workflow는 `workflow_dispatch` 전용이고, 기본 mode는 `vercel-reconcile`이다. reconcile 호출이 실패하면 workflow 로그에 request URL, HTTP status, response body가 남아야 한다. `/api/cron/reconcile`와 `/api/cron/daily-report`는 현재 세션 처리 뒤 `2026-03-23` 이후 누락된 공개 브리핑 row를 자동 복구하는 retained archive self-heal 경로도 함께 담당한다.
 
 ## Telegram webhook 등록
 
@@ -108,6 +108,7 @@ COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 7. `DATABASE_URL`이 Neon으로 연결돼도 500 없이 조회되는지 확인
 8. GitHub Actions `PUBLIC_BRIEFING_BASE_URL`과 `VERCEL_RECONCILE_URL`이 새 Vercel URL을 가리키는지 확인
 9. `/admin`이 Basic Auth 없이 열리지 않는지 확인
+10. `/api/cron/reconcile` 또는 정기 cron 실행 후 public archive가 `2026-03-23`부터의 retained row를 계속 보유하는지 확인
 
 현재 smoke 기준으로 아래는 이미 확인됐다.
 

@@ -207,18 +207,18 @@
 - 마지막 production deploy 후 cron 정의는 다시 `30 22 * * 0-5`, `30 11 * * 1-5`로 복구돼 있어야 한다.
 - 임시 UTC 시각은 반드시 서울 기준 유효 세션 창을 만족해야 한다. 금요일 늦은 UTC 시각은 서울 기준 토요일 00시 이후가 되어 `post_market` 자동 smoke가 skip될 수 있다.
 
-## 시나리오 12. current-week 공개 브리핑 coverage / backfill
+## 시나리오 12. `2026-03-23` 이후 retained 공개 브리핑 coverage / backfill
 
 ### 절차
 
-1. `GET /api/cron/public-backfill?briefingSession=...&reportRunDate=...`를 current-week 허용 세션 수만큼 호출한다.
+1. `GET /api/cron/public-backfill?briefingSession=...&reportRunDate=...`를 누락된 retained session에 대해 호출하거나, 운영자가 `run:backfill-public-week`를 실행해 `2026-03-23` 이후 전체 누락 구간을 다시 채운다.
 2. 필요 시 로컬 worker `run:backfill-public-week`는 참고용으로만 사용하고, 최종 source-of-truth는 production site runtime backfill 결과로 본다.
 3. 이어서 `pnpm --filter @stock-chatbot/worker run run:verify-public-week`를 실행한다.
-4. public feed에서 이번 주 날짜 그룹과 `pre_market`, `post_market`, `weekend_briefing` 노출을 확인한다.
+4. public feed에서 earliest retained date `2026-03-23`이 계속 보이고, 이번 주 날짜 그룹과 `pre_market`, `post_market`, `weekend_briefing` 노출이 유지되는지 확인한다.
 
 ### 기대 결과
 
-- 서울 기준 이번 주 월요일부터 현재까지 허용된 세션 row가 `reports`에 모두 존재해야 한다.
+- `2026-03-23`부터 현재까지 허용된 세션 row가 `reports`에 모두 존재해야 한다.
 - 토요일 기준 기대 세션은 `월~금 pre/post + 토 pre + 토 weekend`다.
 - `/api/cron/public-backfill`와 `run:backfill-public-week`는 기본적으로 `DISABLE_UPSTASH_NEWS_CACHE=true` 경로를 사용해 cross-session dedupe 때문에 뉴스 출처가 비는 현상을 줄여야 한다.
 - `run:verify-public-week`는 최소 `pre_market`, `weekend_briefing` detail에서 `브리핑 역할`, `시장 종합 해석`, `핵심 뉴스 이벤트`, `거시 트렌드 뉴스`, `참고한 뉴스 출처`를 확인해야 한다.
@@ -252,5 +252,5 @@
 
 - cron/public 경로를 수정한 change set에서는 최소 회귀 세트와 별도로 공개 브리핑 cron이 LLM timeout 시에도 rule-based fallback으로 `200`을 반환하고 `reports` 적재를 계속하는지 확인한다.
 - 공개 브리핑 포맷을 수정한 change set에서는 `pre_market`, `post_market`, `weekend_briefing` 중 영향을 받은 세션 row를 production에서 다시 생성한 뒤, public detail에서 `브리핑 역할`, 목적 문장, RSS headline 기반 `핵심 뉴스 이벤트`, `거시 트렌드 뉴스`, `참고한 뉴스 출처`를 직접 확인한다.
-- public feed가 의도보다 적은 수의 row만 보이면 worker current-week backfill을 먼저 수행하고, `run:verify-public-week`로 DB와 detail HTML을 동시에 확인한다.
+- public feed가 의도보다 적은 수의 row만 보이면 worker retained archive backfill을 먼저 수행하고, `run:verify-public-week`로 DB와 detail HTML을 동시에 확인한다.
 - cron 스케줄 자체를 만진 change set에서는 임시 재배치 smoke를 수행한 뒤, 마지막 production deploy에서 반드시 오전/오후 고정 스케줄 정의를 복구한다.

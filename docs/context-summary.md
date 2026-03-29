@@ -78,8 +78,8 @@
 - 공개 웹의 `브리핑 역할`은 세션별로 `미장 마감 분석 기반 국장 시초가 예측 / 국장·대체거래소 결과 분석 및 미장 예보 / 주간 이슈 총정리 및 다음 주 일정 요약`을 직접 드러내야 한다.
 - 공개 웹의 `핵심 뉴스 이벤트`는 RSS 원문 headline과 `브리핑용 요약 제안`을 함께 출력하는 `headlineEvents` 구조를 사용하고, 공개 `eventBullets`는 세션별 체크포인트/일정 용도로 사용한다.
 - Upstash REST cache는 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` env가 있을 때만 활성화되고, 뉴스 dedupe/hot cache/analysis cache에만 사용한다. 영속 저장과 최종 idempotency는 Postgres `news_items`, `news_analysis_results`, `reports.news_references`가 담당한다.
-- 운영용 `/api/cron/public-backfill`는 이제 write path 실행 뒤 동일 runtime의 public read path로 persisted row를 즉시 재검증해야 한다. row를 다시 읽지 못하면 성공 응답 대신 실패로 처리해, current-week backfill에서 “응답은 성공인데 공개 feed/detail에는 없음” 상태를 남기면 안 된다.
-- `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL`과 `CRON_SECRET`가 있으면 local worker insert 대신 production runtime `/api/cron/public-backfill`를 우선 사용한다. 운영 백필은 write-path와 read-path가 같은 runtime을 기준으로 검증해야 한다.
+- 운영용 `/api/cron/public-backfill`는 이제 write path 실행 뒤 동일 runtime의 public read path로 persisted row를 즉시 재검증해야 한다. row를 다시 읽지 못하면 성공 응답 대신 실패로 처리해, `2026-03-23` 이후 retained archive backfill에서 “응답은 성공인데 공개 feed/detail에는 없음” 상태를 남기면 안 된다.
+- `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL`과 `CRON_SECRET`가 있으면 local worker insert 대신 production runtime `/api/cron/public-backfill`를 우선 사용한다. 기본 동작은 current-week만이 아니라 `2026-03-23` 이후 누락된 공개 브리핑 세션 전체를 다시 채우는 retained archive repair다.
 - 공개 `feed/detail` page는 `dynamic = "force-dynamic"`만으로는 build 시점 스냅샷이 남을 수 있어, Next 15 `connection()`을 호출해 요청 시점 runtime 연결을 먼저 확보한 뒤 DB read path를 수행해야 한다.
 - application 계층에는 mock telegram delivery adapter, reusable report preview 템플릿, 공통 report query model이 추가됐다.
 - telegram report 렌더러는 이모지, 방향 기호, 섹션 중심 레이아웃으로 개선됐고 실채널 POC 메시지 발송으로 확인됐다.
@@ -167,6 +167,7 @@
 - Telegram bot runtime은 이제 outbound reply를 `telegram_outbound_messages`에 기록한다. 이 로그는 production-like E2E harness가 Telegram-visible 응답 문구를 검증하는 read model 역할을 하며, 운영 장애 분석에도 활용할 수 있다.
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
 - GitHub Actions `Daily Report`는 `workflow_dispatch`로만 실행하며, 기본 mode는 `vercel-reconcile`이다. 운영자가 선택할 때만 `local-worker` mode를 사용하고, reconcile 호출 실패 시 HTTP status와 response body를 로그에 남긴다.
+- Vercel cron `/api/cron/daily-report`와 manual `/api/cron/reconcile`는 현재 세션을 처리한 뒤 `2026-03-23` 이후 누락된 공개 브리핑 row를 자동 복구한다. 운영상 공개 브리핑 유실이 생겨도 다음 cron/reconcile 실행이 retained archive를 self-heal 해야 한다.
 - `apps/web`에는 Basic Auth 기반 운영 콘솔 `/admin`이 추가됐다. 이 화면은 최근 공개 브리핑, 최근 24시간 실행 요약, 최근 개인화 리포트 실행 로그, 최근 전략 스냅샷과 간단한 이후 수익률 회고를 보여주고, Telegram user별 등록 상태/차단 상태/오늘 사용량을 조회하며 block/unblock 제어를 제공한다. `ADMIN_DASHBOARD_USERNAME` / `ADMIN_DASHBOARD_PASSWORD`가 설정된 경우에만 접근을 허용한다.
 - `/admin`의 사용자 차단 제어는 POST 후 같은 화면으로 redirect되며 결과 배너를 표시한다. 운영자 `telegram_user_id=8606362482`는 Telegram runtime뿐 아니라 admin route/UI에서도 보호되어 수동 block 대상에서 제외된다.
 - 공개 웹 feed/detail에는 `/admin` 진입 링크를 노출하지 않고, 운영자는 `/admin` URL 직접 접근 후 Basic Auth로만 들어간다.
@@ -212,7 +213,7 @@
 - `REPORT_RUN_DATE` override는 worker/manual backfill에만 사용하고, Telegram command runtime `/report`는 항상 현재 서울 날짜를 사용한다.
 - 공개 웹 브리핑은 `오늘의 시장 브리핑` 구조로 분리됐고, 개인 포트 용어와 action language는 renderer 단계에서 제외된다.
 - `apps/web`는 app-local `eslint.config.mjs`에서 공식 `eslint-config-next/core-web-vitals + typescript` flat 구성을 사용하고, 저장소 공통 lint는 root config가 담당한다. Node 24 전환 이후 남은 web build 경고는 이 경로를 기준으로 줄인다.
-- `run:verify-public-week`는 current-week public briefing smoke에서 DB query만 믿지 않고 public feed/detail HTML도 같이 본다. production page fetch는 간헐적으로 partial/stale 응답이 섞일 수 있어 no-cache + retry를 기준선으로 삼는다.
+- `run:verify-public-week`는 `2026-03-23` 이후 retained public briefing DB coverage를 먼저 확인하고, public feed/detail HTML smoke는 current-week 최신 구간과 earliest retained date를 함께 본다. production page fetch는 간헐적으로 partial/stale 응답이 섞일 수 있어 no-cache + retry를 기준선으로 삼는다.
 - 고정 스케줄 Telegram 발송은 같은 기준일/세션의 persisted public `summary/signals`를 재사용해 공통 시장 해석용 두 번째 LLM 조합을 건너뛴다. serverless runtime에서 공개 브리핑 JSON artifact를 상대 경로에 쓰지 못하면 `/tmp/public-briefing/...`로 자동 전환한 뒤 DB 적재를 계속 진행해야 한다.
 - Telegram DM에는 홈 reply keyboard(`📊 브리핑 보기`, `➕ 종목 추가`, `📁 내 종목`, `⚙️ 설정`)와 설정 inline keyboard가 추가됐다. 기존 slash command semantics는 유지한다.
 - Telegram DM `/register`는 같은 private chat에 이미 등록된 사용자를 감지하면 중복 등록 대신 `/report`, `/portfolio_list`, `/unregister` 다음 단계를 안내한다.
@@ -251,6 +252,6 @@
 
 ## 9. Handoff Notes
 
-- 2026-03-23 운영 복구 기준선: production Neon에는 `personal_rebalancing_snapshots`와 `reports.indicator_tags`가 실제 반영돼 있어야 하고, runtime/user 데이터는 초기화 후 공개 브리핑 2026-03-16~2026-03-20 5영업일분이 적재된 상태를 정상 기준으로 본다. Telegram webhook의 `allowed_updates`에는 반드시 `callback_query`가 포함돼야 한다.
+- 2026-03-23 운영 복구 기준선: production Neon에는 `personal_rebalancing_snapshots`와 `reports.indicator_tags`가 실제 반영돼 있어야 하고, 공개 브리핑 retained archive는 `2026-03-23`부터 현재까지 허용 세션 row를 모두 보유해야 한다. Telegram webhook의 `allowed_updates`에는 반드시 `callback_query`가 포함돼야 한다.
 - 상세 배경은 change-log를 보면 되지만, 새 스레드는 이 문서를 우선 기준으로 사용한다.
 - 이 문서가 오래됐거나 누락이 의심되면 `context-rollup` skill로 먼저 갱신한다.

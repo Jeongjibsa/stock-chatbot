@@ -4,8 +4,16 @@ import {
   parseBriefingSession,
   resolveScheduledBriefingSession
 } from "@stock-chatbot/application";
+import {
+  collectRetainedPublicCoverage,
+  resolvePublicCoverageDatabaseUrl
+} from "@stock-chatbot/worker/public-retention";
 import { runDailyReport } from "@stock-chatbot/worker/run-daily-report";
 import { runPublicBriefing } from "@stock-chatbot/worker/run-public-briefing";
+import {
+  readPublicBriefingRetentionStartDate,
+  readPublicWeekReferenceDate
+} from "@stock-chatbot/worker/public-week";
 
 type TriggerType = "schedule" | "workflow_dispatch";
 type PublicBriefingResult = Awaited<ReturnType<typeof runPublicBriefing>>;
@@ -38,6 +46,7 @@ export async function runBriefingSession(input: {
   triggerType: TriggerType;
 },
 dependencies: {
+  repairRetainedPublicCoverageImpl?: typeof repairRetainedPublicCoverage;
   runDailyReportImpl?: typeof runDailyReport;
   runPublicBriefingImpl?: typeof runPublicBriefing;
   sleep?: (ms: number) => Promise<void>;
@@ -68,13 +77,19 @@ dependencies: {
     runPublicBriefingImpl: dependencies.runPublicBriefingImpl ?? runPublicBriefing,
     sleep: dependencies.sleep ?? delay
   });
+  const retentionRepair = await (
+    dependencies.repairRetainedPublicCoverageImpl ?? repairRetainedPublicCoverage
+  )(env, {
+    runPublicBriefingImpl: dependencies.runPublicBriefingImpl ?? runPublicBriefing
+  });
 
   if (input.briefingSession === "weekend_briefing") {
     return {
       skipped: false,
       briefingSession: input.briefingSession,
       linkAttachedToDaily: false,
-      publicBriefing
+      publicBriefing,
+      retentionRepair
     };
   }
 
@@ -90,6 +105,7 @@ dependencies: {
     skipped: false,
     briefingSession: input.briefingSession,
     linkAttachedToDaily: Boolean(publicBriefing.publicBriefingUrl),
+    retentionRepair,
     summary,
     publicBriefing
   };
@@ -170,6 +186,50 @@ async function runPublicBriefingWithRetry(
     runDate: env.REPORT_RUN_DATE ?? "",
     snapshotCount: 0,
     status: "failed"
+  };
+}
+
+async function repairRetainedPublicCoverage(
+  env: ReturnType<typeof readCronRuntimeEnvironment> & {
+    BRIEFING_SESSION: BriefingSession;
+    REPORT_RUN_DATE?: string;
+    REPORT_TRIGGER_TYPE: TriggerType;
+  },
+  dependencies: {
+    runPublicBriefingImpl: typeof runPublicBriefing;
+  }
+) {
+  if (!resolvePublicCoverageDatabaseUrl({ DATABASE_URL: env.DATABASE_URL })) {
+    return {
+      checked: false,
+      missingCount: 0,
+      referenceDate: readPublicWeekReferenceDate({
+        ...(env.REPORT_RUN_DATE ? { PUBLIC_WEEK_REFERENCE_DATE: env.REPORT_RUN_DATE } : {})
+      }),
+      repairedCount: 0,
+      retentionStartDate: readPublicBriefingRetentionStartDate()
+    };
+  }
+
+  const coverage = await collectRetainedPublicCoverage({
+    DATABASE_URL: env.DATABASE_URL,
+    ...(env.REPORT_RUN_DATE ? { PUBLIC_WEEK_REFERENCE_DATE: env.REPORT_RUN_DATE } : {})
+  });
+
+  for (const missingSession of coverage.missingSessions) {
+    await dependencies.runPublicBriefingImpl({
+      ...env,
+      BRIEFING_SESSION: missingSession.briefingSession,
+      REPORT_RUN_DATE: missingSession.reportDate
+    });
+  }
+
+  return {
+    checked: true,
+    missingCount: coverage.missingSessions.length,
+    referenceDate: coverage.referenceDate,
+    repairedCount: coverage.missingSessions.length,
+    retentionStartDate: coverage.retentionStartDate
   };
 }
 

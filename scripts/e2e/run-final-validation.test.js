@@ -82,10 +82,10 @@ describe("buildCommandPlan", () => {
       "database integration tests",
       "web production build",
       "telegram e2e harness unit checks",
-      "public week coverage smoke",
+      "public briefing retention smoke",
       "live telegram e2e suite"
     ]);
-    expect(plan.find((step) => step.label === "public week coverage smoke")?.env)
+    expect(plan.find((step) => step.label === "public briefing retention smoke")?.env)
       .toEqual({
         PUBLIC_BRIEFING_BASE_URL: "https://example.com",
         PUBLIC_WEEK_DATABASE_URL: "postgresql://example"

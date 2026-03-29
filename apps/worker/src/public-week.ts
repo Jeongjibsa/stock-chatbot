@@ -1,5 +1,7 @@
 import type { BriefingSession } from "@stock-chatbot/application";
 
+export const PUBLIC_BRIEFING_RETENTION_START_DATE = "2026-03-23";
+
 export type PublicWeekSession = {
   reportDate: string;
   briefingSession: BriefingSession;
@@ -7,9 +9,31 @@ export type PublicWeekSession = {
 
 export function buildPublicWeekSessions(referenceDate: string): PublicWeekSession[] {
   const endDate = parseDateOnly(referenceDate);
-  const startDate = new Date(endDate);
-  const offset = (endDate.getUTCDay() + 6) % 7;
-  startDate.setUTCDate(startDate.getUTCDate() - offset);
+  const startDate = resolveWeekStartDate(endDate);
+
+  return buildPublicSessionsBetween(formatDateOnly(startDate), referenceDate);
+}
+
+export function buildRetainedPublicSessions(
+  referenceDate: string,
+  retentionStartDate: string = PUBLIC_BRIEFING_RETENTION_START_DATE
+): PublicWeekSession[] {
+  const startDate = parseDateOnly(retentionStartDate);
+  const endDate = parseDateOnly(referenceDate);
+
+  if (startDate.getTime() > endDate.getTime()) {
+    return [];
+  }
+
+  return buildPublicSessionsBetween(retentionStartDate, referenceDate);
+}
+
+export function buildPublicSessionsBetween(
+  startDateValue: string,
+  endDateValue: string
+): PublicWeekSession[] {
+  const startDate = parseDateOnly(startDateValue);
+  const endDate = parseDateOnly(endDateValue);
 
   const sessions: PublicWeekSession[] = [];
 
@@ -46,6 +70,15 @@ export function buildPublicWeekSessions(referenceDate: string): PublicWeekSessio
   return sessions;
 }
 
+export function readPublicBriefingRetentionStartDate(
+  env: Record<string, string | undefined> = process.env
+): string {
+  return (
+    env.PUBLIC_BRIEFING_RETENTION_START_DATE?.trim() ||
+    PUBLIC_BRIEFING_RETENTION_START_DATE
+  );
+}
+
 export function readPublicWeekReferenceDate(
   env: Record<string, string | undefined> = process.env,
   options?: { now?: Date; timeZone?: string }
@@ -68,6 +101,13 @@ function formatDateInTimeZone(timeZone: string, now: Date = new Date()) {
   });
 
   return formatter.format(now);
+}
+
+function resolveWeekStartDate(endDate: Date) {
+  const startDate = new Date(endDate);
+  const offset = (endDate.getUTCDay() + 6) % 7;
+  startDate.setUTCDate(startDate.getUTCDate() - offset);
+  return startDate;
 }
 
 function parseDateOnly(value: string) {

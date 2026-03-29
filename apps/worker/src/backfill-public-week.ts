@@ -1,19 +1,56 @@
 import "dotenv/config";
 
 import { runPublicBriefing } from "./run-public-briefing.js";
-import { buildPublicWeekSessions, readPublicWeekReferenceDate } from "./public-week.js";
+import {
+  collectRetainedPublicCoverage,
+  resolvePublicCoverageDatabaseUrl
+} from "./public-retention.js";
+import {
+  buildRetainedPublicSessions,
+  readPublicBriefingRetentionStartDate,
+  readPublicWeekReferenceDate
+} from "./public-week.js";
 
 async function main() {
   const referenceDate = readPublicWeekReferenceDate();
-  const sessions = buildPublicWeekSessions(referenceDate);
+  const retentionStartDate = readPublicBriefingRetentionStartDate();
   const env = {
     ...process.env,
     DISABLE_UPSTASH_NEWS_CACHE:
       process.env.DISABLE_UPSTASH_NEWS_CACHE?.trim() || "true"
   };
+  let sessions = buildRetainedPublicSessions(referenceDate, retentionStartDate);
   const publicBriefingBaseUrl = process.env.PUBLIC_BRIEFING_BASE_URL?.trim();
   const cronSecret = process.env.CRON_SECRET?.trim();
   const useRuntimeBackfill = Boolean(publicBriefingBaseUrl && cronSecret);
+
+  if (resolvePublicCoverageDatabaseUrl(env)) {
+    const coverage = await collectRetainedPublicCoverage(env);
+
+    sessions = coverage.missingSessions;
+
+    console.log(
+      [
+        "[public-week-backfill]",
+        `referenceDate=${coverage.referenceDate}`,
+        `retentionStartDate=${coverage.retentionStartDate}`,
+        `expectedCount=${coverage.expectedSessions.length}`,
+        `missingCount=${coverage.missingSessions.length}`
+      ].join(" ")
+    );
+  }
+
+  if (sessions.length === 0) {
+    console.log(
+      [
+        "[public-week-backfill]",
+        `referenceDate=${referenceDate}`,
+        `retentionStartDate=${retentionStartDate}`,
+        "status=up_to_date"
+      ].join(" ")
+    );
+    return;
+  }
 
   for (const session of sessions) {
     if (useRuntimeBackfill && publicBriefingBaseUrl && cronSecret) {
@@ -28,6 +65,7 @@ async function main() {
         [
           "[public-week-backfill]",
           `mode=runtime`,
+          `retentionStartDate=${retentionStartDate}`,
           `date=${session.reportDate}`,
           `session=${session.briefingSession}`,
           `status=${result.status}`,
@@ -49,6 +87,7 @@ async function main() {
       [
         "[public-week-backfill]",
         `mode=local`,
+        `retentionStartDate=${retentionStartDate}`,
         `date=${session.reportDate}`,
         `session=${session.briefingSession}`,
         `status=${result.status}`,

@@ -65,12 +65,12 @@ export function buildCommandPlan(options, env = process.env) {
   if (requiresScope(scopes, ["ops"])) {
     if (!hasPublicWeekVerificationContext(env)) {
       throw new Error(
-        "ops scope requires DATABASE_URL and PUBLIC_BRIEFING_BASE_URL so current-week public briefing coverage can be verified."
+        "ops scope requires DATABASE_URL and PUBLIC_BRIEFING_BASE_URL so retained public briefing coverage from 2026-03-23 can be verified."
       );
     }
 
     plan.push({
-      label: "public week coverage smoke",
+      label: "public briefing retention smoke",
       command: ["pnpm", "--filter", "@stock-chatbot/worker", "run", "run:verify-public-week"],
       env: {
         PUBLIC_BRIEFING_BASE_URL: env.PUBLIC_BRIEFING_BASE_URL,

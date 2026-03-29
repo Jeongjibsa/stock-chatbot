@@ -14,6 +14,12 @@ export default defineConfig({
       "@stock-chatbot/database": fileURLToPath(
         new URL("./packages/database/src/index.ts", import.meta.url)
       ),
+      "@stock-chatbot/worker/public-retention": fileURLToPath(
+        new URL("./apps/worker/src/public-retention.ts", import.meta.url)
+      ),
+      "@stock-chatbot/worker/public-week": fileURLToPath(
+        new URL("./apps/worker/src/public-week.ts", import.meta.url)
+      ),
       "@stock-chatbot/worker/run-daily-report": fileURLToPath(
         new URL("./apps/worker/src/run-daily-report.ts", import.meta.url)
       ),

@@ -18,6 +18,14 @@ const nextConfig: NextConfig = {
         __dirname,
         "../../packages/database/src/index.ts"
       ),
+      "@stock-chatbot/worker/public-retention": path.resolve(
+        __dirname,
+        "../../apps/worker/src/public-retention.ts"
+      ),
+      "@stock-chatbot/worker/public-week": path.resolve(
+        __dirname,
+        "../../apps/worker/src/public-week.ts"
+      ),
       "@stock-chatbot/telegram-bot/build-bot": path.resolve(
         __dirname,
         "../../apps/telegram-bot/src/build-bot.ts"
