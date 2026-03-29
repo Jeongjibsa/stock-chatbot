@@ -90,6 +90,10 @@ export class DailyReportCompositionService {
       ...(input.timeoutMs ? { timeoutMs: input.timeoutMs } : {})
     });
     const parsed = parseDailyReportStructuredOutput(llmResponse.outputText);
+    const keyIndicatorBullets =
+      input.audience === "public_web"
+        ? repairPublicKeyIndicatorBullets(parsed, input.briefingSession)
+        : parsed.keyIndicatorBullets;
     const result: DailyReportComposition = {
       oneLineSummary: parsed.oneLineSummary,
       marketBullets: parsed.marketBullets,
@@ -98,7 +102,7 @@ export class DailyReportCompositionService {
       eventBullets: parsed.eventBullets,
       holdingTrendBullets: parsed.holdingTrendBullets,
       articleSummaryBullets: parsed.articleSummaryBullets,
-      keyIndicatorBullets: parsed.keyIndicatorBullets,
+      keyIndicatorBullets,
       headlineEvents: parsed.headlineEvents,
       strategyBullets: parsed.strategyBullets,
       riskBullets: parsed.riskBullets,
@@ -112,4 +116,72 @@ export class DailyReportCompositionService {
 
     return result;
   }
+}
+
+export function repairPublicKeyIndicatorBullets(
+  parsed: ReturnType<typeof parseDailyReportStructuredOutput>,
+  briefingSession: BriefingSession | undefined
+) {
+  const minimumCount = briefingSession === "weekend_briefing" ? 3 : 2;
+  const direct = dedupeSignalBullets(parsed.keyIndicatorBullets);
+
+  if (direct.length >= minimumCount) {
+    return direct.slice(0, 4);
+  }
+
+  const supplemental = dedupeSignalBullets([
+    ...direct,
+    ...parsed.marketBullets.filter((bullet, index) => {
+      if (index > 0) {
+        return true;
+      }
+
+      return !looksLikePurposeBullet(bullet);
+    }),
+    ...parsed.macroBullets,
+    ...parsed.riskBullets,
+    ...parsed.eventBullets,
+    ...parsed.trendNewsBullets,
+    parsed.oneLineSummary
+  ]);
+
+  return supplemental.slice(0, Math.max(minimumCount, Math.min(4, supplemental.length)));
+}
+
+function dedupeSignalBullets(lines: string[]) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const line of lines) {
+    const normalized = line.trim();
+
+    if (!normalized || isGenericSignalPlaceholder(normalized)) {
+      continue;
+    }
+
+    if (seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    result.push(normalized);
+  }
+
+  return result;
+}
+
+function looksLikePurposeBullet(line: string) {
+  return (
+    line.includes("브리핑") &&
+    (line.includes("목적") || line.includes("집중") || line.includes("가늠"))
+  );
+}
+
+function isGenericSignalPlaceholder(line: string) {
+  return (
+    line === "추가 확인이 필요한 구간입니다." ||
+    line.includes("추가 확인이 필요한 구간") ||
+    line.includes("방향성 확인이 더 필요") ||
+    line.includes("일부 데이터는 보강 중")
+  );
 }

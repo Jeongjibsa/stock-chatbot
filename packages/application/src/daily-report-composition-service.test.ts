@@ -102,4 +102,53 @@ describe("DailyReportCompositionService", () => {
       llmResponseId: "resp_report_1"
     });
   });
+
+  it("repairs empty public keyIndicatorBullets from other public composition bullets", async () => {
+    const generate = vi.fn(async () => ({
+      executionMode: "synchronous" as const,
+      model: "gpt-5-mini",
+      outputText: JSON.stringify({
+        oneLineSummary: "달러 강세와 금리 부담을 함께 봐야 하는 날입니다.",
+        marketBullets: [
+          "이번 오전 브리핑은 미국장 마감 결과를 바탕으로 오늘 국내장 시초가와 장 초반 수급 방향을 가늠하는 데 목적이 있습니다.",
+          "미국 증시 반등이 이어져 국내 개장 초반 위험 선호 회복 여부를 볼 필요가 있습니다."
+        ],
+        macroBullets: ["달러 강세와 환율 부담이 이어져 외환 압력을 같이 보셔야 합니다."],
+        fundFlowBullets: [],
+        eventBullets: ["오늘 대응 기준은 환율과 선물 방향이 같은 쪽인지 먼저 보는 것입니다."],
+        holdingTrendBullets: [],
+        articleSummaryBullets: [],
+        keyIndicatorBullets: [],
+        headlineEvents: [],
+        strategyBullets: [],
+        riskBullets: ["미국 장기금리 부담이 남아 있어 성장주 밸류 부담을 같이 보셔야 합니다."],
+        trendNewsBullets: ["달러 강세 뉴스가 반복돼 위험 자산 선호는 다소 눌릴 수 있습니다."],
+        newsReferences: []
+      }),
+      provider: "openai" as const,
+      status: "completed" as const
+    }));
+    const service = new DailyReportCompositionService({
+      llmClient: { generate }
+    });
+
+    const result = await service.compose({
+      audience: "public_web",
+      briefingSession: "pre_market",
+      holdings: [],
+      marketResults: [],
+      newsBriefs: [],
+      quantScorecards: [],
+      quantScenarios: [],
+      riskCheckpoints: [],
+      runDate: "2026-03-29"
+    });
+
+    expect(result.keyIndicatorBullets).toEqual([
+      "미국 증시 반등이 이어져 국내 개장 초반 위험 선호 회복 여부를 볼 필요가 있습니다.",
+      "달러 강세와 환율 부담이 이어져 외환 압력을 같이 보셔야 합니다.",
+      "미국 장기금리 부담이 남아 있어 성장주 밸류 부담을 같이 보셔야 합니다.",
+      "오늘 대응 기준은 환율과 선물 방향이 같은 쪽인지 먼저 보는 것입니다."
+    ]);
+  });
 });

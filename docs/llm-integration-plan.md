@@ -102,7 +102,7 @@
 - Telegram personalized prompt는 `제약/하드룰 -> 최종 action -> 점수/시장 레짐 -> 기타 사실` 우선순위와 개인화 리밸런싱 해석을 강화한다.
 - Public web prompt는 개인 포트폴리오 언어를 금지하고, 공개 시장 해석과 공용 리스크 설명에만 집중한다.
 - Public web prompt는 `headlineEvents`에서 실제 RSS headline과 브리핑용 요약 제안을 함께 생성하고, `eventBullets`는 세션별 체크포인트/일정으로 사용한다.
-- Public web prompt는 `keyIndicatorBullets`를 통해 feed/detail 카드의 `핵심 시그널`을 직접 생성하고, composition 실패 시에만 rule-based fallback이 이를 대신한다.
+- Public web prompt는 `keyIndicatorBullets`를 통해 feed/detail 카드의 `핵심 시그널`을 직접 생성하고, 공개 세션에서는 최소 signal 개수(`pre/post` 2개, `weekend` 3개)를 채우도록 지시한다. LLM이 이 배열을 비우더라도 composition service는 `market/macro/risk/event/trend` bullets에서 저장용 signal을 먼저 재조합하고, 그 뒤에만 rule-based fallback이 개입한다.
 - 리포트 조합 결과는 renderer가 그대로 섹션에 주입할 수 있어야 하며, 숫자 재계산 대신 해석 문장만 생성해야 한다.
 - 정보가 부족한 섹션은 빈 배열로 반환하도록 강제한다.
 

@@ -143,6 +143,9 @@ describe("report prompt contract", () => {
     expect(prompt.instructions).toContain(
       "keyIndicatorBullets는 공개 feed 카드의 `핵심 시그널`에 바로 쓸 수 있게 작성한다."
     );
+    expect(prompt.instructions).toContain(
+      "공개 브리핑에서는 최소 2개를 채운다."
+    );
     expect(prompt.metadata).toEqual({
       promptAudience: "public_web",
       promptBriefingSession: "pre_market",
