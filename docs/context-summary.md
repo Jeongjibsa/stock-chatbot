@@ -80,6 +80,7 @@
 - 공개 웹의 `브리핑 역할`은 세션별로 `미장 마감 분석 기반 국장 시초가 예측 / 국장·대체거래소 결과 분석 및 미장 예보 / 미장 마감 분석 및 주간 이슈 총정리, 다음 주 일정 요약`을 직접 드러내야 한다.
 - 공개 웹의 `핵심 뉴스 이벤트`는 RSS 원문 headline과 그 시장 함의를 설명하는 짧은 요약을 함께 출력하는 `headlineEvents` 구조를 사용한다. literal `브리핑용 요약 제안` 같은 라벨 문구는 출력하면 안 되며, 공개 `eventBullets`는 세션별 체크포인트/일정 용도로 사용한다.
 - 공개 `public_web` macro news 수집은 이제 명백한 개인 재무/생활형 기사와 가족 사연형 조언 기사를 제외한다. 특히 `MarketWatch` top stories는 시장/금리/환율/지수/정책 맥락 키워드가 있는 기사만 통과시켜 공개 피드에 생활형 콘텐츠가 섞이지 않도록 한다.
+- 위 relevance filter는 영어 `personal finance` 기사뿐 아니라 Yahoo consumer-advice 제목, 한국어 은퇴/예금/생활형 기사, 설명형 정책 칼럼까지 공개 시장 맥락이 약한 경우를 함께 제외하는 방향으로 확장됐다. markdown/html renderer도 `headlineEvents` summary 앞의 literal 라벨을 제거해 headline 아래 실제 시장 의미 문장만 남긴다.
 - 공개 웹 feed/detail의 `핵심 시그널`은 이제 rule-based fallback이 아니라 `market-report-composition` structured output의 `keyIndicatorBullets`를 우선 저장해 사용한다. LLM composition이 실패하거나 빈 배열을 반환할 때만 기존 규칙 기반 fallback으로 내려간다.
 - 공개 `핵심 시그널` fallback은 세션 인지형으로 확장됐다. `pre_market`, `post_market`, `weekend_briefing`은 서로 다른 카테고리 후보를 사용하고, threshold가 적게 걸리는 날에도 `pre/post`는 최소 2개, `weekend_briefing`은 최소 3개 시그널을 기본 관찰 포인트로 채워 넣는다.
 - public composition 경로는 이제 LLM이 `keyIndicatorBullets`를 비우더라도, 같은 응답의 `market/macro/risk/event/trend` bullets에서 `핵심 시그널` 후보를 먼저 재조합해 저장한다. 즉 공개 detail 렌더러의 generic placeholder만 보이고 `reports.signals`는 빈 배열로 남는 mismatch를 줄인다.

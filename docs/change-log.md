@@ -181,6 +181,7 @@
 | CHG-0152 | 2026-03-29 | FIX | 공개 브리핑 `핵심 시그널`의 규칙 기반 fallback 범위를 세션 인지형으로 확장했다. `pre_market`, `post_market`, `weekend_briefing`은 이제 각 세션 목적에 맞는 신호 후보를 사용하고, 극단적 threshold가 적게 걸리는 날에도 최소 2개(`weekend_briefing`은 3개) 이상 시그널이 노출되도록 카테고리별 후보와 기본 관찰 포인트를 함께 조합한다. | Change Log, PRD, Context, Code, Tests | yes |
 | CHG-0153 | 2026-03-29 | FIX | 공개 브리핑 LLM composition이 `keyIndicatorBullets`를 비우고도 다른 public bullets를 생성하는 경우를 보정했다. public prompt는 이제 최소 signal 개수를 명시하고, composition service는 `market/macro/risk/event/trend` bullets에서 `핵심 시그널`을 먼저 보강한 뒤 저장한다. 즉 renderer의 generic placeholder만 보이고 `reports.signals`는 빈 배열로 남는 상태를 줄인다. | Change Log, PRD, Context, LLM Plan, Prompt Contract, Code, Tests | yes |
 | CHG-0154 | 2026-03-29 | FIX | 공개 브리핑용 거시 뉴스 relevance filter를 강화했다. `public_web` macro news 수집은 이제 명백한 개인 재무/생활형 기사(`Medicaid`, 가족 재정 상담, 은퇴/주거/카드/모기지 등)를 제외하고, `MarketWatch` top stories는 시장/금리/환율/지수 같은 거시 키워드가 있는 기사만 통과시킨다. 동시에 public prompt는 `headlineEvents` 요약에 `브리핑용 요약 제안` 같은 라벨 문구를 그대로 출력하지 않도록 명시했다. | Change Log, PRD, Context, LLM Plan, Prompt Contract, Code, Tests | yes |
+| CHG-0155 | 2026-03-29 | FIX | 공개 브리핑 뉴스 품질 보정 범위를 한 번 더 넓혔다. `public_web` macro news는 이제 Yahoo consumer-advice 제목과 한국어 생활형/은퇴/예금/상담성 기사까지 차단하고, `headlineEvents` summary는 저장 단계와 markdown/html renderer 모두에서 literal `브리핑용 요약 제안` 라벨을 제거한다. 따라서 regenerate 후 공개 detail에는 headline 아래 실제 시장 의미 한 문장만 남아야 한다. | Change Log, PRD, Context, LLM Plan, Code, Tests, Ops | yes |
 
 ## 4. Open Change Notes
 

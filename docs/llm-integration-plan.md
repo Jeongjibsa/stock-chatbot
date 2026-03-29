@@ -121,6 +121,7 @@
 - `DailyReportCompositionService`가 실제 daily report worker 경로에 연결됐다.
 - public briefing build는 같은 service를 쓰되 `public_web` audience로 호출해 개인 행동 언어를 금지하고, `post_market`에서는 같은 날짜의 오전 공개 브리핑/전략 스냅샷이 있으면 검증 관점 비교 입력을 함께 제공한다.
 - `public_web`용 거시 뉴스 수집은 명백한 개인 재무/생활형 기사와 가족 사연형 조언 기사를 제외하고, `MarketWatch` top stories는 거시/시장 문맥 키워드가 있는 기사만 통과시킨다.
+- public briefing 저장/렌더 단계는 `headlineEvents.summary`에 남아 있는 legacy label prefix를 제거해야 한다. 즉 model 출력이 어설프더라도 최종 markdown/html 공개본에는 literal `브리핑용 요약 제안` 문구를 남기지 않는다.
 - fixed scheduled Telegram delivery는 공개 브리핑 row가 먼저 적재된 세션에서는 persisted public `summary/signals`와 개인화 snapshot만 재사용하고, 공통 시장 해석용 추가 LLM 조합을 다시 호출하지 않는다.
 - `OPENAI_API_KEY`가 없거나 composition 단계가 실패하면 기존 규칙 기반 renderer fallback으로 계속 생성한다.
 - scheduled public briefing의 `public_web` composition은 cron critical path 보호를 위해 hard timeout을 사용하고, timeout 또는 provider 지연 시에도 규칙 기반 fallback으로 즉시 완료해야 한다.

@@ -28,7 +28,7 @@ describe("public daily briefing renderer", () => {
         {
           sourceLabel: "Reuters",
           headline: "Dollar strength persists",
-          summary: "달러 강세가 이어져 외환 부담을 같이 보셔야 합니다."
+          summary: "브리핑용 요약 제안: 달러 강세가 이어져 외환 부담을 같이 보셔야 합니다."
         }
       ],
       trendNewsBullets: ["금리와 달러 강세가 동시에 부담으로 작용하고 있습니다."],
@@ -49,7 +49,8 @@ describe("public daily briefing renderer", () => {
     expect(html).toContain("시장 종합 해석");
     expect(html).toContain("브리핑 목적");
     expect(html).toContain("핵심 뉴스 이벤트");
-    expect(html).toContain("브리핑용 요약 제안");
+    expect(html).toContain("달러 강세가 이어져 외환 부담을 같이 보셔야 합니다.");
+    expect(html).not.toContain("브리핑용 요약 제안");
     expect(html).toContain("거시 트렌드 뉴스");
     expect(html).toContain("참고한 뉴스 출처");
     expect(html).toContain("오늘의 리스크 포인트");

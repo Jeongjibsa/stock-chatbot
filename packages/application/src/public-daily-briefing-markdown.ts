@@ -88,7 +88,7 @@ function renderHeadlineEvents(
 
   return events.flatMap((event) => [
     `- **[${event.sourceLabel}]** ${event.headline}`,
-    `  - **브리핑용 요약 제안**: ${event.summary}`
+    `  - ${event.summary}`
   ]);
 }
 
