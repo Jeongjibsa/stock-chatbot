@@ -9,13 +9,16 @@ import {
   persistPublicBriefingArtifact,
   readPublicBriefingLlmTimeoutMs,
   readPublicBriefingOutputPath,
+  resolveDefaultPublicBriefingOutputPath,
   resolveFallbackPublicBriefingOutputPath,
 } from "./run-public-briefing.js";
 
 describe("run-public-briefing", () => {
   it("reads a safe default output path", () => {
     expect(readPublicBriefingOutputPath({ BRIEFING_SESSION: "pre_market" })).toBe(
-      "artifacts/public-briefing/public-daily-briefing-pre_market.json"
+      resolveDefaultPublicBriefingOutputPath({
+        briefingSession: "pre_market"
+      })
     );
     expect(
       readPublicBriefingOutputPath({
@@ -45,8 +48,9 @@ describe("run-public-briefing", () => {
     const outputPath = persistPublicBriefingArtifact(
       {
         briefing,
-        preferredOutputPath:
-          "artifacts/public-briefing/public-daily-briefing-pre_market.json"
+        preferredOutputPath: resolveDefaultPublicBriefingOutputPath({
+          briefingSession: "pre_market"
+        })
       },
       {
         mkdirSyncImpl,
@@ -68,7 +72,9 @@ describe("run-public-briefing", () => {
     );
     expect(warn).toHaveBeenCalledWith(
       "[public-briefing] switching artifact output path to temporary storage",
-      "artifacts/public-briefing/public-daily-briefing-pre_market.json",
+      resolveDefaultPublicBriefingOutputPath({
+        briefingSession: "pre_market"
+      }),
       resolveFallbackPublicBriefingOutputPath({
         briefingSession: "pre_market"
       }),

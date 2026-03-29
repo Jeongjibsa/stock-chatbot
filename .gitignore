@@ -9,6 +9,8 @@ dist
 .DS_Store
 .pnpm-store
 coverage
+artifacts/
+apps/worker/artifacts/
 .idea
 .vscode
 *.tsbuildinfo

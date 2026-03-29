@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Pool } from "pg";
 
@@ -61,13 +61,27 @@ type PublicBriefingBuilderDependencies = {
   };
 };
 
+const WORKER_SOURCE_DIR = dirname(fileURLToPath(import.meta.url));
+const REPOSITORY_ROOT = resolve(WORKER_SOURCE_DIR, "../../..");
+
+export function resolveDefaultPublicBriefingOutputPath(input: {
+  briefingSession: BriefingSession;
+}): string {
+  return join(
+    REPOSITORY_ROOT,
+    "artifacts",
+    "public-briefing",
+    `public-daily-briefing-${input.briefingSession}.json`
+  );
+}
+
 export function readPublicBriefingOutputPath(
   env: Environment = process.env
 ): string {
   const briefingSession = readPublicBriefingSession(env);
   return (
     env.PUBLIC_BRIEFING_OUTPUT_PATH?.trim() ||
-    `artifacts/public-briefing/public-daily-briefing-${briefingSession}.json`
+    resolveDefaultPublicBriefingOutputPath({ briefingSession })
   );
 }
 

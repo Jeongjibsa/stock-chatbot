@@ -125,7 +125,8 @@ flowchart TD
 9. 최종 public payload 생성:
    - `buildPublicDailyBriefing()`
 10. JSON artifact 저장:
-   - 기본 경로 `artifacts/public-briefing/public-daily-briefing-<session>.json`
+   - 기본 경로는 현재 작업 디렉터리가 아니라 저장소 루트 기준 `artifacts/public-briefing/public-daily-briefing-<session>.json`
+   - 생성물은 runtime 입력이 아니라 디버그/정적 빌드용 산출물이며 git 추적 대상이 아니다
 11. DB가 있으면 `NewsItemRepository`, `NewsAnalysisResultRepository`, `PublicReportRepository` 순서로 저장
 12. `PUBLIC_BRIEFING_BASE_URL`이 있으면 `reports/[uuid]` URL 생성
 

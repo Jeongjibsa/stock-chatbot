@@ -168,6 +168,8 @@
 
 | CHG-0140 | 2026-03-29 | FIX | production `ticker_masters`가 integration fixture 3건으로 오염될 수 있던 검증 경로를 차단했다. integration test는 이제 non-local/Neon `DATABASE_URL`이면 즉시 실패하고, `make test-integration`은 로컬 Docker PostgreSQL(`127.0.0.1:5432`)만 강제로 사용한다. 동시에 production Neon `ticker_masters`를 CSV 9,818행 기준으로 재적재했다. | Change Log, E2E Docs, AGENTS, Code, Ops | yes |
 
+| CHG-0141 | 2026-03-29 | FIX | 공개 브리핑 JSON artifact 기본 출력 경로를 현재 작업 디렉터리 의존 상대 경로에서 저장소 루트 기준 절대 경로로 고정했다. 동시에 생성물 `artifacts/`, `apps/worker/artifacts/`는 git ignore 대상으로 전환해 실행 위치에 따라 중복 산출물이 생기더라도 저장소 변경으로 섞이지 않게 했다. | Change Log, Architecture, Code, Ops | yes |
+
 ## 4. Open Change Notes
 
 - 현재까지 보류 중인 변경 요청 없음
