@@ -10,8 +10,8 @@ import { Separator } from "./ui/separator";
 
 export function ReportCard({ report }: { report: PublicReport }) {
   return (
-    <Card className="group overflow-hidden hover:-translate-y-px hover:shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
-      <CardContent className="space-y-5">
+    <Card className="group overflow-hidden border-none bg-white ring-1 ring-[color:var(--line)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(15,23,42,0.08)]">
+      <CardContent className="space-y-6 p-6 sm:p-8">
         <div className="flex flex-wrap items-start justify-between gap-5">
           <div className="max-w-3xl space-y-3">
             <div className="flex flex-wrap items-center gap-2 text-[0.75rem] font-medium text-[color:var(--muted)]">
@@ -49,16 +49,16 @@ export function ReportCard({ report }: { report: PublicReport }) {
             </span>
           ) : null}
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-[0.82rem] font-medium text-[color:var(--muted)]">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <p className="text-[0.85rem] font-semibold text-[color:var(--muted)]">
             {report.signals.length > 0
               ? `핵심 시그널 ${Math.min(report.signals.length, 3)}개`
               : "핵심 시그널 정리 대기"}
           </p>
-          <Button asChild size="sm">
+          <Button asChild size="default" className="w-full font-semibold shadow-sm sm:w-auto">
             <Link href={`/reports/${report.id}`}>
               상세 브리핑 보기
-              <ArrowUpRight className="h-4 w-4" />
+              <ArrowUpRight className="ml-1.5 h-4 w-4" />
             </Link>
           </Button>
         </div>

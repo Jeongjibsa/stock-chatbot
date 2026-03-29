@@ -80,14 +80,21 @@ button:not(:disabled),
 }
 
 .signal-chip {
-  border: 1px solid var(--line);
-  background: color-mix(in srgb, var(--surface-muted) 78%, white);
-  color: color-mix(in srgb, var(--foreground) 84%, var(--muted));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: var(--foreground);
+  color: var(--surface);
   border-radius: 999px;
-  padding: 0.42rem 0.82rem;
+  padding: 0.4rem 0.85rem;
   font-size: 0.75rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
+  transition: all 0.2s ease;
+}
+
+.signal-chip:hover {
+  background: #1e293b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .kicker {
@@ -106,9 +113,9 @@ button:not(:disabled),
 .report-prose {
   color: var(--foreground);
   display: grid;
-  gap: 1rem;
-  font-size: 0.99rem;
-  line-height: 1.9;
+  gap: 1.25rem;
+  font-size: 1.05rem;
+  line-height: 1.85;
 }
 
 .report-prose h1,
@@ -139,9 +146,12 @@ button:not(:disabled),
 }
 
 .report-prose p,
-.report-prose li,
+.report-prose li {
+  color: color-mix(in srgb, var(--foreground) 85%, var(--muted));
+}
+
 .report-prose blockquote {
-  color: var(--muted);
+  color: color-mix(in srgb, var(--foreground) 90%, var(--muted));
 }
 
 .report-prose p {
@@ -155,13 +165,14 @@ button:not(:disabled),
 
 .report-prose strong {
   color: var(--foreground);
+  font-weight: 700;
 }
 
 .report-prose ul {
-  padding-left: 1.1rem;
-  margin: 0;
+  padding-left: 1.25rem;
+  margin: 0.2rem 0;
   display: grid;
-  gap: 0.45rem;
+  gap: 0.65rem;
 }
 
 .report-prose li::marker {
@@ -169,13 +180,14 @@ button:not(:disabled),
 }
 
 .report-prose blockquote {
-  border-left: 3px solid var(--accent);
-  background: color-mix(in srgb, var(--surface-muted) 92%, white);
-  border-radius: 1rem;
-  padding: 1rem 1.15rem;
-  margin: 0;
-  font-size: 0.96rem;
-  line-height: 1.8;
+  border-left: 4px solid var(--foreground);
+  background: var(--surface-muted);
+  border-radius: 0.5rem;
+  padding: 1.15rem 1.25rem;
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.75;
 }
 
 .report-prose code {

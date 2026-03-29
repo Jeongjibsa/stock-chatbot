@@ -29,10 +29,10 @@ describe("renderPublicDailyBriefingMarkdown", () => {
     expect(markdown).toContain("# 🗞️ 장 시작 전 시장 브리핑 (2026-03-21)");
     expect(markdown).toContain("## 브리핑 역할");
     expect(markdown).toContain("## 시장 종합 해석");
-    expect(markdown).toContain("브리핑 목적:");
+    expect(markdown).toContain("**브리핑 목적**:");
     expect(markdown).toContain("## 핵심 뉴스 이벤트");
-    expect(markdown).toContain("[Reuters] Dollar strength persists");
-    expect(markdown).toContain("브리핑용 요약 제안:");
+    expect(markdown).toContain("**[Reuters]** Dollar strength persists");
+    expect(markdown).toContain("**브리핑용 요약 제안**:");
     expect(markdown).toContain("## 오늘 대응 기준");
     expect(markdown).toContain("## 오늘 시장에서 읽어야 할 포인트");
     expect(markdown).toContain("> ❗ 이 페이지는 공개 프리마켓 브리핑이며");

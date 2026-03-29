@@ -61,33 +61,30 @@ export default async function ReportDetailPage({
             </div>
           </header>
 
-          <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
-            <Card className="h-fit">
-              <CardContent className="space-y-5">
-                <div>
-                  <p className="section-label">Signals</p>
-                  <p className="mt-3 text-[0.9rem] leading-7 text-[color:var(--muted)]">
-                    이번 브리핑에서 핵심으로 추린 시그널입니다.
-                  </p>
+          <div className="flex flex-col gap-8">
+            <Card className="border-none bg-white shadow-[0_8px_30px_rgba(15,23,42,0.03)] ring-1 ring-[color:var(--line)]">
+              <CardContent className="space-y-5 p-7 sm:p-10">
+                <div className="space-y-1">
+                  <p className="section-label">Executive Signals</p>
+                  <h2 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-[color:var(--foreground)]">
+                    오늘의 핵심 요약 시그널
+                  </h2>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2.5">
                   {report.signals.map((signal) => (
                     <span key={signal} className="signal-chip">
                       {signal}
                     </span>
                   ))}
+                  {report.signals.length === 0 ? (
+                    <p className="text-[0.95rem] text-[color:var(--muted)]">요약된 시그널이 없습니다.</p>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardContent className="space-y-5 p-7 sm:p-8">
-                <div className="space-y-2">
-                  <p className="section-label">Full Briefing</p>
-                  <h2 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-[color:var(--foreground)]">
-                    공개 브리핑 전문
-                  </h2>
-                </div>
+            <Card className="border-none bg-white shadow-[0_8px_30px_rgba(15,23,42,0.03)] ring-1 ring-[color:var(--line)]">
+              <CardContent className="p-7 sm:p-10">
                 <MarkdownReport content={report.contentMarkdown} />
               </CardContent>
             </Card>
