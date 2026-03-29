@@ -30,6 +30,7 @@ import {
   PublicReportRepository,
   ReportRunRepository,
   StrategySnapshotRepository,
+  TelegramOutboundMessageRepository,
   UserRepository
 } from "@stock-chatbot/database";
 
@@ -516,6 +517,7 @@ export function buildDailyReportJobProcessor(
     const orchestrator = new DailyReportOrchestrator(orchestratorDependencies);
     const deliveryAdapter = telegramBotToken
       ? new TelegramReportDeliveryAdapter({
+          auditPort: new TelegramOutboundMessageRepository(db),
           telegramClient: new TelegramBotApiClient({
             token: telegramBotToken
           })
