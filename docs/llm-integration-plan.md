@@ -15,7 +15,8 @@
 
 - 2026-03-20 기준 기본 LLM 공급자는 `OpenAI`이고 기본 호출 API 기준선은 `Responses API`다.
 - 2026-03-21 기준 `Gemini`용 첫 adapter가 추가됐고, worker는 `LLM_PROVIDER=openai|google`와 API key 존재 여부를 기준으로 공급자를 선택할 수 있다.
-- 2026-03-21 기준 Google provider의 모델 ID는 공식 문서 기준 `gemini-3-flash-preview`로 맞춘다.
+- 2026-03-29 기준 토큰 비용 절감을 위해 Gemini 연동 시 Native Structured Outputs(`responseSchema`)와 Context Caching을 적용하며, 태스크별로 모델 라우팅을 세분화한다.
+- Google provider의 리포트 조합 기준 모델은 `gemini-3-flash-preview`를 유지하고, 단순 정보 추출 등은 `gemini-1.5-flash-8b` 등 경량 모델로 다운그레이드한다.
 - 구현은 `provider profile + task routing policy` 구조로 유지해 Gemini 등 다른 공급자로 쉽게 교체할 수 있어야 한다.
 - 텔레그램 command 입력 플로우 자체는 LLM 없이 규칙 기반으로 유지한다.
 - 수치 계산과 데이터 정합성 검증은 코드가 담당하고, LLM은 요약/설명/리포트 문장 조합에만 사용한다.
@@ -54,13 +55,13 @@
 
 | Task | API | Model | Mode | Reason |
 | --- | --- | --- | --- | --- |
-| 뉴스 이벤트 추출 | Responses API | `gpt-5-nano` | synchronous | 가장 싸고 빠른 분류/추출 작업 |
-| 뉴스 묶음 요약 | Responses API | `gpt-5-mini` | synchronous | 짧은 요약 품질과 비용 균형 |
-| 기본 리포트 조합 | Responses API | `gpt-5-mini` | synchronous or background | 메인 리포트 품질 기준선 |
-| 리포트 fallback 재생성 | Responses API | `gpt-5.1` | synchronous or background | 요약 품질 저하나 실패 시 상위 fallback |
-| 리스크 체크포인트 검토 | Responses API | `gpt-5-mini` | synchronous | 설명 가능성 중심 |
+| 뉴스 이벤트 추출 | Responses API / GenerateContent | `gpt-5-nano` / `gemini-1.5-flash-8b` | synchronous | 가장 싸고 빠른 분류/추출 작업 |
+| 뉴스 묶음 요약 | Responses API / GenerateContent | `gpt-5-mini` / `gemini-3-flash-preview` | synchronous | 짧은 요약 품질과 비용 균형 |
+| 기본 리포트 조합 | Responses API / GenerateContent | `gpt-5-mini` / `gemini-3-flash-preview` | synchronous or background | 메인 리포트 품질 기준선 |
+| 리포트 fallback 재생성 | Responses API / GenerateContent | `gpt-5.1` / `gemini-3-flash-preview` | synchronous or background | 요약 품질 저하나 실패 시 상위 fallback |
+| 리스크 체크포인트 검토 | Responses API / GenerateContent | `gpt-5-mini` / `gemini-3-flash-preview` | synchronous | 설명 가능성 중심 |
 
-기본 공급자는 OpenAI지만, 다른 공급자를 쓸 때는 같은 task key를 유지하고 model 문자열만 provider profile에서 바꾼다.
+기본 공급자는 OpenAI지만, 다른 공급자를 쓸 때는 같은 task key를 유지하고 model 문자열만 provider profile에서 바꾼다. 특히 단순 반복/대량 호출이 일어나는 추출 태스크는 비용 절감을 위해 각 provider의 가장 경량화된 모델(`1.5-flash-8b` 등)을 우선 할당한다.
 
 ## 6. Invocation Rules
 
@@ -70,13 +71,13 @@
 - JSON 또는 구조화된 출력 계약을 먼저 고정하고, 자연어 렌더링은 마지막 단계에서만 수행
 - 수치 데이터와 기사 메타데이터는 입력으로 직접 주입하고 모델이 숫자를 재계산하지 않게 한다
 
-### 6.2 Non-OpenAI Providers
+### 6.2 Non-OpenAI Providers (Gemini)
 
 - Gemini나 다른 공급자를 붙일 때도 호출 인터페이스는 공통 request/response contract를 유지한다.
 - 공급자별 SDK 호출 차이는 adapter layer에서만 흡수한다.
-- structured output이 native가 아니면 adapter에서 schema validation을 수행한다.
-- 현재 Gemini adapter는 공식 `generateContent` REST 경로를 사용하고, `system_instruction`과 `generationConfig.responseMimeType=application/json`을 통해 현재 structured output contract를 맞춘다.
-- 현재 Google provider는 `gemini-3-flash-preview`를 모든 텍스트 작업의 기준 모델로 사용한다. 이 모델은 preview 상태이므로 추후 GA 모델이 나오면 별도 변경 기록과 함께 교체한다.
+- structured output이 native가 아니면 adapter에서 schema validation을 수행하지만, Gemini API의 경우 `responseSchema` 필드를 이용해 Native Structured Outputs를 구현하여 모델의 불필요한 텍스트 패딩에 의한 토큰 소모를 원천 차단한다.
+- 현재 Gemini adapter는 공식 `generateContent` REST 경로를 사용하고, `system_instruction` 및 OpenAPI 스키마 객체(`responseSchema`)를 전달한다.
+- 대량의 공통 시장 데이터를 포함한 fan-out 리포트 발송 시, 공용 컨텍스트 정보는 Gemini Context Caching API를 이용해 캐시하여 입력 토큰 비용을 대폭 환원한다.
 
 ### 6.3 Background Mode
 

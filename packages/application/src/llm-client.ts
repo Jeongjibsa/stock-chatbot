@@ -18,6 +18,15 @@ export type LlmGenerateRequest = {
   metadata?: Record<string, string>;
   task: LlmTaskKind;
   timeoutMs?: number;
+  schema?: Record<string, unknown>;
+  cachedContent?: string;
+};
+
+export type LlmCachedContentRequest = {
+  task: LlmTaskKind;
+  instructions?: string;
+  input: string;
+  ttlSeconds?: number;
 };
 
 export type LlmGenerateResponse = {
@@ -32,6 +41,7 @@ export type LlmGenerateResponse = {
 export interface LlmClient {
   generate(request: LlmGenerateRequest): Promise<LlmGenerateResponse>;
   retrieve?(responseId: string): Promise<LlmGenerateResponse>;
+  createCachedContent?(request: LlmCachedContentRequest): Promise<{ name: string }>;
 }
 
 type OpenAiResponsesApi = {
@@ -67,6 +77,10 @@ type GoogleGenerateContentApi = {
       finishReason?: string;
     }>;
   }>;
+  createCachedContent?(
+    params: Record<string, unknown>,
+    options?: { signal?: AbortSignal }
+  ): Promise<{ name: string }>;
 };
 
 export class OpenAiLlmClient implements LlmClient {
@@ -187,6 +201,31 @@ export class GoogleGeminiLlmClient implements LlmClient {
     );
 
     return mapGoogleResponse(response, policy);
+  }
+
+  async createCachedContent(
+    request: LlmCachedContentRequest
+  ): Promise<{ name: string }> {
+    if (!this.generateContentApi.createCachedContent) {
+      throw new Error("createCachedContent is not supported");
+    }
+    const policy = this.resolvePolicy({ task: request.task, input: request.input });
+    const params: Record<string, unknown> = {
+      model: `models/${policy.model}`,
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: request.input }]
+        }
+      ],
+      ttl: `${request.ttlSeconds ?? 3600}s`
+    };
+    if (request.instructions) {
+      params.systemInstruction = {
+        parts: [{ text: request.instructions }]
+      };
+    }
+    return this.generateContentApi.createCachedContent(params);
   }
 
   private resolvePolicy(request: LlmGenerateRequest): LlmPolicy {
@@ -319,6 +358,29 @@ function createGoogleGenerateContentApi(input: {
           finishReason?: string;
         }>;
       };
+    },
+    async createCachedContent(
+      params: Record<string, unknown>,
+      options?: { signal?: AbortSignal }
+    ) {
+      const response = await fetchFn(
+        `https://generativelanguage.googleapis.com/v1beta/cachedContents`,
+        {
+          method: "POST",
+          headers: new Headers({
+            "content-type": "application/json",
+            "x-goog-api-key": apiKey
+          }),
+          body: JSON.stringify(params),
+          ...(options?.signal ? { signal: options.signal } : {})
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gemini API createCachedContent failed with status ${response.status}`);
+      }
+
+      return (await response.json()) as { name: string };
     }
   };
 }
@@ -374,6 +436,14 @@ function buildGoogleGenerateContentParams(
         : "text/plain"
     }
   };
+
+  if (request.schema && policy.requiresStructuredOutput) {
+    (params.generationConfig as Record<string, unknown>).responseSchema = request.schema;
+  }
+
+  if (request.cachedContent) {
+    params.cachedContent = request.cachedContent;
+  }
 
   if (request.instructions) {
     params.system_instruction = {

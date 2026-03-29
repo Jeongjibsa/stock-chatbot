@@ -57,6 +57,7 @@ export function buildDailyReportPromptContract(
   input: string;
   instructions: string;
   metadata: Record<string, string>;
+  schema: Record<string, unknown>;
 } {
   const audience = input.audience ?? "telegram_personalized";
   const briefingSession = input.briefingSession ?? "pre_market";
@@ -78,9 +79,64 @@ export function buildDailyReportPromptContract(
           ? "public-market-briefing-composition"
           : "telegram-personalized-report-composition",
       runDate: input.runDate
-    }
+    },
+    schema: DAILY_REPORT_JSON_SCHEMA
   };
 }
+
+export const DAILY_REPORT_JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    oneLineSummary: { type: "string" },
+    marketBullets: { type: "array", items: { type: "string" } },
+    macroBullets: { type: "array", items: { type: "string" } },
+    fundFlowBullets: { type: "array", items: { type: "string" } },
+    eventBullets: { type: "array", items: { type: "string" } },
+    holdingTrendBullets: { type: "array", items: { type: "string" } },
+    articleSummaryBullets: { type: "array", items: { type: "string" } },
+    headlineEvents: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          headline: { type: "string" },
+          sourceLabel: { type: "string" },
+          summary: { type: "string" }
+        },
+        required: ["headline", "sourceLabel", "summary"]
+      }
+    },
+    strategyBullets: { type: "array", items: { type: "string" } },
+    riskBullets: { type: "array", items: { type: "string" } },
+    trendNewsBullets: { type: "array", items: { type: "string" } },
+    newsReferences: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          sourceLabel: { type: "string" },
+          title: { type: "string" },
+          url: { type: "string" }
+        },
+        required: ["sourceLabel", "title", "url"]
+      }
+    }
+  },
+  required: [
+    "oneLineSummary",
+    "marketBullets",
+    "macroBullets",
+    "fundFlowBullets",
+    "eventBullets",
+    "holdingTrendBullets",
+    "articleSummaryBullets",
+    "headlineEvents",
+    "strategyBullets",
+    "riskBullets",
+    "trendNewsBullets",
+    "newsReferences"
+  ]
+};
 
 export function parseDailyReportStructuredOutput(
   outputText: string
@@ -158,14 +214,12 @@ function buildPromptPayload(
           }
         : {
             status: "error",
-            sourceKey: result.sourceKey,
-            message: result.message
+            sourceKey: result.sourceKey
           }
     ),
     newsBriefs: input.newsBriefs.map((brief) => ({
       holding: brief.holding,
       status: brief.status,
-      errorMessage: brief.errorMessage ?? null,
       events: brief.events.map((event) => ({
         eventType: event.eventType,
         headline: event.headline,
@@ -213,11 +267,6 @@ function buildPromptInstructions(
     "시장 해석은 가능하면 `시장 종합 -> 심리/강도 -> 밸류/펀더멘털 -> 구조 리스크` 순서로 정리한다.",
     "심리와 표면 강도가 버티더라도 밸류 부담이나 구조 리스크가 높으면 방어적 해석을 우선한다.",
     "marketResults의 asOfDate가 서로 다르면 같은 시점의 동시 움직임처럼 과장하지 말고 최근 가용 데이터 기준 해석을 유지한다.",
-    "반드시 JSON 객체만 반환한다.",
-    "최상위 키는 oneLineSummary, marketBullets, macroBullets, fundFlowBullets, eventBullets, holdingTrendBullets, articleSummaryBullets, headlineEvents, strategyBullets, riskBullets, trendNewsBullets, newsReferences만 사용한다.",
-    "oneLineSummary는 한 문장 문자열이어야 한다.",
-    "headlineEvents는 sourceLabel, headline, summary 문자열 필드를 가진 객체 배열이어야 한다.",
-    "newsReferences는 sourceLabel, title, url 문자열 필드를 가진 객체 배열이어야 하고, 나머지 키는 문자열 배열이어야 한다.",
     "모든 문장은 한국어 존댓말로 짧고 단정하게 작성한다.",
     "날짜와 수치 블록은 renderer가 따로 보여주므로, 본문에서는 숫자 반복보다 해석과 행동 의미를 우선한다.",
     "portfolioRebalancing 객체가 있으면 그 안의 hard rule, final action, 시장 레짐, 포트 요약을 우선 해석한다.",

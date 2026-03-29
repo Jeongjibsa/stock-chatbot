@@ -165,9 +165,8 @@
 | CHG-0136 | 2026-03-28 | FIX | `apps/web` 루트에 공식 Next.js flat ESLint 구성을 분리해 Node 24 전환 후 남은 web build 경고를 추가로 줄였고, `apps/api`도 공용 Postgres pool 정규화를 재사용하도록 맞췄다. 또한 `/api/cron/public-backfill`는 write 성공 후 같은 public read path로 row를 즉시 재검증하게 바꿔, “삽입 성공 응답만 있고 실제 feed/detail에는 없음” 상태를 운영 smoke에서 바로 실패시키도록 보강했다. | Change Log, Context, Code, Ops | yes |
 | CHG-0137 | 2026-03-28 | FIX | `apps/web/eslint.config.mjs`에 app-local `@next/next` flat config sentinel을 추가해 Node 24 기준 `next build`의 `The Next.js plugin was not detected` 경고를 제거했다. 또한 `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL + CRON_SECRET`가 있으면 production runtime `/api/cron/public-backfill` 경로를 우선 사용하고, `run:verify-public-week`는 feed/detail 검증에 retry를 넣어 운영 smoke의 일시적 캐시·네트워크 흔들림으로 false negative가 나지 않게 보강했다. | Change Log, Context, Code, Tests, Ops | yes |
 | CHG-0138 | 2026-03-28 | FIX | 공개 feed/detail이 production DB를 이미 업데이트했는데도 build 시점 스냅샷처럼 오래된 HTML 한 건만 보여주던 문제를 줄이기 위해 `apps/web/app/page.tsx`와 `apps/web/app/reports/[id]/page.tsx`에 Next 15 `connection()` 강제를 추가했다. 공개 브리핑 페이지는 이제 요청 시점 runtime 연결을 먼저 확보한 뒤 DB read path를 수행해야 한다. | Change Log, Context, Code, Ops | yes |
-
+| CHG-0139 | 2026-03-29 | UPDATE | Gemini LLM 토큰 비용 최적화와 정확도 보장을 위해 (1) `responseSchema`를 활용한 Native Structured Outputs 강제, (2) 단순 정보 추출(`news-event-extraction`) 모델 다운그레이드(`gemini-1.5-flash-8b`), (3) 공통 정보 대상 Context Caching 적용, (4) 불필요한 필터링 및 에러 메타데이터 제외를 도입했다. | Change Log, LLM Plan, Code | yes |
 | CHG-0140 | 2026-03-29 | FIX | production `ticker_masters`가 integration fixture 3건으로 오염될 수 있던 검증 경로를 차단했다. integration test는 이제 non-local/Neon `DATABASE_URL`이면 즉시 실패하고, `make test-integration`은 로컬 Docker PostgreSQL(`127.0.0.1:5432`)만 강제로 사용한다. 동시에 production Neon `ticker_masters`를 CSV 9,818행 기준으로 재적재했다. | Change Log, E2E Docs, AGENTS, Code, Ops | yes |
-
 | CHG-0141 | 2026-03-29 | FIX | 공개 브리핑 JSON artifact 기본 출력 경로를 현재 작업 디렉터리 의존 상대 경로에서 저장소 루트 기준 절대 경로로 고정했다. 동시에 생성물 `artifacts/`, `apps/worker/artifacts/`는 git ignore 대상으로 전환해 실행 위치에 따라 중복 산출물이 생기더라도 저장소 변경으로 섞이지 않게 했다. | Change Log, Architecture, Code, Ops | yes |
 
 ## 4. Open Change Notes

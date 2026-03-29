@@ -53,7 +53,7 @@ export const GOOGLE_PROVIDER_PROFILE: LlmProviderProfile = {
   reasoningSupport: true,
   structuredOutputMode: "native",
   models: {
-    "news-event-extraction": "gemini-3-flash-preview",
+    "news-event-extraction": "gemini-1.5-flash-8b",
     "news-summary": "gemini-3-flash-preview",
     "risk-checkpoint-review": "gemini-3-flash-preview",
     "market-report-composition": "gemini-3-flash-preview",

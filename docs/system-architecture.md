@@ -383,7 +383,15 @@ scheduled session이 끝나면 결과는 세 군데에 남는다.
 | `telegram_request_events` | limit/flood tracking | request guard | request guard, admin |
 | `telegram_conversation_states` | Telegram multi-step input state | bot conversation layer | bot conversation layer |
 
-## 7. Failure Handling and Guardrails
+## 7. LLM Integration Pattern
+
+현재 `stock-chatbot`은 환각을 최소화하고 텍스트 생성 비용을 최적화하기 위해 다음과 같은 LLM 통합 패턴을 강제한다.
+
+- **Task-Specific Routing**: 태스크의 난이도에 따라 모델을 다르게 라우팅한다. 단순 요약이나 이벤트 추출(`news-event-extraction`)은 가장 빠르고 저렴한 경량 모델(`gemini-1.5-flash-8b` 등)을 거치고, 최종 리포트의 논리적 조합(`market-report-composition`)은 품질이 확보된 상위 모델(`gemini-3-flash-preview`)이 수행한다. (`llm-policy.ts`)
+- **Native Structured Outputs**: 프롬프트에 구구절절한 JSON 반환 규칙과 제약을 적지 않고, API의 `responseSchema` 필드에 직접 OpenAPI 규격 Schema를 주입하여 출력 텍스트 패딩과 파싱 에러를 원천 차단한다.
+- **Context Caching API**: 다수 사용자에게 일일 정규 브리핑을 발송할 때 중복되는 공통 정보(시장 컨텍스트, 주요 뉴스 등)로 인한 입력 토큰 낭비를 막기 위해 LLM Client 단에서 Context Caching API 기능을 지원한다.
+
+## 8. Failure Handling and Guardrails
 
 | Concern | Current Behavior |
 | --- | --- |
@@ -397,7 +405,7 @@ scheduled session이 끝나면 결과는 세 군데에 남는다.
 | Flood / daily limit | `telegram_request_events` 기반 request guard |
 | Public/private boundary | public web는 `reports`만 읽고 개인 holdings/news/scorecard는 노출하지 않음 |
 
-## 8. Environment Variables That Shape Architecture
+## 9. Environment Variables That Shape Architecture
 
 | Env | Used In | Effect |
 | --- | --- | --- |
@@ -411,7 +419,7 @@ scheduled session이 끝나면 결과는 세 군데에 남는다.
 | `REPORT_TIMEZONE` | cron/session resolution | `Asia/Seoul` 기준 세션 판단 |
 | `REPORT_RUN_DATE` | worker/manual paths | backfill/manual rerun 날짜 고정 |
 
-## 9. Architecture Summary
+## 10. Architecture Summary
 
 현재 시스템은 하나의 monorepo 안에서 두 개의 핵심 delivery path를 가진다.
 

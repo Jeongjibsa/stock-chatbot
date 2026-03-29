@@ -56,6 +56,7 @@ export class DailyReportCompositionService {
       priorStrategyStance?: string | null;
     };
     portfolioRebalancing?: PersonalizedPortfolioRebalancingData;
+    cachedContent?: string;
   }): Promise<DailyReportComposition> {
     const promptInput: Parameters<typeof buildDailyReportPromptContract>[0] = {
       ...(input.audience ? { audience: input.audience } : {}),
@@ -83,6 +84,8 @@ export class DailyReportCompositionService {
       input: prompt.input,
       instructions: prompt.instructions,
       metadata: prompt.metadata,
+      schema: prompt.schema,
+      ...(input.cachedContent ? { cachedContent: input.cachedContent } : {}),
       ...(input.timeoutMs ? { timeoutMs: input.timeoutMs } : {})
     });
     const parsed = parseDailyReportStructuredOutput(llmResponse.outputText);
