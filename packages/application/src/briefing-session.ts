@@ -7,8 +7,8 @@ export const PRE_MARKET_HOUR = 7;
 export const PRE_MARKET_MINUTE = 30;
 export const POST_MARKET_HOUR = 20;
 export const POST_MARKET_MINUTE = 30;
-export const WEEKEND_BRIEFING_HOUR = 8;
-export const WEEKEND_BRIEFING_MINUTE = 0;
+export const WEEKEND_BRIEFING_HOUR = 7;
+export const WEEKEND_BRIEFING_MINUTE = 30;
 
 export function formatBriefingSessionLabel(
   session: BriefingSession
@@ -35,7 +35,7 @@ export function formatBriefingSessionRole(
     return "국장/대체거래소 결과 분석 및 미장 예보";
   }
 
-  return "주간 이슈 총정리 및 다음 주 일정 요약";
+  return "미장 마감 분석 및 주간 이슈 총정리, 다음 주 일정 요약";
 }
 
 export function formatBriefingSessionSlug(
@@ -132,6 +132,23 @@ export function isScheduledBriefingSessionAllowed(
   }
 
   return parts.weekday >= 1 && parts.weekday <= 5;
+}
+
+export function listScheduledBriefingSessionsForDate(input?: {
+  now?: Date;
+  timeZone?: string;
+}): BriefingSession[] {
+  const parts = getZonedTimeParts(input?.timeZone ?? "Asia/Seoul", input?.now);
+
+  if (parts.weekday >= 1 && parts.weekday <= 5) {
+    return ["pre_market", "post_market"];
+  }
+
+  if (parts.weekday === 6) {
+    return ["pre_market", "weekend_briefing"];
+  }
+
+  return [];
 }
 
 export function getBriefingSessionTime(

@@ -8,6 +8,7 @@ import {
   isUserDueForScheduledReport,
   isNewsCacheDisabled,
   processDailyReportJob,
+  readBriefingSession,
   readDatabaseUrl,
   readFredApiKey,
   readGeminiApiKey,
@@ -21,6 +22,19 @@ import {
 } from "./process-daily-report.js";
 
 describe("processDailyReportJob", () => {
+  it("throws when no scheduled session is allowed for the current date", () => {
+    expect(() =>
+      readBriefingSession(
+        {
+          REPORT_TIMEZONE: "Asia/Seoul"
+        },
+        {
+          now: new Date("2026-03-29T00:30:00.000Z")
+        }
+      )
+    ).toThrow("No scheduled briefing session is allowed for the current date.");
+  });
+
   it("aggregates per-user orchestration results", async () => {
     const orchestrator = {
       runForUser: vi

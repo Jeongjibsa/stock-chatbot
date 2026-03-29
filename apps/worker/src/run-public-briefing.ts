@@ -15,11 +15,12 @@ import {
   CompositeMarketDataAdapter,
   DailyReportCompositionService,
   FredMarketDataAdapter,
-  parseBriefingSession,
-  GOOGLE_PROVIDER_PROFILE,
   createLlmClient,
+  GOOGLE_PROVIDER_PROFILE,
+  listScheduledBriefingSessionsForDate,
   MacroTrendNewsService,
   OPENAI_PROVIDER_PROFILE,
+  parseBriefingSession,
   resolveScheduledBriefingSession,
   renderPublicDailyBriefingMarkdown,
   toQuantStrategyBullets,
@@ -78,11 +79,15 @@ export function resolveDefaultPublicBriefingOutputPath(input: {
 export function readPublicBriefingOutputPath(
   env: Environment = process.env
 ): string {
+  const explicitOutputPath = env.PUBLIC_BRIEFING_OUTPUT_PATH?.trim();
+
+  if (explicitOutputPath) {
+    return explicitOutputPath;
+  }
+
   const briefingSession = readPublicBriefingSession(env);
-  return (
-    env.PUBLIC_BRIEFING_OUTPUT_PATH?.trim() ||
-    resolveDefaultPublicBriefingOutputPath({ briefingSession })
-  );
+
+  return resolveDefaultPublicBriefingOutputPath({ briefingSession });
 }
 
 export function readPublicBriefingLlmTimeoutMs(
@@ -489,7 +494,21 @@ export function readPublicBriefingSession(
     ...(options?.now ? { now: options.now } : {})
   });
 
-  return resolved === "none" ? "pre_market" : resolved;
+  if (resolved === "none") {
+    const allowedSessions = listScheduledBriefingSessionsForDate({
+      timeZone: options?.timeZone ?? env.REPORT_TIMEZONE ?? "Asia/Seoul",
+      ...(options?.now ? { now: options.now } : {})
+    });
+
+    throw new Error(
+      [
+        "No public briefing session is allowed for the current date.",
+        `Allowed sessions for this date: ${allowedSessions.join(", ") || "none"}`
+      ].join(" ")
+    );
+  }
+
+  return resolved;
 }
 
 async function main(): Promise<void> {

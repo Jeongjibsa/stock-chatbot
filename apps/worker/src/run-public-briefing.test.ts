@@ -7,6 +7,7 @@ import {
   buildPublicBriefing,
   formatPublicBriefingBuildSummary,
   persistPublicBriefingArtifact,
+  readPublicBriefingSession,
   readPublicBriefingLlmTimeoutMs,
   readPublicBriefingOutputPath,
   resolveDefaultPublicBriefingOutputPath,
@@ -14,6 +15,19 @@ import {
 } from "./run-public-briefing.js";
 
 describe("run-public-briefing", () => {
+  it("throws when no public briefing session is allowed for the current date", () => {
+    expect(() =>
+      readPublicBriefingSession(
+        {
+          REPORT_TIMEZONE: "Asia/Seoul"
+        },
+        {
+          now: new Date("2026-03-29T00:30:00.000Z")
+        }
+      )
+    ).toThrow("No public briefing session is allowed for the current date.");
+  });
+
   it("reads a safe default output path", () => {
     expect(readPublicBriefingOutputPath({ BRIEFING_SESSION: "pre_market" })).toBe(
       resolveDefaultPublicBriefingOutputPath({

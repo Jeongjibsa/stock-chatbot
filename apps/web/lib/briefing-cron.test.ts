@@ -1,13 +1,69 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { runBriefingSession } from "./briefing-cron";
+import { resolveRequestedBriefingSessions, runBriefingSession } from "./briefing-cron";
 
 describe("runBriefingSession", () => {
+  it("resolves both into the sessions allowed for the current date", () => {
+    expect(
+      resolveRequestedBriefingSessions({
+        briefingSessionParam: "both",
+        timeZone: "Asia/Seoul",
+        now: new Date("2026-03-28T00:30:00.000Z")
+      })
+    ).toEqual(["pre_market", "weekend_briefing"]);
+
+    expect(
+      resolveRequestedBriefingSessions({
+        briefingSessionParam: "both",
+        timeZone: "Asia/Seoul",
+        now: new Date("2026-03-29T00:30:00.000Z")
+      })
+    ).toEqual([]);
+  });
+
+  it("skips workflow dispatch when the requested current-date session is not allowed", async () => {
+    const result = await runBriefingSession(
+      {
+        briefingSession: "pre_market",
+        now: new Date("2026-03-29T00:30:00.000Z"),
+        runtimeEnv: {
+          CRON_SECRET: "secret",
+          DAILY_REPORT_WINDOW_MINUTES: "15",
+          DATABASE_URL: "postgres://example",
+          FRED_API_KEY: "fred-key",
+          GEMINI_API_KEY: undefined,
+          LLM_PROVIDER: undefined,
+          OPENAI_API_KEY: undefined,
+          PUBLIC_BRIEFING_BASE_URL: "https://example.com",
+          REDIS_URL: undefined,
+          REPORT_TIMEZONE: "Asia/Seoul",
+          TELEGRAM_BOT_TOKEN: "token",
+          UPSTASH_REDIS_REST_TOKEN: undefined,
+          UPSTASH_REDIS_REST_URL: undefined
+        },
+        triggerType: "workflow_dispatch"
+      },
+      {
+        repairRetainedPublicCoverageImpl: vi.fn(),
+        runDailyReportImpl: vi.fn(),
+        runPublicBriefingImpl: vi.fn(),
+        sleep: vi.fn(async () => undefined)
+      }
+    );
+
+    expect(result).toEqual({
+      skipped: true,
+      briefingSession: "pre_market",
+      reason: "session_not_allowed_for_today"
+    });
+  });
+
   it("runs public briefing before daily report and passes the explicit url through", async () => {
     const order: string[] = [];
     const result = await runBriefingSession(
       {
         briefingSession: "pre_market",
+        now: new Date("2026-03-27T00:30:00.000Z"),
         runtimeEnv: {
           CRON_SECRET: "secret",
           DAILY_REPORT_WINDOW_MINUTES: "15",
@@ -120,6 +176,7 @@ describe("runBriefingSession", () => {
     const result = await runBriefingSession(
       {
         briefingSession: "pre_market",
+        now: new Date("2026-03-27T00:30:00.000Z"),
         runtimeEnv: {
           CRON_SECRET: "secret",
           DAILY_REPORT_WINDOW_MINUTES: "15",
@@ -173,6 +230,7 @@ describe("runBriefingSession", () => {
     const result = await runBriefingSession(
       {
         briefingSession: "weekend_briefing",
+        now: new Date("2026-03-28T00:30:00.000Z"),
         runtimeEnv: {
           CRON_SECRET: "secret",
           DAILY_REPORT_WINDOW_MINUTES: "15",
@@ -247,6 +305,7 @@ describe("runBriefingSession", () => {
     const result = await runBriefingSession(
       {
         briefingSession: "pre_market",
+        now: new Date("2026-03-27T00:30:00.000Z"),
         runtimeEnv: {
           CRON_SECRET: "secret",
           DAILY_REPORT_WINDOW_MINUTES: "15",

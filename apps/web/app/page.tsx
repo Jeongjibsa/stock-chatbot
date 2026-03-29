@@ -116,13 +116,13 @@ export default async function HomePage() {
           </div>
           <div className="grid gap-5">
             <Card>
-              <CardContent className="grid gap-4 sm:grid-cols-2">
-                <div>
+              <CardContent className="flex flex-col gap-4">
+                <div className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface)] p-4 sm:p-5">
                   <p className="section-label">Reports</p>
                   <p className="data-value mt-3">{reports.length}</p>
                   <p className="mt-2 text-sm text-[color:var(--muted)]">누적 공개 브리핑 수</p>
                 </div>
-                <div className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-4">
+                <div className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-4 sm:p-5">
                   <p className="section-label">Cadence</p>
                   <p className="mt-3 flex items-center gap-2 text-[1rem] font-semibold tracking-[-0.03em]">
                     <Activity className="size-4 text-[color:var(--accent-strong)]" />
