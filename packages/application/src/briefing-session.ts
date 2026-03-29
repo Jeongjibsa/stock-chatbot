@@ -128,7 +128,7 @@ export function isScheduledBriefingSessionAllowed(
   }
 
   if (session === "pre_market") {
-    return parts.weekday >= 1 && parts.weekday <= 6;
+    return parts.weekday >= 1 && parts.weekday <= 5;
   }
 
   return parts.weekday >= 1 && parts.weekday <= 5;
@@ -145,7 +145,7 @@ export function listScheduledBriefingSessionsForDate(input?: {
   }
 
   if (parts.weekday === 6) {
-    return ["pre_market", "weekend_briefing"];
+    return ["weekend_briefing"];
   }
 
   return [];

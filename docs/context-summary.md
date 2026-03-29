@@ -29,7 +29,7 @@
 ## 4. Current Product Baseline
 
 - 제품은 개인화된 주식 리포트를 제공하는 서비스다.
-- 현재 MVP는 텔레그램 + 공개 웹 기반이며, 정기 브리핑은 `07:30 pre_market`, `20:30 post_market`, `토요일 07:30 weekend_briefing(public only)` 세션으로 운영된다. 미국장 기준으로 `월~토 오전`, `월~금 오후`, `토요일 주말 공개 브리핑`만 생성이 허용된다.
+- 현재 MVP는 텔레그램 + 공개 웹 기반이며, 정기 브리핑은 `07:30 pre_market`, `20:30 post_market`, `토요일 07:30 weekend_briefing(public only)` 세션으로 운영된다. 미국장 기준으로 `월~금 오전 pre`, `월~금 오후 post`, `토요일 주말 공개 브리핑`만 생성이 허용되며 `토요일 pre_market`은 허용되지 않는다.
 - 현재 구현 기준으로는 DM에서 온디맨드 `/report`도 지원한다.
 - MVP 전달 채널은 `텔레그램 요약본 + 공개 웹 frontend`의 이중 구조다.
 - 사용자 포트폴리오와 사용자별 시장 지표를 저장하고, 이를 바탕으로 시장 요약, 뉴스 요약, 퀀트 기반 시나리오를 생성한다.
@@ -56,6 +56,7 @@
 - 최근 CI 실패 원인은 `pnpm/action-setup`의 하드코딩 버전과 루트 `packageManager` 충돌이었고, workflow는 이제 루트 pnpm 버전을 단일 source-of-truth로 사용한다.
 - 작업 단위는 검증 통과 후 commit하고, 원격 인증이 정상일 때 push까지 수행한다.
 - `git add`, `git commit`, `git push`는 검증 완료 후 항상 수행하는 기본 마감 단계다.
+- PR을 열거나 갱신할 때는 본문을 한글/영문 병기 형식으로 유지하며, 두 언어 모두에 동일한 변경 요약과 검증 결과를 남긴다.
 - 분석 엔진이 커지면 Python 분석 서비스 분리를 고려한다.
 
 ## 6. Active Delivery Plan
@@ -80,7 +81,8 @@
 - Upstash REST cache는 `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` env가 있을 때만 활성화되고, 뉴스 dedupe/hot cache/analysis cache에만 사용한다. 영속 저장과 최종 idempotency는 Postgres `news_items`, `news_analysis_results`, `reports.news_references`가 담당한다.
 - 운영용 `/api/cron/public-backfill`는 이제 write path 실행 뒤 동일 runtime의 public read path로 persisted row를 즉시 재검증해야 한다. row를 다시 읽지 못하면 성공 응답 대신 실패로 처리해, 최근 7일 recovery window backfill에서 “응답은 성공인데 공개 feed/detail에는 없음” 상태를 남기면 안 된다.
 - `run:backfill-public-week`는 `PUBLIC_BRIEFING_BASE_URL`과 `CRON_SECRET`가 있으면 local worker insert 대신 production runtime `/api/cron/public-backfill`를 우선 사용한다. 기본 동작은 current-week만이 아니라 업로드 가능 기준일에서 최근 7일 안에 누락된 공개 브리핑 세션만 다시 채우는 rolling recovery repair다.
-- worker/public worker가 `BRIEFING_SESSION` 없이 현재 날짜를 해석할 때 허용 세션이 없으면 더 이상 `pre_market`로 폴백하지 않는다. `workflow_dispatch`와 `/api/cron/reconcile?briefingSession=both`도 `reportRunDate`가 없으면 현재 날짜에 허용된 세션만 실행해야 하며, 일요일에는 current-date public row를 만들면 안 된다.
+- `run:verify-public-week`는 protected Vercel preview URL을 검증할 때 raw `curl`이 401/403을 반환하면 `vercel curl --deployment`로 자동 재시도해야 한다. preview smoke 때문에 protection을 끄는 방식은 기준선이 아니다.
+- worker/public worker가 `BRIEFING_SESSION` 없이 현재 날짜를 해석할 때 허용 세션이 없으면 더 이상 `pre_market`로 폴백하지 않는다. `workflow_dispatch`와 `/api/cron/reconcile?briefingSession=both`도 `reportRunDate`가 없으면 현재 날짜에 허용된 세션만 실행해야 하며, 토요일에는 current-date `weekend_briefing`만, 일요일에는 어떤 public row도 만들면 안 된다.
 - 공개 `feed/detail` page는 `dynamic = "force-dynamic"`만으로는 build 시점 스냅샷이 남을 수 있어, Next 15 `connection()`을 호출해 요청 시점 runtime 연결을 먼저 확보한 뒤 DB read path를 수행해야 한다.
 - application 계층에는 mock telegram delivery adapter, reusable report preview 템플릿, 공통 report query model이 추가됐다.
 - telegram report 렌더러는 이모지, 방향 기호, 섹션 중심 레이아웃으로 개선됐고 실채널 POC 메시지 발송으로 확인됐다.
@@ -253,6 +255,6 @@
 
 ## 9. Handoff Notes
 
-- 운영 복구 기준선: production Neon에는 `personal_rebalancing_snapshots`와 `reports.indicator_tags`가 실제 반영돼 있어야 하고, 공개 브리핑은 업로드 가능 기준일에서 최근 7일 rolling window 안의 허용 세션 row를 모두 보유해야 한다. Telegram webhook의 `allowed_updates`에는 반드시 `callback_query`가 포함돼야 한다.
+- 운영 복구 기준선: production Neon에는 `personal_rebalancing_snapshots`와 `reports.indicator_tags`가 실제 반영돼 있어야 하고, 공개 브리핑은 업로드 가능 기준일에서 최근 7일 rolling window 안의 허용 세션 row를 모두 보유해야 한다. 허용 세션은 `월~금 pre/post + 토 weekend + 일 none`이며, historical `토요일 pre_market` public row는 정리 대상이다. Telegram webhook의 `allowed_updates`에는 반드시 `callback_query`가 포함돼야 한다.
 - 상세 배경은 change-log를 보면 되지만, 새 스레드는 이 문서를 우선 기준으로 사용한다.
 - 이 문서가 오래됐거나 누락이 의심되면 `context-rollup` skill로 먼저 갱신한다.

@@ -65,7 +65,7 @@ flowchart TD
 
 세션 규칙:
 
-- `pre_market`: `월~토` 허용
+- `pre_market`: `월~금` 허용
 - `post_market`: `월~금` 허용
 - `weekend_briefing`: `토요일 07:30 KST` 공개 브리핑 전용
 - 구현 기준: `packages/application/src/briefing-session.ts`
