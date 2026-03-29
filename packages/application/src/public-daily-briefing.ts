@@ -125,7 +125,10 @@ export function buildPublicDailyBriefing(input: {
   const riskBullets = input.riskBullets ?? [];
   const keyIndicatorBullets = input.keyIndicatorBullets ?? [];
   const newsReferences = input.newsReferences ?? [];
-  const headlineEvents = input.headlineEvents ?? [];
+  const headlineEvents = (input.headlineEvents ?? []).map((event) => ({
+    ...event,
+    summary: sanitizeHeadlineEventSummary(event.summary)
+  }));
   const trendNewsBullets = input.trendNewsBullets ?? [];
   const hasExplicitPurposeBullet = isExplicitPurposeBullet(marketBullets[0]);
   const narrativeMarketBullets = hasExplicitPurposeBullet
@@ -211,6 +214,13 @@ export function buildPublicDailyBriefing(input: {
         : "이 페이지는 공개 포스트마켓 브리핑이며, 개인화 포트폴리오 리밸런싱 제안은 포함하지 않습니다.",
     trendNewsBullets
   };
+}
+
+function sanitizeHeadlineEventSummary(summary: string) {
+  return summary
+    .replace(/^\*\*?\s*브리핑용 요약 제안\s*\**\s*[:：-]?\s*/i, "")
+    .replace(/^브리핑용 요약 제안\s*[:：-]?\s*/i, "")
+    .trim();
 }
 
 export function buildPublicBriefingCanonicalPath(

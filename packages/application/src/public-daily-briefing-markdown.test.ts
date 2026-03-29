@@ -39,7 +39,7 @@ describe("renderPublicDailyBriefingMarkdown", () => {
     expect(markdown).toContain("**브리핑 목적**:");
     expect(markdown).toContain("## 핵심 뉴스 이벤트");
     expect(markdown).toContain("**[Reuters]** Dollar strength persists");
-    expect(markdown).toContain("**브리핑용 요약 제안**:");
+    expect(markdown).toContain("달러 강세가 이어져 외환 부담을 같이 보셔야 합니다.");
     expect(markdown).toContain("## 오늘 대응 기준");
     expect(markdown).toContain("## 오늘 시장에서 읽어야 할 포인트");
     expect(markdown).toContain("## 참고한 뉴스 출처");
@@ -47,6 +47,7 @@ describe("renderPublicDailyBriefingMarkdown", () => {
       "- [Reuters | Dollar strength persists](https://example.com/reuters-dollar)"
     );
     expect(markdown).not.toContain("**[Reuters]** [Dollar strength persists]");
+    expect(markdown).not.toContain("브리핑용 요약 제안");
     expect(markdown).toContain("> ❗ 이 페이지는 공개 프리마켓 브리핑이며");
     expect(markdown).not.toContain("비중 확대");
     expect(markdown).not.toContain("포트 적합성");

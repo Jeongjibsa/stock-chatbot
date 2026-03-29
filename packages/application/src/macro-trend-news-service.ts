@@ -231,6 +231,10 @@ function dedupeCollectedItems(items: CollectedNewsItem[]): CollectedNewsItem[] {
 }
 
 const STRONG_PERSONAL_FINANCE_KEYWORDS = [
+  "airbnb guest",
+  "ramit sethi",
+  "financial mistake",
+  "salary",
   "medicaid",
   "medicare",
   "social security",
@@ -251,16 +255,34 @@ const STRONG_PERSONAL_FINANCE_KEYWORDS = [
   "student loan",
   "mobile home",
   "home insurance",
+  "beer",
+  "bacon",
   "travel",
   "shopping",
   "coupon",
   "tax refund",
   "lottery",
-  "divorce"
+  "divorce",
+  "은퇴",
+  "노후",
+  "연금",
+  "예금 해지",
+  "생활비",
+  "가계",
+  "청약",
+  "상속",
+  "증여",
+  "대출",
+  "카드값",
+  "월세",
+  "전세",
+  "세종 인사이드",
+  "쉽게 설명해주죠"
 ];
 
 const MARKET_CONTEXT_KEYWORDS = [
   "market",
+  "markets",
   "stocks",
   "shares",
   "equity",
@@ -308,6 +330,11 @@ const MARKET_CONTEXT_KEYWORDS = [
   "recession",
   "risk",
   "volatility",
+  "asset manager",
+  "fund",
+  "etf",
+  "crypto",
+  "bitcoin",
   "선물",
   "증시",
   "주식",
@@ -322,6 +349,13 @@ const MARKET_CONTEXT_KEYWORDS = [
   "유가",
   "반도체",
   "인공지능",
+  "암호화자산",
+  "비트코인",
+  "운용사",
+  "자산운용",
+  "펀드",
+  "상하이",
+  "뉴욕",
   "관세",
   "경기",
   "긴축",
@@ -335,7 +369,10 @@ function isRelevantPublicMacroNewsItem(item: CollectedNewsItem) {
     return false;
   }
 
-  if (item.newsSourceId === "marketwatch-topstories") {
+  if (
+    item.newsSourceId === "marketwatch-topstories" ||
+    item.newsSourceId === "yahoo-finance-news"
+  ) {
     return hasKeyword(text, MARKET_CONTEXT_KEYWORDS);
   }
 

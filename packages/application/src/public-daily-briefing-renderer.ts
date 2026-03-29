@@ -145,7 +145,7 @@ function renderHeadlineEventSection(
         [
           "        <li>",
           `          <strong>[${escapeHtml(event.sourceLabel)}] ${escapeHtml(event.headline)}</strong>`,
-          `          <div>브리핑용 요약 제안: ${escapeHtml(event.summary)}</div>`,
+          `          <div>${escapeHtml(event.summary)}</div>`,
           "        </li>"
         ].join("\n")
     )
