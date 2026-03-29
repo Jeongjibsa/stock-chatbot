@@ -1,9 +1,9 @@
 import { createPool } from "@stock-chatbot/database";
 
 import {
-  buildRetainedPublicSessions,
+  buildPublicRecoverySessions,
   type PublicWeekSession,
-  readPublicBriefingRetentionStartDate,
+  readPublicBriefingRecoveryWindowDays,
   readPublicWeekReferenceDate
 } from "./public-week.js";
 
@@ -28,8 +28,9 @@ export async function collectRetainedPublicCoverage(
   availableCount: number;
   expectedSessions: PublicWeekSession[];
   missingSessions: PublicWeekSession[];
+  recoveryStartDate: string;
+  recoveryWindowDays: number;
   referenceDate: string;
-  retentionStartDate: string;
 }> {
   const databaseUrl = resolvePublicCoverageDatabaseUrl(env);
 
@@ -38,11 +39,9 @@ export async function collectRetainedPublicCoverage(
   }
 
   const referenceDate = readPublicWeekReferenceDate(env);
-  const retentionStartDate = readPublicBriefingRetentionStartDate(env);
-  const expectedSessions = buildRetainedPublicSessions(
-    referenceDate,
-    retentionStartDate
-  );
+  const recoveryWindowDays = readPublicBriefingRecoveryWindowDays(env);
+  const expectedSessions = buildPublicRecoverySessions(referenceDate, recoveryWindowDays);
+  const recoveryStartDate = expectedSessions[0]?.reportDate ?? referenceDate;
   const pool = createPool(databaseUrl);
 
   try {
@@ -52,7 +51,7 @@ export async function collectRetainedPublicCoverage(
         'FROM "reports"',
         'WHERE "report_date" >= $1 AND "report_date" <= $2'
       ].join(" "),
-      [retentionStartDate, referenceDate]
+      [recoveryStartDate, referenceDate]
     );
     const available = new Set(
       reportRows.rows.map((row) => `${row.report_date}:${row.briefing_session}`)
@@ -65,8 +64,9 @@ export async function collectRetainedPublicCoverage(
       availableCount: reportRows.rows.length,
       expectedSessions,
       missingSessions,
+      recoveryStartDate,
+      recoveryWindowDays,
       referenceDate,
-      retentionStartDate
     };
   } finally {
     await pool.end();

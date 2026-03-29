@@ -29,9 +29,10 @@ describe("runBriefingSession", () => {
         repairRetainedPublicCoverageImpl: vi.fn(async () => ({
           checked: true,
           missingCount: 0,
+          recoveryStartDate: "2026-03-14",
+          recoveryWindowDays: 7,
           referenceDate: "2026-03-20",
           repairedCount: 0,
-          retentionStartDate: "2026-03-23"
         })),
         runPublicBriefingImpl: vi.fn(async () => {
           order.push("public");
@@ -140,9 +141,10 @@ describe("runBriefingSession", () => {
         repairRetainedPublicCoverageImpl: vi.fn(async () => ({
           checked: true,
           missingCount: 0,
+          recoveryStartDate: "2026-03-14",
+          recoveryWindowDays: 7,
           referenceDate: "2026-03-20",
           repairedCount: 0,
-          retentionStartDate: "2026-03-23"
         })),
         runPublicBriefingImpl: runPublicBriefingImpl as never,
         runDailyReportImpl: runDailyReportImpl as never,
@@ -192,9 +194,10 @@ describe("runBriefingSession", () => {
         repairRetainedPublicCoverageImpl: vi.fn(async () => ({
           checked: true,
           missingCount: 0,
+          recoveryStartDate: "2026-03-22",
+          recoveryWindowDays: 7,
           referenceDate: "2026-03-28",
           repairedCount: 0,
-          retentionStartDate: "2026-03-23"
         })),
         runPublicBriefingImpl: vi.fn(async () => ({
           briefingSession: "weekend_briefing",
@@ -219,7 +222,7 @@ describe("runBriefingSession", () => {
     expect(runDailyReportImpl).not.toHaveBeenCalled();
   });
 
-  it("repairs retained public briefings missing after March 23, 2026", async () => {
+  it("repairs missing public briefings inside the rolling 7-day recovery window", async () => {
     const runPublicBriefingImpl = vi
       .fn()
       .mockResolvedValueOnce({
@@ -272,9 +275,10 @@ describe("runBriefingSession", () => {
           return {
             checked: true,
             missingCount: 1,
+            recoveryStartDate: "2026-03-23",
+            recoveryWindowDays: 7,
             referenceDate: "2026-03-29",
             repairedCount: 1,
-            retentionStartDate: "2026-03-23"
           };
         }),
         runDailyReportImpl: vi.fn(async () => ({
@@ -302,9 +306,10 @@ describe("runBriefingSession", () => {
     expect(result.retentionRepair).toEqual({
       checked: true,
       missingCount: 1,
+      recoveryStartDate: "2026-03-23",
+      recoveryWindowDays: 7,
       referenceDate: "2026-03-29",
-      repairedCount: 1,
-      retentionStartDate: "2026-03-23"
+      repairedCount: 1
     });
   });
 });

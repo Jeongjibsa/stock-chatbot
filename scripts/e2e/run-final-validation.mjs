@@ -65,7 +65,7 @@ export function buildCommandPlan(options, env = process.env) {
   if (requiresScope(scopes, ["ops"])) {
     if (!hasPublicWeekVerificationContext(env)) {
       throw new Error(
-        "ops scope requires DATABASE_URL and PUBLIC_BRIEFING_BASE_URL so retained public briefing coverage from 2026-03-23 can be verified."
+        "ops scope requires DATABASE_URL and PUBLIC_BRIEFING_BASE_URL so the rolling 7-day public briefing recovery window can be verified."
       );
     }
 

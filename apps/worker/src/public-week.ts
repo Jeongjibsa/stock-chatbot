@@ -1,6 +1,6 @@
 import type { BriefingSession } from "@stock-chatbot/application";
 
-export const PUBLIC_BRIEFING_RETENTION_START_DATE = "2026-03-23";
+export const PUBLIC_BRIEFING_RECOVERY_WINDOW_DAYS = 7;
 
 export type PublicWeekSession = {
   reportDate: string;
@@ -14,18 +14,16 @@ export function buildPublicWeekSessions(referenceDate: string): PublicWeekSessio
   return buildPublicSessionsBetween(formatDateOnly(startDate), referenceDate);
 }
 
-export function buildRetainedPublicSessions(
+export function buildPublicRecoverySessions(
   referenceDate: string,
-  retentionStartDate: string = PUBLIC_BRIEFING_RETENTION_START_DATE
+  recoveryWindowDays: number = PUBLIC_BRIEFING_RECOVERY_WINDOW_DAYS
 ): PublicWeekSession[] {
-  const startDate = parseDateOnly(retentionStartDate);
   const endDate = parseDateOnly(referenceDate);
+  const startDate = new Date(endDate);
 
-  if (startDate.getTime() > endDate.getTime()) {
-    return [];
-  }
+  startDate.setUTCDate(startDate.getUTCDate() - Math.max(recoveryWindowDays - 1, 0));
 
-  return buildPublicSessionsBetween(retentionStartDate, referenceDate);
+  return buildPublicSessionsBetween(formatDateOnly(startDate), referenceDate);
 }
 
 export function buildPublicSessionsBetween(
@@ -70,13 +68,22 @@ export function buildPublicSessionsBetween(
   return sessions;
 }
 
-export function readPublicBriefingRetentionStartDate(
+export function readPublicBriefingRecoveryWindowDays(
   env: Record<string, string | undefined> = process.env
-): string {
-  return (
-    env.PUBLIC_BRIEFING_RETENTION_START_DATE?.trim() ||
-    PUBLIC_BRIEFING_RETENTION_START_DATE
-  );
+): number {
+  const raw = env.PUBLIC_BRIEFING_RECOVERY_WINDOW_DAYS?.trim();
+
+  if (!raw) {
+    return PUBLIC_BRIEFING_RECOVERY_WINDOW_DAYS;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return PUBLIC_BRIEFING_RECOVERY_WINDOW_DAYS;
+  }
+
+  return parsed;
 }
 
 export function readPublicWeekReferenceDate(

@@ -6,20 +6,20 @@ import {
   resolvePublicCoverageDatabaseUrl
 } from "./public-retention.js";
 import {
-  buildRetainedPublicSessions,
-  readPublicBriefingRetentionStartDate,
+  buildPublicRecoverySessions,
+  readPublicBriefingRecoveryWindowDays,
   readPublicWeekReferenceDate
 } from "./public-week.js";
 
 async function main() {
   const referenceDate = readPublicWeekReferenceDate();
-  const retentionStartDate = readPublicBriefingRetentionStartDate();
+  const recoveryWindowDays = readPublicBriefingRecoveryWindowDays();
   const env = {
     ...process.env,
     DISABLE_UPSTASH_NEWS_CACHE:
       process.env.DISABLE_UPSTASH_NEWS_CACHE?.trim() || "true"
   };
-  let sessions = buildRetainedPublicSessions(referenceDate, retentionStartDate);
+  let sessions = buildPublicRecoverySessions(referenceDate, recoveryWindowDays);
   const publicBriefingBaseUrl = process.env.PUBLIC_BRIEFING_BASE_URL?.trim();
   const cronSecret = process.env.CRON_SECRET?.trim();
   const useRuntimeBackfill = Boolean(publicBriefingBaseUrl && cronSecret);
@@ -33,7 +33,8 @@ async function main() {
       [
         "[public-week-backfill]",
         `referenceDate=${coverage.referenceDate}`,
-        `retentionStartDate=${coverage.retentionStartDate}`,
+        `recoveryStartDate=${coverage.recoveryStartDate}`,
+        `recoveryWindowDays=${coverage.recoveryWindowDays}`,
         `expectedCount=${coverage.expectedSessions.length}`,
         `missingCount=${coverage.missingSessions.length}`
       ].join(" ")
@@ -45,7 +46,7 @@ async function main() {
       [
         "[public-week-backfill]",
         `referenceDate=${referenceDate}`,
-        `retentionStartDate=${retentionStartDate}`,
+        `recoveryWindowDays=${recoveryWindowDays}`,
         "status=up_to_date"
       ].join(" ")
     );
@@ -65,7 +66,7 @@ async function main() {
         [
           "[public-week-backfill]",
           `mode=runtime`,
-          `retentionStartDate=${retentionStartDate}`,
+          `recoveryWindowDays=${recoveryWindowDays}`,
           `date=${session.reportDate}`,
           `session=${session.briefingSession}`,
           `status=${result.status}`,
@@ -87,7 +88,7 @@ async function main() {
       [
         "[public-week-backfill]",
         `mode=local`,
-        `retentionStartDate=${retentionStartDate}`,
+        `recoveryWindowDays=${recoveryWindowDays}`,
         `date=${session.reportDate}`,
         `session=${session.briefingSession}`,
         `status=${result.status}`,

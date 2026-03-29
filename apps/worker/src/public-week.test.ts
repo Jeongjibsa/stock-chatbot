@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  buildRetainedPublicSessions,
+  buildPublicRecoverySessions,
   buildPublicWeekSessions,
-  readPublicBriefingRetentionStartDate,
+  readPublicBriefingRecoveryWindowDays,
   readPublicWeekReferenceDate
 } from "./public-week.js";
 
@@ -33,8 +33,8 @@ describe("public week helpers", () => {
     ).toBe("2026-03-28");
   });
 
-  it("builds retained public sessions from the fixed March 23, 2026 baseline", () => {
-    expect(buildRetainedPublicSessions("2026-03-29")).toEqual([
+  it("builds a rolling 7-day public recovery window ending at the reference date", () => {
+    expect(buildPublicRecoverySessions("2026-03-29")).toEqual([
       { reportDate: "2026-03-23", briefingSession: "pre_market" },
       { reportDate: "2026-03-23", briefingSession: "post_market" },
       { reportDate: "2026-03-24", briefingSession: "pre_market" },
@@ -50,11 +50,11 @@ describe("public week helpers", () => {
     ]);
   });
 
-  it("uses the explicit retention start date override when provided", () => {
+  it("uses the explicit recovery window override when provided", () => {
     expect(
-      readPublicBriefingRetentionStartDate({
-        PUBLIC_BRIEFING_RETENTION_START_DATE: "2026-03-24"
+      readPublicBriefingRecoveryWindowDays({
+        PUBLIC_BRIEFING_RECOVERY_WINDOW_DAYS: "5"
       })
-    ).toBe("2026-03-24");
+    ).toBe(5);
   });
 });

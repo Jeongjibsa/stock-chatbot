@@ -11,7 +11,7 @@ import {
 import { runDailyReport } from "@stock-chatbot/worker/run-daily-report";
 import { runPublicBriefing } from "@stock-chatbot/worker/run-public-briefing";
 import {
-  readPublicBriefingRetentionStartDate,
+  readPublicBriefingRecoveryWindowDays,
   readPublicWeekReferenceDate
 } from "@stock-chatbot/worker/public-week";
 
@@ -200,14 +200,17 @@ async function repairRetainedPublicCoverage(
   }
 ) {
   if (!resolvePublicCoverageDatabaseUrl({ DATABASE_URL: env.DATABASE_URL })) {
+    const referenceDate = readPublicWeekReferenceDate({
+      ...(env.REPORT_RUN_DATE ? { PUBLIC_WEEK_REFERENCE_DATE: env.REPORT_RUN_DATE } : {})
+    });
+
     return {
       checked: false,
       missingCount: 0,
-      referenceDate: readPublicWeekReferenceDate({
-        ...(env.REPORT_RUN_DATE ? { PUBLIC_WEEK_REFERENCE_DATE: env.REPORT_RUN_DATE } : {})
-      }),
+      recoveryStartDate: referenceDate,
+      referenceDate,
       repairedCount: 0,
-      retentionStartDate: readPublicBriefingRetentionStartDate()
+      recoveryWindowDays: readPublicBriefingRecoveryWindowDays()
     };
   }
 
@@ -229,7 +232,8 @@ async function repairRetainedPublicCoverage(
     missingCount: coverage.missingSessions.length,
     referenceDate: coverage.referenceDate,
     repairedCount: coverage.missingSessions.length,
-    retentionStartDate: coverage.retentionStartDate
+    recoveryStartDate: coverage.recoveryStartDate,
+    recoveryWindowDays: coverage.recoveryWindowDays
   };
 }
 

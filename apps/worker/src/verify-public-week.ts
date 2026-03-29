@@ -10,7 +10,7 @@ import {
 } from "./public-retention.js";
 import {
   buildPublicWeekSessions,
-  readPublicBriefingRetentionStartDate,
+  readPublicBriefingRecoveryWindowDays,
   readPublicWeekReferenceDate
 } from "./public-week.js";
 
@@ -29,7 +29,7 @@ export async function verifyPublicWeek(
   }
 
   const referenceDate = readPublicWeekReferenceDate(env);
-  const retentionStartDate = readPublicBriefingRetentionStartDate(env);
+  const recoveryWindowDays = readPublicBriefingRecoveryWindowDays(env);
   const expectedRecentSessions = buildPublicWeekSessions(referenceDate);
   const expectedRecentDates = [
     ...new Set(expectedRecentSessions.map((session) => session.reportDate))
@@ -42,8 +42,8 @@ export async function verifyPublicWeek(
   if (coverage.missingSessions.length > 0) {
     throw new Error(
       [
-        `Retained public briefing coverage is missing ${coverage.missingSessions.length} session(s)`,
-        `start=${coverage.retentionStartDate}`,
+        `Public briefing recovery window is missing ${coverage.missingSessions.length} session(s)`,
+        `start=${coverage.recoveryStartDate}`,
         `end=${coverage.referenceDate}`,
         `missing=${coverage.missingSessions
           .map((session) => `${session.reportDate}:${session.briefingSession}`)
@@ -53,7 +53,9 @@ export async function verifyPublicWeek(
   }
 
   const feedHtml = await readUrlWithRetry({
-    expectedTokens: Array.from(new Set([retentionStartDate, ...expectedRecentDates])),
+    expectedTokens: Array.from(
+      new Set([coverage.recoveryStartDate, ...expectedRecentDates])
+    ),
     label: "feed",
     url: publicBriefingBaseUrl
   });
@@ -115,9 +117,10 @@ export async function verifyPublicWeek(
     normalizedDatabaseUrl: normalizePostgresConnectionString(databaseUrl)
       .normalizedConnectionString,
     recentReportCount: expectedRecentSessions.length,
+    recoveryStartDate: coverage.recoveryStartDate,
+    recoveryWindowDays,
     referenceDate,
-    retainedReportCount: coverage.expectedSessions.length,
-    retentionStartDate
+    recoveryReportCount: coverage.expectedSessions.length
   };
 }
 
@@ -181,8 +184,9 @@ async function main() {
     [
       "[public-week-verify]",
       `referenceDate=${result.referenceDate}`,
-      `retentionStartDate=${result.retentionStartDate}`,
-      `retainedReportCount=${result.retainedReportCount}`,
+      `recoveryStartDate=${result.recoveryStartDate}`,
+      `recoveryWindowDays=${result.recoveryWindowDays}`,
+      `recoveryReportCount=${result.recoveryReportCount}`,
       `recentReportCount=${result.recentReportCount}`,
       `checkedDetailCount=${result.checkedDetailCount}`,
       `databaseVisibleCount=${result.databaseVisibleCount}`
