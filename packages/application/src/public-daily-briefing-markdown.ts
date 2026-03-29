@@ -60,7 +60,7 @@ export function renderPublicDailyBriefingMarkdown(
           "## 참고한 뉴스 출처",
           ...briefing.newsReferences.map(
             (reference) =>
-              `- **[${reference.sourceLabel}]** [${reference.title}](${reference.url})`
+              `- [${reference.sourceLabel} | ${reference.title}](${reference.url})`
           )
         ]
       : []),

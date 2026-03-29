@@ -5,16 +5,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold tracking-[-0.01em] transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background)]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full border text-sm font-semibold tracking-[-0.01em] transition-all duration-200 outline-none [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 disabled:pointer-events-none disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[color:var(--ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background)]",
   {
     variants: {
       variant: {
         default:
-          "bg-[color:var(--accent)] px-4 py-2.5 text-white shadow-[0_10px_24px_rgba(59,130,246,0.18)] hover:-translate-y-px hover:bg-[color:var(--accent-strong)]",
+          "border-[color:var(--accent-strong)] bg-[color:var(--accent)] px-4 py-2.5 text-white shadow-[0_14px_30px_rgba(118,156,228,0.24)] hover:-translate-y-px hover:border-[color:var(--accent-strong)] hover:bg-[color:var(--accent-strong)]",
         secondary:
-          "bg-[color:var(--surface)] px-4 py-2.5 text-[color:var(--foreground)] ring-1 ring-inset ring-[color:var(--line)] shadow-[0_1px_0_rgba(255,255,255,0.9)] hover:-translate-y-px hover:bg-[color:var(--surface-muted)]",
+          "border-[color:var(--line)] bg-[color:var(--surface)] px-4 py-2.5 text-[color:var(--foreground)] shadow-[0_1px_0_rgba(255,255,255,0.9)] hover:-translate-y-px hover:border-[color:var(--line-strong)] hover:bg-[color:var(--surface-muted)]",
         ghost:
-          "px-3 py-2 text-[color:var(--muted)] hover:bg-[color:var(--surface-muted)] hover:text-[color:var(--foreground)]"
+          "border-transparent px-3 py-2 text-[color:var(--foreground)] shadow-none hover:bg-[color:var(--accent-soft)] hover:text-[color:var(--accent-strong)]"
       },
       size: {
         default: "h-10",

@@ -3,7 +3,14 @@ import type { HTMLAttributes } from "react";
 import { cn } from "../../lib/utils";
 
 type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
-  tone?: "default" | "positive" | "negative" | "neutral";
+  tone?:
+    | "default"
+    | "positive"
+    | "negative"
+    | "neutral"
+    | "indicator"
+    | "signal"
+    | "muted";
 };
 
 const toneClassMap: Record<NonNullable<BadgeProps["tone"]>, string> = {
@@ -14,7 +21,13 @@ const toneClassMap: Record<NonNullable<BadgeProps["tone"]>, string> = {
   negative:
     "border-[color:var(--line-strong)] bg-[rgba(15,23,42,0.06)] text-[color:var(--foreground)]",
   neutral:
-    "border-[color:var(--line)] bg-[color:var(--surface-muted)] text-[color:var(--muted)]"
+    "border-[color:var(--line)] bg-[color:var(--surface-muted)] text-[color:var(--muted)]",
+  indicator:
+    "border-[color:var(--accent-border)] bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]",
+  signal:
+    "border-[color:var(--line)] bg-[color:var(--surface-muted)] text-[color:var(--foreground)]",
+  muted:
+    "border-[color:var(--line)] bg-transparent text-[color:var(--muted)]"
 };
 
 export function Badge({

@@ -3,7 +3,7 @@ import { Card, CardContent } from "./ui/card";
 export function FeedErrorState() {
   return (
     <Card className="border-[color:var(--line-strong)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(241,245,249,0.9))]">
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <p className="section-label text-[color:var(--accent-strong)]">
           Error
         </p>

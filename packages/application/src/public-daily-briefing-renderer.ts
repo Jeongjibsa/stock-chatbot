@@ -51,15 +51,15 @@ export function renderPublicDailyBriefingHtml(briefing: PublicDailyBriefing): st
     `  <title>${escapeHtml(briefing.title)}</title>`,
     `  <link rel="canonical" href="${escapeHtml(briefing.canonicalPath)}" />`,
     "  <style>",
-    "    :root { color-scheme: light; --bg: #f5f2ea; --card: #fffdf9; --ink: #171513; --muted: #5c564d; --line: #ded7ca; --accent: #9f4633; }",
-    "    body { margin: 0; font-family: 'Iowan Old Style', 'Noto Serif KR', serif; background: linear-gradient(180deg, #fff8e6 0%, var(--bg) 34%, #f3efe8 100%); color: var(--ink); }",
+    "    :root { color-scheme: light; --bg: #f6f8fc; --card: #ffffff; --ink: #0f172a; --muted: #526174; --line: #dde5f0; --accent: #678dde; }",
+    "    body { margin: 0; font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', sans-serif; background: linear-gradient(180deg, #fbfdff 0%, var(--bg) 34%, #f4f7fb 100%); color: var(--ink); }",
     "    main { max-width: 920px; margin: 0 auto; padding: 48px 20px 80px; }",
     "    header { margin-bottom: 24px; }",
     "    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }",
-    "    .chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255,255,255,0.75); color: var(--ink); font-size: 0.86rem; }",
+    "    .chip { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(103, 141, 222, 0.24); background: rgba(143, 181, 247, 0.12); color: var(--accent); font-size: 0.86rem; }",
     "    h1 { margin: 0 0 8px; font-size: clamp(2rem, 4vw, 3.1rem); line-height: 1.05; }",
     "    .meta { color: var(--muted); font-size: 0.95rem; }",
-    "    section { background: rgba(255, 253, 249, 0.88); border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 16px 44px rgba(28, 24, 18, 0.06); }",
+    "    section { background: rgba(255, 255, 255, 0.92); border: 1px solid var(--line); border-radius: 20px; padding: 20px 22px; margin-bottom: 16px; box-shadow: 0 16px 44px rgba(15, 23, 42, 0.06); }",
     "    h2 { margin: 0 0 12px; font-size: 1.08rem; }",
     "    p, li, dd { line-height: 1.7; }",
     "    ul { margin: 0; padding-left: 1.2rem; }",
@@ -67,6 +67,7 @@ export function renderPublicDailyBriefingHtml(briefing: PublicDailyBriefing): st
     "    dl { margin: 0; display: grid; grid-template-columns: minmax(140px, 180px) 1fr; gap: 10px 16px; }",
     "    dt { color: var(--muted); font-weight: 700; }",
     "    dd { margin: 0; }",
+    "    a { color: var(--accent); font-weight: 600; text-decoration-color: rgba(103, 141, 222, 0.28); text-underline-offset: 0.2rem; }",
     "    footer { color: var(--muted); font-size: 0.92rem; margin-top: 24px; }",
     "  </style>",
     "</head>",
@@ -167,7 +168,7 @@ function renderNewsReferenceSection(
   const items = references
     .map(
       (reference) =>
-        `        <li>${escapeHtml(reference.sourceLabel)}: ${escapeHtml(reference.title)} (${escapeHtml(reference.url)})</li>`
+        `        <li><a href="${escapeHtml(reference.url)}" rel="noreferrer" target="_blank">${escapeHtml(reference.sourceLabel)} | ${escapeHtml(reference.title)}</a></li>`
     )
     .join("\n");
 

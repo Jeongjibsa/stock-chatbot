@@ -28,7 +28,7 @@ export function MarkdownReport({ content }: MarkdownReportProps) {
           strong: ({ children }) => <strong>{children}</strong>,
           a: ({ children, href }) => (
             <a
-              className="font-semibold text-[color:var(--accent-strong)] underline decoration-[color:var(--line-strong)] underline-offset-4"
+              className="break-words"
               href={href}
               rel="noreferrer"
               target="_blank"

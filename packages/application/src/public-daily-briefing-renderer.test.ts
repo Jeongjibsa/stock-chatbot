@@ -54,6 +54,8 @@ describe("public daily briefing renderer", () => {
     expect(html).toContain("참고한 뉴스 출처");
     expect(html).toContain("오늘의 리스크 포인트");
     expect(html).toContain("S&amp;P500");
+    expect(html).toContain(">Reuters | Dollar strength persists<");
+    expect(html).not.toContain("Reuters: Dollar strength persists (");
     expect(html).not.toContain("포트 적합성");
     expect(html).not.toContain("비중 확대");
   });

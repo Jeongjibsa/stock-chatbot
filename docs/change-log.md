@@ -170,6 +170,7 @@
 | CHG-0141 | 2026-03-29 | FIX | 공개 브리핑 JSON artifact 기본 출력 경로를 현재 작업 디렉터리 의존 상대 경로에서 저장소 루트 기준 절대 경로로 고정했다. 동시에 생성물 `artifacts/`, `apps/worker/artifacts/`는 git ignore 대상으로 전환해 실행 위치에 따라 중복 산출물이 생기더라도 저장소 변경으로 섞이지 않게 했다. | Change Log, Architecture, Code, Ops | yes |
 | CHG-0142 | 2026-03-29 | UPDATE | 공개 웹 기반 feed/detail 페이지에서 모바일 친화적인 수직 단일 레이아웃을 도입하고, 시그널 배지를 모노톤(Black/Slate)으로 재디자인했다. 또한 공용 리포트 렌더링 시 항목 라벨에 볼드(`**`) 처리를 강제하여 모바일 화면에서의 스캐너빌리티 및 가독성을 극대화했다. | Change Log, Code | yes |
 | CHG-0143 | 2026-03-29 | UPDATE | 저장소 전용 agent loop를 `repo-native 검증 -> 운영 경로 검증 -> GitHub/Vercel 확인` 기준으로 재정의하고, GitHub Actions inventory를 `CI + Daily Report(manual reconcile)`만 남기도록 정리했다. CI의 pnpm version mismatch를 workflow 설정에서 제거했고, `Daily Report Smoke` 및 `Telegram Smoke Test` workflow와 GitHub Pages fallback deploy 단계는 삭제했다. `Daily Report` workflow는 `vercel-reconcile/local-worker` 명시 모드와 HTTP status/response body 로깅을 사용하도록 단순화했다. | PRD, Plan, Change Log, Context, E2E Docs, Deployment, AGENTS, Workflow | yes |
+| CHG-0144 | 2026-03-29 | UPDATE | 공개 브리핑 웹의 feed/detail을 pastel blue accent 중심으로 절제해 재정비했다. CTA 버튼 계층과 badge 톤을 shadcn 소스 컴포넌트 기준으로 통일하고 모바일 우선 spacing/레이아웃을 다듬었으며, 상세 브리핑의 `참고한 뉴스 출처`는 `매체명 | 기사 제목` 링크 라벨만 보이도록 markdown/legacy HTML 표현 계약을 함께 수정했다. | Change Log, Code, Tests | yes |
 
 ## 4. Open Change Notes
 

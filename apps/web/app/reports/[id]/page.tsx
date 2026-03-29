@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { formatBriefingSessionLabel, formatBriefingSessionRole } from "@stock-chatbot/application";
 
+import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent } from "../../../components/ui/card";
 import { MarkdownReport } from "../../../components/markdown-report";
@@ -30,41 +31,47 @@ export default async function ReportDetailPage({
 
     return (
       <main className="pb-12">
-        <div className="space-y-8">
-          <header className="report-shell overflow-hidden p-8 sm:p-10">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
+        <div className="flex flex-col gap-8">
+          <header className="report-shell overflow-hidden p-7 sm:p-10">
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-3">
                 <p className="section-label">Report Detail</p>
-                <h1 className="gradient-title mt-4 text-[2.55rem] font-semibold tracking-[-0.05em]">
+                <h1 className="gradient-title text-[2.2rem] font-semibold tracking-[-0.05em] sm:text-[2.55rem]">
                   {report.reportDate}
                 </h1>
-                <p className="mt-3 text-sm font-medium text-[color:var(--muted)]">
+                <p className="text-sm font-medium text-[color:var(--muted)]">
                   {formatBriefingSessionLabel(report.briefingSession)} · {formatBriefingSessionRole(report.briefingSession)}
                 </p>
               </div>
-              <Button asChild variant="secondary" size="sm">
-                <Link href="/">
-                  <ArrowLeft className="h-4 w-4" />
-                  피드로 돌아가기
-                </Link>
-              </Button>
-            </div>
-            <p className="mt-5 max-w-3xl text-[1.02rem] leading-8 text-[color:var(--muted)]">
-              {report.summary}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {report.indicatorTags.map((tag) => (
-                <span key={tag} className="signal-chip">
-                  {tag}
-                </span>
-              ))}
+              <p className="max-w-3xl text-[0.98rem] leading-7 text-[color:var(--muted)] sm:text-[1.02rem] sm:leading-8">
+                {report.summary}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {report.indicatorTags.map((tag) => (
+                  <Badge
+                    key={tag}
+                    tone="indicator"
+                    className="tracking-[0.04em] normal-case"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="secondary" size="sm">
+                  <Link href="/">
+                    <ArrowLeft />
+                    피드로 돌아가기
+                  </Link>
+                </Button>
+              </div>
             </div>
           </header>
 
           <div className="flex flex-col gap-8">
             <Card className="border-none bg-white shadow-[0_8px_30px_rgba(15,23,42,0.03)] ring-1 ring-[color:var(--line)]">
-              <CardContent className="space-y-5 p-7 sm:p-10">
-                <div className="space-y-1">
+              <CardContent className="flex flex-col gap-5 p-6 sm:p-10">
+                <div className="flex flex-col gap-1">
                   <p className="section-label">Executive Signals</p>
                   <h2 className="text-[1.35rem] font-semibold tracking-[-0.03em] text-[color:var(--foreground)]">
                     오늘의 핵심 요약 시그널
@@ -72,9 +79,13 @@ export default async function ReportDetailPage({
                 </div>
                 <div className="flex flex-wrap gap-2.5">
                   {report.signals.map((signal) => (
-                    <span key={signal} className="signal-chip">
+                    <Badge
+                      key={signal}
+                      tone="signal"
+                      className="text-left leading-5 tracking-normal normal-case"
+                    >
                       {signal}
-                    </span>
+                    </Badge>
                   ))}
                   {report.signals.length === 0 ? (
                     <p className="text-[0.95rem] text-[color:var(--muted)]">요약된 시그널이 없습니다.</p>
@@ -96,7 +107,7 @@ export default async function ReportDetailPage({
     return (
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
         <Card>
-          <CardContent className="space-y-3">
+          <CardContent className="flex flex-col gap-3">
             <p className="section-label text-[color:var(--accent-strong)]">
               Error
             </p>

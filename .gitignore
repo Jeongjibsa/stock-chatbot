@@ -18,3 +18,4 @@ apps/worker/artifacts/
 *.key
 *.crt
 .vercel
+.codex/

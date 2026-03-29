@@ -15,6 +15,16 @@ describe("MarkdownReport", () => {
     expect(markup).toContain("<ul>");
   });
 
+  it("keeps link labels readable without exposing raw url text", () => {
+    const markup = renderToStaticMarkup(
+      <MarkdownReport content={"## 참고한 뉴스 출처\n- [Reuters | Dollar strength persists](https://example.com/reuters-dollar)"} />
+    );
+
+    expect(markup).toContain("Reuters | Dollar strength persists");
+    expect(markup).toContain('href="https://example.com/reuters-dollar"');
+    expect(markup).not.toContain(">https://example.com/reuters-dollar<");
+  });
+
   it("upgrades legacy numbered briefing sections into headings", () => {
     const normalized = normalizeBriefingMarkdown(
       "1. # 제목\n\n2. 오늘 한 줄 요약\n- 요약\n\n13. ❗ 면책 문구"
