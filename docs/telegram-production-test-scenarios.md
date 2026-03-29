@@ -219,7 +219,7 @@
 ### 기대 결과
 
 - 업로드 가능 기준일에서 최근 7일 구간의 허용 세션 row가 `reports`에 모두 존재해야 한다.
-- 토요일 기준 기대 세션은 `월~금 pre/post + 토 pre + 토 weekend`다.
+- 토요일 기준 기대 세션은 `토요일 07:30 weekend_briefing` 단일 세션이다. 최근 7일 recovery coverage 기준으로는 `월~금 pre/post + 토 weekend + 일 none`만 허용된다.
 - `/api/cron/public-backfill`와 `run:backfill-public-week`는 기본적으로 `DISABLE_UPSTASH_NEWS_CACHE=true` 경로를 사용해 cross-session dedupe 때문에 뉴스 출처가 비는 현상을 줄여야 한다.
 - `run:verify-public-week`는 최소 `pre_market`, `weekend_briefing` detail에서 `브리핑 역할`, `시장 종합 해석`, `핵심 뉴스 이벤트`, `거시 트렌드 뉴스`, `참고한 뉴스 출처`를 확인해야 한다.
 - final gate에서 `pnpm e2e:final -- --scope=ops`를 실행할 때도 같은 coverage smoke가 포함되어야 한다.

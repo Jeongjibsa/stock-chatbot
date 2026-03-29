@@ -1,6 +1,8 @@
 import "dotenv/config";
 
 import { execFileSync } from "node:child_process";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath, URL } from "node:url";
 
 import { normalizePostgresConnectionString } from "@stock-chatbot/database";
 
@@ -13,6 +15,9 @@ import {
   readPublicBriefingRecoveryWindowDays,
   readPublicWeekReferenceDate
 } from "./public-week.js";
+
+const WORKER_SOURCE_DIR = dirname(fileURLToPath(import.meta.url));
+const REPOSITORY_ROOT = resolve(WORKER_SOURCE_DIR, "../../..");
 
 export async function verifyPublicWeek(
   env: Record<string, string | undefined> = process.env
@@ -148,6 +153,35 @@ function readUrlWithCurl(url: string) {
   );
 }
 
+function readUrlWithVercelCurl(url: string) {
+  const parsed = new URL(url);
+  const relativePath = `${parsed.pathname}${parsed.search}`;
+
+  return execFileSync(
+    "vercel",
+    ["curl", relativePath || "/", "--deployment", parsed.origin],
+    {
+      cwd: REPOSITORY_ROOT,
+      encoding: "utf8",
+      maxBuffer: 8 * 1024 * 1024
+    }
+  );
+}
+
+function shouldUseVercelCurlFallback(url: string, error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  if (!url.includes(".vercel.app")) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+
+  return message.includes("401") || message.includes("403");
+}
+
 async function readUrlWithRetry(input: {
   expectedTokens: string[];
   label: string;
@@ -156,7 +190,16 @@ async function readUrlWithRetry(input: {
   let lastHtml = "";
 
   for (let attempt = 1; attempt <= 10; attempt += 1) {
-    lastHtml = readUrlWithCurl(input.url);
+    try {
+      lastHtml = readUrlWithCurl(input.url);
+    } catch (error) {
+      if (!shouldUseVercelCurlFallback(input.url, error)) {
+        throw error;
+      }
+
+      lastHtml = readUrlWithVercelCurl(input.url);
+    }
+
     const missing = input.expectedTokens.filter((token) => !lastHtml.includes(token));
 
     if (missing.length === 0) {

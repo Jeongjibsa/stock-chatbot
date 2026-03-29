@@ -43,7 +43,7 @@ export function buildPublicSessionsBetween(
     const reportDate = formatDateOnly(cursor);
     const weekday = cursor.getUTCDay();
 
-    if (weekday >= 1 && weekday <= 6) {
+    if (weekday >= 1 && weekday <= 5) {
       sessions.push({
         reportDate,
         briefingSession: "pre_market"

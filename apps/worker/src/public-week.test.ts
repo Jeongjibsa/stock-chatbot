@@ -20,7 +20,6 @@ describe("public week helpers", () => {
       { reportDate: "2026-03-26", briefingSession: "post_market" },
       { reportDate: "2026-03-27", briefingSession: "pre_market" },
       { reportDate: "2026-03-27", briefingSession: "post_market" },
-      { reportDate: "2026-03-28", briefingSession: "pre_market" },
       { reportDate: "2026-03-28", briefingSession: "weekend_briefing" }
     ]);
   });
@@ -45,7 +44,6 @@ describe("public week helpers", () => {
       { reportDate: "2026-03-26", briefingSession: "post_market" },
       { reportDate: "2026-03-27", briefingSession: "pre_market" },
       { reportDate: "2026-03-27", briefingSession: "post_market" },
-      { reportDate: "2026-03-28", briefingSession: "pre_market" },
       { reportDate: "2026-03-28", briefingSession: "weekend_briefing" }
     ]);
   });

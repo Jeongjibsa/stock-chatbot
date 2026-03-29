@@ -35,6 +35,19 @@ describe("processDailyReportJob", () => {
     ).toThrow("No scheduled briefing session is allowed for the current date.");
   });
 
+  it("resolves Saturday current-date into weekend briefing when no session is specified", () => {
+    expect(
+      readBriefingSession(
+        {
+          REPORT_TIMEZONE: "Asia/Seoul"
+        },
+        {
+          now: new Date("2026-03-28T00:30:00.000Z")
+        }
+      )
+    ).toBe("weekend_briefing");
+  });
+
   it("aggregates per-user orchestration results", async () => {
     const orchestrator = {
       runForUser: vi
