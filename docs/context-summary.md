@@ -245,6 +245,8 @@
 - public market relevance filter는 RSS `collect()`뿐 아니라 historical regenerate에서 재사용하는 persisted `news_items`의 `analyzeMacroTrends` 단계에도 다시 적용돼야 한다. 즉 historical row라도 개인 재무/생활형 기사, 단일 기업 turnaround/consumer-advice headline, source 중복 reference는 최종 공개 headline/news reference에 남기지 않는다.
 - public `summary` 재조합은 이제 직전 같은 세션 row의 `priorSignals`와 겹치지 않는 신호를 우선 사용한다. 같은 첫 문장 + 세션 suffix만 반복하는 pre/post title을 줄이기 위한 기준선이다.
 - public markdown/html 저장 직전에도 `headlineEvents`와 `newsReferences`는 relevance filter와 dedupe를 한 번 더 적용한다. 수집·분석 단계에서 걸러지지 않은 historical 데이터가 있더라도 최종 공개본에는 duplicate reference나 명백한 생활형 headline이 다시 나오면 안 된다.
+- preview에서 공개 피드를 직접 검증하려면 branch별 preview env에 최소 `DATABASE_URL`과 `PUBLIC_BRIEFING_BASE_URL`가 모두 있어야 한다. 예전 브랜치에만 preview env를 걸어 두면 새 PR preview는 홈에서 `공개 브리핑을 불러오지 못했습니다.` 상태로만 보이므로, 현재 검증 대상 branch에 env를 다시 연결해야 한다.
+- 공개 웹 feed의 같은 날짜 카드 배치는 최신 업데이트 우선 기준으로 `post_market -> pre_market -> weekend_briefing` 순서를 사용한다. 따라서 주중 카드 상단은 장 마감 후, 하단은 장 시작 전이 기본값이다.
 - `Phase 6`은 멀티채널 준비 단계이며 mock delivery와 공통 report query model, API 계약 초안까지 들어간 상태다.
 - `Phase 6`은 웹/앱 확장을 위한 멀티채널 준비 단계다.
 - `Phase 7`은 온디맨드 `/report` 이후의 공개 웹 전환, 전략 성과 추적, 사용자 설정 고도화 단계다.

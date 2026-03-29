@@ -25,7 +25,15 @@ export async function listPublicReports(): Promise<PublicReport[]> {
       [
         'SELECT "id", "report_date", "briefing_session", "summary", "market_regime", "total_score", "signals", "indicator_tags", "news_references", "content_markdown", "created_at"',
         'FROM "reports"',
-        'ORDER BY "report_date" DESC, "briefing_session" ASC, "created_at" DESC'
+        [
+          'ORDER BY "report_date" DESC,',
+          'CASE "briefing_session"',
+          "WHEN 'post_market' THEN 0",
+          "WHEN 'pre_market' THEN 1",
+          "WHEN 'weekend_briefing' THEN 2",
+          'ELSE 3 END ASC,',
+          '"created_at" DESC'
+        ].join(" ")
       ].join(" ")
     );
 

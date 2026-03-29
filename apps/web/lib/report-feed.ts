@@ -1,8 +1,8 @@
 import type { PublicReport, ReportsByDate } from "../types/report";
 
 const BRIEFING_SESSION_ORDER = {
-  pre_market: 0,
-  post_market: 1,
+  post_market: 0,
+  pre_market: 1,
   weekend_briefing: 2
 } as const;
 

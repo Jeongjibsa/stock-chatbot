@@ -21,7 +21,7 @@ describe("report-feed utils", () => {
         },
         {
           id: "r2",
-          briefingSession: "pre_market",
+          briefingSession: "post_market",
           reportDate: "2026-03-22",
           summary: "latest",
           indicatorTags: ["KOSPI +0.31%"],
@@ -34,6 +34,19 @@ describe("report-feed utils", () => {
         },
         {
           id: "r1",
+          briefingSession: "pre_market",
+          reportDate: "2026-03-22",
+          summary: "earlier",
+          indicatorTags: ["NASDAQ -2.01%"],
+          newsReferences: [],
+          marketRegime: "Neutral",
+          totalScore: 0,
+          signals: [],
+          contentMarkdown: "",
+          createdAt: "2026-03-21T23:00:00.000Z"
+        },
+        {
+          id: "r0",
           briefingSession: "pre_market",
           reportDate: "2026-03-21",
           summary: "older",
@@ -51,12 +64,13 @@ describe("report-feed utils", () => {
         reportDate: "2026-03-22",
         reports: [
           expect.objectContaining({ id: "r2" }),
+          expect.objectContaining({ id: "r1" }),
           expect.objectContaining({ id: "r3" })
         ]
       },
       {
         reportDate: "2026-03-21",
-        reports: [expect.objectContaining({ id: "r1" })]
+        reports: [expect.objectContaining({ id: "r0" })]
       }
     ]);
   });

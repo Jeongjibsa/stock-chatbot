@@ -182,10 +182,11 @@
 
 다음 권장 작업:
 
-1. 실제 Telegram E2E 운영 점검
-2. 첫 공개 브리핑 저장 확인 및 feed/detail 실데이터 점검
-3. 전략 스코어 튜닝과 운영 지표 보강
-4. active harness suite 확장과 grader 정밀도 개선
+1. stored historical news 별도 복구 전략 정리 및 운영 실행 기준 추가
+2. 실제 Telegram E2E 운영 점검
+3. 첫 공개 브리핑 저장 확인 및 feed/detail 실데이터 점검
+4. 전략 스코어 튜닝과 운영 지표 보강
+5. active harness suite 확장과 grader 정밀도 개선
 
 운영 영향 변경의 표준 마감 사이클:
 
