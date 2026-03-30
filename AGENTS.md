@@ -158,8 +158,11 @@ COREPACK_HOME=/tmp/corepack pnpm e2e:final -- --scope=<comma-separated-scopes> -
 4. production deploy 확인
 5. Neon production DB schema/data 반영
 6. public web/webhook/cron smoke
-7. Telegram production E2E 또는 동등한 live verification
-8. PR merge 완료 확인 후 해당 feature/fix 로컬 브랜치를 삭제한다.
+7. Telegram webhook registration smoke
+   - `pnpm telegram:webhook:register` 또는 동등한 `setWebhook -> getWebhookInfo.url` 확인을 수행한다.
+   - stable production alias를 기준으로 webhook URL이 비어 있지 않고 `pending_update_count=0`인지 확인한다.
+8. Telegram production E2E 또는 동등한 live verification
+9. PR merge 완료 확인 후 해당 feature/fix 로컬 브랜치를 삭제한다.
 
 Telegram webhook, cron, public web feed/detail, production Neon schema/data를 건드린 작업은 이 사이클이 끝나기 전에는 완료가 아니다.
 
