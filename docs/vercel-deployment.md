@@ -102,7 +102,7 @@ COREPACK_HOME=/tmp/corepack pnpm telegram:webhook:register
 1. `/`에서 최신순 feed가 보이는지 확인
 2. `/reports/[id]` detail 페이지가 열리는지 확인
 3. `/api/telegram/webhook` `GET`이 `mode=webhook`을 반환하는지 확인
-4. `pnpm telegram:webhook:register` 후 `getWebhookInfo.url`이 새 도메인을 가리키는지 확인
+4. `pnpm telegram:webhook:register` 후 `getWebhookInfo.url`이 stable production alias를 가리키고 `pending_update_count=0`인지 확인
 5. webhook smoke POST를 `x-telegram-bot-api-secret-token` 없이 보내면 `401` 또는 `500`으로 차단되는지 확인
 6. 빈 DB 상태에서 empty state가 보이는지 확인
 7. `DATABASE_URL`이 Neon으로 연결돼도 500 없이 조회되는지 확인

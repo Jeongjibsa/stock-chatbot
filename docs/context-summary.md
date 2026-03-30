@@ -47,7 +47,7 @@
 - 현재 기본 검증 루프는 실제로 `pnpm verify` 통과 상태다.
 - DB/저장 계층 변경 시 `make test-integration`까지 수행한다.
 - 기능 변경은 `docs/e2e-change-workflow.md`에 시나리오 delta와 scope를 먼저 반영하고, `pnpm e2e:final`로 최종 live E2E gate를 수행하는 기준선을 사용한다.
-- Telegram/webhook/cron/public web/Neon production에 영향을 주는 변경은 로컬 검증으로 끝내지 않고 `commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke/E2E -> PR merge 후 local branch delete`까지 끝나야 완료로 본다.
+- Telegram/webhook/cron/public web/Neon production에 영향을 주는 변경은 로컬 검증으로 끝내지 않고 `commit/push -> production deploy 확인 -> production DB/data 반영 -> production smoke -> Telegram webhook registration smoke -> Telegram E2E -> PR merge 후 local branch delete`까지 끝나야 완료로 본다.
 - GitHub public repository와 `origin/main` push 기준선이 준비됐다.
 - 비용 최소화를 위해 초기 운영 자동화의 기본 런타임은 GitHub Actions다.
 - 초기 운영은 GitHub Actions CI + workflow_dispatch 기반 검증을 우선 사용했고, 정시 실행은 현재 Vercel Cron primary 기준으로 고정한다. 장시간 실행 요구가 커지면 전용 worker/queue로 이관한다.
@@ -176,6 +176,7 @@
 - Telegram command runtime은 webhook으로 전환 가능한 상태이며, `apps/web` 내부 route handler(`/api/telegram/webhook`, `/api/cron/daily-report`, `/api/cron/reconcile`)가 구현됐다.
 - `apps/telegram-bot/src/build-bot.ts`는 polling과 webhook 양쪽에서 공통으로 쓰는 command runtime entrypoint로 정리됐다.
 - Telegram webhook 운영은 `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET_TOKEN`, `pnpm telegram:webhook:register` 기준으로 활성화한다. webhook 등록 스크립트는 secret 없이 실행되면 실패해야 한다.
+- deploy 후 Telegram 운영 smoke는 단순 route 200 확인으로 끝내지 않는다. stable production alias로 `setWebhook` 또는 `pnpm telegram:webhook:register`를 다시 확인하고, `getWebhookInfo.url`이 비어 있지 않으며 production alias를 가리키고 `pending_update_count=0`인 상태까지 확인해야 한다.
 - Telegram webhook 경로는 이제 `telegram_processed_updates` 저장 모델로 `update_id`를 dedupe한다. 같은 Telegram update가 재전송돼도 command handler는 한 번만 실행돼야 한다.
 - Telegram bot runtime은 이제 outbound reply를 `telegram_outbound_messages`에 기록한다. 이 로그는 production-like E2E harness가 Telegram-visible 응답 문구를 검증하는 read model 역할을 하며, 운영 장애 분석에도 활용할 수 있다.
 - `/report` 온디맨드 실행이 duplicate run으로 겹칠 때는 `브리핑을 준비했지만 표시할 내용이 없습니다` 대신 `이미 브리핑을 생성하고 있습니다. 잠시 후 다시 /report 를 실행해 주세요.`를 반환한다.
