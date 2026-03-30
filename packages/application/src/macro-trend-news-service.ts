@@ -154,9 +154,13 @@ export class MacroTrendNewsService implements NewsCollector {
       }
     }
 
+    const relevantItems =
+      input.audience === "public_web"
+        ? input.items.filter(isRelevantPublicMacroNewsItem)
+        : input.items;
     const grouped = new Map<MacroTrendBrief["theme"], CollectedNewsItem[]>();
 
-    for (const item of input.items) {
+    for (const item of relevantItems) {
       const theme = classifyMacroTheme(item);
       const themedItems = grouped.get(theme) ?? [];
       themedItems.push(item);
@@ -304,12 +308,9 @@ const LOW_SIGNAL_PUBLIC_MACRO_KEYWORDS = [
   "how to avoid it"
 ];
 
-const MARKET_CONTEXT_KEYWORDS = [
+const STRICT_PUBLIC_MACRO_CONTEXT_KEYWORDS = [
   "market",
   "markets",
-  "stocks",
-  "shares",
-  "equity",
   "index",
   "nasdaq",
   "s&p",
@@ -359,6 +360,8 @@ const MARKET_CONTEXT_KEYWORDS = [
   "etf",
   "crypto",
   "bitcoin",
+  "week ahead",
+  "market week",
   "선물",
   "증시",
   "주식",
@@ -387,14 +390,35 @@ const MARKET_CONTEXT_KEYWORDS = [
 ];
 
 function isRelevantPublicMacroNewsItem(item: CollectedNewsItem) {
-  const text = `${item.title} ${item.summary ?? ""}`.toLowerCase();
+  return isRelevantPublicMacroReference({
+    sourceId: item.newsSourceId,
+    sourceLabel: item.newsSourceLabel,
+    summary: item.summary,
+    title: item.title
+  });
+}
+
+export function isRelevantPublicMacroReference(input: {
+  sourceId?: string | undefined;
+  sourceLabel?: string | undefined;
+  summary?: string | undefined;
+  title: string;
+}) {
+  const title = input.title.trim();
+
+  if (!title) {
+    return false;
+  }
+
+  const sourceKey = `${input.sourceId ?? ""} ${input.sourceLabel ?? ""}`.toLowerCase();
+  const text = `${title} ${input.summary ?? ""}`.toLowerCase();
 
   if (hasKeyword(text, STRONG_PERSONAL_FINANCE_KEYWORDS)) {
     return false;
   }
 
   if (
-    hasKeyword(item.title.toLowerCase(), LOW_SIGNAL_PUBLIC_MACRO_KEYWORDS) &&
+    hasKeyword(title.toLowerCase(), LOW_SIGNAL_PUBLIC_MACRO_KEYWORDS) &&
     !hasKeyword(text, [
       "markets",
       "nasdaq",
@@ -416,10 +440,10 @@ function isRelevantPublicMacroNewsItem(item: CollectedNewsItem) {
   }
 
   if (
-    item.newsSourceId === "marketwatch-topstories" ||
-    item.newsSourceId === "yahoo-finance-news"
+    sourceKey.includes("marketwatch") ||
+    sourceKey.includes("yahoo")
   ) {
-    return hasKeyword(text, MARKET_CONTEXT_KEYWORDS);
+    return hasKeyword(text, STRICT_PUBLIC_MACRO_CONTEXT_KEYWORDS);
   }
 
   return true;

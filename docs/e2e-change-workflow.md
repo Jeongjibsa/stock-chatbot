@@ -38,7 +38,7 @@
 | 포트폴리오 입력 | `/portfolio_add` exact/alias/ambiguous/failure, `/portfolio_bulk`, `/portfolio_list`, `/portfolio_remove` | same as above |
 | 개인화 브리핑 | `/report` without holdings, `/report` with holdings, 세션별 제목/핵심 섹션 분기, placeholder 부재, public link 노출 규칙, legacy/`확인 필요` 문구 부재 | same as above + `report_runs` assertion |
 | 그룹/운영 제어 | 그룹 온보딩, 그룹 `/register`, rate-limit/block, `/admin` block/unblock | E2E scenario + 관련 unit/integration tests |
-| 공개 웹/운영 경로 | webhook secret 보호, `/api/cron/*`, 공개 feed/detail privacy, `/admin` auth, public briefing LLM timeout fallback, `weekend_briefing` 생성, 공개 웹의 세션별 `브리핑 역할`, RSS headline 기반 `핵심 뉴스 이벤트`, 거시 트렌드 뉴스와 출처 링크 노출, 최근 7일 rolling public briefing recovery coverage, 임시 cron 재배치 후 자동 업로드 확인/고정 스케줄 복구 | `docs/telegram-production-test-scenarios.md`, web/integration tests |
+| 공개 웹/운영 경로 | webhook secret 보호, `/api/cron/*`, 공개 feed/detail privacy, `/admin` auth, public briefing LLM timeout fallback, `weekend_briefing` 생성, 공개 웹의 세션별 `브리핑 역할`, RSS headline 기반 `핵심 뉴스 이벤트`, 거시 트렌드 뉴스와 출처 링크 노출, 최근 7일 rolling public briefing recovery coverage, 임시 cron 재배치 후 자동 업로드 확인/고정 스케줄 복구, public headline/reference relevance와 duplicate title 완화 확인 | `docs/telegram-production-test-scenarios.md`, web/integration tests |
 
 새 기능을 추가하면 위 표에 row를 늘리거나 기존 row의 기대 결과를 명시적으로 강화합니다.
 

@@ -221,6 +221,9 @@ export async function buildPublicBriefing(
       fallbackBriefing.summaryLine,
     keyIndicatorBullets: diversifiedKeyIndicatorBullets,
     macroTrendBriefs,
+    ...(dependencies.priorPublicReport?.signals
+      ? { priorSignals: dependencies.priorPublicReport.signals }
+      : {}),
     ...(dependencies.priorPublicReport?.summary !== undefined
       ? { priorSummary: dependencies.priorPublicReport.summary }
       : {})

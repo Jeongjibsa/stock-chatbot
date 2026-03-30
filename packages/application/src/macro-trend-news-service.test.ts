@@ -250,15 +250,15 @@ describe("MacroTrendNewsService", () => {
           canonicalUrl: "https://example.com/theme",
           collectedAt: "2026-03-28T07:10:00.000Z",
           contentScope: "macro",
-          newsSourceId: "marketwatch-topstories",
-          newsSourceLabel: "MarketWatch",
-          normalizedTitle: "nike stock at lows ahead of earnings",
+          newsSourceId: "yahoo-finance-news",
+          newsSourceLabel: "Yahoo Finance",
+          normalizedTitle: "market week ahead scarcity narratives and naval tactics",
           publishedAt: "2026-03-28T07:00:00.000Z",
           region: "global",
           summary:
-            "The sportswear giant has been trying to focus more on the needs of athletes, but analysts say new products aren't catching on.",
+            "Investors are reassessing broad market narratives ahead of the next trading week.",
           title:
-            "Nike’s stock is at 9-year lows ahead of earnings. It faces these questions as doubt grows over its turnaround.",
+            "Market Week Ahead: Scarcity Narratives And Naval Tactics",
           url: "https://example.com/theme"
         }
       ]
@@ -267,5 +267,57 @@ describe("MacroTrendNewsService", () => {
     expect(briefs[0]?.summary).toBe(
       "공개 시장 해석 기준으로 시장 전반 테마 뉴스가 반복돼 지수 심리와 업종 확산 여부를 함께 점검해야 합니다."
     );
+  });
+
+  it("filters stored historical items again during public macro analysis", async () => {
+    const service = new MacroTrendNewsService({
+      cache: new NoopNewsCacheAdapter(),
+      fetchImplementation: vi.fn()
+    });
+
+    const briefs = await service.analyzeMacroTrends({
+      audience: "public_web",
+      runDate: "2026-03-28",
+      session: "weekend_briefing",
+      items: [
+        {
+          canonicalUrl: "https://example.com/personal",
+          collectedAt: "2026-03-28T07:10:00.000Z",
+          contentScope: "macro",
+          newsSourceId: "marketwatch-topstories",
+          newsSourceLabel: "MarketWatch",
+          normalizedTitle:
+            "parents with student loans could fall into default if they dont take steps soon",
+          publishedAt: "2026-03-28T07:00:00.000Z",
+          region: "global",
+          summary: "Personal finance guidance for families.",
+          title:
+            "Parents with student loans could fall into default if they don’t take steps soon",
+          url: "https://example.com/personal"
+        },
+        {
+          canonicalUrl: "https://example.com/macro",
+          collectedAt: "2026-03-28T07:20:00.000Z",
+          contentScope: "macro",
+          newsSourceId: "yahoo-finance-news",
+          newsSourceLabel: "Yahoo Finance",
+          normalizedTitle: "treasury yields rise as traders await fed speakers",
+          publishedAt: "2026-03-28T07:05:00.000Z",
+          region: "global",
+          summary: "Markets remain focused on rates and the Fed.",
+          title: "Treasury yields rise as traders await Fed speakers",
+          url: "https://example.com/macro"
+        }
+      ]
+    });
+
+    expect(briefs).toHaveLength(1);
+    expect(briefs[0]?.references).toEqual([
+      {
+        sourceLabel: "Yahoo Finance",
+        title: "Treasury yields rise as traders await Fed speakers",
+        url: "https://example.com/macro"
+      }
+    ]);
   });
 });

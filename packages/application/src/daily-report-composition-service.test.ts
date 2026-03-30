@@ -296,4 +296,28 @@ describe("DailyReportCompositionService", () => {
       "달러 강세와 원화 약세가 함께 나타나 환율 부담을 먼저 점검하셔야 합니다. 환율과 채권금리 뉴스가 자산 가격 해석의 중심에 있습니다. 국장 시초가와 초반 수급 반응을 함께 확인하셔야 합니다."
     );
   });
+
+  it("rotates repeated public summaries toward non-overlapping prior signals", () => {
+    const result = repairPublicSummaryLine({
+      briefingSession: "pre_market",
+      currentSummary:
+        "에너지 가격 약세가 이어져 인플레이션 기대와 경기 민감주 해석을 함께 조정하셔야 합니다. 국장 시초가와 초반 수급 반응을 함께 확인하셔야 합니다.",
+      priorSummary:
+        "에너지 가격 약세가 이어져 인플레이션 기대와 경기 민감주 해석을 함께 조정하셔야 합니다. 국장 시초가와 초반 수급 반응을 함께 확인하셔야 합니다.",
+      priorSignals: [
+        "에너지 가격 약세가 이어져 인플레이션 기대와 경기 민감주 해석을 함께 조정하셔야 합니다.",
+        "미국 증시 반등 흐름이 이어져 국내 개장 초반 위험 선호 회복 여부를 볼 필요가 있습니다."
+      ],
+      keyIndicatorBullets: [
+        "에너지 가격 약세가 이어져 인플레이션 기대와 경기 민감주 해석을 함께 조정하셔야 합니다.",
+        "VIX 안정 구간이 이어져 공포 심리는 다소 완화됐습니다.",
+        "장 시작 전에는 미국장 마감 흐름이 국내 시초가에 그대로 이어지는지 먼저 확인하셔야 합니다."
+      ],
+      macroTrendBriefs: []
+    });
+
+    expect(result).toBe(
+      "VIX 안정 구간이 이어져 공포 심리는 다소 완화됐습니다. 국장 시초가와 초반 수급 반응을 함께 확인하셔야 합니다."
+    );
+  });
 });

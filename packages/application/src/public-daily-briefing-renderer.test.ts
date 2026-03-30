@@ -60,4 +60,51 @@ describe("public daily briefing renderer", () => {
     expect(html).not.toContain("포트 적합성");
     expect(html).not.toContain("비중 확대");
   });
+
+  it("filters irrelevant headline events and duplicate public references before rendering", () => {
+    const briefing = buildPublicDailyBriefing({
+      runDate: "2026-03-28",
+      summaryLine: "주말에는 다음 주 체크포인트를 정리하셔야 합니다.",
+      marketResults: [],
+      headlineEvents: [
+        {
+          sourceLabel: "Yahoo Finance",
+          headline: "Treasury yields rise as traders await Fed speakers",
+          summary: "금리 이슈가 시장 기대를 조정하는지 함께 보셔야 합니다."
+        },
+        {
+          sourceLabel: "MarketWatch",
+          headline:
+            "Parents with student loans could fall into default if they don’t take steps soon",
+          summary: "개인 재무 기사입니다."
+        }
+      ],
+      newsReferences: [
+        {
+          sourceLabel: "Yahoo Finance",
+          title: "Treasury yields rise as traders await Fed speakers",
+          url: "https://example.com/yahoo-market"
+        },
+        {
+          sourceLabel: "MarketWatch",
+          title:
+            "Parents with student loans could fall into default if they don’t take steps soon",
+          url: "https://example.com/personal"
+        },
+        {
+          sourceLabel: "Yahoo Finance",
+          title: "Treasury yields rise as traders await Fed speakers",
+          url: "https://example.com/yahoo-market"
+        }
+      ]
+    });
+
+    const html = renderPublicDailyBriefingHtml(briefing);
+
+    expect(html).toContain("Treasury yields rise as traders await Fed speakers");
+    expect(html).not.toContain(
+      "Parents with student loans could fall into default if they don’t take steps soon"
+    );
+    expect(html.match(/example.com\/yahoo-market/g)?.length ?? 0).toBe(1);
+  });
 });
